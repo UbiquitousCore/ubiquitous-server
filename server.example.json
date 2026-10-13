@@ -1,0 +1,36 @@
+{
+  // Game settings shared by `just dev` and `just up` (Docker). Copy to
+  // server.json and edit it; environment variables and command-line flags
+  // still win over anything here. See docs/development/setup.md.
+  // Comments are allowed in this file.
+
+  "bindAddress": "127.0.0.1",
+  "webSocketPort": 8781,
+  "dataDirectory": "data/generated",
+
+  // Where accounts, characters and other saves live when no Postgres
+  // connection string is set. JSON files you can open and edit by hand.
+  // Unset, saves sit beside the data package above.
+  // "stateDirectory": "data/generated",
+
+  // Handy logins for testing. Never enable these on a shared server: each
+  // login below only exists while its pass hash is set (see .env).
+  "developmentAccounts": false,
+  // "logLevel": "Information",
+
+  // Seasonal scenery and creatures. Off hides the whole event; the entry
+  // lists hide only those entries while leaving the rest of it up.
+  "festivalContentEnabled": true,
+  // "festivalStaticEntries": [288, 145],
+  // "festivalCreatureEntries": [3012, 2781],
+
+  // Playerbots: characters the server plays itself. Off by default;
+  // randomBotCount is how many play on their own (0-500).
+  // Every setting in modules/playerbots/README.md can go here.
+  "modules": {
+    "playerbots": {
+      "enabled": false,
+      "randomBotCount": 5
+    }
+  }
+}

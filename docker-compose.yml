@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ubiquitous
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set; see the Docker development doc}
+      POSTGRES_DB: ubiquitous
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ubiquitous -d ubiquitous"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      UBIQUITOUS_BIND_ADDRESS: 0.0.0.0
+      # No `:-default` fallbacks here on purpose: an unset variable arrives
+      # empty, which the server reads as "not said", so server.json (when
+      # mounted) or the built-in default applies. Anything set here or in
+      # .env still wins over server.json.
+      UBIQUITOUS_WEBSOCKET_PORT: ${UBIQUITOUS_WEBSOCKET_PORT:-}
+      UBIQUITOUS_DATA_DIRECTORY: /data/generated
+      UBIQUITOUS_STATE_DIRECTORY: /data/state
+      UBIQUITOUS_DEVELOPMENT_ACCOUNTS: ${UBIQUITOUS_DEVELOPMENT_ACCOUNTS:-}
+      UBIQUITOUS_DEVELOPMENT_USER_ID: ${UBIQUITOUS_DEVELOPMENT_USER_ID:-}
+      UBIQUITOUS_DEVELOPMENT_PASS_HASH: ${UBIQUITOUS_DEVELOPMENT_PASS_HASH:-}
+      UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID: ${UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID:-}
+      UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH: ${UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH:-}
+      UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED: ${UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED:-}
+      UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT: ${UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT:-}
+      UBIQUITOUS_POSTGRES_CONNECTION_STRING: "Host=db;Username=ubiquitous;Password=${POSTGRES_PASSWORD};Database=ubiquitous"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${UBIQUITOUS_WEBSOCKET_PORT:-8781}:${UBIQUITOUS_WEBSOCKET_PORT:-8781}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://127.0.0.1:${UBIQUITOUS_WEBSOCKET_PORT:-8781}/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - ./data/generated:/data/generated:ro
+      - ubiquitous-state:/data/state
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  ubiquitous-state:

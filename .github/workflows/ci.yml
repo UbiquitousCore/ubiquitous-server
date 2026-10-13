@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: No game data or binaries tracked
+        run: python3 scripts/check-no-assets.py
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Test
+        run: dotnet test --no-build -c Release
+
+  format:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes --no-restore
+
+  postgres-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ubiquitous
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: ubiquitous
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ubiquitous -d ubiquitous"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      UBIQUITOUS_TEST_POSTGRES_CONNECTION_STRING: Host=localhost;Username=ubiquitous;Password=ci-only-password;Database=ubiquitous
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore -c Release
+      - name: Postgres tests
+        run: dotnet test tests/integration/integration.tests.csproj --no-build -c Release --filter "FullyQualifiedName~Postgres"

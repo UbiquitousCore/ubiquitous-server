@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A bot is a client: it speaks the WebSocket vocabulary, so it references
+       the protocol project as ubiquitous-client's copy of it would. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\module-api\module-api.csproj" />
+    <ProjectReference Include="..\..\src\protocol\web\web.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RootNamespace>Ubiquitous.Modules.Playerbots</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="playerbots.tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,11 @@
+# Allowlist: the image is built from source alone.
+*
+!src/
+!modules/
+!*.sln
+!Directory.*.props
+!Directory.Packages.props
+!global.json
+!.editorconfig
+**/bin
+**/obj

@@ -1,0 +1,47 @@
+Ubiquitous Server
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. See LICENSE.
+
+Every line of code here was written for this project. It contains no game code
+and no game files (art, audio, models or text files). Some game rules the
+server needs, such as experience per level, base stats and starting
+equipment, are written in this project's own code; see docs/PROVENANCE.md.
+
+This is an unofficial, non-commercial fan project. It is not affiliated with,
+endorsed by, or sponsored by Gameloft SE or any rights holder. "Order & Chaos
+Online" is a trademark of its owner and is used here only to say which game
+files this software is compatible with.
+
+Third-party components
+----------------------
+
+The following packages are used as NuGet dependencies. They are not
+redistributed in this repository; each is used under its own licence. A
+Docker image built from this repository does bundle the runtime packages
+below, together with the .NET runtime from its base image, and carries their
+licences with it.
+
+  Package                      Licence
+  Npgsql                       PostgreSQL License
+  Microsoft.Extensions.DependencyInjection.Abstractions
+                               MIT License (through Npgsql)
+  Microsoft.Extensions.Logging.Abstractions
+                               MIT License (through Npgsql)
+  DotRecast.Core               zlib License (per upstream; the package
+  DotRecast.Recast               metadata carries no licence field)
+  DotRecast.Detour
+  xunit                        Apache License 2.0
+  xunit.runner.visualstudio    Apache License 2.0
+  coverlet.collector           MIT License
+  Microsoft.NET.Test.Sdk       MIT License
+
+Design references
+-----------------
+
+Some rules whose details are not visible in play follow the behaviour of
+CypherCore (https://github.com/CypherCore/CypherCore, GPL-3.0), a World of
+Warcraft server emulator, as a design choice. No CypherCore source code is
+included. See docs/PROVENANCE.md for which rules and which CypherCore commit.

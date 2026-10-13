@@ -1,0 +1,10 @@
+# Reads the shared game settings (bots, festival items, ports) from server.json
+# inside the container. `just up` adds this file automatically when server.json
+# exists; environment variables still win over the file. Kept separate so a
+# checkout without server.json still composes.
+services:
+  server:
+    environment:
+      UBIQUITOUS_CONFIG: /config/server.json
+    volumes:
+      - ./server.json:/config/server.json:ro

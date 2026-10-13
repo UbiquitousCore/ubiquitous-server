@@ -1,0 +1,76 @@
+using Ubiquitous.Data;
+
+namespace Ubiquitous.Scripts;
+
+public sealed record GiveUpContext(
+    CreatureDefinition? Creature,
+    double DistanceToTarget,
+    double DistanceFromHome,
+    TimeSpan TimeInFight,
+    bool LeaderStillFighting,
+    TimeSpan? TimeOutsideMeleeRange = null);
+
+public sealed record FleeContext(CreatureDefinition? Creature, double HealthFraction);
+
+public sealed record AssistContext(CreatureDefinition? Creature, double DistanceToFight);
+
+public enum CastTarget
+{
+    Enemy,
+
+    Self,
+
+    OwnSummon,
+}
+
+public sealed record CombatTurnContext(
+    CreatureDefinition? Creature,
+    double HealthFraction,
+    TimeSpan TimeInFight,
+    bool InMeleeRange,
+    IReadOnlyDictionary<uint, TimeSpan> SinceCast,
+    IReadOnlyDictionary<uint, int> CastCount,
+    int SummonsInReach,
+    IReadOnlySet<string> Marks);
+
+public sealed record CombatAction(
+    uint? Cast = null,
+    CastTarget At = CastTarget.Enemy,
+    uint? Summon = null,
+    string? Sets = null,
+    string? Clears = null);
+
+public abstract class CreatureScript
+{
+    public abstract string Name { get; }
+
+    public virtual bool Assists(AssistContext context) => false;
+
+    public virtual bool NoticesEnemies => true;
+
+    public virtual bool FightsBack => true;
+
+    public virtual bool Chases => true;
+
+    public virtual bool DrawsOthersIn => true;
+
+    public virtual bool GivesUp(GiveUpContext context)
+    {
+        var hold = HoldRange(context.Creature);
+        bool drawnTooFar = Math.Max(context.DistanceToTarget, context.DistanceFromHome) > hold;
+        return drawnTooFar && !context.LeaderStillFighting;
+    }
+
+    public virtual bool Flees(FleeContext context) =>
+        context.Creature?.Rank is null or CreatureRank.Ordinary
+        && context.HealthFraction <= FleeHealthFraction;
+
+    public virtual CombatAction? Act(CombatTurnContext context) => null;
+
+    protected static double HoldRange(CreatureDefinition? creature) =>
+        creature?.LeashRange is float leash && leash > 0 ? leash : DefaultHoldRange;
+
+    public const double DefaultHoldRange = 40.0;
+
+    public const double FleeHealthFraction = 0.2;
+}

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\scripts\scripts.csproj" />
+    <ProjectReference Include="..\game\game.csproj" />
+    <ProjectReference Include="..\world\world.csproj" />
+    <ProjectReference Include="..\data\data.csproj" />
+    <ProjectReference Include="..\persistence\persistence.csproj" />
+    <ProjectReference Include="..\protocol\web\web.csproj" />
+    <ProjectReference Include="..\module-api\module-api.csproj" />
+  </ItemGroup>
+
+  <!-- Every project in modules/<name>/ is built into the server, and named in
+       an assembly attribute so the server can find it without scanning disk. -->
+  <ItemGroup>
+    <ServerModule Include="..\..\modules\*\*.csproj" />
+    <ProjectReference Include="@(ServerModule)" />
+  </ItemGroup>
+
+  <Target Name="NameBuiltModules" BeforeTargets="GetAssemblyAttributes" Condition="'@(ServerModule)' != ''">
+    <ItemGroup>
+      <AssemblyAttribute Include="Ubiquitous.Modules.BuiltWithModuleAttribute">
+        <_Parameter1>%(ServerModule.Filename)</_Parameter1>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\content\**\*.json" LinkBase="content" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+</Project>
