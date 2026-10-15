@@ -9,7 +9,11 @@ files, or is this project's own design choice.
 > movement, combat, spells, quests, inventory and the social systems run end to
 > end against the `ubiquitous-client` client, persisting to JSON files or Postgres.
 > [`docs/BEHAVIOUR.md`](docs/BEHAVIOUR.md) describes what each system does;
-> [`TODO.md`](TODO.md) lists what is missing.
+> the [issue tracker](https://github.com/UbiquitousCore/ubiquitous-server/issues) lists what is missing.
+>
+> **Target build: 1.1.4.** Rules and data follow the 1.1.4 client. Other game
+> versions can be supported: builds close to 1.1.4 should need little work, and
+> more distant ones more.
 
 The server sends identity, rules, state and events; `ubiquitous-client` renders from the
 player's own client files. Game logic is transport-independent and never sees
@@ -63,7 +67,7 @@ then `UBIQUITOUS_*` variables, then flags.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | tick, delivery, scripts, data |
 | [docs/architecture/](docs/architecture) | wire codes, walkable ground |
 | [docs/development/setup.md](docs/development/setup.md) | setup, data import, Docker, tests |
-| [TODO.md](TODO.md) | open work |
+| [Issues](https://github.com/UbiquitousCore/ubiquitous-server/issues) | open work |
 
 ## License
 

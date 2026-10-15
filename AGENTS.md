@@ -141,13 +141,13 @@ For every task:
 
 1. Inspect the current code, roadmap, client contract, and the observable
    behaviour before changing architecture.
-2. Note any open question in `TODO.md`.
+2. Note any open question in the issue tracker.
 3. Write a focused test or fixture using synthetic data where possible.
 4. Implement the smallest independent change that makes the test pass.
 5. Run focused tests, `dotnet build`, and `dotnet test`.
 6. Review the diff for unrelated changes, local paths, client data,
    credentials, and dependency direction.
-7. Update `TODO.md`, and `docs/` only where a client-visible rule or a
+7. Update the issue tracker, and `docs/` only where a client-visible rule or a
    provenance fact changed.
 
 Preserve unrelated worktree changes. Do not reset, revert, or rewrite changes
