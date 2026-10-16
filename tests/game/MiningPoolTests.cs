@@ -20,6 +20,16 @@ public sealed class MiningPoolTests
     private static uint[] ActiveIds(MiningPool pool, int locations) =>
         Enumerable.Range(1, locations).Select(id => (uint)id).Where(id => pool.TryGetActive(id, out _)).ToArray();
 
+    [Fact]
+    public void GreenmontHasNoOre_SoItsLocationsNeverActivate()
+    {
+        var pool = new MiningPool(
+            Enumerable.Range(1, 13).Select(id => (uint)id), MiningOres.ForMap(MiningMaps.Greenmont), () => 0.5);
+
+        Assert.Equal(0, pool.ActiveCount);
+        Assert.NotEmpty(MiningOres.ForMap(1));
+    }
+
     [Theory]
     [InlineData(0, 0)]
     [InlineData(1, 1)]
@@ -169,9 +179,9 @@ public sealed class MiningPoolTests
     [Fact]
     public void ASharedMapShowsActiveLocationsAsOreAndHidesTheRest()
     {
-        var state = new SharedMapState(13, rollUnit: () => 0.0);
+        var state = new SharedMapState(1, rollUnit: () => 0.0);
         var spawns = Enumerable.Range(1, 4)
-            .Select(id => new StaticObjectSpawnDefinition((uint)id, 13, MiningRules.LocationEntry, id, 2, 4, 0f))
+            .Select(id => new StaticObjectSpawnDefinition((uint)id, 1, MiningRules.LocationEntry, id, 2, 4, 0f))
             .ToArray();
 
         var shown = state.VisibleStaticObjects(new Position(0, 2, 0), 58f, spawns);
@@ -184,9 +194,9 @@ public sealed class MiningPoolTests
     [Fact]
     public void MiningOnASharedMapHidesTheNodeAndShowsAnother()
     {
-        var state = new SharedMapState(13, rollUnit: () => 0.0);
+        var state = new SharedMapState(1, rollUnit: () => 0.0);
         var spawns = Enumerable.Range(1, 4)
-            .Select(id => new StaticObjectSpawnDefinition((uint)id, 13, MiningRules.LocationEntry, id, 2, 4, 0f))
+            .Select(id => new StaticObjectSpawnDefinition((uint)id, 1, MiningRules.LocationEntry, id, 2, 4, 0f))
             .ToArray();
         var player = new Position(0, 2, 0);
         var node = state.VisibleStaticObjects(player, 58f, spawns).Single();
@@ -204,8 +214,8 @@ public sealed class MiningPoolTests
     [Fact]
     public void OrdinaryStaticObjectsAreUntouchedByMining()
     {
-        var state = new SharedMapState(13, rollUnit: () => 0.0);
-        var spawns = new[] { new StaticObjectSpawnDefinition(9, 13, 7001, 2, 2, 4, 0f) };
+        var state = new SharedMapState(1, rollUnit: () => 0.0);
+        var spawns = new[] { new StaticObjectSpawnDefinition(9, 1, 7001, 2, 2, 4, 0f) };
 
         var shown = Assert.Single(state.VisibleStaticObjects(new Position(0, 2, 0), 58f, spawns));
 

@@ -32,6 +32,7 @@ public static class MiningOres
 
     public static IReadOnlyList<MiningOreWeight> ForMap(ushort mapId) => mapId switch
     {
+        MiningMaps.Greenmont => [],
         MiningMaps.MiddleLand => MiddleZone,
         MiningMaps.SailenPalace or MiningMaps.CaligulaSkygarden => DeepZone,
         _ => StarterZone,
@@ -40,6 +41,9 @@ public static class MiningOres
 
 public static class MiningMaps
 {
+    // The spawn table places mining locations here, but the original game had no ore in the city.
+    public const ushort Greenmont = 13;
+
     public const ushort MiddleLand = 4;
     public const ushort SailenPalace = 19;
     public const ushort CaligulaSkygarden = 20;

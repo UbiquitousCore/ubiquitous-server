@@ -232,6 +232,8 @@ comes from is in `PROVENANCE.md`.
 - The cast opens the ordinary loot window with one ore. Only `loot.take`
   mines the node (`entity.removed`); closing leaves it standing. A full bag
   mines nothing.
+- Greenmont (map 13) has no ore: its spawn table places mining locations, but
+  none ever activates.
 - A mined location rests three minutes; taking the ore activates a rested (or
   never-mined) location at random, else the longest idle one.
 

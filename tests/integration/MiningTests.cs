@@ -12,10 +12,10 @@ public sealed class MiningTests
 {
     private static readonly StaticObjectSpawnDefinition[] Locations =
     [
-        new(3001, 13, MiningRules.LocationEntry, 2f, 2f, 4f, 0f),
-        new(3002, 13, MiningRules.LocationEntry, 3f, 2f, 4f, 0f),
-        new(3003, 13, MiningRules.LocationEntry, 4f, 2f, 4f, 0f),
-        new(3004, 13, MiningRules.LocationEntry, 5f, 2f, 4f, 0f),
+        new(3001, 1, MiningRules.LocationEntry, 2f, 2f, 4f, 0f),
+        new(3002, 1, MiningRules.LocationEntry, 3f, 2f, 4f, 0f),
+        new(3003, 1, MiningRules.LocationEntry, 4f, 2f, 4f, 0f),
+        new(3004, 1, MiningRules.LocationEntry, 5f, 2f, 4f, 0f),
     ];
 
     private static readonly uint OreItem = MiningOres.Bronze.ItemId;
@@ -278,7 +278,7 @@ public sealed class MiningTests
         var clock = new FakeTimeProvider(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
         var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
-                "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 12, [100, 200]) with { Race = race }]),
+                "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, 1, 2, 3, 12, [100, 200]) with { Race = race }]),
             [], Locations, content, wanderRollUnit: () => 0.0, time: clock);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
