@@ -250,7 +250,9 @@ public sealed record ServerOptions(
 
     private static string? FindArgument(string[] args, params string[] names)
     {
-        for (var index = 0; index < args.Length - 1; index++)
+        // The last occurrence wins, so `just dev --port 9000` overrides the
+        // port the recipe passes first.
+        for (var index = args.Length - 2; index >= 0; index--)
         {
             if (names.Contains(args[index], StringComparer.OrdinalIgnoreCase)) return args[index + 1];
         }

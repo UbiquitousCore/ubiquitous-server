@@ -42,6 +42,15 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
+    public void RepeatedArgument_TakesTheLastOne()
+    {
+        var options = ServerOptions.Load(
+            ["--port", "8781", "--port", "9100"], new Dictionary<string, string?>());
+
+        Assert.Equal(9100, options.WebSocketPort);
+    }
+
+    [Fact]
     public void InvalidEnvironmentPort_IsRejected()
     {
         var environment = new Dictionary<string, string?>

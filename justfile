@@ -50,12 +50,13 @@ setup:
 
 # Run the server for development: saves stay as editable JSON files, no
 # Docker, no Postgres. Reads server.json when it exists (`just setup`).
+# Another port: `just dev --port 9000`, or `just port=9000 up` for any recipe.
 dev *args:
     #!/usr/bin/env bash
     set -euo pipefail
     config=()
     if [ -f server.json ]; then config=(--config server.json); fi
-    UBIQUITOUS_POSTGRES_CONNECTION_STRING= dotnet run --project src/server -- --port {{port}} "${config[@]}" "$@"
+    UBIQUITOUS_POSTGRES_CONNECTION_STRING= dotnet run --project src/server -- --port {{port}} "${config[@]}" {{args}}
 
 # Run the full stack in Docker: the server plus Postgres, on the same port
 # as `just dev`. Reads server.json too when it exists; `just up
@@ -81,7 +82,7 @@ up envfile='' *args:
     elif [ ! -f .env ]; then
       echo "no .env — run: just setup"; exit 2
     fi
-    "${compose[@]}" up --build -d "$@"
+    UBIQUITOUS_WEBSOCKET_PORT={{port}} "${compose[@]}" up --build -d {{args}}
     for _ in $(seq 1 30); do
       if curl -fsS -m 3 "http://127.0.0.1:{{port}}/health" >/dev/null 2>&1; then
         echo "server healthy on port {{port}}"; exit 0
@@ -93,7 +94,7 @@ up envfile='' *args:
 
 # Stop the Docker stack.
 down *args:
-    docker compose down "$@"
+    docker compose down {{args}}
 
 # Follow the Docker server's log.
 docker-logs:
@@ -106,7 +107,7 @@ serve *args:
     set -euo pipefail
     config=()
     if [ -f server.json ]; then config=(--config server.json); fi
-    dotnet run --project src/server -- --port {{port}} "${config[@]}" "$@"
+    dotnet run --project src/server -- --port {{port}} "${config[@]}" {{args}}
 
 # Run the server in the background, logging to local/server.log.
 serve-bg:

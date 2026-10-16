@@ -22,6 +22,7 @@ renders from the player's own files.
 just setup   # once: writes .env and server.json from their examples
 just dev     # run with editable JSON saves, no Docker
 just up      # or the full stack (server plus Postgres) in Docker
+just dev --port 9000      # another port; `just port=9000 up` for Docker
 dotnet build && dotnet test
 ```
 

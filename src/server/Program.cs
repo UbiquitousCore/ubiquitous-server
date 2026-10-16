@@ -115,7 +115,7 @@ public static class Program
             return ExitBindFailed;
         }
 
-        logger.LogInformation("Server ready on {Address}:{Port}. Press Ctrl+C to stop", options.BindAddress, options.WebSocketPort);
+        logger.LogInformation("Server started on port {Port} ({Address}). Press Ctrl+C to stop", options.WebSocketPort, options.BindAddress);
         await WaitForShutdownAsync();
         await modules.ShutdownAsync(CancellationToken.None);
         return 0;
