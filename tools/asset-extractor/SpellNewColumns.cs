@@ -9,6 +9,7 @@ public static class SpellNewColumns
         CooldownMs: 17,
         MaxRange: 21,
         NameTextId: 5,
+        Rank: 6,
         DurationMs: 31,
         WornSlotNeeded: 12,
         RequiredItemClass: 13,

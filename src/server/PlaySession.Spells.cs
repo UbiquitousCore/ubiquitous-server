@@ -459,6 +459,17 @@ public sealed partial class PlaySession
         return Reply(WebMessageTypes.ActionBarAssigned, ActionSlotPayloadFor(new(slot, (id, slotType))));
     }
 
+    private void RaiseBarToHighestRanks(IReadOnlyCollection<uint> known)
+    {
+        foreach (var (slot, (id, type)) in _actionBar.ToArray())
+        {
+            if (type != SpellButtonType) continue;
+            _actionBar[slot] = (SpellRanks.HighestKnown(id, known, _content.Spells), type);
+        }
+    }
+
+    private const int SpellButtonType = 0;
+
     private const int PrimaryBarSlots = 6;
 
     private static ActionSlotPayload ActionSlotPayloadFor(KeyValuePair<int, (uint Id, int Type)> entry)

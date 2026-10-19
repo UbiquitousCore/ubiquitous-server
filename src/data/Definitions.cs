@@ -58,7 +58,8 @@ public sealed record SpellDefinition(
     uint? EffectLearnSpellId = null,
     uint? AuraMountId = null,
     int? AuraMountKeepSeatPercent = null,
-    int? AuraMountSpeedupPercent = null);
+    int? AuraMountSpeedupPercent = null,
+    int Rank = 0);
 
 public static class SpellEffectTargets
 {

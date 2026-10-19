@@ -39,6 +39,19 @@ public class SpellNewColumnsTests
     }
 
     [Fact]
+    public void Build114_ReadsTheRankColumn()
+    {
+        var data = BuildRow(
+            uints: new Dictionary<int, uint> { [0] = 5006, [6] = 2 },
+            floats: new Dictionary<int, float>());
+
+        var spell = Assert.Single(SpellTableMapper.MapSpells(
+            FTableDocument.Load(data), SpellNewColumns.Build114, resolveName: _ => "Fireball"));
+
+        Assert.Equal(2, spell.Rank);
+    }
+
+    [Fact]
     public void Build114_ReadsTheProjectileSpeedColumn()
     {
         var data = BuildRow(

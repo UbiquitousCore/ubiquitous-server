@@ -5,7 +5,7 @@ namespace Ubiquitous.AssetExtractor;
 public sealed record SpellTableColumns(
     int Id, int Name, int CastTimeMs, int CooldownMs, int MaxRange, int NameTextId = -1,
     int DurationMs = -1, int WornSlotNeeded = -1, int RequiredItemClass = -1,
-    int ItemSubclassesAllowed = -1, int Speed = -1);
+    int ItemSubclassesAllowed = -1, int Speed = -1, int Rank = -1);
 
 public static class SpellTableMapper
 {
@@ -80,8 +80,10 @@ public static class SpellTableMapper
                 throw new FTableFormatException($"Spell {id} has an unusable speed.");
             }
 
+            int rank = columns.Rank >= 0 && columns.Rank < row.Count && row[columns.Rank] is uint ranked ? (int)ranked : 0;
+
             spells.Add(new SpellDefinition(
-                id, name, castTimeMs, cooldownMs, maxRange, DurationMs: durationMs, Speed: speed,
+                id, name, castTimeMs, cooldownMs, maxRange, DurationMs: durationMs, Speed: speed, Rank: rank,
                 WornSlotNeeded: wornSlot,
                 RequiredItemClass: wornSlot < 0 ? 0 : itemClass,
                 ItemSubclassesAllowed: wornSlot < 0 ? 0 : allowedSubclasses));
