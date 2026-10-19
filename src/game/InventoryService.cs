@@ -21,7 +21,8 @@ public sealed record InventoryEquipResult(
 public sealed record InventoryRelocation(InventoryItemState Item, StorageSlotState From);
 public sealed record InventoryDestroyResult(bool Accepted, string? ItemId, string? Reason = null);
 public sealed record InventorySplitResult(bool Accepted, InventoryItemState? Added, InventoryItemState? Source, string? Reason = null);
-public sealed record InventorySortResult(bool Accepted, IReadOnlyList<InventoryItemState> Items, string? Reason = null);
+public sealed record InventorySortResult(
+    bool Accepted, IReadOnlyList<InventoryItemState> Items, string? Reason = null, IReadOnlyList<string>? RemovedIds = null);
 
 public sealed record InventoryConsumeResult(
     bool Accepted,
@@ -320,22 +321,65 @@ public sealed class InventoryService
         return new InventorySplitResult(true, added, source);
     }
 
-    public InventorySortResult Sort(string area)
+    public InventorySortResult Sort(string area, Func<int, ItemDefinition?> describe)
     {
         if (!IsStorageArea(area))
             return new InventorySortResult(false, [], "Unrecognized storage area.");
 
-        var ordered = _items.Where(item => string.Equals(item.Area, area, StringComparison.Ordinal))
-            .OrderBy(item => item.Entry).ThenBy(item => item.Slot).ToList();
-        for (int i = 0; i < ordered.Count; i++)
+        var held = _items.Where(item => string.Equals(item.Area, area, StringComparison.Ordinal))
+            .OrderBy(item => item.Slot).ToList();
+        var removed = new List<string>();
+        var kept = new List<InventoryItemState>();
+        foreach (var same in held.GroupBy(item => item.Entry))
+            kept.AddRange(CombineStacks([.. same], StackLimit(describe(same.Key)), removed));
+
+        var ordered = kept
+            .OrderBy(item => item, Comparer<InventoryItemState>.Create((a, b) => CompareForSort(a, b, describe)))
+            .Select((item, slot) => item with { Slot = slot })
+            .ToList();
+
+        _items.RemoveAll(item => string.Equals(item.Area, area, StringComparison.Ordinal));
+        _items.AddRange(ordered);
+        return new InventorySortResult(true, ordered, RemovedIds: removed);
+    }
+
+    private static int StackLimit(ItemDefinition? item) => (int)Math.Max(1u, item?.MaxStack ?? 1u);
+
+    // Only partial stacks are poured together: a stack already at or over the
+    // limit stays whole, so sorting never needs more slots than it started with.
+    private static IEnumerable<InventoryItemState> CombineStacks(
+        IReadOnlyList<InventoryItemState> stacks, int limit, List<string> removed)
+    {
+        var partial = stacks.Where(stack => stack.Count < limit).ToList();
+        foreach (var full in stacks.Where(stack => stack.Count >= limit)) yield return full;
+        if (partial.Count == 0) yield break;
+
+        var total = partial.Sum(stack => Math.Max(1, stack.Count));
+        var index = 0;
+        for (; total > 0; index++)
         {
-            var original = ordered[i];
-            var reslotted = original with { Slot = i };
-            _items[_items.IndexOf(original)] = reslotted;
-            ordered[i] = reslotted;
+            var count = Math.Min(limit, total);
+            total -= count;
+            yield return partial[index] with { Count = count };
         }
 
-        return new InventorySortResult(true, ordered);
+        removed.AddRange(partial.Skip(index).Select(stack => stack.Id));
+    }
+
+    // Own choice, as asked by the owner: group, then quality, worth and item
+    // level from lowest to highest, then name.
+    private static int CompareForSort(InventoryItemState a, InventoryItemState b, Func<int, ItemDefinition?> describe)
+    {
+        var x = describe(a.Entry);
+        var y = describe(b.Entry);
+        int order = (x?.Class ?? byte.MaxValue).CompareTo(y?.Class ?? byte.MaxValue);
+        if (order == 0) order = (x?.Quality ?? 0).CompareTo(y?.Quality ?? 0);
+        if (order == 0) order = (x?.SellPrice ?? 0).CompareTo(y?.SellPrice ?? 0);
+        if (order == 0) order = (x?.ItemLevel ?? 0).CompareTo(y?.ItemLevel ?? 0);
+        if (order == 0) order = string.Compare(x?.NameKey, y?.NameKey, StringComparison.OrdinalIgnoreCase);
+        if (order == 0) order = a.Entry.CompareTo(b.Entry);
+        if (order == 0) order = b.Count.CompareTo(a.Count);
+        return order != 0 ? order : a.Slot.CompareTo(b.Slot);
     }
 
     private static bool IsBagItemAt(InventoryItemState item, StorageSlotState from) =>

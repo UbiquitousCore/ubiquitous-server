@@ -288,7 +288,8 @@ public sealed partial class PlaySession
     {
         if (_world is null) return [Error(WireCodes.ProtocolError.NotInWorld, "Character selection is required before inventory operations.")];
         var request = WebMessageJson.DeserializePayload<InventorySortPayload>(payload);
-        var result = _belongings.Items.Sort(request.Area);
+        var result = _belongings.Items.Sort(request.Area,
+            entry => _content.Items.TryGetValue(checked((uint)entry), out var item) ? item : null);
         var responses = new List<string> { Reply(WebMessageTypes.InventorySorted, new InventorySortedPayload(result.Accepted, request.Area)) };
         if (result.Accepted)
         {

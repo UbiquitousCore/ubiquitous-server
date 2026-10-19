@@ -577,7 +577,8 @@ public sealed record ItemDefinition(
     uint? Quality = null,
     uint? MinDamage = null, uint? MaxDamage = null, uint? SpeedMs = null, uint? Armor = null,
     IReadOnlyList<ItemAttributeBonus>? Stats = null,
-    uint? RequiredSpellId = null);
+    uint? RequiredSpellId = null,
+    uint ItemLevel = 0, uint MaxStack = 0);
 
 public static class GuildStone
 {

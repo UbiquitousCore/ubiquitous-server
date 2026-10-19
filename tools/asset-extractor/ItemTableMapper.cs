@@ -9,7 +9,8 @@ public sealed record ItemTableColumns(
     int InventoryType = -1, int RequiredLevel = -1, int AllowableRaceMask = -1,
     int Quality = -1,
     int MinDamage = -1, int MaxDamage = -1, int SpeedMs = -1, int Armor = -1,
-    int StatCount = -1, int FirstStat = -1, int MaxStats = 10, int RequiredSpellId = -1);
+    int StatCount = -1, int FirstStat = -1, int MaxStats = 10, int RequiredSpellId = -1,
+    int ItemLevel = -1, int MaxStack = -1);
 
 public static class ItemTableMapper
 {
@@ -95,6 +96,8 @@ public static class ItemTableMapper
             uint? speedMs = Optional(row, columns.SpeedMs);
             uint? armor = Optional(row, columns.Armor);
             uint? requiredSpellId = Optional(row, columns.RequiredSpellId);
+            uint itemLevel = Optional(row, columns.ItemLevel) ?? 0;
+            uint maxStack = Optional(row, columns.MaxStack) ?? 0;
 
             var stats = new List<Ubiquitous.Data.ItemAttributeBonus>();
             if (columns.StatCount >= 0 && columns.StatCount < row.Count
@@ -116,7 +119,8 @@ public static class ItemTableMapper
             items.Add(new ItemDefinition(
                 id, name, @class, subClass, displayInfoId, onUseSpellId, onUseCooldown, buyPrice, questId, sellPrice,
                 allowedClasses, inventoryType, requiredLevel, allowedRaces, quality,
-                minDamage, maxDamage, speedMs, armor, stats.Count == 0 ? null : stats, requiredSpellId));
+                minDamage, maxDamage, speedMs, armor, stats.Count == 0 ? null : stats, requiredSpellId,
+                itemLevel, maxStack));
         }
 
         return items;

@@ -17,6 +17,7 @@ public static class ItemColumns
         QuestId: 75,
         AllowableClassMask: 13,
         InventoryType: 11,
+        ItemLevel: 15,
         RequiredLevel: 16,
         RequiredSpellId: 19,
         AllowableRaceMask: 14,
@@ -27,5 +28,6 @@ public static class ItemColumns
         Armor: 54,
         StatCount: 27,
         FirstStat: 28,
-        MaxStats: 10);
+        MaxStats: 10,
+        MaxStack: 25);
 }
