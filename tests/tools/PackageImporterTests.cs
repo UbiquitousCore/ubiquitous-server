@@ -271,7 +271,7 @@ public class PackageImporterTests
             {
                 [0] = 12u, [4] = 3u, [8] = 80u, [11] = (uint)Ubiquitous.Data.NpcFlags.Vendor, [12] = 2000u,
                 [14] = 8u, [15] = 16u, [19] = 60u, [20] = 120u, [53] = 1u, [54] = 5u,
-                [55] = "1",
+                [55] = "1,",
             },
             new Dictionary<int, object>
             {
