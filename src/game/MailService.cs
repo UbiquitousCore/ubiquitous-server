@@ -14,6 +14,7 @@ public enum MailResultCode
     AlreadyClaimed,
     NothingToClaim,
     BagFull,
+    NotInMail,
 }
 
 public sealed record MailSummary(string Id, string SenderName, string Subject, int Gold, long SentAtUnixSeconds, bool Read, bool GoldClaimed,
@@ -30,6 +31,11 @@ public sealed record MailClaimResult(MailResultCode Code, int GoldClaimed = 0,
     IReadOnlyList<MailItemAttachment>? Items = null);
 
 public sealed record MailDeleteResult(MailResultCode Code);
+
+public sealed record MailTake(int? Slot = null, bool MoneyOnly = false)
+{
+    public static readonly MailTake Everything = new();
+}
 
 public sealed class MailService
 {
@@ -108,10 +114,10 @@ public sealed class MailService
         return new MailReadResult(MailResultCode.Ok, ToSummary(found), found.Body, items);
     }
 
-    public Task<MailClaimResult> ClaimAsync(string recipientGuid, string mailId, int freeSlots, CancellationToken cancellationToken = default) =>
-        _gate.RunAsync(() => ClaimAsyncCore(recipientGuid, mailId, freeSlots, cancellationToken), cancellationToken);
+    public Task<MailClaimResult> ClaimAsync(string recipientGuid, string mailId, int freeSlots, MailTake? take = null, CancellationToken cancellationToken = default) =>
+        _gate.RunAsync(() => ClaimAsyncCore(recipientGuid, mailId, freeSlots, take ?? MailTake.Everything, cancellationToken), cancellationToken);
 
-    private async Task<MailClaimResult> ClaimAsyncCore(string recipientGuid, string mailId, int freeSlots, CancellationToken cancellationToken)
+    private async Task<MailClaimResult> ClaimAsyncCore(string recipientGuid, string mailId, int freeSlots, MailTake take, CancellationToken cancellationToken)
     {
         var messages = await _store.ListAsync(recipientGuid, cancellationToken);
         var list = messages.ToList();
@@ -120,6 +126,26 @@ public sealed class MailService
 
         var found = list[index];
         var attachments = found.Attachments ?? [];
+        if (take.MoneyOnly)
+        {
+            if (found.Gold <= 0) return new MailClaimResult(MailResultCode.NothingToClaim);
+            if (found.GoldClaimed) return new MailClaimResult(MailResultCode.AlreadyClaimed);
+            list[index] = found with { GoldClaimed = true, Read = true };
+            await _store.SaveAsync(recipientGuid, list, cancellationToken);
+            return new MailClaimResult(MailResultCode.Ok, found.Gold, []);
+        }
+
+        if (take.Slot is { } slot)
+        {
+            if (found.ItemsClaimed || slot < 0 || slot >= attachments.Count) return new MailClaimResult(MailResultCode.NotInMail);
+            if (freeSlots < 1) return new MailClaimResult(MailResultCode.BagFull);
+            var taken = attachments[slot];
+            var left = attachments.Where((_, at) => at != slot).ToArray();
+            list[index] = found with { Attachments = left, ItemsClaimed = left.Length == 0, Read = true };
+            await _store.SaveAsync(recipientGuid, list, cancellationToken);
+            return new MailClaimResult(MailResultCode.Ok, 0, [new MailItemAttachment(taken.Entry, taken.Count)]);
+        }
+
         var goldToClaim = !found.GoldClaimed && found.Gold > 0 ? found.Gold : 0;
         var itemsToClaim = !found.ItemsClaimed && attachments.Count > 0
             ? attachments.Select(item => new MailItemAttachment(item.Entry, item.Count)).ToArray()
@@ -127,7 +153,7 @@ public sealed class MailService
 
         if (goldToClaim == 0 && itemsToClaim.Length == 0)
         {
-            var everCarriedAnything = found.Gold > 0 || attachments.Count > 0;
+            var everCarriedAnything = found.Gold > 0 || attachments.Count > 0 || found.ItemsClaimed;
             return new MailClaimResult(everCarriedAnything ? MailResultCode.AlreadyClaimed : MailResultCode.NothingToClaim);
         }
 

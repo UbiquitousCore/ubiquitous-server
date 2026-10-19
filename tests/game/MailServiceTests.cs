@@ -247,4 +247,72 @@ public sealed class MailServiceTests
         var claim = await service.ClaimAsync("char-b", sent.Sent!.Id, freeSlots: 5);
         Assert.Equal(MailResultCode.NothingToClaim, claim.Code);
     }
+
+    [Fact]
+    public async Task ClaimAsync_OneSlot_TakesThatItemAndLeavesTheRestAndTheMoney()
+    {
+        var service = NewService(out _);
+        var sent = await service.SendAsync("Ayla", "char-a", "char-b", "Hello", "Hi", 25,
+            [new MailItemAttachment(100, 1), new MailItemAttachment(200, 3)]);
+
+        var taken = await service.ClaimAsync("char-b", sent.Sent!.Id, freeSlots: 5, new MailTake(Slot: 1));
+
+        Assert.Equal(MailResultCode.Ok, taken.Code);
+        Assert.Equal(0, taken.GoldClaimed);
+        Assert.Equal(200, Assert.Single(taken.Items!).Entry);
+        var left = await service.ReadAsync("char-b", sent.Sent.Id);
+        Assert.Equal(100, Assert.Single(left.Items!).Entry);
+        Assert.False(left.Summary!.GoldClaimed);
+        Assert.False(left.Summary.ItemsClaimed);
+    }
+
+    [Fact]
+    public async Task ClaimAsync_TakingTheLastItem_MarksTheItemsClaimed_AndTheLetterStays()
+    {
+        var service = NewService(out _);
+        var sent = await service.SendAsync("Ayla", "char-a", "char-b", "Hello", "Hi", 0, [new MailItemAttachment(100, 1)]);
+
+        await service.ClaimAsync("char-b", sent.Sent!.Id, freeSlots: 5, new MailTake(Slot: 0));
+
+        var inbox = await service.ListInboxAsync("char-b");
+        Assert.True(Assert.Single(inbox).ItemsClaimed);
+        Assert.Equal(MailResultCode.AlreadyClaimed, (await service.ClaimAsync("char-b", sent.Sent.Id, freeSlots: 5)).Code);
+    }
+
+    [Fact]
+    public async Task ClaimAsync_ASlotTheLetterDoesNotHave_IsRefused()
+    {
+        var service = NewService(out _);
+        var sent = await service.SendAsync("Ayla", "char-a", "char-b", "Hello", "Hi", 0, [new MailItemAttachment(100, 1)]);
+
+        var refused = await service.ClaimAsync("char-b", sent.Sent!.Id, freeSlots: 5, new MailTake(Slot: 3));
+
+        Assert.Equal(MailResultCode.NotInMail, refused.Code);
+    }
+
+    [Fact]
+    public async Task ClaimAsync_OneSlotWithNoRoom_RefusesWithBagFull()
+    {
+        var service = NewService(out _);
+        var sent = await service.SendAsync("Ayla", "char-a", "char-b", "Hello", "Hi", 0, [new MailItemAttachment(100, 1)]);
+
+        var refused = await service.ClaimAsync("char-b", sent.Sent!.Id, freeSlots: 0, new MailTake(Slot: 0));
+
+        Assert.Equal(MailResultCode.BagFull, refused.Code);
+    }
+
+    [Fact]
+    public async Task ClaimAsync_MoneyOnly_TakesTheMoneyOnceAndLeavesTheItems()
+    {
+        var service = NewService(out _);
+        var sent = await service.SendAsync("Ayla", "char-a", "char-b", "Hello", "Hi", 25, [new MailItemAttachment(100, 1)]);
+
+        var money = await service.ClaimAsync("char-b", sent.Sent!.Id, freeSlots: 0, new MailTake(MoneyOnly: true));
+        var again = await service.ClaimAsync("char-b", sent.Sent.Id, freeSlots: 0, new MailTake(MoneyOnly: true));
+
+        Assert.Equal(25, money.GoldClaimed);
+        Assert.Empty(money.Items!);
+        Assert.Equal(MailResultCode.AlreadyClaimed, again.Code);
+        Assert.Single((await service.ReadAsync("char-b", sent.Sent.Id)).Items!);
+    }
 }

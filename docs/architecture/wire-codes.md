@@ -95,6 +95,18 @@ carries on).
 (sell price zero or unknown), `notAVendor`, `notEnoughMoney`, `cantEquip`
 (level, class or race).
 
+## Mail results
+
+`code` on `mail.sent` and `mail.claimed`: `ok`, `selfMail`,
+`unknownRecipient`, `emptyBody`, `negativeGold`, `notEnoughMoney`,
+`itemNotInBag` (an attachment left the bag before sending), `mailNotFound`,
+`alreadyClaimed`, `nothingToClaim`, `inventoryFull`, `notInMail` (the slot
+asked for holds nothing), `refused` (no character chosen).
+
+`mail.claim` takes everything unless it names `slot` (one attachment, by its
+index in the letter) or sets `moneyOnly`. After a partial take the server
+sends the letter again as `mail.message`.
+
 ## Loot state
 
 `state` on `entity.lootable`: `lootable` or `emptied`.
