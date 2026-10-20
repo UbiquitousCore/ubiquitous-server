@@ -98,12 +98,12 @@ internal sealed class MailHandler(ISessionPlayer player, SessionOutbox outbox, P
         if (result.Code != MailResultCode.Ok)
             return [outbox.Reply(WebMessageTypes.MailClaimed, new MailClaimedPayload(false, 0, MailRefusalReason(result.Code), Code: CodeFor(result.Code)))];
 
-        var granted = (result.Items ?? []).Select(item => belongings.Items.Add(item.Entry, item.Count, belongings.BagSlots)!).ToArray();
+        var granted = (result.Items ?? []).SelectMany(item => belongings.Receive(item.Entry, item.Count)!).ToArray();
         belongings.Currency += result.GoldClaimed;
         var responses = new List<string>
         {
             outbox.Reply(WebMessageTypes.MailClaimed, new MailClaimedPayload(true, result.GoldClaimed, null,
-                [.. granted.Select(item => new MailAttachmentPayload(item.Entry, item.Count))])),
+                [.. (result.Items ?? []).Select(item => new MailAttachmentPayload(item.Entry, item.Count))])),
         };
         responses.AddRange(granted.Select(item => outbox.Reply(WebMessageTypes.InventoryItemAdded, belongings.PayloadFor(item))));
         responses.Add(outbox.Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(

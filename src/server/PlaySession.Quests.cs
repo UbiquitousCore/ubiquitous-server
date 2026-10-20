@@ -380,8 +380,8 @@ public sealed partial class PlaySession
 
         foreach (var item in result.Items)
         {
-            var added = _belongings.Items.Add(checked((int)item.Entry), item.Count, _belongings.BagSlots)!;
-            responses.Add(Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(added)));
+            var added = _belongings.Receive(checked((int)item.Entry), item.Count)!;
+            responses.AddRange(added.Select(stack => Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(stack))));
         }
 
         if (result.Money != 0)

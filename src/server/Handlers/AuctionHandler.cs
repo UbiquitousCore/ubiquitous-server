@@ -84,7 +84,7 @@ internal sealed class AuctionHandler(ISessionPlayer player, SessionOutbox outbox
             return [outbox.Reply(WebMessageTypes.AuctionCancelled, new AuctionCancelledPayload(false, request.Id,
                 AuctionRefusalReason(result.Code)))];
 
-        var added = belongings.Items.Add(result.Listing.ItemEntry, result.Listing.ItemCount, belongings.BagSlots);
+        var added = belongings.Receive(result.Listing.ItemEntry, result.Listing.ItemCount);
         if (added is null)
         {
             var remainingSeconds = (int)(result.Listing.ExpiresAtUnixSeconds - player.Now.ToUnixTimeSeconds());
@@ -99,7 +99,7 @@ internal sealed class AuctionHandler(ISessionPlayer player, SessionOutbox outbox
         return
         [
             outbox.Reply(WebMessageTypes.AuctionCancelled, new AuctionCancelledPayload(true, request.Id, null)),
-            outbox.Reply(WebMessageTypes.InventoryItemAdded, belongings.PayloadFor(added)),
+            .. added.Select(item => outbox.Reply(WebMessageTypes.InventoryItemAdded, belongings.PayloadFor(item))),
         ];
     }
 

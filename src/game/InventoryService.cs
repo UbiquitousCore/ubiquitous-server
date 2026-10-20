@@ -19,6 +19,7 @@ public sealed record InventoryEquipResult(
 }
 
 public sealed record InventoryRelocation(InventoryItemState Item, StorageSlotState From);
+public sealed record InventoryCombineResult(InventoryItemState Into, InventoryItemState? Left, string? EmptiedId);
 public sealed record InventoryDestroyResult(bool Accepted, string? ItemId, string? Reason = null);
 public sealed record InventorySplitResult(bool Accepted, InventoryItemState? Added, InventoryItemState? Source, string? Reason = null);
 public sealed record InventorySortResult(
@@ -55,15 +56,59 @@ public sealed class InventoryService
         Math.Max(0, capacity - _items.Count(item =>
             string.Equals(item.Area, area, StringComparison.Ordinal) && item.Slot >= 0 && item.Slot < capacity));
 
-    public InventoryItemState? Add(int entry, int count, int bagCapacity)
+    // Tops up the bag's part-stacks of the item before opening new slots, and
+    // takes nothing unless all of it fits. The stacks touched come back, new or not.
+    // An item with no stack limit of more than one arrives whole, in one slot,
+    // as it did before limits were read.
+    public IReadOnlyList<InventoryItemState>? Add(int entry, int count, int bagCapacity, int stackLimit = 0)
     {
+        var limit = stackLimit;
+        if (stackLimit <= 1) return FirstFreeBagSlot(bagCapacity) is { } slot ? [Place(entry, count, slot)] : null;
+        var partial = _items
+            .Where(item => item.Entry == entry && item.Count < limit && string.Equals(item.Area, "bag", StringComparison.Ordinal))
+            .OrderBy(item => item.Slot).ToList();
+        var leftover = Math.Max(0, count - partial.Sum(item => limit - item.Count));
         var used = _items.Where(item => string.Equals(item.Area, "bag", StringComparison.Ordinal))
             .Select(item => item.Slot).ToHashSet();
-        var slot = Enumerable.Range(0, bagCapacity).FirstOrDefault(free => !used.Contains(free), -1);
-        if (slot < 0) return null;
-        var added = new InventoryItemState($"item-{entry}-{_items.Count + 1}", entry, count, slot);
+        var free = Enumerable.Range(0, bagCapacity).Where(slot => !used.Contains(slot)).ToList();
+        if ((leftover + limit - 1) / limit > free.Count) return null;
+
+        var touched = new List<InventoryItemState>();
+        var remaining = count;
+        foreach (var stack in partial)
+        {
+            if (remaining <= 0) break;
+            var poured = Math.Min(limit - stack.Count, remaining);
+            remaining -= poured;
+            var topped = stack with { Count = stack.Count + poured };
+            Replace(stack, topped);
+            touched.Add(topped);
+        }
+
+        for (var at = 0; remaining > 0; at++)
+        {
+            var size = Math.Min(limit, remaining);
+            remaining -= size;
+            touched.Add(Place(entry, size, free[at]));
+        }
+
+        return touched;
+    }
+
+    private InventoryItemState Place(int entry, int count, int slot)
+    {
+        var added = new InventoryItemState(FreshId(entry), entry, count, slot);
         _items.Add(added);
         return added;
+    }
+
+    private string FreshId(int entry)
+    {
+        for (var n = _items.Count + 1; ; n++)
+        {
+            var id = $"item-{entry}-{n}";
+            if (_items.All(item => item.Id != id)) return id;
+        }
     }
 
     public InventoryMoveResult Move(StorageSlotState from, StorageSlotState to, int bagCapacity, int bankCapacity)
@@ -88,6 +133,34 @@ public sealed class InventoryService
         _items[_items.IndexOf(sitting)] = displaced;
         return new InventoryMoveResult(true, moved, from, to, null, displaced);
     }
+
+    // A stack dropped on a part-stack of the same item pours into it; what
+    // does not fit stays where it was. Nothing to pour into answers null,
+    // and the drop is an ordinary move.
+    public InventoryCombineResult? Combine(StorageSlotState from, StorageSlotState to, int stackLimit)
+    {
+        var source = StoredAt(from);
+        var target = StoredAt(to);
+        if (source is null || target is null || source.Id == target.Id || source.Entry != target.Entry) return null;
+        if (stackLimit <= 1 || target.Count >= stackLimit) return null;
+
+        var poured = Math.Min(stackLimit - target.Count, source.Count);
+        var into = target with { Count = target.Count + poured };
+        Replace(target, into);
+        if (poured == source.Count)
+        {
+            _items.Remove(source);
+            return new InventoryCombineResult(into, null, source.Id);
+        }
+
+        var left = source with { Count = source.Count - poured };
+        Replace(source, left);
+        return new InventoryCombineResult(into, left, null);
+    }
+
+    private InventoryItemState? StoredAt(StorageSlotState at) => IsStorageArea(at.Area)
+        ? _items.FirstOrDefault(item => string.Equals(item.Area, at.Area, StringComparison.Ordinal) && item.Slot == at.Index)
+        : null;
 
     public const string EquipmentArea = "equipment";
 
@@ -308,13 +381,19 @@ public sealed class InventoryService
         return item;
     }
 
-    public InventorySplitResult Split(string itemId, StorageSlotState from, int count, StorageSlotState to)
+    // The new stack lands in the slot asked for while it is empty, otherwise
+    // in the first empty one: a split never shares a slot.
+    public InventorySplitResult Split(string itemId, StorageSlotState from, int count, StorageSlotState to, int bagCapacity)
     {
         var item = _items.FirstOrDefault(candidate => candidate.Id == itemId);
         if (item is null || !IsBagItemAt(item, from) || count <= 0 || count >= item.Count
             || !string.Equals(to.Area, "bag", StringComparison.Ordinal))
             return new InventorySplitResult(false, null, null, "Item, source, count, or destination is invalid.");
-        var added = item with { Id = $"{item.Id}-split-{_items.Count + 1}", Count = count, Slot = to.Index };
+        var slot = to.Index >= 0 && to.Index < bagCapacity && BagItemAt(to.Index) is null
+            ? to.Index
+            : FirstFreeBagSlot(bagCapacity);
+        if (slot is null) return new InventorySplitResult(false, null, null, "There is no empty slot to split into.");
+        var added = item with { Id = FreshId(item.Entry), Count = count, Slot = slot.Value };
         var source = item with { Count = item.Count - count };
         _items[_items.IndexOf(item)] = source;
         _items.Add(added);

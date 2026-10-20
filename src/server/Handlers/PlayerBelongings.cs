@@ -13,6 +13,12 @@ public sealed class PlayerBelongings(GameContent content)
     public int BagSlots { get; set; } = DefaultBagCapacity;
     public int BankSlots { get; set; } = DefaultBankCapacity;
 
+    public IReadOnlyList<InventoryItemState>? Receive(int entry, int count) =>
+        Items.Add(entry, count, BagSlots, StackLimitOf(entry));
+
+    public int StackLimitOf(int entry) =>
+        content.Items.TryGetValue(checked((uint)entry), out var proto) ? (int)proto.MaxStack : 0;
+
     public InventoryItemPayload PayloadFor(InventoryItemState item) => new(
         item.Id, item.Entry, item.Count, new StorageSlotPayload(item.Area, item.Slot),
         PrototypeFor(item.Entry));

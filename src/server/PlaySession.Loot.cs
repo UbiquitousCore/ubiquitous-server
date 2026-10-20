@@ -36,7 +36,7 @@ public sealed partial class PlaySession
         if (row is null) return [];
         var refused = new List<string>();
         if (_gatheredLoot.Contains(networkId) && !TakeGatheredOre(networkId, refused)) return refused;
-        var added = _belongings.Items.Add(row.Entry, row.Count, _belongings.BagSlots);
+        var added = _belongings.Receive(row.Entry, row.Count);
         if (added is null) return [ItemRefused(ItemErrors.InventoryFull)];
         _loot[networkId] = remaining;
         var target = WebNetworkId.FromString(networkId);
@@ -45,8 +45,8 @@ public sealed partial class PlaySession
         {
             Reply(WebMessageTypes.LootSlotEmptied,
                 new LootSlotEmptiedPayload(target, looter, false, row.Slot)),
-            Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(added)),
         };
+        responses.AddRange(added.Select(item => Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(item))));
         if (!IsEmptiedGatherLoot(networkId, remaining, responses) && LootService.IsEmpty(remaining))
         {
             HoldCorpse(networkId, Now, carriesLoot: false);

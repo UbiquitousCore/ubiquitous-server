@@ -44,14 +44,14 @@ public sealed partial class PlaySession
         var result = _vendors.Buy(networkId, entryId, _content.Npcs, TabsFor(entryId),
             slotValue.GetInt32(), entryValue.GetInt32(), countValue.GetInt32(), _belongings.Currency);
         if (result.Code != VendorService.ResultOk) return [BuyRefused(result.Code)];
-        var added = _belongings.Items.Add(result.Entry, result.Count, _belongings.BagSlots);
+        var added = _belongings.Receive(result.Entry, result.Count);
         if (added is null)
             return [BuyRefused(VendorService.ResultBagsFull), ItemRefused(ItemErrors.InventoryFull)];
         _belongings.Currency -= result.TotalPrice;
         return
         [
             Reply(WebMessageTypes.BuyResult, new BuyResultPayload(VendorService.ResultOk)),
-            Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(added)),
+            .. added.Select(item => Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(item))),
             Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(
                 new Dictionary<string, int> { [WireCodes.UnitValue.Gold] = _belongings.Currency })),
             .. HeldObjectiveUpdates(),
@@ -129,13 +129,13 @@ public sealed partial class PlaySession
         if (objective is null || HeldCountFor(binding.ItemEntry) >= objective.GoalCount)
             return [Error(WireCodes.ProtocolError.InvalidStaticObject, "You already have everything this gives.")];
 
-        var added = _belongings.Items.Add((int)binding.ItemEntry, 1, _belongings.BagSlots);
+        var added = _belongings.Receive((int)binding.ItemEntry, 1);
         if (added is null)
             return [Error(WireCodes.ProtocolError.InvalidStaticObject, "Your bags are full.")];
 
         return
         [
-            Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(added)),
+            .. added.Select(item => Reply(WebMessageTypes.InventoryItemAdded, _belongings.PayloadFor(item))),
             .. HeldObjectiveUpdates(),
         ];
     }

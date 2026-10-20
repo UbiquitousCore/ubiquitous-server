@@ -7,14 +7,34 @@ namespace Ubiquitous.Server;
 
 public sealed partial class PlaySession
 {
-    private string InventoryMove(JsonElement payload)
+    private IReadOnlyList<string> InventoryMove(JsonElement payload)
     {
-        if (_world is null) return Error(WireCodes.ProtocolError.NotInWorld, "Character selection is required before inventory operations.");
+        if (_world is null) return [Error(WireCodes.ProtocolError.NotInWorld, "Character selection is required before inventory operations.")];
         var request = WebMessageJson.DeserializePayload<InventoryMovePayload>(payload);
+        var from = new StorageSlotState(request.From.Area, request.From.Index);
+        var to = new StorageSlotState(request.To.Area, request.To.Index);
+        var dropped = _belongings.Items.Items.FirstOrDefault(item =>
+            string.Equals(item.Area, from.Area, StringComparison.Ordinal) && item.Slot == from.Index);
+        if (dropped is not null && _belongings.Items.Combine(from, to, _belongings.StackLimitOf(dropped.Entry)) is { } combined)
+        {
+            return
+            [
+                Reply(WebMessageTypes.InventoryStackChanged, new InventoryStackChangedPayload(
+                    combined.Into.Id, new StorageSlotPayload(combined.Into.Area, combined.Into.Slot), combined.Into.Count)),
+                combined.Left is { } left
+                    ? Reply(WebMessageTypes.InventoryStackChanged, new InventoryStackChangedPayload(
+                        left.Id, new StorageSlotPayload(left.Area, left.Slot), left.Count))
+                    : Reply(WebMessageTypes.InventoryItemRemoved, new InventoryItemRemovedPayload(combined.EmptiedId!)),
+            ];
+        }
+
+        return [MoveReply(from, to)];
+    }
+
+    private string MoveReply(StorageSlotState from, StorageSlotState to)
+    {
         var result = _belongings.Items.Move(
-            new StorageSlotState(request.From.Area, request.From.Index),
-            new StorageSlotState(request.To.Area, request.To.Index),
-            _belongings.BagSlots, _belongings.BankSlots);
+            from, to, _belongings.BagSlots, _belongings.BankSlots);
         if (!result.Accepted)
             return Error(WireCodes.ProtocolError.InvalidInventory, result.Reason ?? "Inventory move rejected.");
         if (result.Displaced is not null)
@@ -274,7 +294,7 @@ public sealed partial class PlaySession
         var request = WebMessageJson.DeserializePayload<InventorySplitPayload>(payload);
         var result = _belongings.Items.Split(request.ItemId,
             new StorageSlotState(request.From.Area, request.From.Index), request.Count,
-            new StorageSlotState(request.To.Area, request.To.Index));
+            new StorageSlotState(request.To.Area, request.To.Index), _belongings.BagSlots);
         if (!result.Accepted) return [Error(WireCodes.ProtocolError.InvalidInventory, result.Reason ?? "Inventory split rejected.")];
         return
         [

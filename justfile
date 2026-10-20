@@ -289,7 +289,7 @@ validate dir=generated:
 reimport archive=tables: (extract archive) import (validate staging)
     #!/usr/bin/env bash
     set -euo pipefail
-    for keep in accounts.json characters.json guilds inventory mail quests auctions playerLooks.json; do
+    for keep in accounts.json characters.json guilds inventory mail quests auctions friends playerLooks.json; do
       if [ -e "{{generated}}/${keep}" ]; then cp -R "{{generated}}/${keep}" "{{staging}}/"; fi
     done
     if [ -d "{{generated}}/terrain" ] && [ ! -d "{{staging}}/terrain" ]; then
