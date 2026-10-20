@@ -40,7 +40,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
 
     private const string SelectColumns =
         "guid, account_id, name, gender, race, class, display_info_id, skin, hair_style, hair_colour, face, "
-        + "map_id, x, y, z, level, equipment, xp, currency, bag_slots, bank_slots, health, talent_ranks, learned_spells";
+        + "map_id, x, y, z, level, equipment, xp, currency, bag_slots, bank_slots, health, talent_ranks, learned_spells, action_bar";
 
     public async Task<CharacterRecord?> GetByGuidAsync(string guid, CancellationToken cancellationToken = default)
     {
@@ -102,12 +102,22 @@ public sealed class PostgresCharacterStore : ICharacterStore
             : JsonSerializer.Deserialize<Dictionary<uint, int>>(reader.GetString(22)),
         LearnedSpells: reader.IsDBNull(23)
             ? null
-            : [.. reader.GetFieldValue<int[]>(23).Select(id => (uint)id)]);
+            : [.. reader.GetFieldValue<int[]>(23).Select(id => (uint)id)],
+        ActionBar: reader.IsDBNull(24)
+            ? null
+            : JsonSerializer.Deserialize<PersistedActionButton[]>(reader.GetString(24)));
 
     private static void AddLearnedSpells(NpgsqlCommand command, CharacterRecord character) =>
         command.Parameters.AddWithValue(character.LearnedSpells is null
             ? DBNull.Value
             : character.LearnedSpells.Select(id => (int)id).ToArray());
+
+    private static void AddActionBar(NpgsqlCommand command, CharacterRecord character) =>
+        command.Parameters.Add(new NpgsqlParameter
+        {
+            NpgsqlDbType = NpgsqlDbType.Jsonb,
+            Value = character.ActionBar is null ? DBNull.Value : JsonSerializer.Serialize(character.ActionBar),
+        });
 
     private static void AddTalentRanks(NpgsqlCommand command, CharacterRecord character)
     {
@@ -134,7 +144,8 @@ public sealed class PostgresCharacterStore : ICharacterStore
         command.Transaction = transaction;
         command.CommandText = """
             UPDATE characters SET map_id = $2, x = $3, y = $4, z = $5, level = $6, xp = $7, currency = $8,
-                bag_slots = $9, bank_slots = $10, health = $11, talent_ranks = $12, learned_spells = $13
+                bag_slots = $9, bank_slots = $10, health = $11, talent_ranks = $12, learned_spells = $13,
+                action_bar = $14
             WHERE guid = $1
             """;
         command.Parameters.AddWithValue(character.Guid);
@@ -150,6 +161,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
         command.Parameters.AddWithValue((object?)character.Health ?? DBNull.Value);
         AddTalentRanks(command, character);
         AddLearnedSpells(command, character);
+        AddActionBar(command, character);
         if (await command.ExecuteNonQueryAsync(cancellationToken) == 0)
             throw new InvalidOperationException($"No character with GUID '{character.Guid}' exists to update.");
     }
@@ -162,9 +174,9 @@ public sealed class PostgresCharacterStore : ICharacterStore
             INSERT INTO characters (
                 guid, account_id, name, gender, race, class, display_info_id,
                 skin, hair_style, hair_colour, face, map_id, x, y, z, level, equipment, xp, currency,
-                bag_slots, bank_slots, health, talent_ranks, learned_spells)
+                bag_slots, bank_slots, health, talent_ranks, learned_spells, action_bar)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
-                $20, $21, $22, $23, $24)
+                $20, $21, $22, $23, $24, $25)
             """;
         command.Parameters.AddWithValue(character.Guid);
         command.Parameters.AddWithValue(character.AccountId);
@@ -190,6 +202,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
         command.Parameters.AddWithValue((object?)character.Health ?? DBNull.Value);
         AddTalentRanks(command, character);
         AddLearnedSpells(command, character);
+        AddActionBar(command, character);
         try
         {
             await command.ExecuteNonQueryAsync(cancellationToken);

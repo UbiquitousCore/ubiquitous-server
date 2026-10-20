@@ -626,10 +626,12 @@ public sealed class DataCatalog
 
     private static void ValidateDefinitions<T>(string dataset, string label, IReadOnlyList<T> values)
     {
-        var ids = new HashSet<uint>();
+        var ids = new HashSet<(uint Id, int Part)>();
         foreach (var value in values)
         {
             uint id;
+            // What tells two rows of one id apart: a vendor's shop tabs share its id.
+            int part = 0;
             string name;
             if (value is MapDefinition map)
             {
@@ -692,6 +694,7 @@ public sealed class DataCatalog
             else if (value is VendorStockDefinition stock)
             {
                 id = stock.SellerEntryId;
+                part = stock.Tab.TabIndex;
                 name = $"vendor stock {id}";
                 if (stock.Tab.Items.Count == 0)
                 {
@@ -815,9 +818,11 @@ public sealed class DataCatalog
                 throw new InvalidDataException($"Dataset '{dataset}' contains definition {id} with no name.");
             }
 
-            if (!ids.Add(id))
+            if (!ids.Add((id, part)))
             {
-                throw new InvalidDataException($"Dataset '{dataset}' contains duplicate id {id}.");
+                throw new InvalidDataException(part == 0
+                    ? $"Dataset '{dataset}' contains duplicate id {id}."
+                    : $"Dataset '{dataset}' contains duplicate id {id} (tab {part}).");
             }
         }
     }

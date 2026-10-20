@@ -34,7 +34,10 @@ public sealed record CharacterRecord(
     [property: System.Text.Json.Serialization.JsonPropertyName("bankCapacity")] int? BankSlots = null,
     int? Health = null,
     IReadOnlyDictionary<uint, int>? TalentRanks = null,
-    IReadOnlyList<uint>? LearnedSpells = null);
+    IReadOnlyList<uint>? LearnedSpells = null,
+    IReadOnlyList<PersistedActionButton>? ActionBar = null);
+
+public sealed record PersistedActionButton(int Slot, uint Id, int Type);
 
 public interface IProgressStore
 {

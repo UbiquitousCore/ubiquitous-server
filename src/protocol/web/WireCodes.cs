@@ -96,6 +96,23 @@ public static class WireCodes
         public const string Declined = "declined";
     }
 
+    public static class MailResult
+    {
+        public const string Ok = "ok";
+        public const string SelfMail = "selfMail";
+        public const string UnknownRecipient = "unknownRecipient";
+        public const string EmptyBody = "emptyBody";
+        public const string NegativeGold = "negativeGold";
+        public const string NotEnoughMoney = "notEnoughMoney";
+        public const string MailNotFound = "mailNotFound";
+        public const string AlreadyClaimed = "alreadyClaimed";
+        public const string NothingToClaim = "nothingToClaim";
+        public const string InventoryFull = "inventoryFull";
+        public const string NotInMail = "notInMail";
+        public const string ItemNotInBag = "itemNotInBag";
+        public const string Refused = "refused";
+    }
+
     public static class Loot
     {
         public const string Lootable = "lootable";

@@ -58,7 +58,8 @@ public sealed record SpellDefinition(
     uint? EffectLearnSpellId = null,
     uint? AuraMountId = null,
     int? AuraMountKeepSeatPercent = null,
-    int? AuraMountSpeedupPercent = null);
+    int? AuraMountSpeedupPercent = null,
+    int Rank = 0);
 
 public static class SpellEffectTargets
 {
@@ -577,7 +578,8 @@ public sealed record ItemDefinition(
     uint? Quality = null,
     uint? MinDamage = null, uint? MaxDamage = null, uint? SpeedMs = null, uint? Armor = null,
     IReadOnlyList<ItemAttributeBonus>? Stats = null,
-    uint? RequiredSpellId = null);
+    uint? RequiredSpellId = null,
+    uint ItemLevel = 0, uint MaxStack = 0);
 
 public static class GuildStone
 {

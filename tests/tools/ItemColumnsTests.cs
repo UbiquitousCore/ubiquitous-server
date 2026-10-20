@@ -24,6 +24,18 @@ public class ItemColumnsTests
     }
 
     [Fact]
+    public void Build114_ReadsItemLevelAndStackLimit()
+    {
+        var data = BuildRow(new Dictionary<int, uint> { [0] = 9, [1] = 0, [2] = 0, [3] = 900, [4] = 9, [15] = 12, [25] = 20 });
+
+        var item = Assert.Single(ItemTableMapper.MapItems(
+            FTableDocument.Load(data), ItemColumns.Build114, resolveName: _ => "Test Potion"));
+
+        Assert.Equal(12u, item.ItemLevel);
+        Assert.Equal(20u, item.MaxStack);
+    }
+
+    [Fact]
     public void Build114_MapsAQuestStarterItemsQuestId()
     {
         var data = BuildRow(new Dictionary<int, uint>

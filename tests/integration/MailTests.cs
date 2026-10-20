@@ -64,6 +64,7 @@ public sealed class MailTests
             var entered = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Borin"))));
             Assert.DoesNotContain(entered, r => r.Contains("protocol.error"));
+            Assert.Contains(entered, r => r.Contains("\"type\":\"mail.unread\"") && r.Contains("\"count\":1"));
 
             var opened = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailOpen, 2, new { networkId = "StaticObject:1" })));
@@ -77,7 +78,8 @@ public sealed class MailTests
 
             var read = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailRead, 3, new MailIdPayload(mailId))));
-            var messageReply = Assert.Single(read);
+            var messageReply = Assert.Single(read, r => r.Contains("\"type\":\"mail.message\""));
+            Assert.Contains(read, r => r.Contains("\"type\":\"mail.unread\"") && r.Contains("\"count\":0"));
             Assert.Contains("Safe travels!", messageReply);
 
             var claimed = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -155,6 +157,7 @@ public sealed class MailTests
 
         var reply = Assert.Single(sent);
         Assert.Contains("\"ok\":false", reply);
+        Assert.Contains("\"code\":\"unknownRecipient\"", reply);
     }
 
     private static string ExtractMailId(string inboxJson)
@@ -188,7 +191,8 @@ public sealed class MailTests
 
             var bogusSend = await sender.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailSend, 2, new MailSendPayload("Borin", "Hello", "A gift", 10, ["no-such-item"]))));
-            Assert.Contains(bogusSend, r => r.Contains("\"type\":\"mail.sent\"") && r.Contains("\"ok\":false"));
+            Assert.Contains(bogusSend, r => r.Contains("\"type\":\"mail.sent\"") && r.Contains("\"ok\":false")
+                && r.Contains("\"code\":\"itemNotInBag\""));
 
             var sendResponses = await sender.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailSend, 3, new MailSendPayload("Borin", "Hello", "A gift", 10, ["starter-item"]))));
@@ -215,16 +219,23 @@ public sealed class MailTests
 
             var read = await recipient.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailRead, 3, new MailIdPayload(mailId))));
-            var messageReply = Assert.Single(read);
+            var messageReply = Assert.Single(read, r => r.Contains("\"type\":\"mail.message\""));
             Assert.Contains("A gift", messageReply);
             Assert.Contains("\"entry\":100", messageReply);
 
+            var money = await recipient.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.MailClaim, 4, new MailClaimPayload(mailId, MoneyOnly: true))));
+            Assert.Contains(money, r => r.Contains("\"type\":\"mail.claimed\"") && r.Contains("\"ok\":true") && r.Contains("\"gold\":10"));
+            Assert.DoesNotContain(money, r => r.Contains("\"type\":\"inventory.itemAdded\""));
+            Assert.Contains(money, r => r.Contains("\"type\":\"mail.message\"") && r.Contains("\"goldClaimed\":true") && r.Contains("\"entry\":100"));
+
             var claimed = await recipient.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
-                WebMessageTypes.MailClaim, 4, new MailIdPayload(mailId))));
+                WebMessageTypes.MailClaim, 5, new MailClaimPayload(mailId, Slot: 0))));
             Assert.Contains(claimed, r => r.Contains("\"type\":\"mail.claimed\"") && r.Contains("\"ok\":true")
-                && r.Contains("\"gold\":10") && r.Contains("\"entry\":100"));
+                && r.Contains("\"entry\":100"));
             Assert.Contains(claimed, r => r.Contains("\"type\":\"inventory.itemAdded\"") && r.Contains("\"entry\":100"));
             Assert.Contains(claimed, r => r.Contains("\"gold\":5010"));
+            Assert.Contains(claimed, r => r.Contains("\"type\":\"mail.message\"") && r.Contains("\"itemsClaimed\":true"));
 
             var afterRestart = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore);
@@ -241,7 +252,7 @@ public sealed class MailTests
 
             var secondClaim = await afterRestart.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailClaim, 3, new MailIdPayload(mailId))));
-            Assert.Contains(secondClaim, r => r.Contains("\"ok\":false"));
+            Assert.Contains(secondClaim, r => r.Contains("\"ok\":false") && r.Contains("\"code\":\"alreadyClaimed\""));
             Assert.DoesNotContain(secondClaim, r => r.Contains("\"type\":\"inventory.itemAdded\""));
         }
         finally

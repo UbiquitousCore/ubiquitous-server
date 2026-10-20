@@ -160,6 +160,42 @@ public sealed class PersistenceStoreTests
     }
 
     [Fact]
+    public async Task PlaySession_ActionBarSurvivesARelog()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"ubiquitous-bar-{Guid.NewGuid():N}");
+        var path = Path.Combine(directory, "characters.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(
+                new[] { Character("char-a", 1, "Ayla") }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+            var characters = FileCharacterStore.Load(path);
+
+            var sessionA = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+            await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
+            await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+            await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.ActionBarAssign, 2, new { slot = 7, id = 100, type = 0 })));
+            await sessionA.SaveCharacterAsync();
+
+            var sessionB = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), FileCharacterStore.Load(path));
+            await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
+            var entered = await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+
+            var book = Assert.Single(entered, message => message.Contains("\"type\":\"spell.book\""));
+            Assert.Contains("\"bar\":\"shortcut\",\"slot\":1,\"id\":100", book);
+        }
+        finally
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
     public async Task FileQuestLogStore_RoundTripsAcceptedAndCompletedQuests()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"ubiquitous-quests-{Guid.NewGuid():N}");

@@ -28,10 +28,16 @@ public sealed record MailSendPayload(
 
 public sealed record MailSentPayload(
     [property: JsonPropertyName("ok")] bool Ok,
-    [property: JsonPropertyName("reason")] string? Reason);
+    [property: JsonPropertyName("reason")] string? Reason,
+    [property: JsonPropertyName("code")] string Code = WireCodes.MailResult.Ok);
 
 public sealed record MailIdPayload(
     [property: JsonPropertyName("id")] string Id);
+
+public sealed record MailClaimPayload(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("slot")] int? Slot = null,
+    [property: JsonPropertyName("moneyOnly")] bool MoneyOnly = false);
 
 public sealed record MailAttachmentPayload(
     [property: JsonPropertyName("entry")] int Entry,
@@ -52,7 +58,11 @@ public sealed record MailClaimedPayload(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("gold")] int Gold,
     [property: JsonPropertyName("reason")] string? Reason,
-    [property: JsonPropertyName("items")] IReadOnlyList<MailAttachmentPayload>? Items = null);
+    [property: JsonPropertyName("items")] IReadOnlyList<MailAttachmentPayload>? Items = null,
+    [property: JsonPropertyName("code")] string Code = WireCodes.MailResult.Ok);
+
+public sealed record MailUnreadPayload(
+    [property: JsonPropertyName("count")] int Count);
 
 public sealed record MailDeletedPayload(
     [property: JsonPropertyName("ok")] bool Ok,

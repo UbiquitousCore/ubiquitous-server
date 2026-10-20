@@ -321,6 +321,7 @@ public sealed partial class PlaySession : ISessionPlayer
             BankSlots = _belongings.BankSlots,
             TalentRanks = _talents.Ranks.ToDictionary(),
             LearnedSpells = _learnedSpells.Count == 0 ? null : [.. _learnedSpells],
+            ActionBar = [.. _actionBar.Select(button => new PersistedActionButton(button.Key, button.Value.Id, button.Value.Type))],
         };
     }
 
@@ -446,7 +447,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 WebMessageTypes.BusConfirm => BusConfirm(envelope.Payload),
                 WebMessageTypes.AdminTeleport => AdminTeleport(envelope.Payload),
                 WebMessageTypes.DevStressTest => StressTest(envelope.Payload),
-                WebMessageTypes.InventoryMove => [InventoryMove(envelope.Payload)],
+                WebMessageTypes.InventoryMove => InventoryMove(envelope.Payload),
                 WebMessageTypes.InventoryEquip => InventoryEquip(envelope.Payload),
                 WebMessageTypes.InventoryUse => InventoryUse(envelope.Payload, Now),
                 WebMessageTypes.InventoryDestroy => InventoryDestroy(envelope.Payload),

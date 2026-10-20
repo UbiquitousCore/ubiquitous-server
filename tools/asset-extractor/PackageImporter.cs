@@ -115,13 +115,13 @@ public static class PackageImporter
             }
         }
 
-        var sellProgramIdByCreature = new Dictionary<uint, uint>();
+        var sellListsByCreature = new Dictionary<uint, IReadOnlyList<uint>>();
         foreach (var row in Load("tables/creature_proto.tbl").Rows)
         {
-            if (row.Count > 55 && row[0] is uint creatureEntry && row[55] is string programText
-                && uint.TryParse(programText, out var vendorListId) && vendorListId != 0)
+            if (row.Count > 55 && row[0] is uint creatureEntry && row[55] is string listText
+                && SellListIds.Parse(listText) is { Count: > 0 } lists)
             {
-                sellProgramIdByCreature[creatureEntry] = vendorListId;
+                sellListsByCreature[creatureEntry] = lists;
             }
         }
 
@@ -284,33 +284,37 @@ public static class PackageImporter
         var npcFlagsByEntry = npcs.ToDictionary(npc => npc.EntryId, npc => npc.Flags);
 
         var vendorStock = new List<VendorStockDefinition>();
-        foreach (var (creatureEntry, vendorListId) in sellProgramIdByCreature)
+        foreach (var (creatureEntry, vendorListIds) in sellListsByCreature)
         {
             if (!npcFlagsByEntry.TryGetValue(creatureEntry, out var npcFlags) || !npcFlags.HasFlag(NpcFlags.Vendor))
             {
                 continue;
             }
 
-            if (!sellProgramItems.TryGetValue(vendorListId, out var programItems) || programItems.Count == 0) continue;
-
-            var stockItems = new List<VendorItem>();
-            for (var slot = 0; slot < programItems.Count; slot++)
+            var tabIndex = 0;
+            foreach (var vendorListId in vendorListIds)
             {
-                var (itemId, stackCount, maxCount) = programItems[slot];
-                if (!itemsByEntry.TryGetValue(itemId, out var item)) continue;
-                if (!itemMetaByEntry.TryGetValue(itemId, out var meta)) continue;
+                if (!sellProgramItems.TryGetValue(vendorListId, out var programItems) || programItems.Count == 0) continue;
 
-                stockItems.Add(new VendorItem(
-                    slot, unchecked((int)itemId), unchecked((int)meta.NameTextId),
-                    unchecked((int)item.DisplayInfoId), unchecked((int)(item.BuyPrice ?? 0)),
-                    maxCount, stackCount));
+                var stockItems = new List<VendorItem>();
+                for (var slot = 0; slot < programItems.Count; slot++)
+                {
+                    var (itemId, stackCount, maxCount) = programItems[slot];
+                    if (!itemsByEntry.TryGetValue(itemId, out var item)) continue;
+                    if (!itemMetaByEntry.TryGetValue(itemId, out var meta)) continue;
+
+                    stockItems.Add(new VendorItem(
+                        slot, unchecked((int)itemId), unchecked((int)meta.NameTextId),
+                        unchecked((int)item.DisplayInfoId), unchecked((int)(item.BuyPrice ?? 0)),
+                        maxCount, stackCount));
+                }
+
+                if (stockItems.Count == 0) continue;
+
+                var currencyKind = unchecked((int)sellProgramCurrency.GetValueOrDefault(vendorListId));
+                vendorStock.Add(new VendorStockDefinition(
+                    creatureEntry, new VendorTab(tabIndex++, currencyKind, stockItems.Count, true, stockItems)));
             }
-
-            if (stockItems.Count == 0) continue;
-
-            var currencyKind = unchecked((int)sellProgramCurrency.GetValueOrDefault(vendorListId));
-            vendorStock.Add(new VendorStockDefinition(
-                creatureEntry, new VendorTab(0, currencyKind, stockItems.Count, true, stockItems)));
         }
 
         var nonCreatureStarterQuestIds = itemStarterQuestIds

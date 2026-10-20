@@ -41,7 +41,7 @@ public class PackageImporterTests
             Assert.Equal(0, result.DroppedStaticObjectCount);
             Assert.Equal(1, result.StorageUpgradeCount);
             Assert.Equal(2, result.StaticObjectTypeCount);
-            Assert.Equal(1, result.VendorStockCount);
+            Assert.Equal(2, result.VendorStockCount);
             Assert.Equal(1, result.StaticObjectQuestStarterCount);
             Assert.Equal(1, result.StaticObjectQuestFinisherCount);
             Assert.Equal(1, result.StaticObjectQuestItemBindingCount);
@@ -193,8 +193,12 @@ public class PackageImporterTests
                 new GossipTeleportDefinition(1, 900, 13, -10f, 2.5f, 40f, 1.5f, 0, 250),
                 Assert.Single(travel.Teleports));
 
-            var stock = Assert.Single(catalog.LoadVendorStock());
-            Assert.Equal(12u, stock.SellerEntryId);
+            // One row per shop tab, all under the one seller, and the catalog
+            // takes them back.
+            var tabs = catalog.LoadVendorStock();
+            Assert.Equal([0, 1], tabs.Select(tab => tab.Tab.TabIndex));
+            Assert.All(tabs, tab => Assert.Equal(12u, tab.SellerEntryId));
+            var stock = tabs[0];
             var stockItem = Assert.Single(stock.Tab.Items);
             Assert.Equal(200, stockItem.Entry);
             Assert.Equal(75, stockItem.BuyPrice);
@@ -271,7 +275,7 @@ public class PackageImporterTests
             {
                 [0] = 12u, [4] = 3u, [8] = 80u, [11] = (uint)Ubiquitous.Data.NpcFlags.Vendor, [12] = 2000u,
                 [14] = 8u, [15] = 16u, [19] = 60u, [20] = 120u, [53] = 1u, [54] = 5u,
-                [55] = "1",
+                [55] = "1,2,",
             },
             new Dictionary<int, object>
             {
@@ -281,9 +285,16 @@ public class PackageImporterTests
                 [56] = 60u,
             },
         ]);
-        var sellProgram = BuildTable("usu", new Dictionary<int, object> { [0] = 1u, [1] = "test program", [2] = 0u });
+        var sellProgram = BuildTable("usu",
+        [
+            new Dictionary<int, object> { [0] = 1u, [1] = "test program", [2] = 0u },
+            new Dictionary<int, object> { [0] = 2u, [1] = "second tab", [2] = 0u },
+        ]);
         var sellProgramItem = BuildTable("uuuuuuuuuuu",
-            new Dictionary<int, object> { [0] = 1u, [1] = 1u, [2] = 200u, [3] = 1u, [4] = 5u });
+        [
+            new Dictionary<int, object> { [0] = 1u, [1] = 1u, [2] = 200u, [3] = 1u, [4] = 5u },
+            new Dictionary<int, object> { [0] = 2u, [1] = 2u, [2] = 200u, [3] = 2u, [4] = 10u },
+        ]);
 
         var creatureAppearance = BuildTable("uu",
             [

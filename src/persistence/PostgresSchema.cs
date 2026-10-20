@@ -80,6 +80,9 @@ public static class PostgresSchema
         new Migration("0006_learned_spells", """
             ALTER TABLE characters ADD COLUMN IF NOT EXISTS learned_spells INTEGER[];
             """),
+        new Migration("0007_action_bar", """
+            ALTER TABLE characters ADD COLUMN IF NOT EXISTS action_bar JSONB;
+            """),
     ];
 
     public static async Task EnsureCreatedAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken = default)

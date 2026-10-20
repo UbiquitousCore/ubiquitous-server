@@ -136,6 +136,7 @@ public sealed class PostgresStoresTests : IAsyncLifetime
             BankSlots = 30,
             TalentRanks = new Dictionary<uint, int> { [5] = 2, [9] = 1 },
             LearnedSpells = [6978, 7047],
+            ActionBar = [new PersistedActionButton(0, 108, 0), new PersistedActionButton(7, 5006, 0)],
         };
 
         await store.UpdateAsync(saved);
@@ -147,6 +148,7 @@ public sealed class PostgresStoresTests : IAsyncLifetime
         Assert.Equal(30, loaded.BankSlots);
         Assert.Equal(saved.TalentRanks, loaded.TalentRanks);
         Assert.Equal(saved.LearnedSpells, loaded.LearnedSpells);
+        Assert.Equal(saved.ActionBar, loaded.ActionBar);
     }
 
     [Fact]
@@ -296,13 +298,13 @@ public sealed class PostgresStoresTests : IAsyncLifetime
 
     private static async Task<string> ReceiveUntilAsync(ClientWebSocket client, string marker, CancellationToken cancellationToken)
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             var message = await ReceiveOneMessageAsync(client, cancellationToken);
             if (message.Contains(marker, StringComparison.Ordinal)) return message;
         }
 
-        throw new TimeoutException($"No message containing \"{marker}\" arrived within 10 frames.");
+        throw new TimeoutException($"No message containing \"{marker}\" arrived within 20 frames.");
     }
 
     private static async Task<string> SendAndReceiveUntilAsync(

@@ -289,7 +289,7 @@ validate dir=generated:
 reimport archive=tables: (extract archive) import (validate staging)
     #!/usr/bin/env bash
     set -euo pipefail
-    for keep in accounts.json characters.json guilds inventory mail quests auctions playerLooks.json; do
+    for keep in accounts.json characters.json guilds inventory mail quests auctions friends playerLooks.json .gitkeep; do
       if [ -e "{{generated}}/${keep}" ]; then cp -R "{{generated}}/${keep}" "{{staging}}/"; fi
     done
     if [ -d "{{generated}}/terrain" ] && [ ! -d "{{staging}}/terrain" ]; then
@@ -298,6 +298,20 @@ reimport archive=tables: (extract archive) import (validate staging)
     if [ -d "{{generated}}/navigation" ] && [ ! -d "{{staging}}/navigation" ]; then
       cp -R "{{generated}}/navigation" "{{staging}}/navigation"
     fi
+    # A dataset kept from the old package keeps its manifest entry too, or the
+    # server reads past the file: player looks were lost this way.
+    python3 - "{{generated}}/manifest.json" "{{staging}}/manifest.json" <<'PY'
+    import json, pathlib, sys
+    old, new = (pathlib.Path(p) for p in sys.argv[1:])
+    if old.exists():
+        kept = json.loads(old.read_text()).get("Datasets", {})
+        manifest = json.loads(new.read_text())
+        listed = manifest.setdefault("Datasets", {})
+        for name, file in kept.items():
+            if name not in listed and (new.parent / file).exists():
+                listed[name] = file
+        new.write_text(json.dumps(manifest, indent=2) + "\n")
+    PY
     rm -rf "{{generated}}.previous"
     mv "{{generated}}" "{{generated}}.previous"
     mv "{{staging}}" "{{generated}}"

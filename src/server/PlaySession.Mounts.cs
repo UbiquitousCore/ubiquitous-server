@@ -33,6 +33,7 @@ public sealed partial class PlaySession
         _baseSpells = [.. _baseSpells, .. fresh];
         var book = SpellBookWithTalents();
         _spells.ReplaceKnown(book);
+        RaiseBarToHighestRanks(book);
         return
         [
             Reply(WebMessageTypes.SpellLearned, new SpellLearnedPayload(fresh)),

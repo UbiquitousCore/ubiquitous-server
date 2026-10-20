@@ -222,8 +222,8 @@ internal sealed class TradeHandler(ISessionPlayer player, SessionOutbox outbox, 
         partner.Belongings.Currency -= theirsOffer.Gold;
         belongings.Currency += theirsOffer.Gold;
 
-        var myReceivedItems = theirGivenItems.Select(item => belongings.Items.Add(item.Entry, item.Count, belongings.BagSlots)!).ToArray();
-        var partnerReceivedItems = myGivenItems.Select(item => partner.Belongings.Items.Add(item.Entry, item.Count, partner.Belongings.BagSlots)!).ToArray();
+        var myReceivedItems = theirGivenItems.SelectMany(item => belongings.Receive(item.Entry, item.Count)!).ToArray();
+        var partnerReceivedItems = myGivenItems.SelectMany(item => partner.Belongings.Receive(item.Entry, item.Count)!).ToArray();
 
         trades.Cancel(myId);
 

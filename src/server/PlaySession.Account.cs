@@ -296,6 +296,16 @@ public sealed partial class PlaySession
         _learnedSpells.AddRange(character.LearnedSpells ?? []);
         RestoreTalents(character, [.. KnownSpellsFor(character), .. _learnedSpells]);
         var knownSpells = SpellBookWithTalents();
+        if (character.ActionBar is { } savedBar)
+        {
+            _actionBar.Clear();
+            foreach (var button in savedBar) _actionBar[button.Slot] = (button.Id, button.Type);
+        }
+        else
+        {
+            RaiseBarToHighestRanks(knownSpells);
+        }
+
         _spells.EnterAsCharacter(character.Class, character.Level, knownSpells, startingAttributes?.Intellect ?? 0);
         await LoadInventoryAsync(cancellationToken);
         _belongings.Items.ResettleWorn(InventoryTypeOf);
@@ -308,6 +318,7 @@ public sealed partial class PlaySession
         responses.Add(Reply(WebMessageTypes.InventoryUpdated, InventorySnapshot()));
         responses.Add(Reply(WebMessageTypes.QuestLog, new QuestLogPayload(
             _quests.Log(_content.Quests).Select(QuestLogEntryPayloadFor).ToArray())));
+        responses.Add(await _mailHandler.Unread());
         responses.Add(Reply(WebMessageTypes.SpellBook, new SpellBookPayload(
             [.. knownSpells], [.. _actionBar.Select(ActionSlotPayloadFor)])));
         responses.Add(TalentStateReply());
