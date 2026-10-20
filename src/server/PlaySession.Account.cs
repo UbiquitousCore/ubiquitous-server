@@ -318,6 +318,7 @@ public sealed partial class PlaySession
         responses.Add(Reply(WebMessageTypes.InventoryUpdated, InventorySnapshot()));
         responses.Add(Reply(WebMessageTypes.QuestLog, new QuestLogPayload(
             _quests.Log(_content.Quests).Select(QuestLogEntryPayloadFor).ToArray())));
+        responses.Add(await _mailHandler.Unread());
         responses.Add(Reply(WebMessageTypes.SpellBook, new SpellBookPayload(
             [.. knownSpells], [.. _actionBar.Select(ActionSlotPayloadFor)])));
         responses.Add(TalentStateReply());

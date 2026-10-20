@@ -51,6 +51,12 @@ internal sealed class MailHandler(ISessionPlayer player, SessionOutbox outbox, P
             return [SendRefused(result.Code)];
 
         var responses = new List<string> { outbox.Reply(WebMessageTypes.MailSent, new MailSentPayload(true, null)) };
+        if (player.Hub?.FindByCharacterName(recipient.Name) is { } online)
+        {
+            var waiting = await mail.UnreadCountAsync(recipient.Guid);
+            await player.Hub.DeliverAsync(online, SessionOutbox.Unsequenced(WebMessageTypes.MailUnread, new MailUnreadPayload(waiting)));
+        }
+
         if (request.Gold > 0)
         {
             belongings.Currency -= request.Gold;
@@ -84,8 +90,13 @@ internal sealed class MailHandler(ISessionPlayer player, SessionOutbox outbox, P
                 result.Summary.Gold, result.Summary.SentAtUnixSeconds, result.Summary.GoldClaimed,
                 [.. (result.Items ?? []).Select(item => new MailAttachmentPayload(item.Entry, item.Count))],
                 result.Summary.ItemsClaimed)),
+            await Unread(),
         ];
     }
+
+    public async Task<string> Unread() =>
+        outbox.Reply(WebMessageTypes.MailUnread, new MailUnreadPayload(
+            player.Character is null ? 0 : await mail.UnreadCountAsync(player.Character.Guid)));
 
     public async Task<IReadOnlyList<string>> Claim(JsonElement payload)
     {

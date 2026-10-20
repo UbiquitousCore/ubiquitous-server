@@ -64,6 +64,7 @@ public sealed class MailTests
             var entered = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Borin"))));
             Assert.DoesNotContain(entered, r => r.Contains("protocol.error"));
+            Assert.Contains(entered, r => r.Contains("\"type\":\"mail.unread\"") && r.Contains("\"count\":1"));
 
             var opened = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailOpen, 2, new { networkId = "StaticObject:1" })));
@@ -77,7 +78,8 @@ public sealed class MailTests
 
             var read = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailRead, 3, new MailIdPayload(mailId))));
-            var messageReply = Assert.Single(read);
+            var messageReply = Assert.Single(read, r => r.Contains("\"type\":\"mail.message\""));
+            Assert.Contains(read, r => r.Contains("\"type\":\"mail.unread\"") && r.Contains("\"count\":0"));
             Assert.Contains("Safe travels!", messageReply);
 
             var claimed = await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -217,7 +219,7 @@ public sealed class MailTests
 
             var read = await recipient.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailRead, 3, new MailIdPayload(mailId))));
-            var messageReply = Assert.Single(read);
+            var messageReply = Assert.Single(read, r => r.Contains("\"type\":\"mail.message\""));
             Assert.Contains("A gift", messageReply);
             Assert.Contains("\"entry\":100", messageReply);
 

@@ -61,6 +61,9 @@ public sealed record MailClaimedPayload(
     [property: JsonPropertyName("items")] IReadOnlyList<MailAttachmentPayload>? Items = null,
     [property: JsonPropertyName("code")] string Code = WireCodes.MailResult.Ok);
 
+public sealed record MailUnreadPayload(
+    [property: JsonPropertyName("count")] int Count);
+
 public sealed record MailDeletedPayload(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("id")] string Id,

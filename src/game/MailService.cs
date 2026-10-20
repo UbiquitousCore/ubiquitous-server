@@ -92,6 +92,9 @@ public sealed class MailService
         return [.. messages.OrderByDescending(m => m.SentAtUnixSeconds).Select(ToSummary)];
     }
 
+    public Task<int> UnreadCountAsync(string recipientGuid, CancellationToken cancellationToken = default) =>
+        _gate.RunAsync(async () => (await _store.ListAsync(recipientGuid, cancellationToken)).Count(m => !m.Read), cancellationToken);
+
     public Task<MailReadResult> ReadAsync(string recipientGuid, string mailId, CancellationToken cancellationToken = default) =>
         _gate.RunAsync(() => ReadAsyncCore(recipientGuid, mailId, cancellationToken), cancellationToken);
 
