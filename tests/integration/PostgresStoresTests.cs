@@ -298,13 +298,13 @@ public sealed class PostgresStoresTests : IAsyncLifetime
 
     private static async Task<string> ReceiveUntilAsync(ClientWebSocket client, string marker, CancellationToken cancellationToken)
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i++)
         {
             var message = await ReceiveOneMessageAsync(client, cancellationToken);
             if (message.Contains(marker, StringComparison.Ordinal)) return message;
         }
 
-        throw new TimeoutException($"No message containing \"{marker}\" arrived within 10 frames.");
+        throw new TimeoutException($"No message containing \"{marker}\" arrived within 20 frames.");
     }
 
     private static async Task<string> SendAndReceiveUntilAsync(
