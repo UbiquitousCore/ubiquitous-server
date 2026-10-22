@@ -10,6 +10,10 @@ public sealed class ChatService
     public const string Trade = "trade";
     public const string Party = "party";
 
+    // Sent by the server only, so neither is a known channel a player may send on.
+    public const string Yell = "yell";
+    public const string Notice = "notice";
+
     public const float SayRange = 20f;
 
     private static readonly HashSet<string> KnownChannels =

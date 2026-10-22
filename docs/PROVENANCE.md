@@ -230,6 +230,15 @@ this project's own:
 - The Executioner's armour-and-sweep rhythm opens at 9 seconds and repeats
   every 17; a cover holds 11 seconds (`src/scripts/Prison/ExecutionerScript.cs`,
   `BossTiming.CoverHolds`).
+- From the dungeon field guide (`docs/guides/dungeon-field-guide.md`,
+  compiled from online guides, videos and observed play): the prison
+  bosses' yells; Ariel's Putrefying from the pull; Cosmo's Shadow Shield
+  once he changes back at 25%; the "faraway gate" notice once Ariel and the
+  Executioner are both down, and Cosmo arriving
+  `GameContent.CosmoArrivesAfter` (10 s) later; a puppet left standing
+  `PuppetStandsFor` (10 s) before Cosmo eats it. The spell ids are the
+  operator's `spell` rows of the same names (Putrefying 2651/2766, Shadow
+  Shield 2638/2779, Normal/Legend).
 - A training dummy stops counting itself as fighting 8 seconds after nobody
   is in reach (`TrainingDummyScript.CombatExitDelay`).
 - Melee reach 3 units.

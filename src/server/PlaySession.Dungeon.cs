@@ -9,7 +9,7 @@ namespace Ubiquitous.Server;
 
 public sealed partial class PlaySession
 {
-    private void TickDungeonCompletion(List<string> responses)
+    private void TickDungeonCompletion(DateTimeOffset now, List<string> responses)
     {
         if (_instanceWorld is null || _instanceKey is null || _character is null) return;
         if (_instances.IsCompleted(_instanceKey)) return;
@@ -34,9 +34,10 @@ public sealed partial class PlaySession
             if (string.Equals(milestone, InstanceService.RunCompleted, StringComparison.Ordinal)) continue;
             if (!_instances.Reach(_instanceKey, milestone)) continue;
             AnnounceBarriersOpenedBy(milestone, responses);
+            AnnounceSummonsReadiedBy(milestone, responses);
         }
 
-        if (SummonDueCreatures(responses)) return;
+        if (SummonDueCreatures(now, responses)) return;
 
         if (!progress.Completed) return;
         _instances.MarkCompleted(_instanceKey);
@@ -62,7 +63,20 @@ public sealed partial class PlaySession
         }
     }
 
-    private bool SummonDueCreatures(List<string> responses)
+    private void AnnounceSummonsReadiedBy(string milestone, List<string> responses)
+    {
+        if (_instanceWorld is null || _instanceKey is null) return;
+        foreach (var summon in _content.DungeonSummons)
+        {
+            if (summon.MapId != _instanceWorld.MapId || summon.Notice is null) continue;
+            if (!summon.After.Contains(milestone, StringComparer.Ordinal)) continue;
+            if (!summon.After.All(after => _instances.HasReached(_instanceKey, after))) continue;
+            responses.Add(Reply(WebMessageTypes.ChatReceived,
+                new ChatReceivedPayload(ChatService.Notice, string.Empty, summon.Notice)));
+        }
+    }
+
+    private bool SummonDueCreatures(DateTimeOffset now, List<string> responses)
     {
         if (_instanceWorld is null || _instanceKey is null || _shared is null) return false;
 
@@ -81,6 +95,10 @@ public sealed partial class PlaySession
             }
 
             ReportSummonWaiting(summon.CreatureEntryId, []);
+            var dueKey = $"{_instanceKey}/{summon.CreatureEntryId}";
+            if (!_summonDueSince.TryGetValue(dueKey, out var dueSince)) _summonDueSince[dueKey] = dueSince = now;
+            if (now - dueSince < summon.Delay) continue;
+
             var spawn = _copy.Spawn(new CreatureSpawnDefinition(
                 SummonSpawnId(summon), _instanceWorld.MapId, summon.CreatureEntryId,
                 summon.X, summon.Y, summon.Z, summon.Yaw));
@@ -134,6 +152,8 @@ public sealed partial class PlaySession
     }
 
     private readonly Dictionary<uint, string> _summonWaiting = [];
+
+    private readonly Dictionary<string, DateTimeOffset> _summonDueSince = new(StringComparer.Ordinal);
 
     private static uint SummonSpawnId(DungeonSummonDefinition summon) =>
         SummonedSpawnIdBase + (summon.MapId * 100_000u) + summon.CreatureEntryId;

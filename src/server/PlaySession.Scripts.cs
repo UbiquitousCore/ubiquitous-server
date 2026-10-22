@@ -91,6 +91,8 @@ public sealed partial class PlaySession
         if (action.Clears is not null) memory.Marks.Remove(action.Clears);
         if (action.Sets is not null) memory.Marks.Add(action.Sets);
 
+        if (action.Yell is { } yell && CreatureFor(wireId) is { } shouter)
+            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, yell)));
         if (action.Summon is uint entryId) SummonForFight(wireId, entryId, memory, now, responses);
         if (action.Cast is uint spellId) CastAsCreature(wireId, spellId, action.At, playerId, memory, now, responses);
     }
@@ -168,6 +170,10 @@ public sealed partial class PlaySession
     {
         if (_instanceWorld is null || _shared is null) return;
         if (!_shared.TryGetPosition(wireId, out var bossAt)) return;
+
+        var key = BossTiming.SummonKey(entryId);
+        memory.LastCast[key] = now;
+        memory.CastCount[key] = memory.CastCount.TryGetValue(key, out var count) ? count + 1 : 1;
 
         var angle = memory.Summons.Count * 1.7;
         var spawn = new CreatureSpawnDefinition(

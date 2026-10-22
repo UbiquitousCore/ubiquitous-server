@@ -10,6 +10,7 @@ public sealed class ArielScript : CreatureScript
 
     private const uint DecayedSeed = 2652;
 
+    private const uint Putrefying = 2651;
     private const uint RemovePutrefying = 2796;
 
     private const uint Detonation = 2657;
@@ -28,6 +29,9 @@ public sealed class ArielScript : CreatureScript
 
         if (context.Marks.Contains(Ending) && BossTiming.Count(context, Detonation) == 0)
             return new CombatAction(Cast: Detonation, At: CastTarget.Self);
+
+        if (!context.Marks.Contains(Ending) && BossTiming.Count(context, Putrefying) == 0)
+            return new CombatAction(Cast: Putrefying, At: CastTarget.Self);
 
         return BossTiming.Due(context, DecayedSeed, RootOpensAt, RootEvery)
             ? new CombatAction(Cast: DecayedSeed, At: CastTarget.Enemy)

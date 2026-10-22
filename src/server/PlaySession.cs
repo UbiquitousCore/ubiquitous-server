@@ -1028,7 +1028,7 @@ public sealed partial class PlaySession : ISessionPlayer
             MarkUnitValues(playerId, new Dictionary<string, int> { [WireCodes.UnitValue.Power] = powerRegen.Value, [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(wisdomBonus) }, now);
         }
 
-        TickDungeonCompletion(responses);
+        TickDungeonCompletion(now, responses);
         AnnounceEvades(now, responses);
         if (_combat.TakePlayerStruck() | struckOut)
         {

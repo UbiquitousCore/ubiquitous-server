@@ -161,7 +161,9 @@ public sealed record DungeonSummonDefinition(
     float X,
     float Y,
     float Z,
-    float Yaw = 0);
+    float Yaw = 0,
+    string? Notice = null,
+    TimeSpan Delay = default);
 
 public sealed record DungeonBarrierDefinition(
     string Id,

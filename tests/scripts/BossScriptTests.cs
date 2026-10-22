@@ -42,6 +42,8 @@ public sealed class BossScriptTests
 
         Assert.NotNull(second!.Cast);
         Assert.NotEqual(armour, second.Cast!.Value);
+        Assert.Null(first.Yell);
+        Assert.Equal("Cyclone Slash!", second.Yell);
     }
 
     [Fact]
@@ -84,19 +86,26 @@ public sealed class BossScriptTests
         Assert.Null(outOfReach);
     }
 
-    [Fact]
-    public void Ariel_RootsSomebodyOnceTheFightHasSettled()
-    {
-        var root = ArielScript.Instance.Act(Turn(secondsInFight: 30))!;
+    private static Dictionary<uint, int> ArielRotting() => new() { [2651] = 1 };
 
-        Assert.NotNull(root.Cast);
-        Assert.Equal(CastTarget.Enemy, root.At);
+    [Fact]
+    public void Ariel_OpensByRottingTheWholePartyAndOnlyOnce()
+    {
+        var opener = ArielScript.Instance.Act(Turn(secondsInFight: 0.5))!;
+        Assert.Equal(2651u, opener.Cast);
+        Assert.Equal(CastTarget.Self, opener.At);
+
+        Assert.Null(ArielScript.Instance.Act(Turn(secondsInFight: 0.5, castCount: ArielRotting())));
     }
 
     [Fact]
-    public void Ariel_DoesNothingInTheFirstMomentsOfTheFight()
+    public void Ariel_RootsSomebodyOnceTheFightHasSettled()
     {
-        Assert.Null(ArielScript.Instance.Act(Turn(secondsInFight: 0.5)));
+        var root = ArielScript.Instance.Act(Turn(secondsInFight: 30, castCount: ArielRotting()))!;
+
+        Assert.NotNull(root.Cast);
+        Assert.NotEqual(2651u, root.Cast);
+        Assert.Equal(CastTarget.Enemy, root.At);
     }
 
     [Fact]
@@ -124,7 +133,7 @@ public sealed class BossScriptTests
     [Fact]
     public void Ariel_DoesNotStartHerEndingWhileSheIsStillHealthy()
     {
-        var healthy = ArielScript.Instance.Act(Turn(health: 0.8, secondsInFight: 0.5));
+        var healthy = ArielScript.Instance.Act(Turn(health: 0.8, secondsInFight: 0.5, castCount: ArielRotting()));
         Assert.Null(healthy);
     }
 
@@ -208,6 +217,61 @@ public sealed class BossScriptTests
             secondsSinceCast: new Dictionary<uint, double> { [2637] = 1 }))!;
 
         Assert.NotNull(summon.Summon);
+        Assert.Equal("The dead fight for ME!", summon.Yell);
+    }
+
+    [Fact]
+    public void Cosmo_LeavesAFreshPuppetStandingLongEnoughToBeKilled()
+    {
+        var script = CosmoScript.Instance;
+        var demon = script.Act(Turn(health: 0.5))!.Sets!;
+
+        var fresh = script.Act(Turn(
+            health: 0.5, marks: [demon], summonsInReach: 1,
+            castCount: new Dictionary<uint, int> { [2637] = 1 },
+            secondsSinceCast: new Dictionary<uint, double> { [2637] = 1, [BossTiming.SummonKey(2697)] = 2 }));
+
+        Assert.True(fresh is null || fresh.At != CastTarget.OwnSummon);
+    }
+
+    [Fact]
+    public void Cosmo_SummonsAgainOnlyOnceThePuppetTimerHasRunOut()
+    {
+        var script = CosmoScript.Instance;
+        var demon = script.Act(Turn(health: 0.5))!.Sets!;
+
+        var soon = script.Act(Turn(
+            health: 0.5, marks: [demon],
+            castCount: new Dictionary<uint, int> { [2637] = 1 },
+            secondsSinceCast: new Dictionary<uint, double> { [2637] = 1, [BossTiming.SummonKey(2697)] = 3 }));
+
+        Assert.True(soon?.Summon is null);
+    }
+
+    [Fact]
+    public void Cosmo_YellsAsHeChangesShape()
+    {
+        var change = CosmoScript.Instance.Act(Turn(health: 0.5))!;
+
+        Assert.Equal("The demons stir within me!", change.Yell);
+    }
+
+    [Fact]
+    public void Cosmo_ShieldsHimselfOnceAfterChangingBack_ThenCursesAgain()
+    {
+        var script = CosmoScript.Instance;
+        var demon = script.Act(Turn(health: 0.5))!.Sets!;
+        var back = script.Act(Turn(health: 0.2, marks: [demon]))!;
+        var reverted = back.Sets!;
+
+        var shield = script.Act(Turn(health: 0.2, marks: [reverted]))!;
+        Assert.Equal(2638u, shield.Cast);
+        Assert.Equal(CastTarget.Self, shield.At);
+
+        var curse = script.Act(Turn(
+            health: 0.2, marks: [reverted],
+            castCount: new Dictionary<uint, int> { [2638] = 1 }))!;
+        Assert.Equal(CastTarget.Enemy, curse.At);
     }
 
     [Fact]
@@ -216,9 +280,12 @@ public sealed class BossScriptTests
         var script = CosmoScript.Instance;
         var demon = script.Act(Turn(health: 0.5))!.Sets!;
 
-        var eats = script.Act(Turn(health: 0.5, marks: [demon], summonsInReach: 1))!;
+        var eats = script.Act(Turn(
+            health: 0.5, marks: [demon], summonsInReach: 1,
+            secondsSinceCast: new Dictionary<uint, double> { [BossTiming.SummonKey(2697)] = 10 }))!;
         Assert.Equal(CastTarget.OwnSummon, eats.At);
         Assert.NotNull(eats.Cast);
+        Assert.Equal("Give me your power!", eats.Yell);
 
         var feeds = script.Act(Turn(
             health: 0.5, marks: [demon], summonsInReach: 0,

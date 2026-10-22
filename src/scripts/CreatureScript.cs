@@ -38,7 +38,8 @@ public sealed record CombatAction(
     CastTarget At = CastTarget.Enemy,
     uint? Summon = null,
     string? Sets = null,
-    string? Clears = null);
+    string? Clears = null,
+    string? Yell = null);
 
 public abstract class CreatureScript
 {

@@ -6,8 +6,6 @@ public static class BossTiming
 
     public static readonly TimeSpan CoverHolds = TimeSpan.FromSeconds(11);
 
-    public static readonly TimeSpan BetweenMeals = TimeSpan.FromSeconds(4);
-
     public static bool Ready(CombatTurnContext context, uint spellId, TimeSpan every) =>
         !context.SinceCast.TryGetValue(spellId, out var since) || since >= every;
 

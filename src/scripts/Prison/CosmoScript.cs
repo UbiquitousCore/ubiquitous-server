@@ -17,6 +17,8 @@ public sealed class CosmoScript : CreatureScript
 
     private const uint ShadowErode = 2637;
 
+    private const uint ShadowShield = 2638;
+
     private const uint DevourPuppet = 2645;
     private const uint FeedOnPuppet = 2636;
 
@@ -35,15 +37,23 @@ public sealed class CosmoScript : CreatureScript
 
     private static readonly TimeSpan PuppetEvery = TimeSpan.FromSeconds(15);
 
+    // The players' window to kill a puppet before he eats it.
+    private static readonly TimeSpan PuppetStandsFor = TimeSpan.FromSeconds(10);
+
     public override CombatAction? Act(CombatTurnContext context)
     {
         var demon = context.Marks.Contains(Demon);
+        var reverted = context.Marks.Contains(Reverted);
 
-        if (demon && !context.Marks.Contains(Reverted) && context.HealthFraction <= ChangesBackAt)
+        if (demon && !reverted && context.HealthFraction <= ChangesBackAt)
             return new CombatAction(Cast: RemoveMetamorphosis, At: CastTarget.Self, Sets: Reverted, Clears: Demon);
 
-        if (!demon && !context.Marks.Contains(Reverted) && context.HealthFraction <= ChangesAt)
-            return new CombatAction(Cast: Metamorphosis, At: CastTarget.Self, Sets: Demon);
+        if (!demon && !reverted && context.HealthFraction <= ChangesAt)
+            return new CombatAction(
+                Cast: Metamorphosis, At: CastTarget.Self, Sets: Demon, Yell: "The demons stir within me!");
+
+        if (reverted && BossTiming.Count(context, ShadowShield) == 0)
+            return new CombatAction(Cast: ShadowShield, At: CastTarget.Self);
 
         return demon ? Shaped(context) : Casting(context);
     }
@@ -67,14 +77,15 @@ public sealed class CosmoScript : CreatureScript
         if (BossTiming.Count(context, DevourPuppet) > BossTiming.Count(context, FeedOnPuppet))
             return new CombatAction(Cast: FeedOnPuppet, At: CastTarget.Self);
 
-        if (context.SummonsInReach > 0 && BossTiming.Ready(context, DevourPuppet, BossTiming.BetweenMeals))
-            return new CombatAction(Cast: DevourPuppet, At: CastTarget.OwnSummon);
+        if (context.SummonsInReach > 0
+            && BossTiming.Ready(context, BossTiming.SummonKey(UndeadPuppet), PuppetStandsFor))
+            return new CombatAction(Cast: DevourPuppet, At: CastTarget.OwnSummon, Yell: "Give me your power!");
 
         if (BossTiming.Due(context, ShadowErode, ErodeOpensAt, ErodeEvery))
             return new CombatAction(Cast: ShadowErode, At: CastTarget.Self);
 
         return BossTiming.SummonDue(context, UndeadPuppet, PuppetEvery)
-            ? new CombatAction(Summon: UndeadPuppet)
+            ? new CombatAction(Summon: UndeadPuppet, Yell: "The dead fight for ME!")
             : null;
     }
 }

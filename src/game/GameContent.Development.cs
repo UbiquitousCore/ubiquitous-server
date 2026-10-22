@@ -11,6 +11,8 @@ public sealed partial record GameContent
 
     public const float CosmoDepthPastDoor = 120f;
 
+    public static readonly TimeSpan CosmoArrivesAfter = TimeSpan.FromSeconds(10);
+
     public static readonly LegendCounterparts PrisonLegend = new(
         Creatures: new Dictionary<uint, uint>
         {
@@ -35,6 +37,7 @@ public sealed partial record GameContent
             [2674] = 2761,
             [2675] = 2762,
             [2652] = 2768,
+            [2651] = 2766,
             [2796] = 2795,
             [2657] = 2770,
             [2632] = 2771,
@@ -44,6 +47,7 @@ public sealed partial record GameContent
             [2645] = 2775,
             [2636] = 2776,
             [2637] = 2777,
+            [2638] = 2779,
             [2647] = 2778,
         });
 
@@ -268,7 +272,9 @@ public sealed partial record GameContent
                 MapId: 14,
                 CreatureEntryId: 2667,
                 After: ["boss.2668.down", "boss.2666.down"],
-                X: PrisonInnerDoor.X, Y: PrisonInnerDoor.Y, Z: PrisonInnerDoor.Z - CosmoDepthPastDoor),
+                X: PrisonInnerDoor.X, Y: PrisonInnerDoor.Y, Z: PrisonInnerDoor.Z - CosmoDepthPastDoor,
+                Notice: "You hear a faraway gate creaking open...",
+                Delay: CosmoArrivesAfter),
         ],
         StartingActionBar: [
             .. DevelopmentLoadout.ActionBar,
