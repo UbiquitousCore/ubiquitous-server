@@ -15,7 +15,8 @@ public sealed record ChatPayload(
 public sealed record ChatReceivedPayload(
     [property: JsonPropertyName("channel")] string Channel,
     [property: JsonPropertyName("sender")] string Sender,
-    [property: JsonPropertyName("text")] string Text);
+    [property: JsonPropertyName("text")] string Text,
+    [property: JsonPropertyName("senderId")] WebNetworkId? SenderId = null);
 
 public sealed record GossipPayload(
     [property: JsonPropertyName("networkId")] WebNetworkId NetworkId,

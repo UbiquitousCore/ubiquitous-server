@@ -14,6 +14,7 @@ public sealed class ScriptRegistry
         ExecutionerScript.Instance,
         ArielScript.Instance,
         CosmoScript.Instance,
+        AndareScript.Instance,
         .. PrisonInmates.All,
     ];
 

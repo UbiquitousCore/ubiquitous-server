@@ -36,7 +36,8 @@ public sealed record CombatTurnContext(
     IReadOnlyDictionary<uint, int> CastCount,
     int SummonsInReach,
     IReadOnlySet<string> Marks,
-    IReadOnlyCollection<uint>? AlliesInReach = null)
+    IReadOnlyCollection<uint>? AlliesInReach = null,
+    bool Legend = false)
 {
     public bool HasAllyInReach(uint entryId) => AlliesInReach?.Contains(entryId) == true;
 }
@@ -65,6 +66,14 @@ public abstract class CreatureScript
     public virtual bool Chases => true;
 
     public virtual bool DrawsOthersIn => true;
+
+    public virtual IReadOnlyList<string> Shouts => [];
+
+    // Own choice: how often a creature with idle lines speaks.
+    public virtual TimeSpan ShoutEvery => TimeSpan.FromSeconds(45);
+
+    // Auras a fight leaves on the creature that end when it resets rather than dies.
+    public virtual IReadOnlyList<uint> ClearedOnReset => [];
 
     public virtual bool GivesUp(GiveUpContext context)
     {

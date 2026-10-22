@@ -14,6 +14,9 @@ public sealed class ExecutionerScript : CreatureScript
 
     private const uint Whirlwind = 2675;
 
+    // Only the Legend block carries this second armour row (a slow heal under the same name); Normal has none.
+    private const uint LegendArmorMending = 2781;
+
     private const string Covered = "covered";
 
     private static readonly TimeSpan ReapEvery = TimeSpan.FromSeconds(3);
@@ -22,6 +25,9 @@ public sealed class ExecutionerScript : CreatureScript
 
     public override CombatAction? Act(CombatTurnContext context)
     {
+        if (context.Legend && BossTiming.Count(context, LegendArmorMending) < BossTiming.Count(context, BladeArmor))
+            return new CombatAction(Cast: LegendArmorMending, At: CastTarget.Self);
+
         if (BossTiming.SharedDue(context, RhythmOpensAt, RhythmEvery, BladeArmor, Whirlwind))
         {
             var takeArmor = BossTiming.Count(context, BladeArmor) <= BossTiming.Count(context, Whirlwind);

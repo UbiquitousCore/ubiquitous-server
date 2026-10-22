@@ -252,6 +252,19 @@ this project's own:
   operator's table. The table gives no radius: an area round a creature
   reaches 15 units and one round its target 6, this project's own choice
   (`PlaySession.CreatureSpells.cs`).
+- The prison follows the field guide where it gives a number and the earlier
+  video readings disagree: Cosmo takes the demon shape at 75%, and raises a
+  puppet every 20 s with the turn between for eating it; Ariel's Decayed Seed
+  repeats every 10 s (its 6 s opening is the video reading, since the guide
+  says only that it comes early). Poison Teeth stacks to 5
+  (`GameContent.SpellStackLimits`), also the guide's.
+- Andare's three idle lines are the operator's `String_Script` rows beside
+  the one the guide quotes; how often he speaks (`CreatureScript.ShoutEvery`,
+  45 s) is this project's own choice. The Executioner's second "Osseous Blade
+  Armor" row (2781, a slow heal) exists only in the Legend block, so only the
+  Legend Executioner casts it, after each armour. Cosmo's "Remove All" row is
+  read as what ends his demon shape and shield when his fight resets without
+  his death; that reading is this project's own.
 - A creature spell with a cast time in its `spell` row lands only when the
   cast ends, and a self aura with no duration pulses every
   `AuraService.TickInterval` until the creature ends it or dies. Of the

@@ -290,6 +290,7 @@ public sealed partial record GameContent
             [2679] = "inmate.viciousHumanPrisoner",
             [2688] = "inmate.viciousElfPrisoner",
             [2690] = "inmate.humanPrisonerCapo",
+            [2703] = "npc.andare",
             [1226] = "creature.trainingDummy",
         },
         DungeonSummons:
@@ -306,5 +307,12 @@ public sealed partial record GameContent
             .. DevelopmentLoadout.ActionBar,
             new StartingActionButton(2, OperatorSpells.Finish),
             new StartingActionButton(3, OperatorSpells.Restore),
-        ]);
+        ])
+    {
+        SpellStackLimits = new Dictionary<uint, int>
+        {
+            [2641] = 5,
+            [2722] = 5,
+        },
+    };
 }

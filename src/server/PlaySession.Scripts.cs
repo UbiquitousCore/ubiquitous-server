@@ -27,6 +27,7 @@ public sealed partial class PlaySession
         TickCrumblingSummons(now, responses);
         TickCreaturePulses(playerId, now, responses);
         TickCreatureCasts(playerId, now, responses);
+        TickShouts(now, responses);
         if (_combat.IsPlayerDead || _combat.IsDead(playerId)) return;
 
         foreach (var wireId in _sight.Ids)
@@ -35,7 +36,7 @@ public sealed partial class PlaySession
             if (!string.Equals(_combat.RetaliationTarget(wireId), playerId, StringComparison.Ordinal)
                 && !string.Equals(_combat.CurrentTargetOf(playerId), wireId, StringComparison.Ordinal))
             {
-                _scriptMemory.Remove(wireId);
+                if (_scriptMemory.Remove(wireId) && _shared.MobVictim(wireId) is null) ResetCreature(wireId, responses);
                 _creatureCasts.Remove(wireId);
                 continue;
             }
@@ -65,7 +66,37 @@ public sealed partial class PlaySession
             memory.CastCount,
             SummonsInReach(wireId, memory),
             memory.Marks,
-            AlliesInReach(wireId));
+            AlliesInReach(wireId),
+            _copy.Mode == DungeonMode.Legend);
+    }
+
+    private void ResetCreature(string wireId, List<string> responses)
+    {
+        _creaturePulses.Clear(wireId);
+        _combat.UnshieldUnit(wireId);
+        foreach (var spellId in ScriptFor(wireId).ClearedOnReset)
+            responses.Add(AuraEnded(wireId, wireId, _copy.Spell(spellId)));
+    }
+
+    private readonly Dictionary<string, (DateTimeOffset At, int Next)> _shouts = new(StringComparer.Ordinal);
+
+    private void TickShouts(DateTimeOffset now, List<string> responses)
+    {
+        foreach (var wireId in _sight.Ids)
+        {
+            var script = ScriptFor(wireId);
+            if (script.Shouts.Count == 0 || BodyGone(wireId) || CreatureFor(wireId) is not { } shouter) continue;
+            if (!_shouts.TryGetValue(wireId, out var last))
+            {
+                _shouts[wireId] = (now, 0);
+                continue;
+            }
+
+            if (now - last.At < script.ShoutEvery) continue;
+            var line = script.Shouts[last.Next % script.Shouts.Count];
+            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, line, WebNetworkId.FromString(wireId))));
+            _shouts[wireId] = (now, last.Next + 1);
+        }
     }
 
     private ScriptMemory MemoryFor(string wireId, DateTimeOffset now)
@@ -114,7 +145,7 @@ public sealed partial class PlaySession
         if (action.Sets is not null) memory.Marks.Add(action.Sets);
 
         if (action.Yell is { } yell && CreatureFor(wireId) is { } shouter)
-            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, yell)));
+            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, yell, WebNetworkId.FromString(wireId))));
         if (action.Ends is uint ended) EndCreatureAura(wireId, _copy.Spell(ended), responses);
         if (action.Summon is uint entryId) SummonForFight(wireId, entryId, action.SummonLasts, memory, now, responses);
         if (action.Cast is uint spellId)
@@ -125,11 +156,12 @@ public sealed partial class PlaySession
         string wireId, uint spellId, CastTarget at, uint? allyEntry, string playerId,
         ScriptMemory memory, DateTimeOffset now, List<string> responses)
     {
-        var castId = _copy.Spell(spellId);
-        if (!_content.Spells.TryGetValue(castId, out var spell)) return;
-
+        // Counted even when the row is missing, so a script never stalls retrying a spell it cannot cast.
         memory.LastCast[spellId] = now;
         memory.CastCount[spellId] = memory.CastCount.TryGetValue(spellId, out var count) ? count + 1 : 1;
+
+        var castId = _copy.Spell(spellId);
+        if (!_content.Spells.TryGetValue(castId, out var spell)) return;
 
         var targetId = at switch
         {

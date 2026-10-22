@@ -90,6 +90,8 @@ public sealed partial record GameContent(
 
     public Ubiquitous.World.ITerrainHeightSource? Terrain { get; init; }
 
+    public IReadOnlyDictionary<uint, int> SpellStackLimits { get; init; } = new Dictionary<uint, int>();
+
     public IReadOnlyDictionary<uint, WaypointRouteDefinition> WaypointRoutes { get; init; } =
         WaypointRoutes ?? new Dictionary<uint, WaypointRouteDefinition>();
 }

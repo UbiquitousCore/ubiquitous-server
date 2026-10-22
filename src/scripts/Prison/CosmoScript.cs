@@ -8,6 +8,9 @@ public sealed class CosmoScript : CreatureScript
 
     public override string Name => "boss.cosmo";
 
+    // His "Remove All" row: the demon shape and the shield end together.
+    public override IReadOnlyList<uint> ClearedOnReset => [Metamorphosis, ShadowShield];
+
     private const uint ThunderCurse = 2632;
     private const uint ColdCurse = 2633;
     private const uint FlameCurse = 2634;
@@ -27,7 +30,7 @@ public sealed class CosmoScript : CreatureScript
     private const string Demon = "demon";
     private const string Reverted = "reverted";
 
-    private const double ChangesAt = 0.70;
+    private const double ChangesAt = 0.75;
     private const double ChangesBackAt = 0.25;
 
     private static readonly TimeSpan BetweenCurses = TimeSpan.FromSeconds(5);
@@ -35,7 +38,7 @@ public sealed class CosmoScript : CreatureScript
     private static readonly TimeSpan ErodeOpensAt = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ErodeEvery = TimeSpan.FromSeconds(10);
 
-    private static readonly TimeSpan PuppetEvery = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan PuppetEvery = TimeSpan.FromSeconds(20);
 
     // The players' window to kill a puppet before he eats it.
     private static readonly TimeSpan PuppetStandsFor = TimeSpan.FromSeconds(10);

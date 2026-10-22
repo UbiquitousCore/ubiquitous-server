@@ -218,4 +218,34 @@ public sealed partial class DungeonTests
         Assert.Contains(log, m => m.Contains("\"type\":\"aura.applied\"") && m.Contains("\"spellId\":2641")
             && m.Contains("\"unitId\":\"player:char-cs6\""));
     }
+
+    [Fact]
+    public async Task Andare_ShoutsAtTheOtherPrisonersNowAndThen_SoTheClientCanPutItOverHisHead()
+    {
+        var content = CreatureSpellContent() with
+        {
+            Creatures = new Dictionary<uint, CreatureDefinition>(CreatureSpellContent().Creatures)
+            {
+                [2703] = new(2703, "Andare", 10, 1228, MinDamage: 1, MaxDamage: 1),
+            },
+        };
+        var (session, _) = await JoinAsync("cs7", "Ayla",
+            [new CreatureSpawnDefinition(3207, 14, 2703, -681, InsideFloorY, -2097, 0)], content);
+        await MoveAsync(session, 2, GateInsideX, 2, GateApproachZ);
+        await MoveAsync(session, 3, InsideArrivalX, InsideFloorY, -2096);
+
+        var now = DateTimeOffset.UtcNow;
+        var log = new List<string>();
+        for (var i = 0; i < 50; i++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            log.AddRange(session.TickCombat(now));
+        }
+
+        var shouts = log.Where(m => m.Contains("\"type\":\"chat.received\"") && m.Contains("\"channel\":\"yell\"")
+            && m.Contains("\"sender\":\"Andare\"")).ToList();
+        Assert.InRange(shouts.Count, 2, 3);
+        Assert.All(shouts, m => Assert.Contains("\"senderId\":\"Creature:1\"", m));
+        Assert.Contains(shouts, m => m.Contains("the judgment on me is not justice!"));
+    }
 }

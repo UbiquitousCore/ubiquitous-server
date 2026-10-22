@@ -19,7 +19,7 @@ public sealed class ArielScript : CreatureScript
     private const string Ending = "ending";
 
     private static readonly TimeSpan RootOpensAt = TimeSpan.FromSeconds(6);
-    private static readonly TimeSpan RootEvery = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan RootEvery = TimeSpan.FromSeconds(10);
 
     private const double EndingHealthFraction = 0.10;
 

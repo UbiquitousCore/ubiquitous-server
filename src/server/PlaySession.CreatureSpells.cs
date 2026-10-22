@@ -122,7 +122,7 @@ public sealed partial class PlaySession
     {
         if (_character is not null && string.Equals(playerId, PlayerUnitId, StringComparison.Ordinal))
         {
-            TakeCreatureSpell(casterId, spellId, effect, now, responses);
+            TakeCreatureSpell(casterId, spellId, effect, effectIndex, now, responses);
             return;
         }
 
@@ -134,13 +134,18 @@ public sealed partial class PlaySession
     {
         if (!_content.Spells.TryGetValue(blow.SpellId, out var cast)) return;
         var effect = blow.ExtraEffect == PlayerBlow.MainEffect ? cast : cast.ExtraEffects?.ElementAtOrDefault(blow.ExtraEffect);
-        if (effect is not null) TakeCreatureSpell(blow.AttackerId, blow.SpellId, effect, now, responses);
+        if (effect is not null) TakeCreatureSpell(blow.AttackerId, blow.SpellId, effect, blow.ExtraEffect, now, responses);
     }
 
+    private SpellStacks? _stacksOnMe;
+
     private void TakeCreatureSpell(
-        string casterId, uint spellId, SpellDefinition effect, DateTimeOffset now, List<string> responses)
+        string casterId, uint spellId, SpellDefinition effect, int effectIndex, DateTimeOffset now,
+        List<string> responses)
     {
         if (_character is null || _combat.IsPlayerDead) return;
+        _stacksOnMe ??= new SpellStacks(_content.SpellStackLimits);
+        effect = SpellStacks.Scaled(effect, _stacksOnMe.Land(spellId, effect, adds: effectIndex == PlayerBlow.MainEffect, now));
         var playerId = PlayerUnitId;
         var caster = WebNetworkId.FromString(casterId);
 

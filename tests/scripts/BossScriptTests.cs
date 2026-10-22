@@ -351,4 +351,64 @@ public sealed class BossScriptTests
         Assert.Null(caster.Summon);
         Assert.Equal(CastTarget.Enemy, caster.At);
     }
+
+    [Fact]
+    public void Cosmo_TakesTheDemonShapeAtThreeQuarters()
+    {
+        Assert.Equal(2635u, CosmoScript.Instance.Act(Turn(health: 0.74))!.Cast);
+        Assert.NotEqual(2635u, CosmoScript.Instance.Act(Turn(health: 0.76))!.Cast);
+    }
+
+    [Fact]
+    public void Cosmo_RaisesAPuppetOnlyEveryOtherTurn_LeavingTheTurnBetweenForEatingIt()
+    {
+        var demon = CosmoScript.Instance.Act(Turn(health: 0.5))!.Sets!;
+        var erodeJustCast = new Dictionary<uint, int> { [2637] = 1 };
+
+        Assert.Null(CosmoScript.Instance.Act(Turn(
+            health: 0.5, marks: [demon], castCount: erodeJustCast,
+            secondsSinceCast: new Dictionary<uint, double> { [2637] = 1, [BossTiming.SummonKey(2697)] = 15 }))?.Summon);
+        Assert.NotNull(CosmoScript.Instance.Act(Turn(
+            health: 0.5, marks: [demon], castCount: erodeJustCast,
+            secondsSinceCast: new Dictionary<uint, double> { [2637] = 1, [BossTiming.SummonKey(2697)] = 20 }))!.Summon);
+    }
+
+    [Fact]
+    public void Cosmo_ShedsTheDemonShapeAndTheShieldWhenHisFightResets()
+    {
+        Assert.Equal([2635u, 2638u], CosmoScript.Instance.ClearedOnReset);
+    }
+
+    [Fact]
+    public void Ariel_SeedsSomebodyAboutEveryTenSeconds()
+    {
+        Dictionary<uint, int> Cast() => new() { [2651] = 1, [2652] = 1 };
+
+        Assert.Null(ArielScript.Instance.Act(Turn(castCount: Cast(),
+            secondsSinceCast: new Dictionary<uint, double> { [2652] = 9 })));
+        Assert.Equal(2652u, ArielScript.Instance.Act(Turn(castCount: Cast(),
+            secondsSinceCast: new Dictionary<uint, double> { [2652] = 10 }))!.Cast);
+    }
+
+    [Fact]
+    public void TheExecutioner_MendsUnderHisArmourOnlyInLegend()
+    {
+        var armoured = new Dictionary<uint, int> { [2674] = 1 };
+        var since = new Dictionary<uint, double> { [2674] = 1 };
+
+        Assert.Equal(2781u, ExecutionerScript.Instance.Act(Turn(castCount: armoured, secondsSinceCast: since) with { Legend = true })!.Cast);
+        Assert.NotEqual(2781u, ExecutionerScript.Instance.Act(Turn(castCount: armoured, secondsSinceCast: since))?.Cast);
+        Assert.NotEqual(2781u, ExecutionerScript.Instance.Act(Turn(
+            castCount: new Dictionary<uint, int> { [2674] = 1, [2781] = 1 }, secondsSinceCast: since) with { Legend = true })?.Cast);
+    }
+
+    [Fact]
+    public void Andare_ShoutsAtTheOtherPrisonersButNeverFights()
+    {
+        var andare = AndareScript.Instance;
+
+        Assert.Contains("I'll tell you again: the judgment on me is not justice!", andare.Shouts);
+        Assert.False(andare.FightsBack);
+        Assert.False(andare.NoticesEnemies);
+    }
 }
