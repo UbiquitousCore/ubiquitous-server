@@ -543,6 +543,7 @@ public sealed partial class CombatService
     private void SettleDeath(string sourceId, string targetId, DateTimeOffset now)
     {
         _dead.Add(targetId);
+        _unitShields.Remove(targetId);
         _hostility.ClearFighters(targetId);
         if (_targets.TryGetValue(sourceId, out var currentTarget)
             && string.Equals(currentTarget, targetId, StringComparison.Ordinal))
@@ -578,12 +579,27 @@ public sealed partial class CombatService
     {
         if (OverwhelmingBlows && LooksLikePlayerId(sourceId) && !LooksLikePlayerId(targetId)) damage = GodModeDamage;
         if (GodMode && LooksLikePlayerId(targetId)) damage = 0;
-        if (!isSelf) return (damage, 0);
+        if (!isSelf) return ThroughUnitShield(targetId, damage);
 
         if (damage > 0) _playerStruck = true;
         if (AbsorbIncoming is null) return (damage, 0);
         var through = AbsorbIncoming(damage, now);
         return (through, damage - through);
+    }
+
+    private readonly Dictionary<string, (int Percent, int Left)> _unitShields = new(StringComparer.Ordinal);
+
+    public void ShieldUnit(string unitId, int percent, int amount) => _unitShields[unitId] = (percent, amount);
+
+    public bool UnshieldUnit(string unitId) => _unitShields.Remove(unitId);
+
+    private (int Damage, int Absorbed) ThroughUnitShield(string unitId, int damage)
+    {
+        if (damage <= 0 || !_unitShields.TryGetValue(unitId, out var shield)) return (damage, 0);
+        var absorbed = Math.Min(shield.Left, damage * shield.Percent / 100);
+        if (absorbed >= shield.Left) _unitShields.Remove(unitId);
+        else _unitShields[unitId] = shield with { Left = shield.Left - absorbed };
+        return (damage - absorbed, absorbed);
     }
 
     public void EnterCombatOnCast(string sourceId, string targetId, DateTimeOffset now) =>

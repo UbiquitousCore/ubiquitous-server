@@ -8,6 +8,25 @@ public sealed class CombatServiceTests
     private static readonly DateTimeOffset Now = new(2026, 9, 7, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void AShieldedCreature_TakesOnlyTheShareItsShieldLetsThrough_UntilTheShieldIsSpent()
+    {
+        var combat = new CombatService();
+        combat.EnterAsCharacter(classId: 1, level: 10, playerId: "player:char-a");
+        combat.ShieldUnit("Creature:1", percent: 50, amount: 30);
+
+        var halved = combat.DamageTarget("player:char-a", "Creature:1", 40, Now);
+        Assert.Equal(20, halved.Damage);
+        Assert.Equal(20, halved.Absorbed);
+
+        var spent = combat.DamageTarget("player:char-a", "Creature:1", 40, Now);
+        Assert.Equal(30, spent.Damage);
+        Assert.Equal(10, spent.Absorbed);
+
+        var bare = combat.DamageTarget("player:char-a", "Creature:1", 40, Now);
+        Assert.Equal(40, bare.Damage);
+    }
+
+    [Fact]
     public void Start_MarksNewAttackerInCombat()
     {
         var result = new CombatService().Start("player:char-a", "Creature:1", Visible, Now);

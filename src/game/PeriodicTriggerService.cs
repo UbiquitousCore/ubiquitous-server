@@ -9,12 +9,22 @@ public sealed class PeriodicTriggerService
 {
     private readonly List<ActivePeriodicTrigger> _active = new();
 
-    public void Apply(string targetId, uint spellId, uint triggerSpellId, int chancePercent, DateTimeOffset now)
+    public void Apply(
+        string targetId, uint spellId, uint triggerSpellId, int chancePercent, DateTimeOffset now,
+        int ticks = AuraService.TickCount)
     {
         _active.RemoveAll(a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId);
         _active.Add(new ActivePeriodicTrigger(
-            targetId, spellId, triggerSpellId, chancePercent, AuraService.TickCount, now + AuraService.TickInterval));
+            targetId, spellId, triggerSpellId, chancePercent, ticks, now + AuraService.TickInterval));
     }
+
+    // A spell with no duration pulses until something ends it.
+    public static int TicksFor(int durationMs) => durationMs <= 0
+        ? int.MaxValue
+        : Math.Max(1, (int)(TimeSpan.FromMilliseconds(durationMs) / AuraService.TickInterval));
+
+    public bool End(string targetId, uint spellId) =>
+        _active.RemoveAll(a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId) > 0;
 
     public IReadOnlyList<uint> Clear(string targetId)
     {

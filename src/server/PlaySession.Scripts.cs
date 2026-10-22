@@ -23,6 +23,10 @@ public sealed partial class PlaySession
     {
         if (_character is null || _shared is null) return;
         var playerId = PlayerUnitId;
+        TickDeathSplits(responses);
+        TickCrumblingSummons(now, responses);
+        TickCreaturePulses(playerId, now, responses);
+        TickCreatureCasts(playerId, now, responses);
         if (_combat.IsPlayerDead || _combat.IsDead(playerId)) return;
 
         foreach (var wireId in _sight.Ids)
@@ -32,9 +36,14 @@ public sealed partial class PlaySession
                 && !string.Equals(_combat.CurrentTargetOf(playerId), wireId, StringComparison.Ordinal))
             {
                 _scriptMemory.Remove(wireId);
+                _creatureCasts.Remove(wireId);
                 continue;
             }
 
+            // One session acts for a creature a whole party is fighting: the one whose player it has chosen.
+            if (_shared.MobVictim(wireId) is { } victim && !string.Equals(victim, playerId, StringComparison.Ordinal))
+                continue;
+            if (_creatureCasts.ContainsKey(wireId)) continue;
             var action = ScriptFor(wireId).Act(TurnContextFor(wireId, now));
             if (action is null) continue;
             Perform(wireId, action, playerId, now, responses);
@@ -55,7 +64,8 @@ public sealed partial class PlaySession
             since,
             memory.CastCount,
             SummonsInReach(wireId, memory),
-            memory.Marks);
+            memory.Marks,
+            AlliesInReach(wireId));
     }
 
     private ScriptMemory MemoryFor(string wireId, DateTimeOffset now)
@@ -71,17 +81,29 @@ public sealed partial class PlaySession
         if (memory.Summons.Count == 0 || _shared is null) return 0;
         memory.Summons.RemoveAll(id => _combat.IsDead(id) || !_sight.Contains(id));
         if (!_shared.TryGetPosition(wireId, out var bossAt)) return 0;
+        return memory.Summons.Count(summonId =>
+            _shared.TryGetPosition(summonId, out var summonAt) && Apart(bossAt, summonAt) <= BossTiming.SummonReach);
+    }
 
-        var count = 0;
-        foreach (var summonId in memory.Summons)
+    private IReadOnlyCollection<uint> AlliesInReach(string wireId)
+    {
+        if (_shared is null || !_shared.TryGetPosition(wireId, out var at)) return [];
+        var allies = new HashSet<uint>();
+        foreach (var (otherId, entry) in _sight.Entries)
         {
-            if (!_shared.TryGetPosition(summonId, out var summonAt)) continue;
-            var dx = summonAt.X - bossAt.X;
-            var dz = summonAt.Z - bossAt.Z;
-            if (Math.Sqrt((dx * dx) + (dz * dz)) <= BossTiming.SummonReach) count++;
+            if (string.Equals(otherId, wireId, StringComparison.Ordinal) || BodyGone(otherId)) continue;
+            if (_shared.TryGetPosition(otherId, out var otherAt) && Apart(at, otherAt) <= BossTiming.SummonReach)
+                allies.Add(_copy.AuthoredEntry(entry));
         }
 
-        return count;
+        return allies;
+    }
+
+    private static double Apart(DomainPosition a, DomainPosition b)
+    {
+        var dx = a.X - b.X;
+        var dz = a.Z - b.Z;
+        return Math.Sqrt((dx * dx) + (dz * dz));
     }
 
     private void Perform(
@@ -91,12 +113,16 @@ public sealed partial class PlaySession
         if (action.Clears is not null) memory.Marks.Remove(action.Clears);
         if (action.Sets is not null) memory.Marks.Add(action.Sets);
 
-        if (action.Summon is uint entryId) SummonForFight(wireId, entryId, memory, now, responses);
-        if (action.Cast is uint spellId) CastAsCreature(wireId, spellId, action.At, playerId, memory, now, responses);
+        if (action.Yell is { } yell && CreatureFor(wireId) is { } shouter)
+            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, yell)));
+        if (action.Ends is uint ended) EndCreatureAura(wireId, _copy.Spell(ended), responses);
+        if (action.Summon is uint entryId) SummonForFight(wireId, entryId, action.SummonLasts, memory, now, responses);
+        if (action.Cast is uint spellId)
+            CastAsCreature(wireId, spellId, action.At, action.AllyEntry, playerId, memory, now, responses);
     }
 
     private void CastAsCreature(
-        string wireId, uint spellId, CastTarget at, string playerId,
+        string wireId, uint spellId, CastTarget at, uint? allyEntry, string playerId,
         ScriptMemory memory, DateTimeOffset now, List<string> responses)
     {
         var castId = _copy.Spell(spellId);
@@ -105,87 +131,71 @@ public sealed partial class PlaySession
         memory.LastCast[spellId] = now;
         memory.CastCount[spellId] = memory.CastCount.TryGetValue(spellId, out var count) ? count + 1 : 1;
 
-        var caster = WebNetworkId.FromString(wireId);
         var targetId = at switch
         {
             CastTarget.Self => wireId,
             CastTarget.OwnSummon => memory.Summons.FirstOrDefault() ?? wireId,
+            CastTarget.Ally => NearestAlly(wireId, allyEntry) ?? wireId,
+            CastTarget.AnyEnemy => AnyEnemyOf(wireId, playerId),
             _ => playerId,
         };
-        var target = WebNetworkId.FromString(targetId);
-        responses.Add(Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(castId, caster, [target], [], spell.Speed, Aimed: false)));
 
-        if (spell.EffectHeal is int heal)
+        if (spell.CastTimeMs > 0)
         {
-            var restored = _combat.RestoreHealth(targetId, heal);
-            if (restored.Applied > 0)
-                MarkUnitValues(targetId, new Dictionary<string, int>
-                {
-                    [WireCodes.UnitValue.Health] = restored.FinalHealth,
-                    [WireCodes.UnitValue.MaxHealth] = restored.MaxHealth,
-                }, now);
-            responses.Add(Reply(WebMessageTypes.SpellOutcome,
-                new SpellOutcomePayload(
-                    caster, target, castId, WireCodes.Outcome.Hit, restored.Applied, restored.FinalHealth)));
+            _creatureCasts[wireId] = new PendingCreatureCast(castId, spell, targetId, now.AddMilliseconds(spell.CastTimeMs));
+            responses.Add(Reply(WebMessageTypes.SpellCasting,
+                new SpellCastingPayload(castId, WebNetworkId.FromString(wireId), spell.CastTimeMs)));
             return;
         }
 
-        if (spell.EffectDamage is int baseDamage)
-        {
-            var damage = spell.EffectDamageRandom is int spread
-                ? _combat.RollAmount(baseDamage, baseDamage + spread)
-                : baseDamage;
-            if (string.Equals(targetId, playerId, StringComparison.Ordinal))
-            {
-                damage = CombatService.ApplyArmorMitigation(
-                    damage, _attributeModifiers.GetFlatAmount(playerId, AttributeIds.Armor, now));
-            }
+        LandCreatureSpell(wireId, targetId, castId, spell, now, responses);
+    }
 
-            var swing = _combat.DamageTarget(
-                wireId, targetId, damage, now,
-                _attributeModifiers.GetFlatAmount(playerId, AttributeIds.Stamina, now));
-            MarkUnitValues(targetId, new Dictionary<string, int>
-            {
-                [WireCodes.UnitValue.Health] = swing.FinalHealth,
-                [WireCodes.UnitValue.MaxHealth] = swing.MaxHealth,
-            }, now);
-            responses.Add(Reply(WebMessageTypes.SpellOutcome,
-                new SpellOutcomePayload(
-                    caster, target, castId, WireCodes.Outcome.Hit, swing.Damage, swing.FinalHealth, WireAbsorbed(swing))));
-            if (swing.Killed) AnnounceScriptedKill(wireId, targetId, playerId, responses);
-            return;
-        }
-
-        int durationMs = checked((int)AuraService.Duration.TotalMilliseconds);
-        responses.Add(Reply(WebMessageTypes.AuraApplied, new AuraAppliedPayload(
-            castId, target, caster,
-            Harmful: string.Equals(targetId, playerId, StringComparison.Ordinal) ? 1 : 0,
-            MaxDuration: durationMs, Remaining: durationMs)));
+    private string? NearestAlly(string wireId, uint? allyEntry)
+    {
+        if (_shared is null || allyEntry is not uint wanted || !_shared.TryGetPosition(wireId, out var at)) return null;
+        return _sight.Entries
+            .Where(pair => !string.Equals(pair.Key, wireId, StringComparison.Ordinal)
+                && _copy.AuthoredEntry(pair.Value) == wanted && !BodyGone(pair.Key))
+            .Select(pair => (Id: pair.Key, Distance: _shared.TryGetPosition(pair.Key, out var p) ? Apart(at, p) : double.MaxValue))
+            .Where(ally => ally.Distance <= BossTiming.SummonReach)
+            .OrderBy(ally => ally.Distance)
+            .Select(ally => ally.Id)
+            .FirstOrDefault();
     }
 
     private void SummonForFight(
-        string wireId, uint entryId, ScriptMemory memory, DateTimeOffset now, List<string> responses)
+        string wireId, uint entryId, TimeSpan? lasts, ScriptMemory memory, DateTimeOffset now, List<string> responses)
     {
-        if (_instanceWorld is null || _shared is null) return;
-        if (!_shared.TryGetPosition(wireId, out var bossAt)) return;
+        if (_shared is null || !_shared.TryGetPosition(wireId, out var bossAt)) return;
+
+        var key = BossTiming.SummonKey(entryId);
+        memory.LastCast[key] = now;
+        memory.CastCount[key] = memory.CastCount.TryGetValue(key, out var count) ? count + 1 : 1;
 
         var angle = memory.Summons.Count * 1.7;
-        var spawn = new CreatureSpawnDefinition(
-            NextSummonSpawnId(), _instanceWorld.MapId, _copy.CreatureEntry(entryId),
-            (float)(bossAt.X + (Math.Cos(angle) * 4)),
-            bossAt.Y,
-            (float)(bossAt.Z + (Math.Sin(angle) * 4)),
-            0);
+        var at = new DomainPosition(
+            (float)(bossAt.X + (Math.Cos(angle) * 4)), bossAt.Y, (float)(bossAt.Z + (Math.Sin(angle) * 4)));
+        if (SummonAt(entryId, at, responses) is not { } summonId) return;
+        memory.Summons.Add(summonId);
+        if (lasts is TimeSpan life) _summonCrumblesAt[summonId] = now + life;
+    }
 
-        if (_instanceWorld.Summon(spawn) is not { } entity) return;
+    private string? SummonAt(uint authoredEntryId, DomainPosition at, List<string> responses)
+    {
+        if (_instanceWorld is null || _shared is null) return null;
+        var spawn = new CreatureSpawnDefinition(
+            NextSummonSpawnId(), _instanceWorld.MapId, _copy.CreatureEntry(authoredEntryId), at.X, at.Y, at.Z, 0);
+
+        if (_instanceWorld.Summon(spawn) is not { } entity) return null;
         _spawnById[spawn.Id] = spawn;
         var summonId = entity.Id.ToString();
         var home = new DomainPosition(entity.Position.X, entity.Position.Y, entity.Position.Z);
         _shared.Adopt(summonId, entity.SpawnId, home);
         _shared.SetPosition(summonId, home);
         RegisterCreature(entity);
-        memory.Summons.Add(summonId);
         responses.Add(SpawnedReply(entity));
+        return summonId;
     }
 
     private uint NextSummonSpawnId() => FightSummonSpawnIdBase + _nextFightSummon++;

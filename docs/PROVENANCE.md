@@ -230,6 +230,33 @@ this project's own:
 - The Executioner's armour-and-sweep rhythm opens at 9 seconds and repeats
   every 17; a cover holds 11 seconds (`src/scripts/Prison/ExecutionerScript.cs`,
   `BossTiming.CoverHolds`).
+- From the dungeon field guide (`docs/guides/dungeon-field-guide.md`,
+  compiled from online guides, videos and observed play): the prison
+  bosses' yells; Ariel's Putrefying from the pull; Cosmo's Shadow Shield
+  once he changes back at 25%; the "faraway gate" notice once Ariel and the
+  Executioner are both down, and Cosmo arriving
+  `GameContent.CosmoArrivesAfter` (10 s) later; a puppet left standing
+  `PuppetStandsFor` (10 s) before Cosmo eats it. The spell ids are the
+  operator's `spell` rows of the same names (Putrefying 2651/2766, Shadow
+  Shield 2638/2779, Normal/Legend).
+- Also from the field guide: an Undead Puppet crumbles
+  `CosmoScript.PuppetCrumblesAfter` (12 s) after it rises; Decayed Seed and
+  Flame Curse fall on any player in the fight; which prison inmate uses which
+  move, Bloodlust at 80/60/40/20%, Siphon Life only below half health with a
+  Vicious Orc Prisoner beside it, and a Bone Golem breaking into two Inferior
+  Bone Golems (`PrisonInmates`). How often each inmate move repeats is this
+  project's own choice. The Legend counterparts of the inmate spells are the
+  operator's `spell` rows of the same names in the Legend block.
+- `spell_affect_type` names effect targets 4 "AreaEnemy", 14 "Area Enemy Of
+  Target" and 16 "Position Area Enemy" (`SpellEffectTargets`), read from the
+  operator's table. The table gives no radius: an area round a creature
+  reaches 15 units and one round its target 6, this project's own choice
+  (`PlaySession.CreatureSpells.cs`).
+- A creature spell with a cast time in its `spell` row lands only when the
+  cast ends, and a self aura with no duration pulses every
+  `AuraService.TickInterval` until the creature ends it or dies. Of the
+  sessions fighting a creature, only the one whose player it has chosen acts
+  for it. These are this project's own design.
 - A training dummy stops counting itself as fighting 8 seconds after nobody
   is in reach (`TrainingDummyScript.CombatExitDelay`).
 - Melee reach 3 units.

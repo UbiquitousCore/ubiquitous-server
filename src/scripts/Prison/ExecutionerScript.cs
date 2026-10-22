@@ -27,7 +27,7 @@ public sealed class ExecutionerScript : CreatureScript
             var takeArmor = BossTiming.Count(context, BladeArmor) <= BossTiming.Count(context, Whirlwind);
             return takeArmor
                 ? new CombatAction(Cast: BladeArmor, At: CastTarget.Self, Sets: Covered)
-                : new CombatAction(Cast: Whirlwind, At: CastTarget.Self, Sets: Covered);
+                : new CombatAction(Cast: Whirlwind, At: CastTarget.Self, Sets: Covered, Yell: "Cyclone Slash!");
         }
 
         if (context.Marks.Contains(Covered))

@@ -159,6 +159,8 @@ public sealed partial class PlaySession : ISessionPlayer
 
     public Ubiquitous.Common.Position? PlayerPosition => _world?.PlayerPosition;
 
+    public bool IsAlive => _character is not null && !_combat.IsPlayerDead;
+
     public bool IsChatChannelJoined(string channel) => _chatHandler.IsJoined(channel);
 
     CharacterRecord? ISessionPlayer.Character => _character;
@@ -1028,7 +1030,7 @@ public sealed partial class PlaySession : ISessionPlayer
             MarkUnitValues(playerId, new Dictionary<string, int> { [WireCodes.UnitValue.Power] = powerRegen.Value, [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(wisdomBonus) }, now);
         }
 
-        TickDungeonCompletion(responses);
+        TickDungeonCompletion(now, responses);
         AnnounceEvades(now, responses);
         if (_combat.TakePlayerStruck() | struckOut)
         {

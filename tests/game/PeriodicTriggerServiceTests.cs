@@ -63,6 +63,31 @@ public sealed class PeriodicTriggerServiceTests
     }
 
     [Fact]
+    public void ASpellWithNoDuration_KeepsPulsingUntilItIsEnded()
+    {
+        var triggers = new PeriodicTriggerService();
+        triggers.Apply("Creature:1", spellId: 2651, triggerSpellId: 2679, chancePercent: 100, Now,
+            PeriodicTriggerService.TicksFor(durationMs: 0));
+        var at = Now;
+
+        for (int i = 0; i < 20; i++)
+        {
+            at += AuraService.TickInterval;
+            Assert.False(Assert.Single(triggers.Tick(at)).Expired);
+        }
+
+        Assert.True(triggers.End("Creature:1", 2651));
+        Assert.Empty(triggers.Tick(at + AuraService.TickInterval));
+    }
+
+    [Fact]
+    public void ASpellWithADuration_PulsesOnlyAsOftenAsTheDurationHolds()
+    {
+        Assert.Equal(2, PeriodicTriggerService.TicksFor(durationMs: 8000));
+        Assert.Equal(1, PeriodicTriggerService.TicksFor(durationMs: 1000));
+    }
+
+    [Fact]
     public void Tick_ReportsTheOriginalSpellIdSeparatelyFromTheTriggeredOne()
     {
         var triggers = new PeriodicTriggerService();

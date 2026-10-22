@@ -64,6 +64,12 @@ public sealed partial class DungeonTests
             }
         }
 
+        for (var i = 0; i < 8; i++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            log.AddRange(session.TickCombat(now));
+        }
+
         Assert.True(instances.HasReached(key, "boss.2668.down"));
         Assert.True(instances.HasReached(key, "boss.2666.down"));
 
@@ -78,6 +84,54 @@ public sealed partial class DungeonTests
         var finishedAt = log.FindIndex(m => m.Contains("\"type\":\"dungeon.completed\""));
         Assert.True(finishedAt < 0 || finishedAt > createdAt,
             "the run finished before its last boss was ever created");
+    }
+
+    [Fact]
+    public async Task KillingBothPlacedBosses_SoundsTheGateOnceAndBringsTheLastBossAfterADelay()
+    {
+        var content = GameContent.Development with
+        {
+            Creatures = new Dictionary<uint, CreatureDefinition>(GameContent.Development.Creatures)
+            {
+                [2668] = new(2668, "Ariel", 20, 10, MinDamage: 1, MaxDamage: 2, NoticeDistance: 1),
+                [2666] = new(2666, "creature-2666", 20, 10, MinDamage: 1, MaxDamage: 2, NoticeDistance: 1),
+                [2667] = new(2667, "Cosmo", 21, 10, MinDamage: 1, MaxDamage: 2, NoticeDistance: 1),
+            },
+        };
+        var (session, _) = await JoinAsync("dung32", "Ayla",
+            [
+                new CreatureSpawnDefinition(3003, 14, 2668, -681, InsideFloorY, -2097, 0),
+                new CreatureSpawnDefinition(3004, 14, 2666, -683, InsideFloorY, -2097, 0),
+            ],
+            content);
+        await MoveAsync(session, 2, GateInsideX, 2, GateApproachZ);
+
+        var now = DateTimeOffset.UtcNow;
+        var log = new List<(DateTimeOffset At, string Message)>();
+        foreach (var target in new[] { "Creature:1", "Creature:2" })
+        {
+            await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.AttackEngage, 290, new { targetId = target })));
+            for (var i = 0; i < 6; i++)
+            {
+                now += TimeSpan.FromSeconds(1);
+                log.AddRange(session.TickCombat(now).Select(m => (now, m)));
+            }
+        }
+
+        for (var i = 0; i < 20; i++)
+        {
+            now += TimeSpan.FromSeconds(1);
+            log.AddRange(session.TickCombat(now).Select(m => (now, m)));
+        }
+
+        var summon = Assert.Single(content.DungeonSummons);
+        var heard = Assert.Single(log, e => e.Message.Contains("\"type\":\"chat.received\"")
+            && e.Message.Contains("\"channel\":\"notice\"") && e.Message.Contains(summon.Notice!));
+        var appeared = Assert.Single(log, e => e.Message.Contains("\"type\":\"entity.spawned\"")
+            && e.Message.Contains("\"entry\":2667"));
+        Assert.True(appeared.At - heard.At >= GameContent.CosmoArrivesAfter,
+            $"the last boss came {appeared.At - heard.At} after the gate was heard");
     }
 
     [Fact]
@@ -691,6 +745,11 @@ public sealed partial class DungeonTests
 
         Assert.Contains(log, m => m.Contains("\"type\":\"entity.spawned\"")
             && m.Contains("\"entry\":2697"));
+
+        // 80 seconds of fighting leaves room for one puppet every 15, not one a tick.
+        Assert.InRange(log.Count(m => m.Contains("\"type\":\"entity.spawned\"") && m.Contains("\"entry\":2697")), 1, 6);
+        Assert.Contains(log, m => m.Contains("\"type\":\"chat.received\"") && m.Contains("\"channel\":\"yell\"")
+            && m.Contains("\"sender\":\"creature-2667\"") && m.Contains("The dead fight for ME!"));
     }
 
     [Fact]
@@ -716,6 +775,9 @@ public sealed partial class DungeonTests
         Assert.Contains(log, m => m.Contains("\"type\":\"spell.released\"") && m.Contains("\"spellId\":2674"));
         Assert.Contains(log, m => m.Contains("\"type\":\"spell.released\"") && m.Contains("\"spellId\":2675"));
         Assert.Contains(log, m => m.Contains("\"type\":\"spell.released\"") && m.Contains("\"spellId\":2683"));
+        Assert.Equal(
+            log.Count(m => m.Contains("\"type\":\"spell.released\"") && m.Contains("\"spellId\":2675")),
+            log.Count(m => m.Contains("\"channel\":\"yell\"") && m.Contains("Cyclone Slash!")));
     }
 
     [Fact]
@@ -828,8 +890,10 @@ public sealed partial class DungeonTests
             [2635] = new(2635, "spell-2635", 0, 0, 0f),
             [2636] = new(2636, "spell-2636", 0, 0, 0f, EffectHeal: 4000),
             [2637] = new(2637, "spell-2637", 0, 0, 0f),
+            [2638] = new(2638, "spell-2638", 0, 0, 0f),
             [2645] = new(2645, "spell-2645", 0, 0, 0f, EffectDamage: 100000),
             [2647] = new(2647, "spell-2647", 0, 0, 0f),
+            [2651] = new(2651, "spell-2651", 0, 0, 0f),
             [2652] = new(2652, "spell-2652", 0, 0, 30f, AuraStun: true),
             [2657] = new(2657, "spell-2657", 2000, 0, 0f, EffectDamage: 1),
             [2674] = new(2674, "spell-2674", 0, 0, 0f),

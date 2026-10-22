@@ -95,6 +95,12 @@ public sealed partial class DungeonTests
             }
         }
 
+        for (var i = 0; i < 8; i++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            log.AddRange(session.TickCombat(now));
+        }
+
         Assert.True(instances.HasReached(key, "boss.2668.down"));
         Assert.True(instances.HasReached(key, "boss.2666.down"));
         Assert.Contains(log, m => m.Contains("\"type\":\"dungeon.barrierOpened\""));
