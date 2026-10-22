@@ -10,6 +10,8 @@ public enum PlayerBlowKind
     Heal,
     Aura,
     Harm,
+
+    CreatureSpell,
 }
 
 public sealed record PlayerBlow(

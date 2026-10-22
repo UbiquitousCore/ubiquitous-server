@@ -104,6 +104,8 @@ public sealed partial class CombatService
 
     public int RollAmount(int min, int max) => Roll(min, max);
 
+    public int PickOne(int count) => count <= 1 ? 0 : Math.Min(count - 1, (int)(_rollUnit() * count));
+
     private int Roll(int min, int max) => min >= max ? min : _rollDamage(min, max);
 
     private static bool LooksLikePlayerId(string id) => id.StartsWith("player:", StringComparison.Ordinal);

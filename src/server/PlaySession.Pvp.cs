@@ -54,6 +54,11 @@ public sealed partial class PlaySession
         foreach (var blow in _blows.Drain(playerId))
         {
             if (_combat.IsPlayerDead) continue;
+            if (blow.Kind == PlayerBlowKind.CreatureSpell)
+            {
+                TakeRelayedCreatureSpell(blow, now, responses);
+                continue;
+            }
             if (blow.Kind is PlayerBlowKind.Heal or PlayerBlowKind.Aura)
             {
                 if (IsPlayerOpponent(blow.AttackerId)) continue;

@@ -30,6 +30,7 @@ public sealed partial record GameContent
             [2679] = 2687,
             [2688] = 2689,
             [2690] = 2691,
+            [2692] = 2693,
         },
         Spells: new Dictionary<uint, uint>
         {
@@ -49,6 +50,21 @@ public sealed partial record GameContent
             [2637] = 2777,
             [2638] = 2779,
             [2647] = 2778,
+            [2641] = 2722,
+            [2646] = 2723,
+            [2649] = 2724,
+            [2650] = 2725,
+            [2653] = 2726,
+            [2655] = 2727,
+            [2658] = 2728,
+            [2659] = 2729,
+            [2662] = 2731,
+            [2663] = 2732,
+            [2664] = 2733,
+            [2666] = 2735,
+            [2667] = 2736,
+            [2669] = 2738,
+            [2682] = 2739,
         });
 
     public static GameContent Development { get; } = new(
@@ -264,6 +280,16 @@ public sealed partial record GameContent
             [2666] = "boss.executioner",
             [2668] = "boss.ariel",
             [2667] = "boss.cosmo",
+            [2672] = "inmate.fleshGolem",
+            [2673] = "inmate.rottenJailHound",
+            [2674] = "inmate.boneGolem",
+            [2675] = "inmate.humanPrisoner",
+            [2676] = "inmate.viciousOrcPrisoner",
+            [2677] = "inmate.rottenFleshGolem",
+            [2678] = "inmate.elfPrisoner",
+            [2679] = "inmate.viciousHumanPrisoner",
+            [2688] = "inmate.viciousElfPrisoner",
+            [2690] = "inmate.humanPrisonerCapo",
             [1226] = "creature.trainingDummy",
         },
         DungeonSummons:

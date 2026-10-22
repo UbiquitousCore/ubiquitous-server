@@ -159,6 +159,8 @@ public sealed partial class PlaySession : ISessionPlayer
 
     public Ubiquitous.Common.Position? PlayerPosition => _world?.PlayerPosition;
 
+    public bool IsAlive => _character is not null && !_combat.IsPlayerDead;
+
     public bool IsChatChannelJoined(string channel) => _chatHandler.IsJoined(channel);
 
     CharacterRecord? ISessionPlayer.Character => _character;

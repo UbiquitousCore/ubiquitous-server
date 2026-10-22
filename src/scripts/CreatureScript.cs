@@ -21,6 +21,10 @@ public enum CastTarget
     Self,
 
     OwnSummon,
+
+    AnyEnemy,
+
+    Ally,
 }
 
 public sealed record CombatTurnContext(
@@ -31,7 +35,11 @@ public sealed record CombatTurnContext(
     IReadOnlyDictionary<uint, TimeSpan> SinceCast,
     IReadOnlyDictionary<uint, int> CastCount,
     int SummonsInReach,
-    IReadOnlySet<string> Marks);
+    IReadOnlySet<string> Marks,
+    IReadOnlyCollection<uint>? AlliesInReach = null)
+{
+    public bool HasAllyInReach(uint entryId) => AlliesInReach?.Contains(entryId) == true;
+}
 
 public sealed record CombatAction(
     uint? Cast = null,
@@ -39,7 +47,10 @@ public sealed record CombatAction(
     uint? Summon = null,
     string? Sets = null,
     string? Clears = null,
-    string? Yell = null);
+    string? Yell = null,
+    uint? Ends = null,
+    TimeSpan? SummonLasts = null,
+    uint? AllyEntry = null);
 
 public abstract class CreatureScript
 {
@@ -67,6 +78,8 @@ public abstract class CreatureScript
         && context.HealthFraction <= FleeHealthFraction;
 
     public virtual CombatAction? Act(CombatTurnContext context) => null;
+
+    public virtual IReadOnlyList<uint> DiesInto => [];
 
     protected static double HoldRange(CreatureDefinition? creature) =>
         creature?.LeashRange is float leash && leash > 0 ? leash : DefaultHoldRange;

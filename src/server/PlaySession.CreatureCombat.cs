@@ -122,6 +122,7 @@ public sealed partial class PlaySession
     private void KillShared(string wireId, DateTimeOffset now)
     {
         if (_shared is null || !_sight.SpawnIds.TryGetValue(wireId, out var spawnId)) return;
+        NoteDeathSplits(wireId);
         _shared.Kill(spawnId, now);
         if (_instanceWorld is not null && _spawnById.TryGetValue(spawnId, out var spawn))
         {

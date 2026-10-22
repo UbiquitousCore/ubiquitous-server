@@ -65,6 +65,9 @@ public static class SpellEffectTargets
 {
     public const int Self = 1;
     public const int SingleEnemy = 2;
+    public const int AreaEnemy = 4;
+    public const int AreaEnemyOfTarget = 14;
+    public const int PositionAreaEnemy = 16;
 
     public static bool IsFriendly(int target) => target is 6 or 9 or 10 or 11 or 13 or 17;
 }

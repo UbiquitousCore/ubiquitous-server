@@ -40,13 +40,16 @@ public sealed class CosmoScript : CreatureScript
     // The players' window to kill a puppet before he eats it.
     private static readonly TimeSpan PuppetStandsFor = TimeSpan.FromSeconds(10);
 
+    public static readonly TimeSpan PuppetCrumblesAfter = TimeSpan.FromSeconds(12);
+
     public override CombatAction? Act(CombatTurnContext context)
     {
         var demon = context.Marks.Contains(Demon);
         var reverted = context.Marks.Contains(Reverted);
 
         if (demon && !reverted && context.HealthFraction <= ChangesBackAt)
-            return new CombatAction(Cast: RemoveMetamorphosis, At: CastTarget.Self, Sets: Reverted, Clears: Demon);
+            return new CombatAction(
+                Cast: RemoveMetamorphosis, At: CastTarget.Self, Sets: Reverted, Clears: Demon, Ends: Metamorphosis);
 
         if (!demon && !reverted && context.HealthFraction <= ChangesAt)
             return new CombatAction(
@@ -69,7 +72,7 @@ public sealed class CosmoScript : CreatureScript
 
         var sinceAny = BossTiming.SinceAny(context, ThunderCurse, ColdCurse, FlameCurse);
         if (sinceAny is not null && sinceAny < BetweenCurses) return null;
-        return new CombatAction(Cast: next, At: CastTarget.Enemy);
+        return new CombatAction(Cast: next, At: next == FlameCurse ? CastTarget.AnyEnemy : CastTarget.Enemy);
     }
 
     private static CombatAction? Shaped(CombatTurnContext context)
@@ -85,7 +88,7 @@ public sealed class CosmoScript : CreatureScript
             return new CombatAction(Cast: ShadowErode, At: CastTarget.Self);
 
         return BossTiming.SummonDue(context, UndeadPuppet, PuppetEvery)
-            ? new CombatAction(Summon: UndeadPuppet, Yell: "The dead fight for ME!")
+            ? new CombatAction(Summon: UndeadPuppet, Yell: "The dead fight for ME!", SummonLasts: PuppetCrumblesAfter)
             : null;
     }
 }

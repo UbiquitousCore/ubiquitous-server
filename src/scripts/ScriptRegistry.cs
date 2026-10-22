@@ -5,17 +5,20 @@ namespace Ubiquitous.Scripts;
 
 public sealed class ScriptRegistry
 {
+    private static readonly CreatureScript[] Known =
+    [
+        DefaultCreatureScript.Instance,
+        GuardScript.Instance,
+        DungeonInmateScript.Instance,
+        TrainingDummyScript.Instance,
+        ExecutionerScript.Instance,
+        ArielScript.Instance,
+        CosmoScript.Instance,
+        .. PrisonInmates.All,
+    ];
+
     public static readonly IReadOnlyDictionary<string, CreatureScript> Catalogue =
-        new Dictionary<string, CreatureScript>(StringComparer.Ordinal)
-        {
-            [DefaultCreatureScript.Instance.Name] = DefaultCreatureScript.Instance,
-            [GuardScript.Instance.Name] = GuardScript.Instance,
-            [DungeonInmateScript.Instance.Name] = DungeonInmateScript.Instance,
-            [TrainingDummyScript.Instance.Name] = TrainingDummyScript.Instance,
-            [ExecutionerScript.Instance.Name] = ExecutionerScript.Instance,
-            [ArielScript.Instance.Name] = ArielScript.Instance,
-            [CosmoScript.Instance.Name] = CosmoScript.Instance,
-        };
+        Known.ToDictionary(script => script.Name, StringComparer.Ordinal);
 
     private readonly IReadOnlyDictionary<uint, string> _namedByEntry;
     private readonly InstanceScript _dungeon;
