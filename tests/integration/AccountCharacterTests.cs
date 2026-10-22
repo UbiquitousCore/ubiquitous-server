@@ -2003,9 +2003,11 @@ public sealed class AccountCharacterTests
         Assert.False(toCity.Contains(toForest.DestinationX, toForest.DestinationZ));
         Assert.False(toForest.Contains(toCity.DestinationX, toCity.DestinationZ));
 
-        var mouth = gates.Single(g => g.IsDungeonEntrance);
-        var wayOut = gates.Single(g => g.IsDungeonExit);
-        Assert.False(wayOut.Contains(mouth.DestinationX, mouth.DestinationZ));
-        Assert.False(mouth.Contains(wayOut.DestinationX, wayOut.DestinationZ));
+        foreach (var mouth in gates.Where(g => g.IsDungeonEntrance))
+        {
+            var wayOut = gates.Single(g => g.IsDungeonExit && g.SourceMapId == mouth.DestinationMapId);
+            Assert.False(wayOut.Contains(mouth.DestinationX, mouth.DestinationZ));
+            Assert.False(mouth.Contains(wayOut.DestinationX, wayOut.DestinationZ));
+        }
     }
 }

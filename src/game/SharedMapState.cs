@@ -348,6 +348,19 @@ public sealed class SharedMapState : IHostilityLog
         lock (_gate) _mobVictims.Remove(mobId);
     }
 
+    private readonly Dictionary<string, DateTimeOffset> _claims = new(StringComparer.Ordinal);
+
+    // Lets exactly one of the sessions sharing this map do a recurring thing, once per period.
+    public bool TryClaimEvery(string key, TimeSpan every, DateTimeOffset now)
+    {
+        lock (_gate)
+        {
+            if (_claims.TryGetValue(key, out var last) && now - last < every) return false;
+            _claims[key] = now;
+            return true;
+        }
+    }
+
     public IReadOnlyCollection<string> Fighters(string mobId)
     {
         lock (_gate)

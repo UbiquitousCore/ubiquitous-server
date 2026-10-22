@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using Ubiquitous.Game;
 using Ubiquitous.Protocol.Web;
 
 namespace Ubiquitous.Server;
@@ -37,6 +38,9 @@ internal static class EventAudience
 
     public static bool IsMapWide(OutboundEvent outbound)
     {
+        // A creature's yell and a dungeon's notice are heard by everyone there; players' own chat is routed apart.
+        if (outbound.Type == WebMessageTypes.ChatReceived)
+            return outbound.ChatChannel is ChatService.Yell or ChatService.Notice;
         var isPresenceChange = outbound.Type is WebMessageTypes.EntitySpawned or WebMessageTypes.EntityRemoved;
         if (isPresenceChange && outbound.NetworkId is { Length: > 0 } id
             && !id.StartsWith(PlayerIdPrefix, StringComparison.Ordinal))

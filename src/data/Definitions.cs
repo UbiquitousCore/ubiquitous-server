@@ -157,6 +157,20 @@ public sealed record MapGateDefinition(
     }
 }
 
+public sealed record MapPoint(float X, float Y, float Z);
+
+// Where a dungeon's keeper starts, the ground its ritual is held on, and where the creatures that come for it
+// appear. Talking to the keeper (its chat-menu script) starts the escort.
+public sealed record RitualSiteDefinition(
+    ushort MapId,
+    string Ritual,
+    uint GossipScript,
+    uint KeeperEntry,
+    uint CastingKeeperEntry,
+    MapPoint KeeperStart,
+    MapPoint Site,
+    IReadOnlyList<MapPoint> WaveGates);
+
 public sealed record DungeonSummonDefinition(
     ushort MapId,
     uint CreatureEntryId,

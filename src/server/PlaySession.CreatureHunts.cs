@@ -93,25 +93,32 @@ public sealed partial class PlaySession
             if (nearest is not int picked) continue;
 
             var preyId = quarry[picked].Id;
-            if (!_shared.TryClaimHunt(hunterId, preyId)) continue;
-            var result = _combat.Start(hunterId, preyId,
-                _sight.Entries.Keys.ToHashSet(StringComparer.Ordinal), now, CombatStatsFor(preyId));
-            if (result is null)
-            {
-                _shared.ReleaseHunt(hunterId);
-                continue;
-            }
+            if (!BeginHunt(hunterId, preyId, new DomainPosition(spawn.X, spawn.Y, spawn.Z), now, responses)) continue;
             quarry.RemoveAt(picked);
-            _hunts[hunterId] = (preyId, new DomainPosition(spawn.X, spawn.Y, spawn.Z));
-            HoldEngaged(hunterId);
-            HoldEngaged(preyId);
-            responses.Add(Reply(WebMessageTypes.AttackMeleeStart, new AttackMeleeStartPayload(
-                WebNetworkId.FromString(hunterId), WebNetworkId.FromString(preyId))));
-            responses.Add(Reply(WebMessageTypes.AttackEnterCombat,
-                new AttackEnterCombatPayload(WebNetworkId.FromString(hunterId))));
-            responses.Add(Reply(WebMessageTypes.AttackEnterCombat,
-                new AttackEnterCombatPayload(WebNetworkId.FromString(preyId))));
         }
+    }
+
+    private bool BeginHunt(string hunterId, string preyId, DomainPosition home, DateTimeOffset now, List<string> responses)
+    {
+        if (_shared is null || !_shared.TryClaimHunt(hunterId, preyId)) return false;
+        var result = _combat.Start(hunterId, preyId,
+            _sight.Entries.Keys.ToHashSet(StringComparer.Ordinal), now, CombatStatsFor(preyId));
+        if (result is null)
+        {
+            _shared.ReleaseHunt(hunterId);
+            return false;
+        }
+
+        _hunts[hunterId] = (preyId, home);
+        HoldEngaged(hunterId);
+        HoldEngaged(preyId);
+        responses.Add(Reply(WebMessageTypes.AttackMeleeStart, new AttackMeleeStartPayload(
+            WebNetworkId.FromString(hunterId), WebNetworkId.FromString(preyId))));
+        responses.Add(Reply(WebMessageTypes.AttackEnterCombat,
+            new AttackEnterCombatPayload(WebNetworkId.FromString(hunterId))));
+        responses.Add(Reply(WebMessageTypes.AttackEnterCombat,
+            new AttackEnterCombatPayload(WebNetworkId.FromString(preyId))));
+        return true;
     }
 
     private bool FreeForAHunt(string wireId) =>

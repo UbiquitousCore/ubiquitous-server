@@ -25,6 +25,8 @@ public enum CastTarget
     AnyEnemy,
 
     Ally,
+
+    WoundedAlly,
 }
 
 public sealed record CombatTurnContext(
@@ -37,7 +39,8 @@ public sealed record CombatTurnContext(
     int SummonsInReach,
     IReadOnlySet<string> Marks,
     IReadOnlyCollection<uint>? AlliesInReach = null,
-    bool Legend = false)
+    bool Legend = false,
+    bool WoundedAllyInReach = false)
 {
     public bool HasAllyInReach(uint entryId) => AlliesInReach?.Contains(entryId) == true;
 }
@@ -51,7 +54,8 @@ public sealed record CombatAction(
     string? Yell = null,
     uint? Ends = null,
     TimeSpan? SummonLasts = null,
-    uint? AllyEntry = null);
+    uint? AllyEntry = null,
+    uint? LeavesPool = null);
 
 public abstract class CreatureScript
 {
@@ -66,6 +70,10 @@ public abstract class CreatureScript
     public virtual bool Chases => true;
 
     public virtual bool DrawsOthersIn => true;
+
+    public virtual string? PullLine => null;
+
+    public virtual string? DeathLine => null;
 
     public virtual IReadOnlyList<string> Shouts => [];
 

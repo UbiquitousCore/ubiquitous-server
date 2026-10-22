@@ -263,9 +263,11 @@ public sealed partial record GameContent
                 SourceMapId: 14, SourceMinX: -687, SourceMaxX: -680, SourceMinZ: -2094, SourceMaxZ: -2087,
                 DestinationMapId: 1, DestinationX: -2678, DestinationY: 39, DestinationZ: -582, DestinationYaw: 2.02f,
                 IsDungeonExit: true),
+            .. RelicsKeyGates,
         ],
         Dungeons: [new DungeonDefinition(14, "The Prison", [9401]),
-            new DungeonDefinition(14, "The Prison", [2666, 2668, 2667], PrisonLegend)],
+            new DungeonDefinition(14, "The Prison", [2666, 2668, 2667], PrisonLegend),
+            new DungeonDefinition(RelicsKeyMap, "Relic's Key", [2619, 2620, 2621], RelicsKeyLegend)],
         DungeonBarriers:
         [
             new DungeonBarrierDefinition(
@@ -275,7 +277,7 @@ public sealed partial record GameContent
                 OpenedBy: "boss.2668.down",
                 Models: ["dungeon_door01"]),
         ],
-        CreatureScripts: new Dictionary<uint, string>
+        CreatureScripts: new Dictionary<uint, string>(RelicsKeyScripts)
         {
             [2666] = "boss.executioner",
             [2668] = "boss.ariel",
@@ -302,6 +304,7 @@ public sealed partial record GameContent
                 X: PrisonInnerDoor.X, Y: PrisonInnerDoor.Y, Z: PrisonInnerDoor.Z - CosmoDepthPastDoor,
                 Notice: "You hear a faraway gate creaking open...",
                 Delay: CosmoArrivesAfter),
+            RelicsKeyKeeper,
         ],
         StartingActionBar: [
             .. DevelopmentLoadout.ActionBar,
@@ -313,6 +316,10 @@ public sealed partial record GameContent
         {
             [2641] = 5,
             [2722] = 5,
+            [2408] = 5,
+            [2525] = 5,
         },
+        SpellReach = RelicsKeyReach,
+        RitualSites = [RelicsKeyRitualSite],
     };
 }

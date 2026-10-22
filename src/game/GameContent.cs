@@ -92,6 +92,10 @@ public sealed partial record GameContent(
 
     public IReadOnlyDictionary<uint, int> SpellStackLimits { get; init; } = new Dictionary<uint, int>();
 
+    public IReadOnlyDictionary<uint, float> SpellReach { get; init; } = new Dictionary<uint, float>();
+
+    public IReadOnlyList<RitualSiteDefinition> RitualSites { get; init; } = [];
+
     public IReadOnlyDictionary<uint, WaypointRouteDefinition> WaypointRoutes { get; init; } =
         WaypointRoutes ?? new Dictionary<uint, WaypointRouteDefinition>();
 }

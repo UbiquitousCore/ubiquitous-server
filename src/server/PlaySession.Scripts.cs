@@ -23,10 +23,12 @@ public sealed partial class PlaySession
     {
         if (_character is null || _shared is null) return;
         var playerId = PlayerUnitId;
-        TickDeathSplits(responses);
+        TickDeaths(responses);
         TickCrumblingSummons(now, responses);
         TickCreaturePulses(playerId, now, responses);
         TickCreatureCasts(playerId, now, responses);
+        TickPools(now, responses);
+        TickRitual(now, responses);
         TickShouts(now, responses);
         if (_combat.IsPlayerDead || _combat.IsDead(playerId)) return;
 
@@ -45,7 +47,10 @@ public sealed partial class PlaySession
             if (_shared.MobVictim(wireId) is { } victim && !string.Equals(victim, playerId, StringComparison.Ordinal))
                 continue;
             if (_creatureCasts.ContainsKey(wireId)) continue;
-            var action = ScriptFor(wireId).Act(TurnContextFor(wireId, now));
+            var pulled = !_scriptMemory.ContainsKey(wireId);
+            var script = ScriptFor(wireId);
+            var action = script.Act(TurnContextFor(wireId, now));
+            if (pulled && script.PullLine is { } pullLine) YellAs(wireId, pullLine, responses);
             if (action is null) continue;
             Perform(wireId, action, playerId, now, responses);
         }
@@ -67,7 +72,8 @@ public sealed partial class PlaySession
             SummonsInReach(wireId, memory),
             memory.Marks,
             AlliesInReach(wireId),
-            _copy.Mode == DungeonMode.Legend);
+            _copy.Mode == DungeonMode.Legend,
+            MostWoundedAlly(wireId) is not null);
     }
 
     private void ResetCreature(string wireId, List<string> responses)
@@ -78,24 +84,17 @@ public sealed partial class PlaySession
             responses.Add(AuraEnded(wireId, wireId, _copy.Spell(spellId)));
     }
 
-    private readonly Dictionary<string, (DateTimeOffset At, int Next)> _shouts = new(StringComparer.Ordinal);
-
     private void TickShouts(DateTimeOffset now, List<string> responses)
     {
+        if (_shared is null) return;
         foreach (var wireId in _sight.Ids)
         {
             var script = ScriptFor(wireId);
             if (script.Shouts.Count == 0 || BodyGone(wireId) || CreatureFor(wireId) is not { } shouter) continue;
-            if (!_shouts.TryGetValue(wireId, out var last))
-            {
-                _shouts[wireId] = (now, 0);
-                continue;
-            }
-
-            if (now - last.At < script.ShoutEvery) continue;
-            var line = script.Shouts[last.Next % script.Shouts.Count];
-            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, line, WebNetworkId.FromString(wireId))));
-            _shouts[wireId] = (now, last.Next + 1);
+            if (!_shared.TryClaimEvery($"shout:{wireId}", script.ShoutEvery, now)) continue;
+            var turn = (int)((now - DateTimeOffset.UnixEpoch) / script.ShoutEvery);
+            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(
+                ChatService.Yell, shouter.NameKey, script.Shouts[turn % script.Shouts.Count], WebNetworkId.FromString(wireId))));
         }
     }
 
@@ -144,15 +143,17 @@ public sealed partial class PlaySession
         if (action.Clears is not null) memory.Marks.Remove(action.Clears);
         if (action.Sets is not null) memory.Marks.Add(action.Sets);
 
-        if (action.Yell is { } yell && CreatureFor(wireId) is { } shouter)
-            responses.Add(Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, yell, WebNetworkId.FromString(wireId))));
+        if (action.Yell is { } yell) YellAs(wireId, yell, responses);
         if (action.Ends is uint ended) EndCreatureAura(wireId, _copy.Spell(ended), responses);
         if (action.Summon is uint entryId) SummonForFight(wireId, entryId, action.SummonLasts, memory, now, responses);
-        if (action.Cast is uint spellId)
-            CastAsCreature(wireId, spellId, action.At, action.AllyEntry, playerId, memory, now, responses);
+        if (action.Cast is not uint spellId) return;
+        var targetId = CastAsCreature(wireId, spellId, action.At, action.AllyEntry, playerId, memory, now, responses);
+        if (action.LeavesPool is uint pool && targetId is not null
+            && _content.Spells.TryGetValue(_copy.Spell(spellId), out var cast))
+            DropPool(wireId, _copy.Spell(pool), targetId, TimeSpan.FromMilliseconds(cast.DurationMs), now);
     }
 
-    private void CastAsCreature(
+    private string? CastAsCreature(
         string wireId, uint spellId, CastTarget at, uint? allyEntry, string playerId,
         ScriptMemory memory, DateTimeOffset now, List<string> responses)
     {
@@ -161,13 +162,14 @@ public sealed partial class PlaySession
         memory.CastCount[spellId] = memory.CastCount.TryGetValue(spellId, out var count) ? count + 1 : 1;
 
         var castId = _copy.Spell(spellId);
-        if (!_content.Spells.TryGetValue(castId, out var spell)) return;
+        if (!_content.Spells.TryGetValue(castId, out var spell)) return null;
 
         var targetId = at switch
         {
             CastTarget.Self => wireId,
             CastTarget.OwnSummon => memory.Summons.FirstOrDefault() ?? wireId,
             CastTarget.Ally => NearestAlly(wireId, allyEntry) ?? wireId,
+            CastTarget.WoundedAlly => MostWoundedAlly(wireId) ?? wireId,
             CastTarget.AnyEnemy => AnyEnemyOf(wireId, playerId),
             _ => playerId,
         };
@@ -177,10 +179,40 @@ public sealed partial class PlaySession
             _creatureCasts[wireId] = new PendingCreatureCast(castId, spell, targetId, now.AddMilliseconds(spell.CastTimeMs));
             responses.Add(Reply(WebMessageTypes.SpellCasting,
                 new SpellCastingPayload(castId, WebNetworkId.FromString(wireId), spell.CastTimeMs)));
-            return;
+            return targetId;
         }
 
         LandCreatureSpell(wireId, targetId, castId, spell, now, responses);
+        return targetId;
+    }
+
+    private void YellAs(string wireId, string line, List<string> responses)
+    {
+        if (CreatureFor(wireId) is not { } shouter) return;
+        responses.Add(Reply(WebMessageTypes.ChatReceived,
+            new ChatReceivedPayload(ChatService.Yell, shouter.NameKey, line, WebNetworkId.FromString(wireId))));
+    }
+
+    // Own choice: "under half health", the guide's line for when a healer steps in.
+    private const double WoundedBelow = 0.5;
+
+    private string? MostWoundedAlly(string wireId)
+    {
+        if (_shared is null || !_shared.TryGetPosition(wireId, out var at)) return null;
+        string? worst = _combat.HealthFractionOf(wireId) <= WoundedBelow ? wireId : null;
+        var worstFraction = worst is null ? WoundedBelow : _combat.HealthFractionOf(wireId);
+        foreach (var otherId in _sight.Ids)
+        {
+            if (string.Equals(otherId, wireId, StringComparison.Ordinal) || BodyGone(otherId)) continue;
+            if (!_shared.TryGetPosition(otherId, out var otherAt) || Apart(at, otherAt) > BossTiming.SummonReach) continue;
+            if (FactionOf(CreatureFor(otherId)) != FactionOf(CreatureFor(wireId))) continue;
+            var fraction = _combat.HealthFractionOf(otherId);
+            if (fraction > worstFraction) continue;
+            worst = otherId;
+            worstFraction = fraction;
+        }
+
+        return worst;
     }
 
     private string? NearestAlly(string wireId, uint? allyEntry)

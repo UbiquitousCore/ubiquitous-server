@@ -126,6 +126,8 @@ public static class WireCodes
         public const string NotEnoughMoney = "notEnoughMoney";
 
         public const string NothingHappens = "nothingHappens";
+
+        public const string Started = "started";
     }
 
     public static class SpellRefusal

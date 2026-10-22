@@ -620,6 +620,14 @@ public sealed partial class PlaySession : ISessionPlayer
         string Answer(string result) => Reply(WebMessageTypes.NpcChoiceResult,
             new NpcChoiceResultPayload(WebNetworkId.FromString(networkId), menuId, choice, result));
 
+        if (pick.Kind == GossipPickKind.RunsScript)
+        {
+            var started = new List<string>();
+            return StartRitual(networkId, pick.Script, Now, started)
+                ? [Answer(WireCodes.ChoiceResult.Started), .. started]
+                : [Answer(WireCodes.ChoiceResult.NothingHappens)];
+        }
+
         if (pick.Kind != GossipPickKind.Teleport || _world is null || _character is null)
             return [Answer(WireCodes.ChoiceResult.NothingHappens)];
 

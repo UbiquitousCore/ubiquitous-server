@@ -15,7 +15,12 @@ public sealed class ScriptRegistry
         ArielScript.Instance,
         CosmoScript.Instance,
         AndareScript.Instance,
+        HathraadScript.Instance,
+        KermodeScript.Instance,
+        AlrRahjilScript.Instance,
+        TharrathScript.Instance,
         .. PrisonInmates.All,
+        .. RelicsKeyCreatures.All,
     ];
 
     public static readonly IReadOnlyDictionary<string, CreatureScript> Catalogue =
@@ -50,6 +55,12 @@ public sealed class ScriptRegistry
     }
 
     public bool IsDungeonMap(ushort mapId) => _dungeonMaps.Contains(mapId);
+
+    public static Ritual? RitualFor(string name) => name switch
+    {
+        "ritual.relicsKey" => RelicsKeyRitual.Create(),
+        _ => null,
+    };
 
     public InstanceScript ForMap(ushort mapId) => _dungeon;
 

@@ -11,9 +11,11 @@ public enum GossipPickKind
     NothingHappens,
 
     Teleport,
+
+    RunsScript,
 }
 
-public sealed record GossipPick(GossipPickKind Kind, GossipTeleportDefinition? Teleport = null);
+public sealed record GossipPick(GossipPickKind Kind, GossipTeleportDefinition? Teleport = null, uint Script = 0);
 
 // What a chat-menu script does on this server, by the script id a choice slot names.
 public static class GossipScripts
@@ -21,8 +23,13 @@ public static class GossipScripts
     // The Orc Teleporter's and Akhan's offer to send the player to the Town of Silence.
     public const uint SendToTownOfSilence = 562;
 
+    // Tharrath's offer, in the swamp's dungeon, to lead the way to his ritual.
+    public const uint StartsRitual = 591;
+
     // The teleport spot the client's tables name "HF-Silent town".
     public const uint TownOfSilenceSpot = 1;
+
+    public static readonly IReadOnlySet<uint> ServerEvents = new HashSet<uint> { StartsRitual };
 
     public static readonly IReadOnlyDictionary<uint, uint> TeleportSpots = new Dictionary<uint, uint>
     {
@@ -53,6 +60,9 @@ public sealed class GossipService
 
         var teleport = menu.Teleports.FirstOrDefault(offer => offer.Choice == request.Choice)
             ?? ScriptedTeleport(menu, request.Choice, spots);
+        var script = menu.Scripts?.ElementAtOrDefault(request.Choice - 1) ?? 0;
+        if (teleport is null && GossipScripts.ServerEvents.Contains(script))
+            return new GossipPick(GossipPickKind.RunsScript, Script: script);
         return teleport is null || teleport.Currency != 0
             ? new GossipPick(GossipPickKind.NothingHappens)
             : new GossipPick(GossipPickKind.Teleport, teleport);

@@ -54,14 +54,9 @@ public sealed partial class PlaySession
         string casterId, string targetId, uint spellId, SpellDefinition effect, int effectIndex,
         DateTimeOffset now, List<string> responses)
     {
-        if (AreaOf(casterId, targetId, effect.EffectTarget) is var (centre, reach))
+        if (AreaOf(casterId, targetId, spellId, effect.EffectTarget) is var (centre, reach))
         {
-            foreach (var playerId in EnemiesOf(casterId))
-            {
-                if (PositionOfPlayer(playerId) is { } standing && Apart(centre, standing) <= reach)
-                    HitPlayerWithCreatureSpell(casterId, playerId, spellId, effect, effectIndex, now, responses);
-            }
-
+            LandAreaAt(casterId, centre, reach, spellId, effect, effectIndex, now, responses);
             return;
         }
 
@@ -71,19 +66,56 @@ public sealed partial class PlaySession
             LandOnCreature(casterId, targetId, spellId, effect, now, responses);
     }
 
-    private (DomainPosition Centre, double Reach)? AreaOf(string casterId, string targetId, int effectTarget)
+    private void LandAreaAt(
+        string casterId, DomainPosition centre, double reach, uint spellId, SpellDefinition effect, int effectIndex,
+        DateTimeOffset now, List<string> responses)
+    {
+        foreach (var playerId in EnemiesOf(casterId))
+        {
+            if (PositionOfPlayer(playerId) is { } standing && Apart(centre, standing) <= reach)
+                HitPlayerWithCreatureSpell(casterId, playerId, spellId, effect, effectIndex, now, responses);
+        }
+    }
+
+    private (DomainPosition Centre, double Reach)? AreaOf(string casterId, string targetId, uint spellId, int effectTarget)
     {
         if (effectTarget == SpellEffectTargets.AreaEnemy)
-            return CreaturePosition(casterId) is { } at ? (at, CreatureAreaAroundCaster) : null;
+            return CreaturePosition(casterId) is { } at ? (at, ReachOf(spellId, CreatureAreaAroundCaster)) : null;
         if (effectTarget is SpellEffectTargets.AreaEnemyOfTarget or SpellEffectTargets.PositionAreaEnemy)
-        {
-            var at = targetId.StartsWith("player:", StringComparison.Ordinal)
-                ? PositionOfPlayer(targetId)
-                : CreaturePosition(targetId);
-            return at is { } centre ? (centre, CreatureAreaAroundTarget) : null;
-        }
-
+            return PositionOf(targetId) is { } centre ? (centre, ReachOf(spellId, CreatureAreaAroundTarget)) : null;
         return null;
+    }
+
+    private double ReachOf(uint spellId, double otherwise) =>
+        _content.SpellReach.TryGetValue(spellId, out var reach) ? reach : otherwise;
+
+    private DomainPosition? PositionOf(string unitId) => unitId.StartsWith("player:", StringComparison.Ordinal)
+        ? PositionOfPlayer(unitId)
+        : CreaturePosition(unitId);
+
+    private sealed record GroundPool(string CasterId, uint SpellId, DomainPosition Centre, DateTimeOffset Until)
+    {
+        public DateTimeOffset NextAt { get; set; }
+    }
+
+    private readonly List<GroundPool> _pools = [];
+
+    private void DropPool(string casterId, uint poolSpellId, string targetId, TimeSpan lasts, DateTimeOffset now)
+    {
+        if (PositionOf(targetId) is not { } centre) return;
+        _pools.Add(new GroundPool(casterId, poolSpellId, centre, now + lasts) { NextAt = now });
+    }
+
+    private void TickPools(DateTimeOffset now, List<string> responses)
+    {
+        _pools.RemoveAll(pool => now >= pool.Until || BodyGone(pool.CasterId));
+        foreach (var pool in _pools)
+        {
+            if (now < pool.NextAt || !_content.Spells.TryGetValue(pool.SpellId, out var spell)) continue;
+            pool.NextAt = now + AuraService.TickInterval;
+            LandAreaAt(pool.CasterId, pool.Centre, ReachOf(pool.SpellId, CreatureAreaAroundTarget), pool.SpellId, spell,
+                PlayerBlow.MainEffect, now, responses);
+        }
     }
 
     private DomainPosition? CreaturePosition(string wireId) =>
@@ -311,14 +343,20 @@ public sealed partial class PlaySession
         }
     }
 
-    private void NoteDeathSplits(string wireId)
+    private readonly List<(string WireId, string Line)> _deathLines = [];
+
+    private void NoteDeath(string wireId)
     {
         if (!_sight.Contains(wireId) || CreaturePosition(wireId) is not { } at) return;
-        foreach (var split in ScriptFor(wireId).DiesInto) _deathSplits.Add((split, at));
+        var script = ScriptFor(wireId);
+        foreach (var split in script.DiesInto) _deathSplits.Add((split, at));
+        if (script.DeathLine is { } line) _deathLines.Add((wireId, line));
     }
 
-    private void TickDeathSplits(List<string> responses)
+    private void TickDeaths(List<string> responses)
     {
+        foreach (var (wireId, line) in _deathLines) YellAs(wireId, line, responses);
+        _deathLines.Clear();
         if (_deathSplits.Count == 0) return;
         var due = _deathSplits.ToArray();
         _deathSplits.Clear();

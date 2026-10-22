@@ -265,6 +265,33 @@ this project's own:
   Legend Executioner casts it, after each armour. Cosmo's "Remove All" row is
   read as what ends his demon shape and shield when his fight resets without
   his death; that reading is this project's own.
+- Relic's Key (map 15, `swamp_eye`): the way the ritual runs (talk to
+  Tharrath, follow him, three blocks of waves on a timer, a boss once a
+  block is cleared, failure if he dies), the bosses' moves and thresholds
+  and which creature uses which move are the dungeon field guide's. Every
+  line Tharrath, Hathraad and Alr-Rahjil say is an operator `String_Script`
+  row; which line is a boss's pull or death line ("Heretics must die!" /
+  "No...." for Hathraad, "You dare disturb me! You will die!" / "I will
+  devour your rotten soul when next we meet in hell!" for Alr-Rahjil) is
+  read from the rows' order around the lines the guide quotes, this
+  project's own reading. Spell and creature ids are the operator's rows of
+  those names; the Legend copy is map 15 with the swamp's Legend rows
+  (`GameContent.RelicsKeyLegend`), not map 16. Tharrath's chat-menu script
+  591 starts the escort (`GossipScripts.StartsRitual`), and he becomes the
+  sturdier Tharrath row (2660, 2662 in Legend) once he starts the ritual:
+  both readings are this project's own.
+- Own choices in Relic's Key, to be checked in play: where Tharrath starts,
+  where the ritual is held and where waves appear
+  (`GameContent.RelicsKeyRitualSite`, each on a spot a creature in the
+  swamp's spawn table stands on); the dungeon gates, laid round the gate
+  objects 205 and 206 the way the prison's are round theirs; how many
+  creatures make each wave; the pauses before the first wave (3 s), a boss
+  (8 s), the farewell (4 s) and a retry (15 s); every move's repeat time
+  where the guide says only "every so often". Waves 30 s apart, Kermode's
+  shouts every 8 s, Tempest every 10 s, Alr-Rahjil's rotation every 5 s and
+  the reach of Kermode's shouts (30), Tempest (30), Wraith Blast (20) and
+  Pounding Glow (8) are the guide's (`GameContent.SpellReach`). Break Armor
+  stacks to 5, as the guide says.
 - A creature spell with a cast time in its `spell` row lands only when the
   cast ends, and a self aura with no duration pulses every
   `AuraService.TickInterval` until the creature ends it or dies. Of the

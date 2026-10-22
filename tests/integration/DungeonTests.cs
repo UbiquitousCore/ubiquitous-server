@@ -73,7 +73,7 @@ public sealed partial class DungeonTests
         Assert.True(instances.HasReached(key, "boss.2668.down"));
         Assert.True(instances.HasReached(key, "boss.2666.down"));
 
-        var summon = Assert.Single(content.DungeonSummons);
+        var summon = Assert.Single(content.DungeonSummons, s => s.CreatureEntryId == 2667);
         var appeared = Assert.Single(
             log, m => m.Contains("\"type\":\"entity.spawned\"") && m.Contains("\"entry\":2667"));
         Assert.Contains($"\"x\":{Math.Truncate(summon.X)}", appeared);
@@ -125,7 +125,7 @@ public sealed partial class DungeonTests
             log.AddRange(session.TickCombat(now).Select(m => (now, m)));
         }
 
-        var summon = Assert.Single(content.DungeonSummons);
+        var summon = Assert.Single(content.DungeonSummons, s => s.CreatureEntryId == 2667);
         var heard = Assert.Single(log, e => e.Message.Contains("\"type\":\"chat.received\"")
             && e.Message.Contains("\"channel\":\"notice\"") && e.Message.Contains(summon.Notice!));
         var appeared = Assert.Single(log, e => e.Message.Contains("\"type\":\"entity.spawned\"")
