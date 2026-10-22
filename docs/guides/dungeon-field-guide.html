@@ -1,0 +1,1031 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dungeon Field Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: guild handbook. Sticky dungeon index left, one reading column right; stacks on phones. */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --ink:#1d2030; --muted:#5b6074; --line:#d9dce6;
+  --normal:#2f5f9e; --normal-bg:#e7eef8;
+  --legend:#a85a00; --legend-bg:#fbf0dd; --legend-line:#e8c48a;
+  --tip:#1f7a5a; --tip-bg:#e3f3ec; --warn:#a33a2e; --warn-bg:#f9e6e3; --info-bg:#eceef4;
+  --display:"Alegreya SC", Georgia, "Times New Roman", serif;
+  --body:"Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14161f; --surface:#1c1f2b; --ink:#e7e8ef; --muted:#a3a7b8; --line:#2f3343;
+  --normal:#8db4ec; --normal-bg:#1e2a3f;
+  --legend:#f0a646; --legend-bg:#2e2416; --legend-line:#6b4f24;
+  --tip:#6fd0a8; --tip-bg:#17302a; --warn:#f08c7f; --warn-bg:#36201e; --info-bg:#232736;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14161f; --surface:#1c1f2b; --ink:#e7e8ef; --muted:#a3a7b8; --line:#2f3343;
+  --normal:#8db4ec; --normal-bg:#1e2a3f;
+  --legend:#f0a646; --legend-bg:#2e2416; --legend-line:#6b4f24;
+  --tip:#6fd0a8; --tip-bg:#17302a; --warn:#f08c7f; --warn-bg:#36201e; --info-bg:#232736;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 64px}
+a{color:var(--normal)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--legend);outline-offset:2px}
+.shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px}
+.hero{max-width:1180px;margin:0 auto;padding-block:48px 28px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.05;margin:0 0 12px;text-wrap:balance;letter-spacing:.01em}
+.hero p{max-width:65ch;color:var(--muted);margin:0 0 10px}
+.legendkey{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px}
+.chip.n{background:var(--normal-bg);color:var(--normal)} .chip.l{background:var(--legend-bg);color:var(--legend)}
+.chip.t{background:var(--tip-bg);color:var(--tip)} .chip.w{background:var(--warn-bg);color:var(--warn)}
+.toggle{margin-left:auto;font:inherit;font-size:.9rem;font-weight:500;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 16px);align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-size:.95rem}
+nav.toc h2{font-family:var(--display);font-size:1rem;letter-spacing:.06em;margin:0 0 8px;color:var(--muted)}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.toc a{display:flex;justify-content:space-between;gap:8px;text-decoration:none;color:var(--ink);padding:5px 8px;border-radius:6px}
+nav.toc a:hover{background:var(--surface)}
+nav.toc .lvl{color:var(--muted);font-size:.82rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+main{min-width:0}
+.overview{overflow-x:auto;margin-bottom:40px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.overview table{border-collapse:collapse;width:100%;font-size:.93rem;font-variant-numeric:tabular-nums}
+.overview th,.overview td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.overview tr:last-child td{border-bottom:0}
+.overview th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.overview td.n{color:var(--normal);white-space:nowrap} .overview td.l{color:var(--legend);white-space:nowrap}
+.overview td a{font-weight:700;text-decoration:none;color:var(--ink)}
+section.dungeon{padding-block:8px 36px;border-bottom:1px solid var(--line);margin-bottom:36px;scroll-margin-top:16px}
+.dhead h2{font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,3.4vw,2.3rem);line-height:1.1;margin:0 0 10px;text-wrap:balance}
+.dhead h2 small{font-family:var(--body);font-weight:400;font-size:.55em;color:var(--muted);letter-spacing:0}
+.levels{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.lv{font-size:.9rem;padding:4px 12px;border-radius:6px;font-variant-numeric:tabular-nums}
+.lv b{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;margin-right:6px}
+.lv.normal{background:var(--normal-bg);color:var(--normal)} .lv.legend{background:var(--legend-bg);color:var(--legend)}
+.bosses{color:var(--muted);font-size:.95rem;margin:0 0 14px}
+section.dungeon p,section.dungeon li{max-width:68ch}
+section.dungeon h3{font-family:var(--display);font-size:1.3rem;margin:26px 0 8px;text-wrap:balance}
+section.dungeon h4{font-size:.8rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:16px 0 4px}
+section.dungeon ul,section.dungeon ol{padding-left:1.25em;margin:8px 0}
+section.dungeon li{margin:4px 0}
+q{quotes:"“" "”";font-style:italic;color:var(--ink)}
+q::before,q::after{color:var(--muted)}
+i{font-style:normal;font-weight:500;color:var(--normal)}
+.boss{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 20px 14px;margin:18px 0}
+.boss h3{margin-top:14px}
+.callout{border-radius:8px;padding:12px 16px;margin:14px 0;font-size:.97rem}
+.callout::before{display:block;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.callout ul{margin:6px 0 0}
+.callout.legend{background:var(--legend-bg);border:1px solid var(--legend-line)}
+.callout.legend::before{content:"◆ Legendary";color:var(--legend)}
+.callout.tip{background:var(--tip-bg)} .callout.tip::before{content:"Tip";color:var(--tip)}
+.callout.warn{background:var(--warn-bg)} .callout.warn::before{content:"Warning";color:var(--warn)}
+.callout.info{background:var(--info-bg)} .callout.info::before{content:"Event";color:var(--muted)}
+body.hide-legend .callout.legend{display:none}
+footer.notes{color:var(--muted);font-size:.9rem;max-width:68ch}
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0}
+  nav.toc{position:static;max-height:none;margin-bottom:28px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface)}
+  .toggle{margin-left:0}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<header class="hero">
+  <h1>Dungeon Field Guide</h1>
+  <p><em>These guides have been compiled from online guides, videos, and observed gameplay. They describe the game as players see it, across every version up to the latest; not every dungeon here exists in every build.</em></p>
+  <p>Strategies for every dungeon and instance: what the bosses do, what they yell before they do it, what they summon, and how to beat them. Each dungeon is written for Normal mode, with Legendary differences called out where they change.</p>
+  <p>Health thresholds and timings are approximate, the way you'd see them on the boss's health bar and in the heat of a fight. Treat "about every 10 seconds" as a rhythm, not a stopwatch.</p>
+  <div class="legendkey">
+    <span class="chip n">Normal</span><span class="chip l">◆ Legendary</span><span class="chip t">Tip</span><span class="chip w">Warning</span>
+    <button class="toggle" id="toggle-legend" type="button" aria-pressed="false">Hide Legendary notes</button>
+  </div>
+</header>
+<div class="shell">
+<nav class="toc" aria-label="Dungeons"><h2>Dungeons</h2><ol>
+<li><a href="#knahswahs-jail"><span>Knahswahs Jail</span><span class="lvl">Lv 10+</span></a></li><li><a href="#relics-key"><span>Relic's Key</span><span class="lvl">Lv 20+</span></a></li><li><a href="#eristar-temple"><span>Eristar Temple</span><span class="lvl">Lv 30+</span></a></li><li><a href="#sailen-lower-city"><span>Sailen: The Lower City</span><span class="lvl">Lv 40+</span></a></li><li><a href="#sailen-palace"><span>Sailen: The Palace</span><span class="lvl">Lv 45+</span></a></li><li><a href="#eidolons-horizon"><span>Eidolon's Horizon</span><span class="lvl">Lv 50+</span></a></li><li><a href="#metal-ziggurat"><span>Metal Ziggurat</span><span class="lvl">Lv 52+</span></a></li><li><a href="#abyss-of-limitless-gears"><span>Abyss of Limitless Gears</span><span class="lvl">Lv 56+</span></a></li><li><a href="#insane-arcadian-forest"><span>The Insane in Arcadian Forest</span><span class="lvl">Lv 63+</span></a></li><li><a href="#flame-ruin-of-vliya-temple"><span>Flame: Ruin of Vliya Temple</span><span class="lvl">Lv 61+</span></a></li><li><a href="#flame-fate-of-collapse"><span>Flame: Fate of Collapse</span><span class="lvl">Lv 61+</span></a></li><li><a href="#flame-khalins-rebirth"><span>Flame: Khalin's Rebirth</span><span class="lvl">Lv 62+</span></a></li><li><a href="#field-trials"><span>The Field Trials</span><span class="lvl">Lv 70+</span></a></li><li><a href="#pirate-island"><span>Pirate Island</span><span class="lvl">Lv 8+</span></a></li>
+</ol></nav>
+<main>
+<div class="overview"><table>
+<thead><tr><th>Dungeon</th><th>Normal</th><th>Legendary</th><th>Bosses</th></tr></thead>
+<tbody><tr><td><a href="#knahswahs-jail">Knahswahs Jail</a></td><td class="n">Enter from Lv 10 · monsters Lv 19–21</td><td class="l">monsters Lv 58–61</td><td>Bosses: Executioner of Knahswahs · Ariel · Cosmo (final)</td></tr><tr><td><a href="#relics-key">Relic's Key</a></td><td class="n">Enter from Lv 20 · monsters Lv 29–31</td><td class="l">Enter from Lv 60 · monsters Lv 60</td><td>Bosses: Hathraad · Kermode · Alr-Rahjil (final)</td></tr><tr><td><a href="#eristar-temple">Eristar Temple</a></td><td class="n">Enter from Lv 30 · monsters Lv 39–42</td><td class="l">monsters Lv 60–62</td><td>Bosses: Crystal Guard · the Four Champions (Barstikar, Ansurui, Ultanjin, Gindular) · Khaphichelur the dragon (final)</td></tr><tr><td><a href="#sailen-lower-city">Sailen: The Lower City</a></td><td class="n">Enter from Lv 40 · monsters Lv 48–52</td><td class="l">monsters Lv 59–62 · bonus bosses Lv 60</td><td>Bosses: Titehelm · Kha-Anata (final) · Legendary only: a random bonus boss behind the Ninth Gate</td></tr><tr><td><a href="#sailen-palace">Sailen: The Palace</a></td><td class="n">Enter from Lv 45 · monsters Lv 50–55</td><td class="l">monsters Lv 60–62</td><td>Bosses: Sacharist · Crethiyum · the Spirit Ancestors · Zargis (final)</td></tr><tr><td><a href="#eidolons-horizon">Eidolon's Horizon</a></td><td class="n">Enter from Lv 50 · monsters Lv 56–60</td><td class="l">monsters Lv 70–72</td><td>Bosses: Healique · the Crystal trials · Wethvive · Nacher (final) · Legendary only: Lamiyt</td></tr><tr><td><a href="#metal-ziggurat">Metal Ziggurat</a></td><td class="n">Enter from Lv 52 · monsters Lv 60–64</td><td class="l">monsters Lv 70–72</td><td>Bosses: Ziggurat Protectors · <b>either</b> Patridon <b>or</b> X-11A (random) · Core (final)</td></tr><tr><td><a href="#abyss-of-limitless-gears">Abyss of Limitless Gears</a></td><td class="n">Enter from Lv 56 · monsters Lv 64–68</td><td class="l">monsters Lv 70–72</td><td>Bosses: Ilystin, the Dark Queen · Mechanical Origin (final)</td></tr><tr><td><a href="#insane-arcadian-forest">The Insane in Arcadian Forest</a></td><td class="n">Enter from Lv 63 · monsters Lv 64–67</td><td class="l">monsters Lv 70–72</td><td>Bosses: Arkolian · Lendoerl (final) · Legendary only: Qiu Yuelan (hidden)</td></tr><tr><td><a href="#flame-ruin-of-vliya-temple">Flame: Ruin of Vliya Temple</a></td><td class="n">Enter from Lv 61 · bosses Lv 63 (adds Lv 66)</td><td class="l">bosses Lv 72 (adds Lv 71)</td><td>Bosses: Brand · Teresa · Gunnar-Thyne (final). Plus the harp puzzle with Roku.</td></tr><tr><td><a href="#flame-fate-of-collapse">Flame: Fate of Collapse</a></td><td class="n">Enter from Lv 61 · monsters Lv 62 · bosses Lv 63</td><td class="l">monsters Lv 70 · bosses Lv 72</td><td>Bosses: Sydell · Ned (final)</td></tr><tr><td><a href="#flame-khalins-rebirth">Flame: Khalin's Rebirth</a></td><td class="n">Enter from Lv 62 · monsters Lv 64 · demon lords Lv 66 · Gunnar-Thyne Lv 68</td><td class="l">monsters Lv 70 · bosses Lv 72</td><td>Bosses: four demon lords (Shadow Prince, Usnemor, Jamnysae, Galand), one at a time · Gunnar-Thyne (final)</td></tr><tr><td><a href="#field-trials">The Field Trials</a></td><td class="n">Enter from Lv 70 · bosses Lv 72</td><td class="l">bosses Lv 72, tougher</td><td>One trial per class role, each started by a mentor</td></tr><tr><td><a href="#pirate-island">Pirate Island</a></td><td class="n">Enter from Lv 8 · monsters Lv 10–12</td><td class="l">not available</td><td>Boss: Captain Paul Wesley</td></tr></tbody></table></div>
+<section class="dungeon" id="knahswahs-jail">
+<header class="dhead">
+  <h2>Knahswahs Jail</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 10 · monsters Lv 19–21</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 58–61</span>
+  </div>
+  <p class="bosses">Bosses: Executioner of Knahswahs · Ariel · Cosmo (final)</p>
+</header>
+
+<p>The first dungeon most players see. It's a prison full of inmates and golems, with two bosses you can take in either order. Once both are dead a gate opens and the warden, Cosmo, comes out. Legendary uses the same layout and the same mechanics, but everything hits much harder and has a lot more health.</p>
+
+<h3>Getting through the cells</h3>
+<ul>
+  <li><b>Andare</b>, a prisoner near the start, yells at the other prisoners now and then ("I'll tell you again: the judgment on me is not justice!"). He's flavour only and doesn't fight.</li>
+  <li><b>Human Prisoners</b> pick a random player and throw them to the ground (<i>Knock Throw</i>). Healers, stay out of melee range.</li>
+  <li><b>Vicious Elf Prisoners</b> do a <i>Crazy Dance</i> and stun people with <i>Throat Seal</i> (2 seconds). <b>Elf Prisoners</b> make the tank bleed every few seconds.</li>
+  <li><b>Vicious Orc Prisoners</b> get angrier as they lose health. They gain <i>Bloodlust</i> at around 80%, 60%, 40% and 20% health, so burn them down instead of dragging the fight out.</li>
+  <li><b>Vicious Human Prisoners</b> and <b>Human Prisoner Capos</b> set a random player on fire with <i>Burning Blood</i>. It also burns anyone standing within a few metres of that player, <b>so whoever is on fire should step away from the group</b>. If a Vicious Human Prisoner drops to about half health with an Orc Prisoner nearby, it uses <i>Siphon Life</i> to drain the target and heal itself. Capos also cast <i>Entice from Hell</i> as the fight opens.</li>
+  <li><b>Flesh Golems</b> drain the tank with <i>Flesh Siphon</i>, which heals the golem, and puff out a <i>Rotten Cloud</i> every few seconds. <b>Rotten Flesh Golems</b> also throw rotten flesh at a random player, cutting that player's attack and spell power for a while.</li>
+  <li><b>Rotten Jail Hounds</b> stack <i>Poison Teeth</i> on the tank (up to 5 stacks, slowing movement, attacks and casting). Kill them quickly so the stacks don't build up.</li>
+  <li><b>Bone Golems</b> open with <i>Bone Thorn</i>. <b>When one dies it breaks into two Inferior Bone Golems</b>. They have nothing special but need cleaning up, so AoE helps here.</li>
+</ul>
+
+<div class="boss">
+<h3>Boss: Executioner of Knahswahs</h3>
+<p>A straight tank-and-spank with two cooldowns that take turns:</p>
+<ul>
+  <li><b>Osseous Blade Armor</b>: he puts on bone armour (you'll see the buff on him) and holds it for several seconds.</li>
+  <li><b>Whirlwind</b>: he yells <q>Cyclone Slash!</q> and spins. Melee players should back off when they hear it.</li>
+  <li>When neither of those is up he uses <i>Reaping</i> on the tank every few seconds.</li>
+</ul>
+<p>The armour comes first, then the Cyclone Slash, then they repeat. The first armour comes up quickly after the pull, and after that the cycle runs on a steady timer.</p>
+</div>
+
+<div class="boss">
+<h3>Boss: Ariel</h3>
+<ul>
+  <li>Applies <i>Putrefying</i> as soon as the fight starts.</li>
+  <li>About every 10 seconds she plants a <i>Decayed Seed</i> on a random player, stunning them for 3 seconds. The first one comes very early.</li>
+  <li><b>At around 10% health she casts <i>Detonation</i> and blows herself up.</b> Let the cast finish with everyone spread out and topped up. Once it goes off she's dead and the kill counts.</li>
+</ul>
+</div>
+
+<div class="callout info">Once <b>both</b> the Executioner and Ariel are dead you'll get the message <q>You hear a faraway gate creaking open...</q>, and about 10 seconds later <b>Cosmo</b> appears.</div>
+
+<div class="boss">
+<h3>Final boss: Cosmo</h3>
+<p><b>Phase 1 (100% to about 75%): curses.</b> Cosmo cycles three curses in order, with a few seconds between each:</p>
+<ol>
+  <li><i>Thunder Curse</i>: a big energy nuke on his target.</li>
+  <li><i>Cold Curse</i>: slows the target by 30% for 3 seconds.</li>
+  <li><i>Flame Curse</i>: dropped on a random player's position. It burns for 15 seconds, so get out of it.</li>
+</ol>
+<p><b>Phase 2 (about 75%): demon form.</b> He yells <q>The demons stir within me!</q> and transforms (<i>Demon Metamorphosis</i>). From then on:</p>
+<ul>
+  <li>He uses <i>Shadow Erode</i> on his target every so often. It's shadow damage.</li>
+  <li>About every 10 seconds he does one of two things, taking turns:
+    <ul>
+      <li>He yells <q>The dead fight for ME!</q> and raises an <b>Undead Puppet</b>.</li>
+      <li>On the next turn, <b>if a puppet is still standing near him</b>, he yells <q>Give me your power!</q> and eats it (<i>Devour Puppet</i>), healing himself by a big chunk.</li>
+    </ul>
+  </li>
+</ul>
+<div class="callout tip"><b>Kill every Undead Puppet as soon as it appears.</b> If one is still alive the next time he calls for power, he heals. Puppets also crumble on their own after about 12 seconds, so pulling one away from Cosmo works too.</div>
+<p><b>Phase 3 (about 25%): shield.</b> He drops the demon form, puts up a <i>Shadow Shield</i> that absorbs half of all damage he takes, and goes back to cycling his three curses for the rest of the fight. Save your burst for this phase.</p>
+</div>
+
+<div class="callout legend">Every boss and trash mechanic is the same. The difference is the numbers. Burning Blood, Bleeding, Thunder Curse and the rest hit several times harder, and the bosses have many times more health, so the Cosmo puppet heal and the 25% shield matter far more. Bleeds on the tank in particular go from minor to dangerous.</div>
+</section>
+
+<section class="dungeon" id="relics-key">
+<header class="dhead">
+  <h2>Relic's Key</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 20 · monsters Lv 29–31</span>
+    <span class="lv legend"><b>Legendary</b> Enter from Lv 60 · monsters Lv 60</span>
+  </div>
+  <p class="bosses">Bosses: Hathraad · Kermode · Alr-Rahjil (final)</p>
+</header>
+
+<p>A swamp defence run. Instead of clearing your way to the bosses, you escort the scholar <b>Tharrath</b> to a ritual site and hold off wave after wave while he works. Each block of waves ends with a boss. Tharrath talks you through it, and his lines tell you exactly what's coming next.</p>
+
+<h3>The escort and the ritual</h3>
+<ol>
+  <li>Talk to Tharrath. He says <q>Follow me!</q> and walks to the ritual site. Stay with him.</li>
+  <li>When he gets there he starts casting <i>Summoning</i> and the waves begin. <b>Keep him alive. If Tharrath dies, the ritual fails.</b></li>
+  <li><b>Block 1, swamp spirits:</b> <q>Here they come, right on time!</q> Three waves of Sons of the Earth and Sons of the Lake arrive about half a minute apart. When the last wave is dead, Tharrath warns <q>The air is humming... Must be a giant one!</q> and <b>Hathraad</b> arrives a little later.</li>
+  <li><b>Block 2, ghosts:</b> after Hathraad, <q>More of them are coming!</q> Three waves of Ghostly Hunters, Gladiators, Mages and Priests. Then <q>An angry spirit approaches!</q> and <b>Kermode</b> arrives.</li>
+  <li><b>Block 3, mixed:</b> <q>You've got to hold them off!</q> Four bigger waves that mix lake spirits, ghosts, Flame Strikers, Lava-Skin Burners and Rock-Wings Assassins. Then <q>I'm almost finished!</q> and <b>Alr-Rahjil</b> arrives.</li>
+  <li>Kill Alr-Rahjil and Tharrath finishes with <q>It's done!</q>. A few seconds later he says he's exhausted and will wait for you in Wyrgast's Library. The dungeon is complete.</li>
+</ol>
+<div class="callout tip">The next wave in a block comes on a timer whether or not you've finished the last one, so don't fall behind. The boss only comes once <b>every</b> monster in that block is dead.</div>
+
+<h3>Wave monsters to watch</h3>
+<ul>
+  <li><b>Ghostly Priest</b>: <b>kill it first.</b> Every so often it heals a nearby ally that's under half health, or heals itself, for a big amount.</li>
+  <li><b>Ghostly Mage</b>: puts up an <i>Energy Field</i> that absorbs damage as soon as it engages, and again much later in a long fight. The field breaks once it's taken enough damage. Between shields it spams <i>Frost Bolt</i> (damage plus a 40% slow).</li>
+  <li><b>Ghostly Hunter</b>: shoots from range and calls in a <b>Ghost Wolf</b> a few seconds into the fight.</li>
+  <li><b>Ghostly Gladiator</b>: stacks <i>Break Armor</i> on the tank (up to 5 stacks).</li>
+  <li><b>Son of the Earth</b>: heals itself over time once it drops to about half health.</li>
+  <li><b>Son of the Lake</b>: <i>Wave Charge</i>: rushes a random player and knocks them down.</li>
+  <li><b>Rotten Son of the Lake</b>: <i>Slow Poison</i> slows attack and run speed.</li>
+  <li><b>Lava-Skin Burner</b>: pulses <i>Fire Barrier</i> around itself every few seconds. Melee take constant damage.</li>
+  <li><b>Flame Striker</b>: <i>Pounding Glow</i> burns everyone within about 8 metres.</li>
+  <li><b>Rock-Wings Assassin</b>: hard-hitting <i>Claw Strike</i> on the tank.</li>
+  <li>Swamp wildlife on the way in: <b>Swamp Giant Tortoise</b> (<i>Ankle Bite</i>, a 50% slow), <b>Giant Tail Crocodile</b> (<i>Tail Lash</i> knockdown), <b>Swamp Guardian</b> (<i>Wolf Howl</i> stacks attack power on itself, so kill it fast).</li>
+</ul>
+
+<div class="boss">
+<h3>Boss: Hathraad</h3>
+<ul>
+  <li>Throws <i>Water Balls</i> at his target constantly. He's a caster, so he'll happily fight from range.</li>
+  <li>About every 10 seconds he yells <q>Tempest!</q> and hits everyone within a wide radius with <i>Multi Water Ball</i>. Healers, be ready.</li>
+  <li><b>At around 75%, 50% and 25% health he yells <q>Dividedness!</q> and splits off two mirror images</b> (smaller Hathraads). By the end there can be six of them. The mirrors only cast weak water balls, but they add up. Either AoE them down or kill each pair before the next split.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Boss: Kermode</h3>
+<p>A spirit bear with two room-wide shouts. He uses one about every 8 seconds, taking turns:</p>
+<ul>
+  <li><i>Soul Growl</i>: silences everyone within about 30 metres for 3 seconds and does some damage.</li>
+  <li><i>Deafening Roar</i>: stuns everyone within about 30 metres for 2 seconds.</li>
+</ul>
+<p>The first shout is the Growl, then the Roar. Get heals and shields out just before each one, because nobody can act for a couple of seconds after it lands.</p>
+<p><b>At around 30% health he goes into <i>Spirit Bear Frenzy</i></b> (+50% attack power and attack speed). The tank takes much more damage from here, so use defensive cooldowns.</p>
+</div>
+
+<div class="boss">
+<h3>Final boss: Alr-Rahjil</h3>
+<p>About every 5 seconds he casts one of three spells, in a fixed rotation:</p>
+<ol>
+  <li><i>Siphon Life</i> on a random player. It drains them and heals him.</li>
+  <li><i>Shadow Mire</i>: he yells <q>Tremble in terror!</q> and drops a shadow pool on a random player. It damages and slows everyone inside it, so <b>move out of it</b>.</li>
+  <li><i>Ignite</i> on a random player. It's a fire damage-over-time.</li>
+</ol>
+<p><b>At around 30% health he visibly grows larger. That's your warning.</b> He then yells <q>Out, brief life!</q> and casts <i>Wraith Blast</i>, which hits everyone within about 20 metres for a huge amount of shadow damage. Either run well away from him while he's big, or have everyone topped up with shields on. He only does it once, then shrinks back and continues his rotation.</p>
+</div>
+
+<div class="callout legend">This is its own entrance (Lv 60+). The ritual and waves run exactly the same, and every boss keeps its moveset with much bigger numbers. One change you'll notice: <b>Kermode opens with Deafening Roar (stun) instead of Soul Growl</b>, then alternates. Tharrath has a lot more health, but the waves hit far harder, so keeping him alive becomes the real challenge.</div>
+</section>
+
+<section class="dungeon" id="eristar-temple">
+<header class="dhead">
+  <h2>Eristar Temple <small>(Young Deity's Realm)</small></h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 30 · monsters Lv 39–42</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 60–62</span>
+  </div>
+  <p class="bosses">Bosses: Crystal Guard · the Four Champions (Barstikar, Ansurui, Ultanjin, Gindular) · Khaphichelur the dragon (final)</p>
+</header>
+
+<p>A temple of spirit warriors and elemental summoners, guarded by four champions and a young dragon god. The final fight has four elemental phases, and the dragon's master steps in near the end.</p>
+<div class="callout info">Part of the temple has a cursed path. Walking into it gives you <i>Mind Contaminated</i> (<q>You feel as if your mind has fallen into a bottomless abyss...</q>). It wears off when you leave that area.</div>
+
+<h3>Temple monsters</h3>
+<ul>
+  <li><b>Spirit Warriors (Bear, Spider and Wolf).</b> At around 90% health each one takes on its spirit form. They hit harder from then on, and each type does something different at around 20%:
+    <ul>
+      <li><b>Bear</b>: regular <i>Bleeding</i>. At about 20% it does <i>Fury Thud</i> and knocks the tank down.</li>
+      <li><b>Spider</b>: regular <i>Neurotoxin</i> poison. At about 20% it throws a <i>Spider Net</i> that roots someone for 10 seconds.</li>
+      <li><b>Wolf</b>: regular <i>Claw Attack</i>. At about 20% it does a <i>Terrible Howl</i> that cuts your attack and spell power for a while.</li>
+    </ul>
+  </li>
+  <li><b>Eristar Rock Summoner</b>: puts up <i>Rock Shield</i> (takes 30% less damage) and calls an <b>Earth Spirit</b> as soon as it's pulled. The Earth Spirit does an <i>Earthquake</i> about every 10 seconds.</li>
+  <li><b>Eristar Water Summoner</b>: calls a <b>Water Spirit</b> straight away and fires <i>Multi Water Arrow</i> (a wide frost AoE) every few seconds. Kill the summoner fast. The Water Spirit traps a random player in a <i>Water Prison</i> and powers itself up at about 35%.</li>
+  <li><b>Eristar Flame Summoner</b>: <i>Burning</i> every few seconds, plus a <i>Multi Fire Ball</i> volley at about 80% and again at about 40% health.</li>
+  <li><b>Dragon-Lance Knight</b>: opens with <i>Dragon's Fury</i> and throws its lance at random players.</li>
+  <li><b>Dragon-Shield Knight</b>: opens with <i>Crystal Shield</i> (takes 30% less damage). At around 10% health it binds its target in crystal (a 90% slow).</li>
+</ul>
+
+<div class="boss">
+<h3>Boss: Crystal Guard</h3>
+<ul>
+  <li>Fires a <i>Crystal Missile</i> every several seconds.</li>
+  <li>Every so often it hits a random player with <i>Crystal Cut</i>: they're rooted in place and bleed heavily for 5 seconds. Healers, watch for it and heal that player straight away.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Boss: The Four Champions</h3>
+<p><b>Barstikar the Fury</b> stands with his three companions: <b>Ansurui the Jungle Hunter</b>, <b>Ultanjin the Archpsion</b> and <b>Gindular the Silent</b>. You fight all four together.</p>
+<ul>
+  <li><b>Barstikar</b> (warrior) is <i>Fearless</i> while any of his companions are alive, and does a <i>Circled Cut</i> about every 5 seconds. <b>Once the other three are dead</b> you'll see <q>Barstikar sees the others have died and sorrow fills his eyes...</q> and he loses Fearless. <b>Kill him last.</b></li>
+  <li><b>Gindular</b> (monk) heals his group: <i>Group Healing</i> several times in a row, then a <i>Prayer</i>. <b>Kill him first</b>, or interrupt him and keep interrupting.</li>
+  <li><b>Ultanjin</b> (mage) takes turns between <i>Multi Fireball</i> and <i>Multi Frost Bolt</i> (the frost one slows). Both hit the whole group. Second kill.</li>
+  <li><b>Ansurui</b> (hunter) stacks <i>Laceration</i> bleeds on his target (up to 10). At around 30% health he goes <i>Crazy</i> (enrages).</li>
+</ul>
+<div class="callout warn">Kill all four champions <b>before</b> you engage the dragon. If you pull Khaphichelur while they're still alive, he gets an extra buff called <i>Anti-Cheat</i>, so the fight is meant to be done in order.</div>
+</div>
+
+<div class="boss">
+<h3>Final boss: Khaphichelur</h3>
+<p>The dragon fights in four elemental stages and changes every 20% of his health. Each stage starts with a server message and a resistance buff on him. <b>Switch to a damage type he isn't resisting.</b></p>
+
+<h4>Stage 1: Fire (100% to about 80%)</h4>
+<p><q>You feel the air around you heat up...</q> He gains <i>Fire Resist</i>.</p>
+<ul>
+  <li><i>Flame Breath</i> every few seconds.</li>
+  <li><i>Burn Out</i>: a big fire spell that comes about 10 seconds in and then roughly every half-minute. Heal through it.</li>
+</ul>
+
+<h4>Stage 2: Frost (about 80% to 60%)</h4>
+<p><q>You feel a cold shiver in the air...</q> and he yells <q>I will freeze your blood!</q>. He gains <i>Frost Resist</i>.</p>
+<ul>
+  <li><i>Ice Meteor</i> on a random player every few seconds. It cuts their attack and spell power by 30% for a few seconds.</li>
+  <li><i>Subzero</i> every several seconds. It stacks a slow to movement, attacks and casting.</li>
+</ul>
+
+<h4>Stage 3: Energy (about 60% to 40%)</h4>
+<p><q>Your skin tingles with anticipation...</q> and <q>Thunder, shake the dark sky!</q>. He wraps himself in an <i>Electrostatic Field</i> and gains <i>Energy Resist</i>.</p>
+<ul>
+  <li>About every 12 seconds a <b>Wind Summoner</b> appears at one of three spots around the room and starts throwing <i>Lightning Balls</i>.</li>
+  <li>Wind Summoners die on their own after about half a minute, but several can be alive at once. Have ranged DPS kill them as they appear.</li>
+</ul>
+
+<h4>Stage 4: Earth (about 40% to the end)</h4>
+<p><q>You feel the ground shaking...</q> and he calls on the heart of the land for strength. He gains <i>Physics Resist</i> (physical attacks do less).</p>
+<ul>
+  <li><i>Poison Erosion</i>: a poison on the tank that stacks up to 10 times.</li>
+  <li><i>Earthquake</i>: stuns everyone for 3 seconds. The first one is quick, then it repeats every 15 seconds or so.</li>
+  <li><b>At about 22%</b> he taunts: <q>Do you think you are close to victory, foolish mortal? No, the strength you are about to face is our true power...</q></li>
+  <li><b>At about 20%, The One appears.</b> This is Khaphichelur's master and fights on <b>your</b> side. A while later The One pleads <q>Sorry, Khaphichelur my son, It's my fault... But I have to stop you.</q>. The dragon refuses: <q>I cannot, master! I exist to guard this place, it's my sole duty.</q> and then <q>Despite your intentions, it is impossible to change my fate!</q></li>
+  <li><b>At about 10%</b> the dragon yells <q>Arrrgh! My life is nearing the end! Let my fury burn both you and I, mortal!</q> and starts a long cast called <i>End</i>. Shortly after, The One cries <q>No, no more death!</q> and <b>casts a protective spell on everybody</b> (<q>The One cast a mystical spell on everybody...</q>). When <i>End</i> finishes, the dragon dies.</li>
+  <li>The One gives a last farewell (<q>Rest in peace, Khaphichelur. You have lived up to your duty.</q>) and leaves. A chest appears and the dungeon is complete.</li>
+</ul>
+</div>
+
+<div class="callout legend">Same fight, harder numbers, and a few things speed up:
+<ul>
+  <li>In the energy stage, <b>Wind Summoners arrive more often</b> (roughly every 10 seconds instead of every 12) and fade a little sooner.</li>
+  <li>In the earth stage, <b>Poison Erosion comes twice as often</b>, so the tank's stacks climb much faster. Plan a tank swap or a cleanse.</li>
+  <li>Ansurui stacks Laceration about twice as fast.</li>
+  <li>The rule about clearing the champions first still applies.</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="sailen-lower-city">
+<header class="dhead">
+  <h2>Sailen: The Lower City</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 40 · monsters Lv 48–52</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 59–62 · bonus bosses Lv 60</span>
+  </div>
+  <p class="bosses">Bosses: Titehelm · Kha-Anata (final) · Legendary only: a random bonus boss behind the Ninth Gate</p>
+</header>
+
+<p>The slums under Sailen: rogues, goblin slaves, scorpions and the minotaur guards who keep them in line. There are two bosses and they must be done in order. Killing Titehelm opens the way to Kha-Anata. On the way in, a couple of locals call out to you (<q>Hey, could you do me a favor?</q>, <q>We need a large number of laborers.</q>).</p>
+
+<h3>Lower City monsters</h3>
+<ul>
+  <li><b>Lower City Rogue</b>: opens with <i>Weakness</i> on its target. That's −30% attack and spell power for a full minute, so dispel it if you can.</li>
+  <li><b>Lower City Vagabond</b>: <i>Head Smash</i> (a short stun) and <i>Dirty Fog</i> (−40% armour on the tank).</li>
+  <li><b>Sailen Priest</b>: hits random players with <i>Poison Fang Attack</i> and, at around 80% and 40% health, puts someone to <b>sleep</b> with <i>Medusa's Stare</i>. Kill priests early.</li>
+  <li><b>Sailen Hunter</b>: shoots from range and <b>calls in a Bronze Battle Scorpion</b> right after the pull.</li>
+  <li><b>Bronze Battle Scorpion</b>: <i>Weak Poison</i> (a slow plus damage over time). <b>Golden Battle Scorpion</b>: puts on <i>Golden Armor</i> when pulled and uses <i>Breaking Knee</i> (an 80% slow).</li>
+  <li><b>Goblin Slaves</b>: stack <i>Slash Knee</i> slows on random players. The <b>Goblin Slave Chieftain</b> opens with <i>Food Lure</i> and uses <i>Power Sweep</i>.</li>
+  <li><b>Minotaur Guard</b>: frequent <i>Fury Attacks</i>, and <i>Bloody Fury</i> at about 80% and 40%. <b>Sailen Giant Guard</b>: gains <i>Giant Power</i> at about 75%.</li>
+</ul>
+
+<div class="boss">
+<h3>Boss: Titehelm</h3>
+<ul>
+  <li><b>At around 90%, 60% and 30% health</b> he says <q>When you feel the earth shaking, it is time to say goodbye.</q> and wraps himself in a <i>Storm Shell</i>.</li>
+  <li>Every so often he roots a random player in <i>Spikeweed</i>, a <b>4-second stun</b>.</li>
+  <li><b>About every 20 seconds:</b> <q>Go ahead, my little heroes.</q> A <b>Son of Titehelm</b> pops out of one of several holes around the room, picks a random player, runs at them and <b>blows itself up</b> (<i>Bug Blast</i>). They only have a little health, so <b>kill them before they reach anyone</b>.</li>
+  <li><b>At around 25% he enrages:</b> <q>You have no choice but to decide with a contest.</q> (<i>Titehelm's Frenzy</i>). From now on Spikeweed comes every few seconds and <b>two</b> Sons come out at a time.</li>
+</ul>
+<p>When he dies the server tells you <q>You hear something wooden collapsing to the east...</q>. That's the way to Kha-Anata opening up.</p>
+</div>
+
+<div class="boss">
+<h3>Final boss: Kha-Anata</h3>
+<p>Kha-Anata appears a little after Titehelm dies. He sits wrapped in <i>Tangle Vines</i>, guarded by <b>three Twisted Vines</b>. If you leave and come back, any vine you killed grows back.</p>
+<div class="callout warn">Kill Titehelm first. If you pull Kha-Anata while Titehelm is still alive, he gets an <i>Anti-Cheat</i> buff.</div>
+
+<h4>Phase 1: the vines</h4>
+<ul>
+  <li>Each Twisted Vine uses <i>Convolve</i> on a random player (a 3-second crush), <i>Intake</i> (a heavy hit that heals the vine), and <i>Whipping</i> at about 50% health.</li>
+  <li><b>The vines also keep stacking <i>Poison Weakening</i> on you.</b> Each stack does a little damage and cuts all your damage by 2%. It lasts 5 minutes and stacks up to 50 times. <b>It only goes away when Kha-Anata dies</b>, so the faster you kill the vines, the fewer stacks you'll carry into the boss fight.</li>
+  <li>About 10 seconds after the last vine dies, Kha-Anata says <q>All right, here I am. It's time to end this.</q> and engages. (If you're too slow on the vines, he comes out on his own after a little over a minute.)</li>
+</ul>
+
+<h4>Phase 2: Kha-Anata himself</h4>
+<ul>
+  <li><q>Kha-Anata unleashes a powerful spell in front...</q>: <i>Skeleton Spell</i> every several seconds. Only the tank should be standing in front of him.</li>
+  <li><i>Undead the Grudge</i>: an instant ranged shot every so often.</li>
+  <li><b>At about 75%, 50% and 25%</b> he says <q>Everyone has strength within them; it emerges when it is needed most.</q> and <b>three copies of Kha-Anata</b> appear behind him. Each one casts Skeleton Spell three times in a row and then vanishes. <b>They die in one hit</b>, so kill them on the spot.</li>
+  <li><b>At about 20%:</b> <q>You need to know my real strength.</q> He silences the group for 3 seconds and puts up a <i>Magic Shield</i>. Burn through the shield to keep damaging him.</li>
+</ul>
+<p>When he dies your Poison Weakening stacks are cleared and the dungeon is complete.</p>
+</div>
+
+<div class="callout legend"><ul>
+  <li><b>Titehelm</b> also uses <i>Sweep</i> about every 15 seconds.</li>
+  <li><b>Sailen Hunters</b> don't call scorpions any more. They use <i>Swift Snake Blood</i> instead.</li>
+  <li><b>Kha-Anata</b>: his Skeleton Spell and Grudge come less often, but:
+    <ul>
+      <li>At about <b>80%, 60% and 40%</b> he shouts <q>Look out! The Twisted Vine is attacking!</q> and <b>a new Twisted Vine grows</b> next to him, which starts stacking Poison Weakening again. Kill these vines quickly too. They wither when Kha-Anata dies.</li>
+      <li>The three copies come <b>on a timer</b> (first one about half a minute in, then every 45 seconds or so) instead of at health thresholds.</li>
+      <li>The 20% silence and shield work the same way.</li>
+    </ul>
+  </li>
+</ul></div>
+
+<div class="callout legend"><b>The Ninth Gate.</b> In Legendary there's an NPC called <b>The Ninth Gate</b>. After you've killed a boss you can use it. You'll see <q>You sense the enemy coming...</q> and <b>one random bonus encounter</b> appears:
+<ul>
+  <li><b>Rock General</b>: hardens himself with <i>Sclerosis</i> at about 80% and 60%, then again regularly below about 30%. He drops <i>Stalagmites</i> on random players and stuns with <i>Shock</i> (3 seconds).</li>
+  <li><b>Fire Origin</b>: <i>Huge Fire</i> as soon as he's pulled and regularly after that. <i>Evil Fire</i> on random players burns them <b>until the fight ends</b>, so more and more people are burning the longer it goes on. When he dies he casts <i>Gone With Me</i>.</li>
+  <li><b>Edison</b>: <i>Incandescence</i> (−75% hit chance for 10 seconds) and <i>Hypnosis Gramophone</i> (a 3-second sleep), both every so often. He gets <i>Curiosity</i> at about 80/60/40/20%.</li>
+  <li><b>Golden Rooster</b>: <i>Made by Gold</i> as soon as he's pulled and regularly after. <i>Crow</i> stacks a hit-chance debuff on you. At about <b>70%, 50% and 30%</b> he <b>hides in a flock</b> (<i>Mixed in Flock</i>): he drops his target and four little Golden Roosters appear around him. Find the real one.</li>
+  <li><b>Lord Stan</b>: not a fight at all. He says <q>The floor is quite stiff. Maybe I went the wrong way... Still, I'm glad to see you, my friend. Goodbye.</q> and walks off. Better luck next time.</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="sailen-palace">
+<header class="dhead">
+  <h2>Sailen: The Palace</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 45 · monsters Lv 50–55</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 60–62</span>
+  </div>
+  <p class="bosses">Bosses: Sacharist · Crethiyum · the Spirit Ancestors · Zargis (final)</p>
+</header>
+
+<p>The royal palace of Sailen. There's a lot of story in this one. You fight through the court, kill the high priest and the palace guardian, then help the Daisauros spirit <b>Sayiddy</b> break the seal on the inner sanctum where <b>Zargis</b> waits.</p>
+
+<h3>The Circle of Calling</h3>
+<p>Early on, the Circle of Calling sends <b>three waves</b> of Golden Battle Scorpions and Sailen Hounds at you. Each wave is a little bigger than the last, and each one is announced with <q>Danger is nearing...</q>.</p>
+
+<h3>Palace monsters</h3>
+<ul>
+  <li><b>Sailen Hound</b>: <i>Repugnant Discharge</i> roots a random player and poisons them for a few seconds.</li>
+  <li><b>Golden Battle Scorpion</b>: <i>Weak Poison</i> (a slow plus damage over time) and <i>Break Shoulder</i> (−30% attack speed on the tank).</li>
+  <li><b>Sailen Patricians</b>: the women throw <i>Blinding Powder</i> (−25% hit chance) and the men fire <i>Poison Arrows</i> at random players.</li>
+  <li><b>Sailen Royal Guard</b>: puts up a <i>Royal Shield</i> regularly and stacks <i>Majestic Atmosphere</i> (a small all-stat debuff, up to 5 stacks).</li>
+  <li><b>Sailen Royal Mage</b>: drops a <i>Burning Pool</i> and then a <i>Frozen Pool</i>. Get out of both.</li>
+  <li><b>Sailen Royal Priest</b>: <i>Shadow Punish</i>, and <b>heals any ally that falls under about 30%</b>. Kill it first.</li>
+  <li><b>Sailen Necromancer</b>: <i>Curse Armor</i> on the tank. <b>At about half health it raises two Slave Remains</b>, which shred armour with <i>Wailing</i> (−50% armour).</li>
+  <li><b>Royal Minotaur Guard</b>: <i>Fury Sweep</i> leaves a bleed on everyone it hits. At about 30% it goes into <i>Bloody Fury</i>.</li>
+</ul>
+
+<div class="boss">
+<h3>Boss 1: Sacharist</h3>
+<ul>
+  <li>About every 12 seconds: <q>You don't deserve to be alive, weak person!</q> He hits a random player with <i>Disciplinary Lightning</i>.</li>
+  <li><b>About 12 seconds in, and then about every 45 seconds:</b> he screams <q>My ancestor! Help me!!!</q> and casts <i>Ancient Sacrifice</i>. <b>Two Sailen Oblations</b> appear (Heart, Head, Arms, Bones, Soul or Blood, at random) and <b>walk towards him</b>. If one reaches him it consecrates itself to him (<i>Consecrated Heart</i>, <i>Consecrated Blood</i> and so on), dies, and Sacharist gains that blessing.</li>
+</ul>
+<div class="callout tip"><b>Intercept the Oblations.</b> Kill both before they reach Sacharist, or at least slow them down. Every one that gets through makes him stronger.</div>
+<p>When he dies, a drawbridge comes down and opens the way on.</p>
+</div>
+
+<div class="boss">
+<h3>Boss 2: Crethiyum</h3>
+<p>The palace guardian appears a short while after Sacharist dies.</p>
+<ul>
+  <li><i>Shield Bash</i> on the tank about every 15 seconds (a 50% slow, and less dodge and parry). Right after it, he throws his trident at a random player.</li>
+  <li><b>About every 40 seconds</b> you'll see <q>An Energy Ball appears.</q> An Energy Ball spawns somewhere in the room. A few seconds later Crethiyum says <q>Let me show you the strength of the Well Power.</q> and gains <i>Well Power</i>.</li>
+  <li><b>Kill the Energy Ball.</b> When it bursts you'll see <q>The moment the energy ball exploded, you felt the evil around it suddenly purified...</q>, Crethiyum yells <q>Ah! My power has disappeared!</q>, and his Well Power is gone. If you ignore the ball it fades after about half a minute, but he keeps the buff.</li>
+</ul>
+<p>When he dies you'll see <q>Do you hear strange noises from that well in the middle of the square?</q>. Go to the well.</p>
+</div>
+
+<h3>Sayiddy and the seal</h3>
+<p>At the well you meet <b>Sayiddy</b>, a Daisauros spirit. As you go he tells you some of Sailen's history (<q>Sailen was once a vast, magnificent kingdom...</q>) and warns you about the defences ahead. Escort him to the seal. When he reaches the <b>Shield of Primeval Serpent</b> he says <q>It's my time to go... only our blood can break the seal. Keep moving forward and don't look back.</q> and dissolves the circle.</p>
+<div class="callout warn">Keep Sayiddy alive until he reaches the seal. If he dies on the way, he reappears back at the well and you have to start the escort again.</div>
+
+<div class="boss">
+<h3>The Spirit Ancestors</h3>
+<p>Once the seal breaks, the <b>Water</b>, <b>Fire</b> and <b>Earth Spirit Ancestors</b> rise to guard Zargis. Each one buffs itself while waiting (<i>Water Power</i>, <i>Fire Power</i>, and <i>Earth Power</i> plus <i>Rock Shield</i>). In the fight:</p>
+<ul>
+  <li><b>Water</b>: <i>Multiple Water Arrow</i> hits everyone within a wide radius every few seconds. Kill it first.</li>
+  <li><b>Fire</b>: <i>Fire Ball</i> on its target every few seconds.</li>
+  <li><b>Earth</b>: just melee, but it's well protected by its Rock Shield.</li>
+</ul>
+<p>Once all three are dead, <b>Sayiddy's Soul</b> comes back: <q>I am not going to the kingdom of the dead any time soon. I'm here to take you away, monster!</q> and later <q>Fight on after death? It never occurred to me.</q>. He's here to help you against Zargis.</p>
+</div>
+
+<div class="boss">
+<h3>Final boss: Zargis</h3>
+<ul>
+  <li><b>Endless Power:</b> about 15 seconds in, and then about every 30 seconds, he yells <q>Ready to tremble, timid person?</q> and gains another stack of <i>Endless Power</i>. It keeps stacking, so <b>the fight gets harder the longer it goes</b>. Treat it as a soft enrage.</li>
+  <li><b>Feeble Soul:</b> about every 15 seconds (the first one comes quickly) he yells <q>Let me taste your soul!</q>, stuns a random player for 3 seconds and marks them with <i>Feeble Soul</i>. <b>Their soul explodes about 10 seconds later.</b> Healers, top that player up before it goes off. If you have a way to cleanse it, use it.</li>
+  <li><b>Sacrificial Flame:</b> at about <b>80%, 60%, 40% and 20%</b> health he yells <q>Feel the roaring flames of hell.</q> and sets everyone's soul burning. <b>All healing on you is cut by 25%</b> while it lasts. Line up healing cooldowns for these four moments.</li>
+</ul>
+<p>When Zargis falls, Sayiddy's Soul says goodbye (<q>The hate that has sustained me throughout my time on Earth is slipping away... Farewell, my friends...</q>) and the dungeon is complete.</p>
+</div>
+
+<div class="callout legend">The whole sequence is the same: waves, Sacharist, Crethiyum, the escort, the Ancestors, then Zargis. Everything has much more health and damage. Small changes:
+<ul>
+  <li>Sacharist's first Ancient Sacrifice comes a little later (about 15 seconds in), then about every 45 seconds.</li>
+  <li>The Water Spirit Ancestor uses a different arrow spell (<i>water arrow</i>) in place of Multiple Water Arrow.</li>
+  <li>Zargis's Endless Power stacks and Feeble Soul bombs hurt a lot more, so DPS checks are tight. Bring burst.</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="eidolons-horizon">
+<header class="dhead">
+  <h2>Eidolon's Horizon</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 50 · monsters Lv 56–60</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 70–72</span>
+  </div>
+  <p class="bosses">Bosses: Healique · the Crystal trials · Wethvive · Nacher (final) · Legendary only: Lamiyt</p>
+</header>
+
+<p>A dream world where everyone has fallen into a deep sleep. You wake the sleepers, fight the nightmares that come out of them, and work up through Nacher's dream court. Much of the dungeon is driven by on-screen messages, so read them.</p>
+
+<h3>Stage 1: wake the sleepers</h3>
+<p>When you arrive you'll see <q>Wake 25 Survivors in Deep Sleep to activate the guardian.</q>. All over the first area there are <b>Survivors in Deep Sleep</b>, snoring and stirring now and then (one of them insists <q>I'm not drunk.</q>). When you wake one, a <b>nightmare</b> climbs out of them:</p>
+<ul>
+  <li><b>Spirit of Nightmare</b>: puts <i>Whisper Curses</i> (damage over time) on random players.</li>
+  <li><b>Residue of Nightmare</b>: <i>Nightmare Scream</i> interrupts a random player's cast and slows them by 80% for a few seconds. Casters, watch your bars.</li>
+</ul>
+<p>The voices tell you how you're doing: after a few kills <q>There is a sound that comes from deep within the walls...</q>, later <q>"You will see my doll," a sound says.</q>, and at the 25th <q>A voice whispers, "Only fear drives the weak, and I can smell your fear."</q>. The guardian, <b>Healique</b>, then appears.</p>
+
+<div class="boss">
+<h3>Boss: Healique</h3>
+<ul>
+  <li>Spams <i>Mouth Attack</i> at his target.</li>
+  <li>About every 11 seconds he puts <i>Nightmare</i> on a random player: <b>silenced and slowed by 80% for 8 seconds</b>. A moment later the <b>Eyes of Fear</b> open and you get <q>Avoid the wave!</q>. A wave of ground attacks runs down one lane of the room. Watch which lane lights up and step out of it. The silenced player is the slowest to move, so they need to start moving straight away.</li>
+  <li><b>At around 50% and again at around 10%</b> you get <q>The ground shakes in the blast!</q>: the <b>Eyes of Death</b>. Waves run down <b>every</b> lane, one row after another. Get out of the blast area. These two moments are where most wipes happen.</li>
+</ul>
+<p>When Healique dies, an NPC appears and tells you <q>Try both paths to see where they lead.</q>. If you head somewhere you're not ready for yet, you'll see <q>It is not over yet!</q>.</p>
+</div>
+
+<h3>Stage 2: the Crystal trials</h3>
+<p><q>A Crystal has appeared.</q> There are <b>three crystal stations</b>, and you clear them one at a time. Each one has:</p>
+<ul>
+  <li>a <b>Messy Monster</b>. About every 10 seconds it uses one of three emotions at random: <i>Scary Ridicule</i> or <i>Sadness</i> on a random player, or <i>Fierce Rage</i> on itself;</li>
+  <li>a <b>Calm Crystal</b> and a <b>Peaceful Crystal</b>. When one breaks it sends out a <i>Break Spell</i>;</li>
+  <li>three spirits: the <b>Spirit of Snickering Evil</b> (<i>Scary Ridicule</i>), the <b>Spirit of Cheerless Evil</b> (<i>Sadness</i>) and the <b>Spirit of Angry Evil</b> (<i>Fierce Rage</i>). More spirits turn up while the station is still active, so don't hang around.</li>
+</ul>
+<div class="callout tip"><b>Kill order matters.</b> When a spirit dies, the ones left behind react. The Snickering spirit's death gives out <i>Openmind</i> (+20% damage dealt) and <i>Hubris</i>. The Cheerless spirit's gives out <i>Strong Will</i> (30% less damage taken) and <i>Heart Broken</i>. The Angry spirit's gives out <i>Peaceful Healing</i> (a heal over time) and <i>Lost Control</i>. Look at who gets each buff and kill the spirits in the order that leaves the useful ones on your side.</div>
+<p>Kill the Messy Monster, or all three spirits, to clear the station. The messages track your progress: <q>Head to the next Crystal.</q> after the first, <q>The battle will soon be over.</q> after the second, and after the third the dream court calls out <q>Our master's word is sacred! Heed his words, and join us!</q>. Wethvive appears.</p>
+
+<div class="boss">
+<h3>Boss: Wethvive</h3>
+<ul>
+  <li><b>Lethargy:</b> about every 12 seconds (first one early) you get <q>Sleepiness surrounds you. Move to stay awake!</q>. <b>Everyone has to move.</b> If you're standing still when it lands, your nightmare swallows you after 3 seconds. Any movement clears it. Straight after, he hits a random player with <i>Asphyxia</i> (−50% skill and spell damage).</li>
+  <li><b>Dream Charge:</b> about every 12 seconds he charges a random player and follows up with <i>Dream Shock</i>.</li>
+</ul>
+<p>When he dies he says <q>Our waking dream is a nightmare!</q> and you see <q>"The Teleportation Circle near the throne is shining."</q>. Take the circle up to Nacher.</p>
+</div>
+
+<div class="boss">
+<h3>Final boss: Nacher</h3>
+<p><b>100% to about 45%</b></p>
+<ul>
+  <li><i>Oneiro Touch</i> on random players every couple of seconds.</li>
+  <li><q>Sleep now, in a dream of dreams!</q>: <i>Hypersomnia</i> puts a random player to <b>sleep for 5 seconds</b> (first one after a little while, then every 20-odd seconds).</li>
+  <li>Below about 80%: <q>Evil souls, appear!</q>: <i>Fervent Sweven</i> on a random player about every 12 seconds.</li>
+</ul>
+<p><b>At about 45%: a memory from your past.</b> Nacher pulls <b>one old boss</b> out of your dreams, at random, and wraps himself in <i>Sweet Dream</i> while it fights you. A friendly memory usually turns up too and gives you <i>Courage</i> (more power and +20% healing for a short time):</p>
+<ul>
+  <li><b>Alr-Rahjil in Dream</b> (<q>The prophet of doom and fire! I summon thee!...</q>): drops <i>Shadow Mire</i> on random players. Dream Tharrath helps: <q>I won't let you escape again, demon!</q></li>
+  <li><b>Dream State Cosmo</b>: he's already in demon form (<q>Is it over? Have I failed?</q>) and uses <i>Shadow Erode</i>. At about 20% he loses control (<q>No! I refuse such a destiny!</q>).</li>
+  <li><b>Dream State Khaphichelur</b> (<q>Khaphichelur, burn them with your fiery breath!</q>): <i>Flame Breath</i>, <i>Subzero</i> and stacking <i>Poison Erosion</i>, and an <i>Electrostatic Field</i> whenever his target gets out of melee range. Keep him tanked in melee. The One's memory cheers you on.</li>
+  <li><b>Dream State Zargis</b> (<q>The great chieftain was destined to die in the ruins of Sailen...</q>): stacks <i>Endless Power</i> on a timer, so kill him fast. Dream Sayiddy warns <q>Leave now! You should not be here.</q></li>
+  <li><b>First Enemy</b> (<q>Have you forgotten the first you've faced?...</q>): punishes anyone who leaves melee range with <i>Pain of Being Attacked</i>. Don't kite it.</li>
+</ul>
+<p>Once the memory is dead, Sweet Dream fades and Nacher fights on.</p>
+<p><b>At about 20%:</b> <q>Ha, I am still the ruler of this world!</q>. He starts channelling <i>Night Wish</i>, and <b>Incubi of Nacher</b> start appearing every few seconds (up to five). They throw Oneiro Touch and Fervent Sweven at random players. Burn Nacher down while your off-DPS keep the Incubi under control. They vanish when he dies.</p>
+<p>He dies with <q>Our waking dream is a nightmare!</q> and the dungeon is complete.</p>
+</div>
+
+<div class="callout legend"><ul>
+  <li>Everything is Lv 70–72 and the nightmares from the sleepers are far tougher. The sequence (25 sleepers, Healique, three crystals, Wethvive, Nacher) is the same.</li>
+  <li>Dream Cosmo stays in demon form instead of losing control, and uses <i>Shadow Erosion</i>.</li>
+  <li>Nacher has a <b>hidden bonus</b>: if a particular crystal was broken earlier in the run, a <b>First Gift</b> appears when Nacher dies.</li>
+</ul></div>
+
+<div class="callout legend"><b>Lamiyt, the Dream Lord.</b> If someone in your group is on the Legendary weapon quest line (it starts with <i>A Sultan's Lament</i>) and carries its quest item, <b>Lamiyt replaces Wethvive</b>. It's a long, brutal fight. About every 15 seconds Lamiyt uses one of four "demon fires" at random:
+<ul>
+  <li><b>Angry Fire</b>: <q>Destroy the mortal!</q>. <i>Furious Fire</i> stuns his target for 4 seconds and strips all block, dodge and parry. It happens twice in a row, so the tank needs a big cooldown.</li>
+  <li><b>Greedy Fire</b>: <q>Your life is mine!</q>, three times, a few seconds apart. Each one drains and heals Lamiyt.</li>
+  <li><b>Betrayal</b>: <q>Now kill each other, or perish in this nightmare world!</q>. A random player is mind-controlled (<i>Fire of Betrayal</i>) and starts attacking the group. <b>They die after 8 seconds unless you free them.</b> The message says it: <q>Attack your teammate, until he recovers.</q>. Beat them down below a quarter of their health and hit them once more (<i>Lymar's Will</i>) to break the control.</li>
+  <li><b>Desire</b>: <q>Fool! There is nothing you can do to save yourself!</q>. <q>Engulf yourself in the flames! It will fuel your desires!</q>. You're hit with two of four 30-second "Lust" curses: <i>Grief</i> (a heavy slow), <i>Rage</i> (damage that ramps up), <i>Suffering</i> (burns allies near you) and <i>Voracity</i> (drains mana, morale and vigour). <b>Four coloured orbs appear around the room. Each one removes one curse:</b> yellow for Grief, green for Rage, red for Suffering and blue for Voracity. Run to the right colours.</li>
+</ul>
+<p>After about six minutes he casts <i>Lust of Ruin</i>, which is an enrage. Kill him before then. When Lamiyt dies the teleport circle lights up as usual.</p></div>
+</section>
+
+<section class="dungeon" id="metal-ziggurat">
+<header class="dhead">
+  <h2>Metal Ziggurat</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 52 · monsters Lv 60–64</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 70–72</span>
+  </div>
+  <p class="bosses">Bosses: Ziggurat Protectors · <b>either</b> Patridon <b>or</b> X-11A (random) · Core (final)</p>
+</header>
+
+<p>A mechanical pyramid full of insect-machines and energy constructs. There's a twist: after the gatekeepers, <b>only one of two doors opens</b>, chosen at random, so each run you fight either Patridon or X-11A before the Core. Learn both.</p>
+
+<h3>Ziggurat monsters</h3>
+<ul>
+  <li><b>Energy Cores (Blue, Purple, Red)</b>: pulse a <i>Weak Current</i> every couple of seconds that strips your resistance (Blue for energy, Purple for shadow, Red for fire). It stacks up to 5 times. <b>Energy Balls</b> of the matching colour then hit you with that element, so kill the core first.</li>
+  <li><b>Cave Spiders</b>: the knitters throw a <i>Spider Net</i> (a 40% slow), and the poisonous ones drop a <i>Poison Cloud</i> on random players.</li>
+  <li><b>Ziggurat Guards</b>: one type raises a <i>Bug Shield</i>; the other stacks a <i>Deadly Avulsion</i> bleed (up to 5 stacks) every few seconds.</li>
+  <li><b>Ziggurat Keepers</b>: the green ones use <i>Stun Wave</i> (a 4-second stun); the purple ones stack <i>Cracking Blade</i> (+5% damage taken).</li>
+</ul>
+
+<div class="boss">
+<h3>Gatekeepers: the two Ziggurat Protectors</h3>
+<p>A copper and a silver Protector. One uses <i>Clap Ground</i>, the other <i>Heavy Hit</i> on random players. <b>When both are dead</b> one of two messages comes up: <q>The left door has been opened.</q> (Patridon) or <q>The right door has been opened.</q> (X-11A). It's random each run.</p>
+</div>
+
+<div class="boss">
+<h3>Left door: Patridon</h3>
+<div class="callout warn"><b>You can't hurt Patridon directly.</b> When the fight starts he drops to well under full health and becomes <i>Immortal</i>. The way to damage him is to <b>kill the Sacrificing Bugs</b>. Each bug you kill takes a chunk off his health bar.</div>
+<ul>
+  <li>Bugs come in waves from pillars around the room about every 20 seconds, with a message each time: <q>One wave of bugs is coming.</q>, later <q>Two waves of bugs are coming.</q>, and eventually <q>Three waves of bugs are coming.</q>. There are more each time, so bring AoE.</li>
+  <li><b>Don't let bugs reach him.</b> Bugs that get to Patridon heal him.</li>
+  <li>About 10 seconds in, and then about every 20 seconds: <q>Patridon is charging.</q>. He casts <i>Electrostatic Field</i>, which pins you in place (100% slow). Kill the bugs that are already near you.</li>
+  <li><b>At about 20%</b> you'll see <q>There is an error. Fatal application will begin in 10 seconds.</q>. He loses Immortal, so <b>burn him down now</b>. You have about ten seconds before he starts to <q>Perish!</q>.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Right door: X-11A</h3>
+<ul>
+  <li><i>Cracking Blade</i> on the tank shortly after the pull, then about every 12 seconds.</li>
+  <li><i>Impale</i>: about every 12 seconds (the first comes about 9 seconds in) a random player is impaled and <b>takes a big hit of physical damage 3 seconds later</b>. Shield or pre-heal them.</li>
+  <li><b>X-11A Guards</b> keep appearing around the hexagonal arena. Each one stacks <i>Mangle</i> on its target (+20% damage taken, up to 3 stacks) and then vanishes after about 15 seconds. Kill or avoid them before the stacks build up on your tank.</li>
+</ul>
+</div>
+
+<div class="callout info">After either Patridon or X-11A dies: <q>Core is beginning to wake up.</q></div>
+
+<div class="boss">
+<h3>Final boss: Core</h3>
+<ul>
+  <li><i>Electric Fist</i> on the tank every so often.</li>
+  <li><b>At about 75%, 50% and 25%</b>: <q>Core is casting Earthquake. Run away!</q>. Get out of the earthquake area. Anyone left in it takes damage over time and is stunned.</li>
+  <li><b>About every 25 seconds</b> a <b>Core Energy Entity</b> spawns: <q>The energy entity is healing Core. Interrupt it.</q>. It channels a big heal on the Core (10% of its health). Sometimes it also puts up a shield that absorbs damage and lightning-zaps the area around it. <b>Kill or interrupt it straight away.</b></li>
+</ul>
+<p>When the Core falls a chest appears and the dungeon is complete.</p>
+</div>
+
+<div class="callout legend"><ul>
+  <li><b>Patridon</b> starts the fight with more health (he only drops to about 70% instead of about 60%), so you need to kill more bugs.</li>
+  <li><b>Core</b> spawns its Energy Entities more often, about every 20 seconds instead of 25.</li>
+  <li>Everything else, including the random door, is the same with bigger numbers.</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="abyss-of-limitless-gears">
+<header class="dhead">
+  <h2>Abyss of Limitless Gears</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 56 · monsters Lv 64–68</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 70–72</span>
+  </div>
+  <p class="bosses">Bosses: Ilystin, the Dark Queen · Mechanical Origin (final)</p>
+</header>
+
+<p>The dark elves of Queen Ilystin have taken over a giant gear machine. Expect two puzzles: a set of gears to line up before you can reach the Queen, and a pair of switches that wake the Mechanical Origin.</p>
+<div class="callout warn">Some floors in here are on fire. If you get <q>It's so hot here! You've been burned; leave right now!</q>, move.</div>
+
+<h3>The Mechanical Corridor</h3>
+<p>The dark elf guards are chatty (<q>For Queen Ilystin! Stay alert!</q>, <q>The enemy is attacking! For Queen Ilystin, guard the Mechanical Corridor!</q>), and if you've already cleared their friends you'll hear <q>Where are the soldiers? Enemies around here? This needs to be reported.</q>.</p>
+<ul>
+  <li><b>Dark Archer</b>: shoots from range with a multi-arrow aura.</li>
+  <li><b>Dark Phantom Killer</b>: splits off <b>two Phantoms</b> next to itself when it engages. The Phantoms vanish once their target dies or disappears.</li>
+  <li><b>Dark Summoner</b>: ranged, and calls a <b>Mechanical Scorpion Warrior</b> (sting aura).</li>
+  <li><b>Dark Witch</b>: puts a <i>Dark Curse</i> on someone about every 30 seconds. It has little health, so kill it first.</li>
+  <li><b>Electromagnetic Beetle</b>: <i>EMI</i> silences a random player every few seconds. Kill it before your healer gets locked out.</li>
+  <li><b>Supercharging Beetle</b>: <i>Supercharges</i> itself about every 10–12 seconds.</li>
+  <li><b>Mechanical Scorpion Striker</b>: a <i>tail strike</i> every few seconds.</li>
+  <li><b>Mechanical Giant</b>: plants its feet and throws a <i>Giant Punch</i> (a 1.5-second stun) every few seconds. <b>Mechanical Radiator</b>: shoots damaging rays.</li>
+</ul>
+
+<h3>The gear puzzle</h3>
+<p>Before the Queen's platform there are <b>four gears</b> that start in random positions. Several levers each turn a different set of gears: one turns all four, one turns gears 1 and 2, one turns 1 and 3, and one turns just gear 4. <b>Get all four gears into the correct position</b> to open the way. It's a "lights out" puzzle: plan your lever pulls instead of spamming them.</p>
+<div class="callout info">The Queen also wants her <b>Dark Phantom Killers and Dark Archers</b> dealt with. Once you've lined up the gears <b>and</b> killed enough of them, an angry voice shouts <q>Ill-mannered intruders! Duel with me in the center of the platform!</q> and about 10 seconds later Ilystin appears.</div>
+
+<div class="boss">
+<h3>Boss: Ilystin, the Dark Queen</h3>
+<p>When she enters she yells <q>Abominable intruders. Let there be more soldiers for me to fight!</q>, <q>Soon, you would be consumed by your fear!</q> and <q>Come here, my little babies! Be careful of the energy discs.</q>. Walls go up around the platform and <b>energy discs</b> start spinning. Keep away from the discs.</p>
+<h4>100% to about 60%</h4>
+<ul>
+  <li><i>Tides of Darkness</i>: about 2 seconds in, then about every 10 seconds. It does heavy shadow damage over 3 seconds plus a 60% slow. Heal through it.</li>
+  <li><i>Shadow bullets</i> every few seconds.</li>
+  <li><b>Bomber Bugs</b> walk out of the sides and <b>explode a few seconds later</b>. They come more and more often as the fight goes on. Move away from them, or kill them before they get to the group.</li>
+</ul>
+<h4>About 60% to 20%</h4>
+<p>The walls and energy discs go away.</p>
+<ul>
+  <li>Tides of Darkness and shadow bullets carry on.</li>
+  <li><i>Darkness Kiss</i>: about every 20 seconds she locks onto a random nearby player and drains them. <b>Run more than about 20 metres away from her to break it.</b></li>
+</ul>
+<h4>About 20% to the end</h4>
+<ul>
+  <li>Darkness Kiss stops, and she uses <i>Darkness Hug</i> instead, once at about 20% and again at about 10%.</li>
+  <li>Tides of Darkness keeps going until she dies.</li>
+</ul>
+</div>
+
+<h3>Waking the Mechanical Origin</h3>
+<p>After the Queen dies, two more <b>switches</b> control the machine's heart. Set both and it wakes up (a few seconds later): <q>Someone has broken in. They must die!</q>.</p>
+
+<div class="boss">
+<h3>Final boss: Mechanical Origin</h3>
+<p>The Origin is built into the room. Three huge mechanical fists are anchored in a row (left, middle, right), and it fights with patterns that change as its health drops.</p>
+<ul>
+  <li><b>Fist slams:</b> it picks one of the three positions (left, middle or right), <b>stuns whoever is there for 1.5 seconds</b>, and slams it. Watch which fist winds up and step out of that lane.</li>
+  <li><b>Laser:</b> it aims a laser at a random player within range. Move out of the beam.</li>
+  <li><b>Electromagnetic Shield:</b> it surrounds a random player with a damaging shield that also <b>hurts party members inside it</b>. Whoever gets it, run away from the group.</li>
+  <li>Its rotation changes at around <b>85%, 70%, 55% and 30%</b> health, mixing the slams, lasers and shields in different orders. Below <b>about 5%</b> it builds up to an <i>Electromagnetic Explode</i>. Push hard to finish it.</li>
+</ul>
+<p>When it dies a chest appears and the dungeon is complete.</p>
+</div>
+
+<div class="callout legend">The gear puzzle, the Queen and the Origin all work the same way, with everything at Lv 70–72 and much more health and damage.
+<ul>
+  <li>Some Bomber Bugs wait for their friends before they run in, so they tend to arrive in groups.</li>
+  <li>The Queen's Darkness Kiss picks its victims slightly differently.</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="insane-arcadian-forest">
+<header class="dhead">
+  <h2>The Insane in Arcadian Forest</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 63 · monsters Lv 64–67</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 70–72</span>
+  </div>
+  <p class="bosses">Bosses: Arkolian · Lendoerl (final) · Legendary only: Qiu Yuelan (hidden)</p>
+</header>
+
+<p>A story dungeon. You follow <b>Lendoerl</b>, a devout follower of Khalin, into a forest where the animals and guardians have gone mad. Protect him on the way in. He won't stay your friend.</p>
+<div class="callout warn"><b>Lendoerl has to survive the first half.</b> If he dies you'll see <q>Failed Dungeon. Retry this dungeon and remember to protect Lendoerl.</q> and the run is over.</div>
+
+<h3>The forest</h3>
+<ul>
+  <li><b>Arcadian Guardians</b> start out calm. When Lendoerl senses something (<q>Danger! Unusual power has been seen on them!</q>), they turn on you, one roaring <q>Bloooood!</q> and the other <q>I... feel... great!!!</q>. The attack type stuns with <i>Strong Hit</i> every few seconds. The defence type calls for help.</li>
+  <li><b>Insane Adherents</b>: the women cast <i>Shadow Shock</i> (a slow) and the men stun with <i>Vulnerability Attack</i> (1.5 seconds), each every few seconds.</li>
+  <li><b>Insane Bears</b> use <i>Heavy Knock</i>, and <b>Insane Boars</b> sting every few seconds.</li>
+</ul>
+
+<div class="boss">
+<h3>Boss 1: Arkolian</h3>
+<p>Lendoerl walks up to the beast's lair: <q>Now, let's see the true color of that monster... Then kill him!</q>, summons it, and shouts <q>Here it comes! Be ready to beat him!</q>.</p>
+<ul>
+  <li><b>100% to about 65%:</b> <i>Flame Bombardment</i> on a random player about every 5 seconds.</li>
+  <li><b>About 65% to 25%:</b> <i>Evil Stare</i> every several seconds. It <b>fears</b> its target (you lose control).</li>
+  <li><b>About 25% to the end:</b> it goes wild. It blinks to a random player and stuns them with <i>Beast Dance</i> (2 seconds) every several seconds, and <b>calls an Insane Adherent about every 20 seconds</b>. Kill the adds as they come.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>The betrayal</h3>
+<p>Arkolian drops a <b>Fragment of Khalin's Hammer</b>. Lendoerl picks it up: <q>This is... the fragment of Khalin's Hammer. Great Khalin, I, a devout adherent, will get your power!</q>, then <q>I feel power in my body. Hahahaha! I'm the god in reality!</q>. He becomes the final boss.</p>
+</div>
+
+<div class="boss">
+<h3>Final boss: Lendoerl</h3>
+<p><b>100% to about 60%</b></p>
+<ul>
+  <li>A shadow strike on his target every few seconds.</li>
+  <li>About every 11 seconds he lunges at a random player.</li>
+  <li>About every 17 seconds he takes <b>Mind Control</b> of a random player (<q>You are being controlled!</q>) and makes them use their own skills on the group. CC or avoid them until it wears off.</li>
+</ul>
+<p><b>About 60% to 15%:</b> he empowers himself with holy light. The strikes and mind control continue, and he adds <i>Holy Storm</i> about every 10 seconds, which stuns for 2.5 seconds.</p>
+<p><b>Below about 15%:</b> <i>Holy Symbol</i> curses someone every 5 seconds or so. Finish him fast.</p>
+<p>When Lendoerl falls, <b>Nova</b> appears and the dungeon is complete.</p>
+</div>
+
+<div class="callout legend">Same story, same escort, same two bosses with all three phases, at Lv 70–72 with several times the health and damage. Arkolian's bombardment is a stronger version, and Lendoerl's holy phase is cleaned up properly when he dies.</div>
+
+<div class="callout legend"><b>Qiu Yuelan.</b> Tied to a quest: if the right quest conditions are met, an <b>Old Woman</b> in the forest is replaced by <b>Qiu Yuelan</b>, a martial artist who fights in every class style. It's a long, mechanics-heavy fight.
+<ul>
+  <li>She keeps <b>changing stance</b> between warrior, defensive warrior, monk, battle monk, mage, archer and assassin, using that class's moves: <i>Charge</i> (stun), <i>Shield Slap</i>, <i>Decapitate</i>, <i>Dragon Tail Kick</i>, <i>Yunlong Stick Hit</i>, <i>Arrow of Faith</i>, <i>Powerful Split Shot</i> (bleed), <i>Rapid Healing</i>, <i>Tunes Reflect</i> and more. Watch her stance buff and react: interrupt the heals, spread for the shots.</li>
+  <li><b>After her Charge, if the stunned player is under about 25% health, she executes them.</b> Keep the charge target healed.</li>
+  <li>She calls <b>Insane Adherents</b> and <b>Phantoms of Qiu Yuelan</b>, which blink around and vanish after a few seconds.</li>
+  <li><b>At around 80%</b> she <b>splits into her seven class forms</b> around the arena. Each one is a smaller Qiu Yuelan that fights in its own style. The archer form pins feet and snipes, and the assassin form blinks and stabs. They disappear when the real one dies.</li>
+  <li><b>At around 30%</b> she turns <b>evil</b> for the last phase. Watch out for <i>Dance Music of the Soul</i>: heavy shadow damage every second, and you <b>can't act</b> until it ends.</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="flame-ruin-of-vliya-temple">
+<header class="dhead">
+  <h2>Flame: Ruin of Vliya Temple</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 61 · bosses Lv 63 (adds Lv 66)</span>
+    <span class="lv legend"><b>Legendary</b> bosses Lv 72 (adds Lv 71)</span>
+  </div>
+  <p class="bosses">Bosses: Brand · Teresa · Gunnar-Thyne (final). Plus the harp puzzle with Roku.</p>
+</header>
+
+<p>The first of the "Flame" story dungeons. It's short: three bosses in a ruined temple, each with three phases (100% to 80%, 80% to 30%, and 30% to the end). Roku also has a memory puzzle for you.</p>
+
+<h3>Roku's dance (the harp puzzle)</h3>
+<p>Roku says <q>Watch carefully. You need to remember my dance.</q>. Four harp spots appear around her (in front, behind, left and right), and she plays them one at a time. <b>Go and stand on the spot she just played</b>, quickly. You have a few seconds, and the window shrinks each round. Stand on the wrong one, or take too long, and she says <q>You chose incorrectly... Retry when you are ready.</q>. Get the whole sequence right and she says <q>You succeeded!</q>. This also counts for the related quest.</p>
+
+<div class="boss">
+<h3>Boss 1: Brand</h3>
+<ul>
+  <li><b>Flame Charge:</b> about every 5 seconds he charges a random player, up to three times in a row.</li>
+  <li><b>Bloody Contract:</b> about every 15 seconds he gains a stack of +10% damage. It keeps stacking, so this is a DPS race.</li>
+  <li><b>Below about 80%:</b> four <b>Sanctions Swords</b> appear around him whenever none are left (he checks every 8 seconds or so). Kill them, or at least keep them off your healer. They vanish when Brand dies.</li>
+  <li><b>Below about 30%:</b> on top of everything else, he casts <i>Deadly Judgment</i> about every 40 seconds.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Boss 2: Teresa</h3>
+<ul>
+  <li><i>Divine Arrow</i>: a heavy holy shot at her target every couple of seconds. The tank needs steady healing.</li>
+  <li><b>Divine Spring</b>, about every 8 seconds, in one of three random shapes. Learn the shapes and get out of the affected ground:
+    <ul>
+      <li><b>Area</b>: a whole area lights up.</li>
+      <li><b>Small Ring</b>: a small ring of holy water.</li>
+      <li><b>Big Ring</b>: a large ring of holy water.</li>
+    </ul>
+  </li>
+  <li><b>Below about 80%:</b> she also puts <i>Holy Fire of Judgment</i> on a random player about every 6 seconds. It burns them for 7 seconds, so heal it.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Final boss: Gunnar-Thyne</h3>
+<ul>
+  <li>About every 25 seconds he gives himself one of three buffs at random: <i>Immobilizing Strike</i>, <i>Insane Erosion</i> (+15% physical damage) or <i>Absolute Disability</i> (+25% attack speed). Use your defensive cooldowns during the damage buffs.</li>
+  <li><i>Soul Extraction</i>: about every 7 seconds he stuns a random nearby player for 1 second.</li>
+  <li><i>Sword Penetrate</i> on a random nearby player about every 11 seconds.</li>
+  <li><b>Below about 80%:</b> adds <i>Lightning Flame</i> about every 45 seconds.</li>
+  <li><b>Below about 30%:</b> he stops using Sword Penetrate and starts calling <i>Flame Storm</i> on random players very often. Keep moving and burn him down.</li>
+</ul>
+</div>
+
+<div class="callout legend">The same three fights with Lv 72 bosses and huge health pools.
+<ul>
+  <li><b>Brand</b> stacks <i>Bloody Contract</i> faster (about every 10 seconds instead of every 15), so the DPS check is much tighter.</li>
+  <li><b>Teresa</b> shoots the legendary version of her arrow (<i>Arrow of Divine</i>).</li>
+  <li><b>Gunnar-Thyne</b>'s Soul Extraction stuns come a little less often (about every 9 seconds).</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="flame-fate-of-collapse">
+<header class="dhead">
+  <h2>Flame: Fate of Collapse</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 61 · monsters Lv 62 · bosses Lv 63</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 70 · bosses Lv 72</span>
+  </div>
+  <p class="bosses">Bosses: Sydell · Ned (final)</p>
+</header>
+
+<p>You chase the archbishop <b>Gunnar-Thyne</b> through the abbey's crypts. Talk to <b>Ryton</b> to start. Gunnar-Thyne runs ahead of you, and each time you catch up he leaves something nasty behind.</p>
+
+<h3>The chase</h3>
+<ol>
+  <li><q>You will never take it from me!</q>: he runs, and a pack of <b>Undead Skeletons</b> and <b>Sewage Spiders</b> rises behind him.</li>
+  <li><q>Sydell... Blood of Rascasath... Sleep no more! Rise, rise and taste life once more!</q>: he raises <b>Sydell</b> and flees again.</li>
+  <li><q>You will never take it from me!</q>: a much bigger pack, with skeletons, spiders and <b>Eyes of the Undead</b>. Pull carefully.</li>
+  <li><q>Ned... Such a loyal knight. I call upon your service once more; awake!</q> then <q>Ned, hear me! Kill these enemies of the Abbey! Kill them in my name!</q>: <b>Ned</b>, the final boss.</li>
+</ol>
+<ul>
+  <li><b>Undead Skeleton</b>: hits hard and sprays <i>Erupt Poison</i> every few seconds.</li>
+  <li><b>Sewage Spider</b>: webs a random player in place for 6 seconds (<i>Spider Net</i>).</li>
+</ul>
+
+<div class="boss">
+<h3>Boss 1: Sydell</h3>
+<p>A barrier comes up when you engage, so you can't leave mid-fight.</p>
+<ul>
+  <li><i>Earth Strike</i> on the tank about every 5 seconds.</li>
+  <li><i>Stone Strike</i> on a random nearby player about every 8–9 seconds.</li>
+  <li><b>Below about 80%:</b> adds <i>Deadly Poison</i> about every 13 seconds.</li>
+  <li><b>Below about 30%:</b> the poison is replaced by <i>Power Strike</i>, a big hit at the same pace. Tank, save a cooldown for this.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Final boss: Ned</h3>
+<p>Another barrier closes when you pull.</p>
+<ul>
+  <li><b>Lethargy:</b> about every 7 seconds. <q>You'll be consumed by your nightmare after 1 sec.</q> Whoever gets it has to <b>move straight away</b>.</li>
+  <li>About every 23 seconds: <i>Decapitate</i>, followed at once by a <i>Fist Strike</i>, on the tank. It's a big burst.</li>
+  <li><b>100% to about 70%:</b> also <i>Mangle</i> into a Fist Strike about every 13 seconds.</li>
+  <li><b>About 70% to 30%:</b> Mangle stops, and he throws <i>Fervent Sweven</i> at a random nearby player about every 11 seconds.</li>
+  <li><b>Below about 30%:</b> Fervent Sweven comes <b>twice in a row</b> about every 10 seconds. Spread out.</li>
+</ul>
+<p>When Ned falls the barrier lifts and the dungeon is complete.</p>
+</div>
+
+<div class="callout legend">The same chase and the same two bosses at Lv 70–72. Sydell's <i>Stone Strike</i> is replaced by <i>Sword Burst</i>, and Ned's Decapitate becomes the stronger <i>Decapitate VI</i>. Otherwise expect the same timings with much bigger hits.</div>
+</section>
+
+<section class="dungeon" id="flame-khalins-rebirth">
+<header class="dhead">
+  <h2>Flame: Khalin's Rebirth</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 62 · monsters Lv 64 · demon lords Lv 66 · Gunnar-Thyne Lv 68</span>
+    <span class="lv legend"><b>Legendary</b> monsters Lv 70 · bosses Lv 72</span>
+  </div>
+  <p class="bosses">Bosses: four demon lords (Shadow Prince, Usnemor, Jamnysae, Galand), one at a time · Gunnar-Thyne (final)</p>
+</header>
+
+<p>The end of the Flame story. Gunnar-Thyne is trying to bring back Khalin, and four demon lords stand between you and him. <b>Myrst</b> waits at the summoning area while you work through the demon lords. They're summoned <b>one at a time</b>, and the order changes from run to run. Once all four are dead, Gunnar-Thyne himself comes out.</p>
+
+<h3>Monsters</h3>
+<p><b>Everything here calls for help</b>, so expect nearby packs to join when you pull.</p>
+<ul>
+  <li><b>Gunnar-Thyne's Priestess</b>: <i>Evil Light</i> (−30% hit chance on your skills) every so often, and heals any ally that drops below about 40%. <b>Kill her first.</b></li>
+  <li><b>Gunnar-Thyne's Lurker</b>: <i>Weak Curse</i> on a random nearby player: a 30% slow to movement and attacks, plus heavy damage over 8 seconds. Dispel or heal it.</li>
+  <li><b>Gunnar-Thyne's Elite Fighter</b>: <i>Power Strike</i> (a bleed) and, at about 30%, <i>Gunnar's Zealot</i>.</li>
+  <li><b>Abyss Bat</b>: a fire AoE around itself every 8 seconds or so. <b>Fire Imp</b>: devil fireballs every few seconds.</li>
+  <li><b>Eye of the Devil</b>: at about 30% it panics (<q>Help! Enemies are gonna kill meeee!</q>), confuses its target with <i>Deep Fear</i>, and calls more help.</li>
+</ul>
+
+<div class="boss">
+<h3>Demon lord: Shadow Prince</h3>
+<ul>
+  <li>About every 12 seconds he puts up a <b>shield</b>, chosen at random: either a <b>magic shield</b> or a <b>physical (energy) shield</b>. <b>Look at which one it is and switch</b>: casters hold back during the magic shield, melee during the physical one.</li>
+  <li>His <i>Crazy Dance</i> comes about every 12 seconds.</li>
+  <li><b>Below about 70%:</b> <i>Evil Burn</i> about every 9 seconds, and attacks on random players.</li>
+  <li><b>Below about 30%:</b> everything speeds up. Shields about every 10 seconds, <i>Crazy Dance</i>, <i>Evil Burn</i>, and an <i>Evil Shock</i> about every 16 seconds.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Demon lord: Usnemor</h3>
+<p><q>Let the hunt begin!</q></p>
+<ul>
+  <li><i>Spirit Storm</i> stuns about every 8 seconds, all fight long.</li>
+  <li><b>100% to about 70%:</b> a <i>Spirit Arrow</i> at a random nearby player about every 12 seconds.</li>
+  <li><b>About 70% to 30%:</b> <i>Spirit Arrow Rain</i> (an area) about every 12 seconds, and <i>Spirit Explosion</i> on random players about every 18 seconds, which slows movement and attack speed.</li>
+  <li><b>Below about 30%:</b> <i>Spirit Shock</i> about every 12 seconds <b>cuts all healing received</b>. Healers will struggle, so DPS should burn him.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Demon lord: Jamnysae</h3>
+<ul>
+  <li><i>War Stomp</i> about every 4 seconds. Melee will feel it.</li>
+  <li><i>Dark Forces</i> about every 30 seconds (more attack power and attack speed).</li>
+  <li><b>Below about 80%:</b> <i>Beast Charge</i> at a random player about every 5 seconds, and <i>Curse of Agony</i> about every 7 seconds.</li>
+</ul>
+<div class="callout tip"><b>Curse of Agony is removed when players stand close to each other.</b> When it goes out, <b>stack up</b> with your group to clear it. Left alone, it ticks for a lot of shadow damage.</div>
+</div>
+
+<div class="boss">
+<h3>Demon lord: Galand</h3>
+<ul>
+  <li><i>Lightning Ball</i> at his target every couple of seconds, and <i>Rain of Flame</i> on a random player about every 12 seconds.</li>
+  <li><b>Endless Flame</b>: about every 25 seconds a random player catches fire and <b>leaves a ring of fire around themselves</b> that burns everyone within about 10 metres. <b>That player has to run away from the group.</b></li>
+  <li><b>At about 85%, 65%, 40% and 15%:</b> <q>Elementals, follow your master's order: Devastate the invaders!</q>. A <b>Frost Rage</b> and a <b>Flame Rage</b> appear. Each one shields itself, charges at random players, and after a while (or once it's low on health) unleashes <i>Lightning Flame</i> or a frost burst. Kill them quickly, ideally before the next pair arrives.</li>
+</ul>
+</div>
+
+<div class="boss">
+<h3>Final boss: Gunnar-Thyne</h3>
+<p>Once all four demon lords are dead, Gunnar-Thyne comes out: <q>You dare challenge my godly power?!</q>.</p>
+<ul>
+  <li><b>100% to about 70%:</b> <i>Soul Extraction</i> on a random nearby player about every 7 seconds, and a <b>meteor</b> called down about every 12 seconds.</li>
+  <li><b>At about 70%</b> he transforms (<q>Die! Reckless mortals!</q>). From then on: Soul Extraction on several people about every 15 seconds, meteors, and a <b>hellfire AoE</b> about every 30 seconds.</li>
+  <li><b>Below about 30%:</b> hellfire about every 9 seconds, <i>Evil's Judgment</i> about every 18 seconds, and a <b>blood absorb</b> every few seconds that soaks up your damage. Use everything you have.</li>
+</ul>
+<p>When he dies a chest appears and the dungeon is complete. Hang around: a few minutes later the story continues with a short scene.</p>
+</div>
+
+<div class="callout legend">The same four demon lords (still one at a time, in a random order) and the same Gunnar-Thyne fight, with Lv 70–72 enemies and enormous health pools. Differences you'll notice:
+<ul>
+  <li><b>Jamnysae</b> also uses <i>Beast Gaze</i>.</li>
+  <li><b>Galand</b> gains <i>Energy Transportation</i>, and his Endless Flame rings and Lightning Balls hit more than twice as hard. Getting the fire ring out of the group is essential.</li>
+  <li>The Shadow Prince's shields and Gunnar-Thyne's meteors, hellfire and Soul Extraction are all the stronger legendary versions.</li>
+</ul></div>
+</section>
+
+<section class="dungeon" id="field-trials">
+<header class="dhead">
+  <h2>The Field Trials <small>(class trials)</small></h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 70 · bosses Lv 72</span>
+    <span class="lv legend"><b>Legendary</b> bosses Lv 72, tougher</span>
+  </div>
+  <p class="bosses">One trial per class role, each started by a mentor</p>
+</header>
+<p>Not a group dungeon. It's a series of <b>class trials</b>, one for each role. A mentor sets up your trial, a door opens, and you face a boss built to test that role. Both modes run the same trials. Legendary bosses have more health and hit harder.</p>
+<ul>
+  <li><b>Mage: The God of Demolition Rabbits.</b> Waves of <b>Demolition Rabbits</b> keep pouring in from eight burrows around the arena while the God throws <i>Fervent Sweven</i>. Manage the adds with AoE and keep moving.</li>
+  <li><b>Monk (martial): Warrior of Thunder.</b> <i>Tiger Claw Strike</i> and <i>Holy Fire</i>. Below about 70% he calls the four elemental <b>Warrior's Wood / Water / Wind / Fire</b> spirits, and later starts casting <i>Divine Light</i>, a slow self-heal of a fifth of his health. <b>Interrupt it.</b></li>
+  <li><b>Monk (healer): Trial of Water Elemental.</b> You fight alongside two NPC teammates, <b>Cython</b> (tank) and <b>Pytric</b> (damage), and your job is to <b>keep them alive</b> through <i>Shield Slap</i>, <i>Tiger Claw Strike</i> and <i>Lightning Flame</i>. <i>Lethargy</i> hits you too, so keep moving to stay awake.</li>
+  <li><b>Ranger (archer): Oriental Berserker.</b> A melee bruiser that slows you with <i>Crystal Ice Strike</i>. Kite it, and deal with the adds that use <i>Avulsion Shot</i>.</li>
+  <li><b>Ranger (assassin): the Corruptor.</b> A stealth trial. The <b>Wizard of Mystery</b> is turning a man into the Corruptor (<q>Wizard, sir... how long do I have to wait to get the power?</q>, <q>Wizard: Soon... Soon, wait one more minute!</q>), surrounded by <b>Captains of the Guard</b>. When the ritual finishes (<q>Corruptor: This... is... EVIL! Hmm? A strange visitor!</q>, <q>Corruptor: Wonderful! You are my first prey!</q>) you have to deal with him.</li>
+  <li><b>Warrior (battle): Thunder Soul.</b> <q>I'm angry! I will drink your blood!</q>. <i>Withering Harm</i> (+30% damage taken), <i>Swift Strike</i> and <i>Plague Erosion</i> (defence down). It's a damage race.</li>
+  <li><b>Warrior (guard): the Traitor.</b> You tank the Traitor while an NPC <b>Punisher</b> fights with you, and three <b>Minders</b> join in. <b>At about 20%</b> the Traitor uses <i>Absolute Disability</i>: double damage and triple attack speed. Save your biggest defensive cooldown for this.</li>
+</ul>
+<p>Beat a trial and that role's mentor (Liu Zhong, Lu Hou, Cai Ying, Xu Hanchen, Chen Wei, Wei Wei or Lu Gong) appears. You can teleport out from there.</p>
+</section>
+
+<section class="dungeon" id="pirate-island">
+<header class="dhead">
+  <h2>Pirate Island</h2>
+  <div class="levels">
+    <span class="lv normal"><b>Normal</b> Enter from Lv 8 · monsters Lv 10–12</span>
+    <span class="lv legend"><b>Legendary</b> not available</span>
+  </div>
+  <p class="bosses">Boss: Captain Paul Wesley</p>
+</header>
+<p>A tiny starter instance. <b>Paul Buccaneer Assassins</b> poison you with <i>Poison Thorn</i> (a small damage over time). <b>Captain Paul Wesley</b> uses <i>Snuff Strike</i>, which halves your hit chance for 8 seconds, and every so often <i>Pounding Glow</i>, which burns everyone within about 5 metres of him. Step back when the ground lights up.</p>
+</section>
+
+
+<footer class="notes"><p>Levels are monster levels unless marked "Enter from", which is the minimum level to enter. Legendary entry requirements vary; monsters there are listed at the level you'll fight them.</p></footer>
+</main>
+</div>
+<script>
+(function(){
+  var b=document.getElementById('toggle-legend');
+  function set(h){document.body.classList.toggle('hide-legend',h);b.setAttribute('aria-pressed',h?'true':'false');b.textContent=h?'Show Legendary notes':'Hide Legendary notes';}
+  var h=false; try{h=localStorage.getItem('hideLegend')==='1'}catch(e){}
+  set(h);
+  b.addEventListener('click',function(){h=!h;set(h);try{localStorage.setItem('hideLegend',h?'1':'0')}catch(e){}});
+})();
+</script>
+
+</body></html>
