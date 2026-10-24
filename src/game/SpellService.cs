@@ -29,6 +29,16 @@ public sealed class SpellService
     public const int PlayerMaxPower = 100;
     public const int PowerRegenPerInterval = 10;
     public static readonly TimeSpan PowerRegenInterval = TimeSpan.FromSeconds(8);
+    public static readonly TimeSpan FastPowerRegenInterval = TimeSpan.FromSeconds(1);
+    public const int MoraleRest = 20;
+    public const int MoraleDriftPerTick = 2;
+    public const int VigorFloor = 20;
+    public const int VigorRegenPerTick = 10;
+    public const double VigorLossPerDamagePerLevel = 0.667;
+    public const double MoraleGainPerDamageTakenPerLevel = 1.2;
+    public const int MoraleMinimumGainOnHit = 5;
+    public const int MoraleGainOnAvoid = 4;
+    public const double MoraleWeaponBonusPerSwingSecond = 3.5;
     public const int PowerRegenPerRating = 1;
     public const double MissChance = 0.05;
     public const double ResistChance = 0.08;
@@ -63,7 +73,7 @@ public sealed class SpellService
         _classId = classId;
         _level = level;
         if (baseIntellect is int intellect) _baseIntellect = Math.Max(0, intellect);
-        _power = EffectiveMaxPower(0);
+        _power = RestingPower(0);
         if (knownSpells is null) return;
         _known.Clear();
         foreach (var spellId in knownSpells) _known.Add(spellId);
@@ -88,7 +98,7 @@ public sealed class SpellService
         || spell.EffectPowerRestore is not null
         || spell.AuraTriggerSpellId is not null || spell.AuraPeriodicTriggerSpellId is not null
         || spell.EffectTriggerSpellId is not null || spell.EffectLeapToTarget
-        || spell.AuraMountId is not null
+        || spell.AuraMountId is not null || spell.AuraAvatarDisplayId is not null
         || (spell.ExtraEffects?.Any(HasResolvableEffect) ?? false);
 
     public int? RestorePower(int powerKind, int amount, int wisdomBonus = 0)
@@ -182,31 +192,98 @@ public sealed class SpellService
 
     public const double SpellHitChance = 1.0 - ResistChance - MissChance;
 
-    public int? PowerRegen(DateTimeOffset now, int wisdomBonus = 0, int manaRegenRating = 0)
+    public int? PowerRegen(DateTimeOffset now, bool inCombat = false, int wisdomBonus = 0, int manaRegenRating = 0)
     {
-        var max = EffectiveMaxPower(wisdomBonus);
-        if (_power >= max) return null;
+        var kind = PowerKinds.ForClass(_classId);
+        var interval = kind is PowerKinds.Morale or PowerKinds.Vigor ? FastPowerRegenInterval : PowerRegenInterval;
+        if (_nextPowerRegen == default)
+        {
+            _nextPowerRegen = now + interval;
+            return null;
+        }
+
         if (now < _nextPowerRegen) return null;
-        _nextPowerRegen = now + PowerRegenInterval;
-        var amount = PowerRegenPerInterval + Math.Max(0, manaRegenRating) * PowerRegenPerRating;
-        _power = Math.Min(max, _power + amount);
-        return _power;
+        _nextPowerRegen = now + interval;
+        var max = EffectiveMaxPower(wisdomBonus);
+        var before = _power;
+        _power = kind switch
+        {
+            PowerKinds.Morale => inCombat ? _power : DriftToward(_power, MoraleRest, MoraleDriftPerTick),
+            PowerKinds.Vigor => Math.Min(max, _power + VigorRegenPerTick),
+            _ => _power >= max ? _power : Math.Min(max, _power + ManaTick(wisdomBonus, inCombat) + Math.Max(0, manaRegenRating) * PowerRegenPerRating),
+        };
+        return _power == before ? null : _power;
+    }
+
+    private static int DriftToward(int value, int rest, int step) =>
+        value < rest ? Math.Min(rest, value + step) : Math.Max(rest, value - step);
+
+    // A class this server has no mana rule for keeps a flat tick.
+    private int ManaTick(int wisdomBonus, bool inCombat)
+    {
+        var wisdom = Math.Max(0, TotalWisdom(wisdomBonus));
+        var tick = _classId switch
+        {
+            PlayerClassIds.Mage => (int)((5 + Math.Sqrt(wisdom)) * wisdom * 0.07 + 10),
+            PlayerClassIds.Monk => (int)((8 + Math.Sqrt(wisdom)) * wisdom * 0.08 + 14),
+            PlayerClassIds.Warrior or PlayerClassIds.Ranger => 0,
+            _ => PowerRegenPerInterval,
+        };
+        return inCombat ? tick / 2 : tick;
+    }
+
+    private int TotalWisdom(int wisdomBonus) =>
+        PlayerStatCurves.AttributesAt(_classId, _level, new StartingAttributes(0, 0, 0, _baseIntellect)).Intellect + wisdomBonus;
+
+    private int RestingPower(int wisdomBonus) =>
+        PowerKinds.ForClass(_classId) == PowerKinds.Morale ? MoraleRest : EffectiveMaxPower(wisdomBonus);
+
+    public int? GainMoraleFromHitTaken(int damage)
+    {
+        if (PowerKinds.ForClass(_classId) != PowerKinds.Morale) return null;
+        return AddPower(Math.Max(1, (int)(damage / (double)Math.Max(1, _level) * MoraleGainPerDamageTakenPerLevel)));
+    }
+
+    public int? GainMoraleFromHitDealt(int damage, TimeSpan swing, bool critical, bool offHand)
+    {
+        if (PowerKinds.ForClass(_classId) != PowerKinds.Morale) return null;
+        var bonus = MoraleWeaponBonusPerSwingSecond * swing.TotalSeconds;
+        if (offHand) bonus /= 2;
+        if (!critical) bonus /= 2;
+        return AddPower(Math.Max(MoraleMinimumGainOnHit, (int)(damage / (double)Math.Max(1, _level) + bonus)));
+    }
+
+    public int? GainMoraleFromAvoid() =>
+        PowerKinds.ForClass(_classId) == PowerKinds.Morale ? AddPower(MoraleGainOnAvoid) : null;
+
+    public int? LoseVigorFromHitTaken(int damage)
+    {
+        if (PowerKinds.ForClass(_classId) != PowerKinds.Vigor || _power <= VigorFloor) return null;
+        var loss = Math.Max(1, (int)(VigorLossPerDamagePerLevel * damage / Math.Max(1, _level)));
+        var before = _power;
+        _power = Math.Max(VigorFloor, _power - loss);
+        return _power == before ? null : _power;
+    }
+
+    private int? AddPower(int amount)
+    {
+        var before = _power;
+        _power = Math.Min(EffectiveMaxPower(0), _power + amount);
+        return _power == before ? null : _power;
     }
 
     public int EffectiveMaxPower(int wisdomBonus)
     {
         var manaBase = PlayerStatCurves.BaseMaxPower(_classId, _level, fallback: 0);
         if (manaBase <= 0) return PlayerMaxPower;
-        var wisdom = PlayerStatCurves.AttributesAt(_classId, _level, new StartingAttributes(0, 0, 0, _baseIntellect)).Intellect;
-        return Math.Max(1, manaBase + (wisdom + wisdomBonus) * ManaPerWisdom);
+        return Math.Max(1, manaBase + TotalWisdom(wisdomBonus) * ManaPerWisdom);
     }
 
-    public void RestoreFullPower(int wisdomBonus = 0) => _power = EffectiveMaxPower(wisdomBonus);
+    public void RestoreFullPower(int wisdomBonus = 0) => _power = RestingPower(wisdomBonus);
 
     private void Resolve(uint spellId, SpellDefinition spell, DateTimeOffset now, int wisdomBonus = 0)
     {
         _power -= spell.PowerCost ?? 0;
         if (spell.CooldownMs > 0) _cooldownUntil[spellId] = now + TimeSpan.FromMilliseconds(spell.CooldownMs);
-        if (_power < EffectiveMaxPower(wisdomBonus)) _nextPowerRegen = now + PowerRegenInterval;
     }
 }

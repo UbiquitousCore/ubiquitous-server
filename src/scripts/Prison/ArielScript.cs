@@ -29,7 +29,7 @@ public sealed class ArielScript : CreatureScript
             return new CombatAction(Cast: RemovePutrefying, At: CastTarget.Self, Sets: Ending, Ends: Putrefying);
 
         if (context.Marks.Contains(Ending) && BossTiming.Count(context, Detonation) == 0)
-            return new CombatAction(Cast: Detonation, At: CastTarget.Self);
+            return new CombatAction(Cast: Detonation, At: CastTarget.Self, HoldsStill: true);
 
         // The long cast has landed by the time she acts again; the second, instant one ends her.
         if (context.Marks.Contains(Ending) && BossTiming.Count(context, DetonatesHerself) == 0)

@@ -55,7 +55,9 @@ public sealed record CombatAction(
     uint? Ends = null,
     TimeSpan? SummonLasts = null,
     uint? AllyEntry = null,
-    uint? LeavesPool = null);
+    uint? LeavesPool = null,
+    // The creature neither swings nor walks while this (cast-time) spell is being cast.
+    bool HoldsStill = false);
 
 public abstract class CreatureScript
 {

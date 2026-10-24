@@ -187,6 +187,7 @@ public sealed partial class PlaySession
                 damage, _attributeModifiers.GetFlatAmount(playerId, AttributeIds.Armor, now));
             var swing = _combat.DamageTarget(
                 casterId, playerId, damage, now, _attributeModifiers.GetFlatAmount(playerId, AttributeIds.Stamina, now));
+            NotePlayerStruck(swing.Damage, StrikeResult.Hit, now);
             MarkUnitValues(playerId, new Dictionary<string, int>
             {
                 [WireCodes.UnitValue.Health] = swing.FinalHealth,

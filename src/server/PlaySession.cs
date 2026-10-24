@@ -48,6 +48,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly ChillEffectService _chill = new();
     private readonly SpellFlightService _spellFlights = new();
     private readonly AbsorbEffectService _absorb = new();
+    private readonly AvatarEffectService _avatar = new();
     private readonly StealthEffectService _stealth = new();
     private readonly Dictionary<string, BodyStates> _auraStateSent = new(StringComparer.Ordinal);
     private readonly DirtyValueTracker _dirty = new();
@@ -231,7 +232,7 @@ public sealed partial class PlaySession : ISessionPlayer
         _combat.AbsorbIncoming = (damage, at) =>
             _character is null ? damage : _absorb.Absorb(PlayerUnitId, damage, at);
         _combat.Evading = IsReturningHome;
-        _combat.CannotAct = (unitId, at) => _control.IsControlled(unitId, at);
+        _combat.CannotAct = (unitId, at) => _control.IsControlled(unitId, at) || IsHoldingStill(unitId, at);
         _combat.InActiveDuel = () =>
             _character is not null && _duels.OpponentOf(PlayerUnitId) is not null;
         _combat.UseTargetStats(CombatStatsFor);
@@ -921,6 +922,7 @@ public sealed partial class PlaySession : ISessionPlayer
         responses.AddRange(TickRangeAttackSpeedEffects(now));
         responses.AddRange(TickStealthEffects(now));
         responses.AddRange(TickAbsorbEffects(now));
+        responses.AddRange(TickAvatarEffects(now));
         responses.AddRange(TickDuelNotifications(now));
         _partyHandler.Tick(now);
         responses.AddRange(_partyHandler.DrainNotices());
@@ -968,8 +970,11 @@ public sealed partial class PlaySession : ISessionPlayer
                 : Reply(WebMessageTypes.AttackSwingResult, new AttackSwingResultPayload(
                     attacker, target, WireOutcome(swing.Result), swing.Damage, swing.FinalHealth,
                     swing.OffHand ? WireCodes.Hand.Off : WireCodes.Hand.Main, WireAbsorbed(swing))));
+            if (string.Equals(swing.AttackerId, playerId, StringComparison.Ordinal))
+                NotePlayerLanded(swing, playerMeleeAttackSpeedPercent, now);
             if (string.Equals(swing.TargetId, playerId, StringComparison.Ordinal))
             {
+                NotePlayerStruck(swing.Damage, swing.Result, now);
                 MarkUnitValues(swing.TargetId, new Dictionary<string, int> { [WireCodes.UnitValue.Health] = swing.FinalHealth, [WireCodes.UnitValue.MaxHealth] = swing.MaxHealth }, now);
                 if (swing.Spared)
                 {
@@ -1040,7 +1045,7 @@ public sealed partial class PlaySession : ISessionPlayer
 
         var wisdomBonus = _attributeModifiers.GetFlatAmount(playerId, AttributeIds.Wisdom, now);
         var manaRegenRating = _attributeModifiers.GetFlatAmount(playerId, AttributeIds.ManaRegenRating, now);
-        var powerRegen = _spells.PowerRegen(now, wisdomBonus, manaRegenRating);
+        var powerRegen = _spells.PowerRegen(now, _combat.PlayerInCombat, wisdomBonus, manaRegenRating);
         if (powerRegen is not null)
         {
             MarkUnitValues(playerId, new Dictionary<string, int> { [WireCodes.UnitValue.Power] = powerRegen.Value, [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(wisdomBonus) }, now);

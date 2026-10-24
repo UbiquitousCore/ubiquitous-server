@@ -22,6 +22,7 @@ public sealed partial class PlaySession
         .. _chill.Clear(unitId),
         .. _stealth.Clear(unitId),
         .. _absorb.Clear(unitId),
+        .. _avatar.Clear(unitId),
     ];
 
     private IReadOnlyList<string> ResolveAuraApply(
@@ -343,6 +344,36 @@ public sealed partial class PlaySession
             responses.Add(Reply(WebMessageTypes.SpellCooldownStarted, new SpellCooldownStartedPayload(spellId, spell.CooldownMs)));
         return responses;
     }
+
+    // A shape with a duration is refreshed by casting it again; one with none (a spirit form) comes off the second
+    // time. Casting another shape replaces the first.
+    private IReadOnlyList<string> ResolveAvatarApply(
+        WebNetworkId casterId, uint spellId, SpellDefinition spell, DateTimeOffset now)
+    {
+        var self = casterId.Text!;
+        var responses = new List<string>();
+        if (spell.DurationMs <= 0 && _avatar.ActiveOn(self) == spellId)
+        {
+            _avatar.Clear(self);
+            responses.Add(AuraEnded(self, self, spellId));
+            return responses;
+        }
+
+        Dismount(now, responses);
+        if (_avatar.Apply(self, spellId, spell.DurationMs, now) is uint replaced)
+            responses.Add(AuraEnded(self, self, replaced));
+        responses.Add(Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [casterId], [], spell.Speed, Aimed: false)));
+        responses.Add(Reply(WebMessageTypes.AuraApplied, new AuraAppliedPayload(
+            spellId, casterId, casterId, Harmful: 0, MaxDuration: spell.DurationMs, Remaining: spell.DurationMs)));
+        if (spell.CooldownMs > 0)
+            responses.Add(Reply(WebMessageTypes.SpellCooldownStarted, new SpellCooldownStartedPayload(spellId, spell.CooldownMs)));
+        return responses;
+    }
+
+    private IReadOnlyList<string> TickAvatarEffects(DateTimeOffset now) =>
+        _character is null
+            ? []
+            : [.. _avatar.TickExpired(now).Select(ended => AuraEnded(ended.TargetId, ended.TargetId, ended.SpellId))];
 
     private IReadOnlyList<string> TickAbsorbEffects(DateTimeOffset now)
     {

@@ -124,7 +124,7 @@ public sealed class FriendlySpellTests
 
         await SendAsync(hub, a, WebMessageTypes.SpellRequest, new { spellId = InstantHeal, targetId = BId });
         Assert.Empty(PayloadsOf(a.Inbox, WebMessageTypes.SpellFailed));
-        await TickBothAsync(hub, DateTimeOffset.UtcNow + TimeSpan.FromMilliseconds(10));
+        await TickBothAsync(hub, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(3));
 
         var onTarget = Assert.Single(HealsOn(b.Inbox, AId, BId));
         var onCaster = Assert.Single(HealsOn(a.Inbox, AId, BId));

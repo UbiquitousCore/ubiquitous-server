@@ -74,6 +74,7 @@ public sealed partial class PlaySession
             }
             var damage = blow.Kind == PlayerBlowKind.Spell ? blow.Amount : CombatService.ApplyArmorMitigation(blow.Amount, armor);
             var swing = _combat.DamageTarget(blow.AttackerId, playerId, damage, now, stamina);
+            NotePlayerStruck(swing.Damage, blow.Result, now);
             var attacker = WebNetworkId.FromString(blow.AttackerId);
             var outcome = WireOutcome(blow.Result);
             responses.Add(blow.Kind switch
@@ -168,6 +169,7 @@ public sealed partial class PlaySession
         {
             Dismount(now, responses);
             ended.AddRange(_absorb.Clear(self).Select(spellId => ((string?)null, spellId)));
+            ended.AddRange(_avatar.Clear(self).Select(spellId => ((string?)null, spellId)));
             ended.AddRange(_stealth.Clear(self).Select(spellId => ((string?)null, spellId)));
             ended.AddRange(_periodicTrigger.Clear(self).Select(spellId => ((string?)null, spellId)));
         }

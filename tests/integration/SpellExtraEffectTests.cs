@@ -203,7 +203,7 @@ public sealed class SpellExtraEffectTests
     public async Task APotionOfTheCastersOwnPowerGivesItBack()
     {
         var spend = new SpellDefinition(1500, "spell-1500", 0, 0, 30f, PowerCost: 60, EffectDamage: 5);
-        var potion = new SpellDefinition(1510, "spell-1510", 0, 0, 0f, EffectPowerRestore: 280, EffectPowerKind: PowerKinds.Energy,
+        var potion = new SpellDefinition(1510, "spell-1510", 0, 0, 0f, EffectPowerRestore: 280, EffectPowerKind: PowerKinds.Vigor,
             EffectTarget: SpellEffectTargets.Self);
         var items = new Dictionary<uint, ItemDefinition>(GameContent.Development.Items)
         {

@@ -44,6 +44,24 @@ public sealed class SpellEffectClassifierTests
     }
 
     [Fact]
+    public void AnAvatarAuraNamesTheDisplayItTurnsItsWearerInto()
+    {
+        var spell = Classify(
+            (33, Effect(1, 1, SpellEffectColumns.AvatarSubType, argument: 1962, target: 1)),
+            (34, Effect(2, 1, SpellEffectColumns.AttributeModifierFlatSubType, baseValue: 1000, argument: 4, target: 1)));
+
+        Assert.Equal(1962u, spell.AuraAvatarDisplayId);
+    }
+
+    [Fact]
+    public void AnAvatarWithNoDisplayChangesNobody()
+    {
+        var spell = Classify((33, Effect(1, 1, SpellEffectColumns.AvatarSubType, argument: 0, target: 1)));
+
+        Assert.Null(spell.AuraAvatarDisplayId);
+    }
+
+    [Fact]
     public void ALessonTeachesEachOfItsSpells()
     {
         var spell = Classify(

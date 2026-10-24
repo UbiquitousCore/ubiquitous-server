@@ -178,6 +178,74 @@ public sealed partial class DungeonTests
     }
 
     [Fact]
+    public async Task APuppetWithNoNoticeRangeOfItsOwn_AttacksFromTheMomentItRises()
+    {
+        // As the game data has it: a puppet neither notices anyone nor belongs to a hostile faction.
+        var content = CreatureSpellContent();
+        var creatures = new Dictionary<uint, CreatureDefinition>(content.Creatures)
+        {
+            [2697] = new(2697, "Undead Puppet", 19, 200, MinDamage: 1, MaxDamage: 1),
+        };
+        var (session, _) = await JoinAsync("cs4b", "Ayla",
+            [new CreatureSpawnDefinition(3204, 14, 2667, -681, InsideFloorY, -2097, 0)], content with { Creatures = creatures });
+        await MoveAsync(session, 2, GateInsideX, 2, GateApproachZ);
+        await MoveAsync(session, 3, InsideArrivalX, InsideFloorY, -2096);
+        await EngageAsync(session, "Creature:1");
+
+        var now = DateTimeOffset.UtcNow;
+        var log = new List<string>();
+        for (var i = 0; i < 40 && !log.Any(m => m.Contains("\"entry\":2697")); i++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            log.AddRange(session.TickCombat(now));
+        }
+
+        var raised = log.First(m => m.Contains("\"type\":\"entity.spawned\"") && m.Contains("\"entry\":2697"));
+        var puppet = CreatureNetworkId([raised]);
+        Assert.Contains(log, m => m.Contains("\"type\":\"attack.meleeStart\"") && m.Contains(puppet));
+    }
+
+    [Fact]
+    public async Task ArielHoldsStill_NeitherSwingingNorWalking_WhileHerDetonationIsBeingCast()
+    {
+        var content = CreatureSpellContent();
+        var spells = new Dictionary<uint, SpellDefinition>(content.Spells)
+        {
+            // The long cast of the guide, 20 seconds.
+            [2657] = new(2657, "Detonation", 20000, 0, 0f, EffectDamage: 1, EffectTarget: SpellEffectTargets.Self),
+        };
+        var creatures = new Dictionary<uint, CreatureDefinition>(content.Creatures)
+        {
+            [2668] = new(2668, "Ariel", 20, 200, MinDamage: 1, MaxDamage: 1, NoticeDistance: 1, FactionType: UnitFactionTypes.Hostile),
+        };
+        var (session, _) = await JoinAsync("cs-ariel", "Ayla",
+            [new CreatureSpawnDefinition(3210, 14, 2668, -681, InsideFloorY, -2097, 0)],
+            content with { Spells = spells, Creatures = creatures });
+        await MoveAsync(session, 2, GateInsideX, 2, GateApproachZ);
+        await MoveAsync(session, 3, InsideArrivalX, InsideFloorY, -2096);
+        await EngageAsync(session, "Creature:1");
+
+        var now = DateTimeOffset.UtcNow;
+        DateTimeOffset? castFrom = null;
+        var swingsDuringTheCast = 0;
+        var swingsBefore = 0;
+        for (var second = 1; second <= 90; second++)
+        {
+            now += TimeSpan.FromSeconds(1);
+            var tick = session.TickCombat(now);
+            if (castFrom is null && tick.Any(m => m.Contains("\"type\":\"spell.casting\"") && m.Contains("\"spellId\":2657")))
+                castFrom = now;
+            var ariel = tick.Count(m => m.Contains("\"type\":\"attack.swingResult\"") && m.Contains("\"attackerId\":\"Creature:1\""));
+            if (castFrom is { } from && now > from && now < from + TimeSpan.FromSeconds(19)) swingsDuringTheCast += ariel;
+            else if (castFrom is null) swingsBefore += ariel;
+        }
+
+        Assert.NotNull(castFrom);
+        Assert.True(swingsBefore > 0, "she fights before the cast");
+        Assert.Equal(0, swingsDuringTheCast);
+    }
+
+    [Fact]
     public async Task ABoneGolem_BreaksIntoTwoLesserGolemsWhenItDies()
     {
         var (session, _) = await JoinAsync("cs5", "Ayla",

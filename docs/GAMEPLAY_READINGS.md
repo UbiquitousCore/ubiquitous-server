@@ -400,7 +400,7 @@ The Wisdom shown is the one in "Stats by level". Every point of it is worth
 15 mana, including the points gained by levelling, so the server gives the
 same 15 for Wisdom from gear and buffs.
 
-Warrior (morale) and Ranger (energy) show a flat 100 at every level, with or
+Warrior (morale) and Ranger (vigor) show a flat 100 at every level, with or
 without Wisdom worn (`SpellService.PlayerMaxPower`).
 
 ### Mage (class 2)

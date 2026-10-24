@@ -1216,6 +1216,7 @@ public sealed class SpellCastTests
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.SpellRequest, 2, new { spellId = 116 })));
 
+        session.TickCombat(now);
         var tick = session.TickCombat(now + SpellService.PowerRegenInterval + TimeSpan.FromMilliseconds(100));
 
         Assert.Contains(tick, m => m.Contains("\"type\":\"player.updated\"")

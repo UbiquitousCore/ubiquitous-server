@@ -95,6 +95,8 @@ public static class SpellEffectClassifier
                 AuraMountKeepSeatPercent = effect.BaseValue,
             },
             SpellEffectColumns.MountSpeedupSubType => spell with { AuraMountSpeedupPercent = effect.BaseValue },
+            SpellEffectColumns.AvatarSubType when effect.EffectArgument != 0 =>
+                spell with { AuraAvatarDisplayId = effect.EffectArgument },
             _ => spell,
         };
     }

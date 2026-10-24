@@ -118,6 +118,7 @@ public sealed class BossScriptTests
 
         var detonation = script.Act(Turn(health: 0.05, marks: [ending], castCount: ArielRotting()))!;
         Assert.Equal(2657u, detonation.Cast);
+        Assert.True(detonation.HoldsStill, "she neither swings nor walks through the long cast");
 
         var herself = script.Act(Turn(
             health: 0.05, marks: [ending],

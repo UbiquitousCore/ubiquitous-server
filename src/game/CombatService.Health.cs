@@ -43,6 +43,8 @@ public sealed partial class CombatService
         return new PlayerRegen(_playerHealth, max);
     }
 
+    public bool PlayerInCombat => PlayerIsFighting() || InActiveDuel?.Invoke() == true;
+
     private bool PlayerIsFighting()
     {
         foreach (var (attackerId, targetId) in _targets)

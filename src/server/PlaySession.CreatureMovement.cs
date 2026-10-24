@@ -86,7 +86,7 @@ public sealed partial class PlaySession
 
     private void ChaseTowards(string chaserId, DomainPosition chaserPosition, DomainPosition destination, DateTimeOffset now, List<string> responses)
     {
-        if (_control.IsControlled(chaserId, now))
+        if (_control.IsControlled(chaserId, now) || IsHoldingStill(chaserId, now))
         {
             _chase.Clear(chaserId);
             return;

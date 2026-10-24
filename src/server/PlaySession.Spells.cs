@@ -47,11 +47,12 @@ public sealed partial class PlaySession
             && (peekedSpell.AuraAttributeAmount ?? 0) >= 0;
         bool isSelfStealth = peekedSpell is not null && peekedSpell.AuraStealth;
         bool isSelfShield = peekedSpell?.AuraAbsorbAmount is not null;
+        bool isSelfShape = peekedSpell?.AuraAvatarDisplayId is not null;
         bool namesCaster = peekedSpell?.EffectTarget == SpellEffectTargets.Self;
         var namedTargetId = PayloadIds.Read(payload, "targetId");
         bool atFriend = !namesCaster && LandsOnFriend(peekedSpell) && !string.IsNullOrEmpty(namedTargetId)
             && IsFriendlyPlayer(namedTargetId);
-        bool isSelfTargeted = namesCaster || (!atFriend && (isSelfHeal || isSelfBuff || isSelfStealth || isSelfShield));
+        bool isSelfTargeted = namesCaster || (!atFriend && (isSelfHeal || isSelfBuff || isSelfStealth || isSelfShield || isSelfShape));
         var targetId = isSelfTargeted ? PlayerUnitId : namedTargetId;
 
         bool atPlayerOpponent = !isSelfTargeted && !string.IsNullOrEmpty(targetId)
@@ -410,6 +411,8 @@ public sealed partial class PlaySession
             return ResolveRangeAttackSpeedEffectApply(casterId, targetId, spellId, spell, now);
         if (spell.AuraChill && !IsStrike(spell))
             return ResolveChillEffectApply(casterId, targetId, spellId, spell, now);
+        if (spell.AuraAvatarDisplayId is not null)
+            return ResolveAvatarApply(casterId, spellId, spell, now);
         if (spell.AuraStealth)
             return ResolveStealthEffectApply(casterId, spellId, spell, now);
         if (spell.AuraAbsorbAmount is not null)

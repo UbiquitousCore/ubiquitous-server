@@ -156,10 +156,25 @@ comes from is in `PROVENANCE.md`.
   combat; a shield takes its share; health drops; death. So a fully absorbed
   blow still starts a fight, and a killing blow leaves nobody in combat with a
   corpse.
-- Out of combat, health and power regenerate every 8 s; health per tick is
+- Out of combat, health regenerates every 8 s; health per tick is
   `⌊stamina × factor + constant⌋` plus regeneration rating.
+- Power depends on the class (`docs/POWER_READINGS.md`): mana (Mage, Monk)
+  ticks every 8 s, halved in combat; vigor (Ranger) ticks +10 every 1 s; a
+  Warrior's morale starts at 20, drifts back to 20 by 2 a second out of
+  combat, and gains from hits taken, hits landed and dodges, parries and
+  blocks. A Ranger loses vigor to each hit taken, down to 20. Spending power
+  does not delay the next tick. The swing time behind a morale gain is the
+  server's one swing interval, hasted by attack speed, since weapons carry no
+  speed of their own here.
 
 ## Spells and auras
+
+- A shape-changing aura (`aura.applied` for a spell that turns its wearer into a
+  creature) lasts the spell's duration, ends the shape it replaces, and a second
+  cast of a timed one refreshes it. One with no duration toggles off when cast
+  again. The client reads the display from its own spell data.
+- A creature action marked to hold still stops that creature swinging and
+  walking until the cast lands (Ariel's detonation).
 
 - `spell.request` checks in order: stun or sleep, silence, operator-only,
   equipment, a visible living target (unless self-targeted), spell book,

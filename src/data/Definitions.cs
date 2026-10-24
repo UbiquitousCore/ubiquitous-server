@@ -59,7 +59,9 @@ public sealed record SpellDefinition(
     uint? AuraMountId = null,
     int? AuraMountKeepSeatPercent = null,
     int? AuraMountSpeedupPercent = null,
-    int Rank = 0);
+    int Rank = 0,
+    // A `creaturedisplayinfo` row the aura turns its wearer into, for as long as it lasts.
+    uint? AuraAvatarDisplayId = null);
 
 public static class SpellEffectTargets
 {
@@ -76,13 +78,13 @@ public static class PowerKinds
 {
     public const int Mana = 1;
     public const int Morale = 2;
-    public const int Energy = 3;
+    public const int Vigor = 3;
 
     public static int ForClass(int playerClass) => playerClass switch
     {
         PlayerClassIds.Warrior => Morale,
         PlayerClassIds.Mage or PlayerClassIds.Monk => Mana,
-        PlayerClassIds.Ranger => Energy,
+        PlayerClassIds.Ranger => Vigor,
         _ => 0,
     };
 }

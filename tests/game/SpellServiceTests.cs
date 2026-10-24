@@ -317,8 +317,7 @@ public sealed class SpellServiceTests
         var spells = new SpellService([100]);
         spells.TryBeginCast(100, Spells, "Creature:1", Now, out _);
 
-        Assert.Null(spells.PowerRegen(Now));
-
+        spells.PowerRegen(Now);
         var regen = spells.PowerRegen(Now + SpellService.PowerRegenInterval);
 
         Assert.Equal(SpellService.PlayerMaxPower, regen);
@@ -330,34 +329,205 @@ public sealed class SpellServiceTests
         Assert.Null(new SpellService([]).PowerRegen(Now));
     }
 
-    [Fact]
-    public void PowerRegen_RestoresPastTheBaseMaxWhenWisdomRaisesTheCeiling()
+    private static SpellService Spent(int classId, int level, int baseIntellect = 0)
     {
-        var spells = new SpellService([100]);
-        spells.EnterAsCharacter(classId: 2, level: 1);
-        var baseMax = spells.EffectiveMaxPower(0);
-        spells.TryBeginCast(100, Spells, "Creature:1", Now, out _, wisdomBonus: 50);
+        var spells = new SpellService([300]);
+        spells.EnterAsCharacter(classId, level, baseIntellect: baseIntellect);
+        spells.PowerRegen(Now);
+        var costly = new Dictionary<uint, SpellDefinition> { [300] = new(300, "spell-300", 0, 0, 30f, PowerCost: 300, EffectDamage: 1) };
+        spells.TryBeginCast(300, costly, "Creature:1", Now, out _);
+        return spells;
+    }
 
-        var first = spells.PowerRegen(Now + SpellService.PowerRegenInterval, wisdomBonus: 50);
-        Assert.Equal(baseMax, first);
+    [Fact]
+    public void PowerRegen_ManaTickFollowsTheMageFormulaAndHalvesInCombat()
+    {
+        var spells = Spent(PlayerClassIds.Mage, 1, baseIntellect: 25);
+        var before = spells.Power;
 
-        var second = spells.PowerRegen(Now + SpellService.PowerRegenInterval * 2, wisdomBonus: 50);
-        Assert.Equal(baseMax + SpellService.PowerRegenPerInterval, second);
+        Assert.Equal(before + 27, spells.PowerRegen(Now + SpellService.PowerRegenInterval));
+        Assert.Equal(before + 27 + 13, spells.PowerRegen(Now + SpellService.PowerRegenInterval * 2, inCombat: true));
+    }
+
+    [Fact]
+    public void PowerRegen_ManaTickFollowsTheMonkFormula()
+    {
+        var spells = Spent(PlayerClassIds.Monk, 1, baseIntellect: 20);
+        var before = spells.Power;
+
+        Assert.Equal(before + 33, spells.PowerRegen(Now + SpellService.PowerRegenInterval));
     }
 
     [Fact]
     public void PowerRegen_ManaRegenRatingIncreasesTheAmountRestored()
     {
-        var spells = new SpellService([100]);
-        spells.EnterAsCharacter(classId: 2, level: 1);
-        var baseMax = spells.EffectiveMaxPower(0);
-        spells.TryBeginCast(100, Spells, "Creature:1", Now, out _, wisdomBonus: 50);
-
-        var regen = spells.PowerRegen(Now + SpellService.PowerRegenInterval, wisdomBonus: 50, manaRegenRating: 10);
+        var spells = Spent(PlayerClassIds.Mage, 1, baseIntellect: 25);
+        var before = spells.Power;
 
         Assert.Equal(
-            baseMax - 10 + SpellService.PowerRegenPerInterval + 10 * SpellService.PowerRegenPerRating,
-            regen);
+            before + 27 + 10 * SpellService.PowerRegenPerRating,
+            spells.PowerRegen(Now + SpellService.PowerRegenInterval, manaRegenRating: 10));
+    }
+
+    [Fact]
+    public void PowerRegen_SpendingDoesNotDelayTheNextTick()
+    {
+        var spells = new SpellService([100]);
+        spells.EnterAsCharacter(PlayerClassIds.Mage, 1, baseIntellect: 25);
+        spells.PowerRegen(Now);
+        spells.TryBeginCast(100, Spells, "Creature:1", Now + TimeSpan.FromSeconds(4), out _);
+
+        Assert.NotNull(spells.PowerRegen(Now + SpellService.PowerRegenInterval));
+    }
+
+    [Fact]
+    public void Morale_StartsAtRestAndDriftsTowardItOnlyOutOfCombat()
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Warrior, 10);
+        Assert.Equal(SpellService.MoraleRest, spells.Power);
+
+        spells.GainMoraleFromHitTaken(50 * 10 / 6 * 3);
+        var raised = spells.Power;
+        Assert.True(raised > SpellService.MoraleRest);
+
+        Assert.Null(spells.PowerRegen(Now, inCombat: true));
+        Assert.Null(spells.PowerRegen(Now + SpellService.FastPowerRegenInterval, inCombat: true));
+        Assert.Equal(raised - 2, spells.PowerRegen(Now + SpellService.FastPowerRegenInterval * 2));
+        Assert.Equal(raised, spells.Power + 2);
+    }
+
+    [Fact]
+    public void Morale_DriftLandsExactlyOnRestFromAboveAndBelow()
+    {
+        var above = new SpellService([]);
+        above.EnterAsCharacter(PlayerClassIds.Warrior, 1);
+        above.RestorePower(PowerKinds.Morale, 53);
+        var tick = Now;
+        above.PowerRegen(tick);
+        while (above.PowerRegen(tick += SpellService.FastPowerRegenInterval) is not null) { }
+        Assert.Equal(SpellService.MoraleRest, above.Power);
+
+        var below = new SpellService([]);
+        below.EnterAsCharacter(PlayerClassIds.Warrior, 1);
+        below.LoseVigorFromHitTaken(1);
+        below.GainMoraleFromAvoid();
+        Assert.Equal(24, below.Power);
+        below.RestorePower(PowerKinds.Morale, 0);
+        for (var i = 0; i <= 3; i++) below.PowerRegen(Now + SpellService.FastPowerRegenInterval * i);
+        Assert.Equal(20, below.Power);
+    }
+
+    [Theory]
+    [InlineData(50, 10, 6)]
+    [InlineData(45, 10, 5)]
+    [InlineData(12, 60, 1)]
+    public void Morale_GainsFromHitsTakenByDamagePerLevel(int damage, int level, int gain)
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Warrior, level);
+
+        spells.GainMoraleFromHitTaken(damage);
+
+        Assert.Equal(SpellService.MoraleRest + gain, spells.Power);
+    }
+
+    [Theory]
+    [InlineData(100, true, false, 17)]
+    [InlineData(100, false, false, 13)]
+    [InlineData(20, false, true, 5)]
+    public void Morale_GainsFromHitsLandedByDamageAndSwingTime(int damage, bool critical, bool offHand, int gain)
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Warrior, 10);
+
+        spells.GainMoraleFromHitDealt(damage, TimeSpan.FromSeconds(2), critical, offHand);
+
+        Assert.Equal(SpellService.MoraleRest + gain, spells.Power);
+    }
+
+    [Fact]
+    public void Morale_AnAvoidIsWorthFourWhateverTheLevel()
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Warrior, 60);
+
+        spells.GainMoraleFromAvoid();
+
+        Assert.Equal(SpellService.MoraleRest + 4, spells.Power);
+    }
+
+    [Fact]
+    public void Morale_StopsAtTheMax()
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Warrior, 1);
+        spells.RestorePower(PowerKinds.Morale, 78);
+
+        spells.GainMoraleFromAvoid();
+
+        Assert.Equal(100, spells.Power);
+    }
+
+    [Fact]
+    public void Morale_ClassesThatDoNotUseItGainNothing()
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Mage, 10);
+        var before = spells.Power;
+
+        Assert.Null(spells.GainMoraleFromHitTaken(100));
+        Assert.Null(spells.GainMoraleFromAvoid());
+        Assert.Equal(before, spells.Power);
+    }
+
+    [Fact]
+    public void Vigor_RegeneratesTenASecondInOrOutOfCombat()
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Ranger, 10);
+        spells.LoseVigorFromHitTaken(10_000);
+        Assert.Equal(SpellService.VigorFloor, spells.Power);
+
+        spells.PowerRegen(Now);
+        Assert.Equal(30, spells.PowerRegen(Now + SpellService.FastPowerRegenInterval, inCombat: true));
+        Assert.Equal(40, spells.PowerRegen(Now + SpellService.FastPowerRegenInterval * 2));
+    }
+
+    [Theory]
+    [InlineData(60, 10, 4)]
+    [InlineData(45, 10, 3)]
+    [InlineData(15, 60, 1)]
+    public void Vigor_LosesByDamagePerLevelAndNeverBelowTheFloor(int damage, int level, int loss)
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Ranger, level);
+
+        spells.LoseVigorFromHitTaken(damage);
+
+        Assert.Equal(100 - loss, spells.Power);
+    }
+
+    [Fact]
+    public void Vigor_AHitAtTheFloorChangesNothing()
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Ranger, 10);
+        spells.LoseVigorFromHitTaken(100_000);
+
+        Assert.Null(spells.LoseVigorFromHitTaken(500));
+        Assert.Equal(SpellService.VigorFloor, spells.Power);
+    }
+
+    [Fact]
+    public void Vigor_DealingAndAvoidingChangeNothing()
+    {
+        var spells = new SpellService([]);
+        spells.EnterAsCharacter(PlayerClassIds.Ranger, 10);
+
+        Assert.Null(spells.GainMoraleFromHitDealt(100, TimeSpan.FromSeconds(2), true, false));
+        Assert.Null(spells.GainMoraleFromAvoid());
+        Assert.Equal(100, spells.Power);
     }
 
     [Fact]

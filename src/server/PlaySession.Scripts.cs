@@ -76,8 +76,15 @@ public sealed partial class PlaySession
             MostWoundedAlly(wireId) is not null);
     }
 
+    // Creatures standing through a long cast until the time given: no swings, no chasing.
+    private readonly Dictionary<string, DateTimeOffset> _holdingStill = new(StringComparer.Ordinal);
+
+    private bool IsHoldingStill(string wireId, DateTimeOffset at) =>
+        _holdingStill.TryGetValue(wireId, out var until) && at < until;
+
     private void ResetCreature(string wireId, List<string> responses)
     {
+        _holdingStill.Remove(wireId);
         _creaturePulses.Clear(wireId);
         _combat.UnshieldUnit(wireId);
         foreach (var spellId in ScriptFor(wireId).ClearedOnReset)
@@ -145,9 +152,10 @@ public sealed partial class PlaySession
 
         if (action.Yell is { } yell) YellAs(wireId, yell, responses);
         if (action.Ends is uint ended) EndCreatureAura(wireId, _copy.Spell(ended), responses);
-        if (action.Summon is uint entryId) SummonForFight(wireId, entryId, action.SummonLasts, memory, now, responses);
+        if (action.Summon is uint entryId) SummonForFight(wireId, entryId, action.SummonLasts, playerId, memory, now, responses);
         if (action.Cast is not uint spellId) return;
         var targetId = CastAsCreature(wireId, spellId, action.At, action.AllyEntry, playerId, memory, now, responses);
+        if (action.HoldsStill && _creatureCasts.TryGetValue(wireId, out var holding)) _holdingStill[wireId] = holding.LandsAt;
         if (action.LeavesPool is uint pool && targetId is not null
             && _content.Spells.TryGetValue(_copy.Spell(spellId), out var cast))
             DropPool(wireId, _copy.Spell(pool), targetId, TimeSpan.FromMilliseconds(cast.DurationMs), now);
@@ -229,7 +237,8 @@ public sealed partial class PlaySession
     }
 
     private void SummonForFight(
-        string wireId, uint entryId, TimeSpan? lasts, ScriptMemory memory, DateTimeOffset now, List<string> responses)
+        string wireId, uint entryId, TimeSpan? lasts, string playerId, ScriptMemory memory, DateTimeOffset now,
+        List<string> responses)
     {
         if (_shared is null || !_shared.TryGetPosition(wireId, out var bossAt)) return;
 
@@ -243,6 +252,14 @@ public sealed partial class PlaySession
         if (SummonAt(entryId, at, responses) is not { } summonId) return;
         memory.Summons.Add(summonId);
         if (lasts is TimeSpan life) _summonCrumblesAt[summonId] = now + life;
+
+        // An add called into a fight fights from the moment it is there: its own notice range and faction
+        // would leave it standing by (a puppet has neither) until someone hit it.
+        _combat.EnlistAttacker(summonId, playerId, now);
+        NotePackJoiner(summonId);
+        HoldEngaged(summonId);
+        _shared.ClearReturning(summonId);
+        EmitJoinResponses(responses, summonId, playerId);
     }
 
     private string? SummonAt(uint authoredEntryId, DomainPosition at, List<string> responses)

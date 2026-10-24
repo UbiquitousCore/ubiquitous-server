@@ -68,6 +68,9 @@ public static class SpellEffectColumns
 
     public const int LearnSpellSubType = 10;
 
+    // The aura that turns its wearer into another creature's display (a boss shape, a cookie, a spirit).
+    public const int AvatarSubType = 17;
+
     public const int MountSubType = 50;
     public const int MountSpeedupSubType = 52;
 }
