@@ -51,7 +51,9 @@ public sealed class AccountAuthenticator : IAccountAuthenticator, IAccountStore
         return new LoginResult(true, LoginCode.Success);
     }
 
-    private static LoginResult Refused() => new(false, LoginCode.InvalidCredentials, "Invalid credentials.");
+    public const string RefusedReason = "This username does not exist, or the password is incorrect.";
+
+    private static LoginResult Refused() => new(false, LoginCode.InvalidCredentials, RefusedReason);
 
     private bool IsLockedOut(string userId, DateTimeOffset now)
     {

@@ -20,7 +20,7 @@ public sealed class AccountCharacterTests
         Assert.NotEqual(LoginCode.InvalidCredentials, success.Code);
         Assert.False(failure.Ok);
         Assert.Equal(LoginCode.InvalidCredentials, failure.Code);
-        Assert.Equal("Invalid credentials.", failure.Reason);
+        Assert.Equal(AccountAuthenticator.RefusedReason, failure.Reason);
     }
 
     [Fact]

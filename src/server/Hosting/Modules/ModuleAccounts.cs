@@ -52,7 +52,7 @@ public sealed class ModuleAccounts(IAccountAuthenticator inner) : IAccountAuthen
         var ok = CryptographicOperations.FixedTimeEquals(held.Secret, Encoding.UTF8.GetBytes(passHash ?? ""));
         return Task.FromResult(ok
             ? new LoginResult(true, LoginCode.Success)
-            : new LoginResult(false, LoginCode.InvalidCredentials, "Invalid credentials."));
+            : new LoginResult(false, LoginCode.InvalidCredentials, AccountAuthenticator.RefusedReason));
     }
 
     public Task<AccountRecord?> FindByUserIdAsync(string userId, CancellationToken cancellationToken = default)
