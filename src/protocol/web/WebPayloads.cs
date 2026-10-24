@@ -358,6 +358,12 @@ public sealed record ResultPayload(
     [property: JsonPropertyName("code")] int Code,
     [property: JsonPropertyName("reason")] string? Reason = null);
 
+public sealed record LoginResultPayload(
+    [property: JsonPropertyName("ok")] bool Ok,
+    [property: JsonPropertyName("code")] int Code,
+    [property: JsonPropertyName("reason")] string? Reason,
+    [property: JsonPropertyName("isAdmin")] bool IsAdmin);
+
 public sealed record ChooseCharacterRequest(
     [property: JsonPropertyName("name")] string Name);
 

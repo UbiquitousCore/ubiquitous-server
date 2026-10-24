@@ -21,7 +21,8 @@ coverage/
 *.ipa
 *.apk
 # Drop folder for the client build (`just ingest`); never commit its contents.
-incoming/
+incoming/*
+!incoming/.gitkeep
 data/*
 !data/generated/
 data/generated/*

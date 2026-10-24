@@ -4,7 +4,7 @@ using NpgsqlTypes;
 
 namespace Ubiquitous.Persistence;
 
-public sealed class PostgresAccountStore : IAccountStore
+public sealed class PostgresAccountStore : IAccountAdmin
 {
     private readonly NpgsqlDataSource _dataSource;
 
@@ -14,11 +14,46 @@ public sealed class PostgresAccountStore : IAccountStore
     {
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT id, user_id, pass_hash FROM accounts WHERE user_id = $1";
+        command.CommandText = "SELECT id, user_id, pass_hash, is_admin FROM accounts WHERE user_id = $1";
         command.Parameters.AddWithValue(userId);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken)) return null;
-        return new AccountRecord(reader.GetInt32(0), reader.GetString(1), reader.GetString(2));
+        return new AccountRecord(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetBoolean(3));
+    }
+
+    public async Task<AccountRecord?> CreateAsync(string userId, string passHash, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO accounts (id, user_id, pass_hash) "
+            + "SELECT COALESCE(MAX(id), 0) + 1, $1, $2 FROM accounts "
+            + "ON CONFLICT (user_id) DO NOTHING RETURNING id";
+        command.Parameters.AddWithValue(userId);
+        command.Parameters.AddWithValue(passHash);
+        var id = await command.ExecuteScalarAsync(cancellationToken);
+        return id is int created ? new AccountRecord(created, userId, passHash) : null;
+    }
+
+    public async Task<IReadOnlyList<AccountRecord>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT id, user_id, pass_hash, is_admin FROM accounts ORDER BY id";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        var accounts = new List<AccountRecord>();
+        while (await reader.ReadAsync(cancellationToken))
+            accounts.Add(new AccountRecord(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetBoolean(3)));
+        return accounts;
+    }
+
+    public async Task SetAdminAsync(int accountId, bool isAdmin, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE accounts SET is_admin = $2 WHERE id = $1";
+        command.Parameters.AddWithValue(accountId);
+        command.Parameters.AddWithValue(isAdmin);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task SetPassHashAsync(int accountId, string passHash, CancellationToken cancellationToken = default)

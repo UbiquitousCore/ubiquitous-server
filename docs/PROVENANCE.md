@@ -189,6 +189,8 @@ this project's own:
   mount spell or `mount.dismount` does so at once. The ride shows among the
   rider's buffs as an aura that lasts until taken off. Mounts are not saved
   across a relog.
+- A new character starts with no money (observed in play). Only the synthetic
+  development content, used with no data package, hands out a large purse.
 - Development logins enter the world with at least 99,000 gold
   (`DevelopmentFixtures.Purse`), enough to buy every mount while testing.
 - Only the team leader, or a player on their own, may change the dungeon

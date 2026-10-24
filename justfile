@@ -39,14 +39,9 @@ check: build test
 clean:
     dotnet clean
 
-# First run: writes .env and server.json from their examples when missing.
-setup:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ -e .env ]; then echo ".env exists, leaving it";
-    else cp env.example .env; echo "wrote .env — set POSTGRES_PASSWORD and the development logins"; fi
-    if [ -e server.json ]; then echo "server.json exists, leaving it";
-    else cp server.example.json server.json; echo "wrote server.json — bots, festival items and ports live there"; fi
+# First run: installs missing tools, writes .env and server.json (see setup.sh).
+setup *args:
+    ./setup.sh {{args}}
 
 # Run the server for development: saves stay as editable JSON files, no
 # Docker, no Postgres. Reads server.json when it exists (`just setup`).
@@ -56,7 +51,7 @@ dev *args:
     set -euo pipefail
     config=()
     if [ -f server.json ]; then config=(--config server.json); fi
-    UBIQUITOUS_POSTGRES_CONNECTION_STRING= dotnet run --project src/server -- --port {{port}} "${config[@]}" {{args}}
+    UBIQUITOUS_POSTGRES_CONNECTION_STRING= dotnet run --project src/server -- --port {{port}} ${config[@]+"${config[@]}"} {{args}}
 
 # Run the full stack in Docker: the server plus Postgres, on the same port
 # as `just dev`. Reads server.json too when it exists; `just up
@@ -80,7 +75,7 @@ up envfile='' *args:
     if [ -n "{{envfile}}" ]; then
       if [ ! -f "{{envfile}}" ]; then echo "no {{envfile}}"; exit 2; fi
     elif [ ! -f .env ]; then
-      echo "no .env — run: just setup"; exit 2
+      echo "no .env — run: ./setup.sh"; exit 2
     fi
     UBIQUITOUS_WEBSOCKET_PORT={{port}} "${compose[@]}" up --build -d {{args}}
     for _ in $(seq 1 30); do
@@ -93,12 +88,21 @@ up envfile='' *args:
     exit 1
 
 # Stop the Docker stack.
-down *args:
-    docker compose down {{args}}
+down envfile='' *args:
+    docker compose {{ if envfile != "" { "--env-file " + envfile } else { "" } }} down {{args}}
 
 # Follow the Docker server's log.
 docker-logs:
     docker compose logs -f server
+
+# Manage real accounts for `just dev` (file saves). Safe while the server runs.
+#   just account create alice | just account password alice | just account list
+account *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    config=()
+    if [ -f server.json ]; then config=(--config server.json); fi
+    UBIQUITOUS_POSTGRES_CONNECTION_STRING= dotnet run --project src/server -- account {{args}} ${config[@]+"${config[@]}"}
 
 # Run the server in the foreground, exactly as configured (Postgres when
 # UBIQUITOUS_POSTGRES_CONNECTION_STRING is set, files when it is not).
@@ -107,7 +111,7 @@ serve *args:
     set -euo pipefail
     config=()
     if [ -f server.json ]; then config=(--config server.json); fi
-    dotnet run --project src/server -- --port {{port}} "${config[@]}" {{args}}
+    dotnet run --project src/server -- --port {{port}} ${config[@]+"${config[@]}"} {{args}}
 
 # Run the server in the background, logging to local/server.log.
 serve-bg:
@@ -117,7 +121,7 @@ serve-bg:
     dotnet build -v quiet
     config=()
     if [ -f server.json ]; then config=(--config server.json); fi
-    nohup src/server/bin/Debug/net10.0/server --port {{port}} "${config[@]}" > local/server.log 2>&1 &
+    nohup src/server/bin/Debug/net10.0/server --port {{port}} ${config[@]+"${config[@]}"} > local/server.log 2>&1 &
     echo "server starting on port {{port}}; log: local/server.log"
     sleep 8
     curl -fsS -m 8 "http://127.0.0.1:{{port}}/health" && echo || echo "health check did not answer yet"

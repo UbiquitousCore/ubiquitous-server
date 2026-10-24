@@ -24,6 +24,8 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly ICharacterStore _characters;
     private readonly SessionOutbox _outbox;
     private bool _loginAttempted;
+    private int _failedLogins;
+    private const int MaxFailedLogins = 5;
     private AccountRecord? _account;
     private CharacterRecord? _character;
     private readonly IReadOnlyList<CreatureSpawnDefinition> _creatureSpawns;
@@ -414,6 +416,7 @@ public sealed partial class PlaySession : ISessionPlayer
             {
                 WebMessageTypes.SessionPing => [Reply(WebMessageTypes.SessionPong, new { })],
                 WebMessageTypes.AccountLogin => [await LoginAsync(envelope.Payload, cancellationToken)],
+                WebMessageTypes.AccountLogout => [Logout()],
                 WebMessageTypes.DevEnterWorld => await DevEnterWorldAsync(envelope.Payload, cancellationToken),
                 WebMessageTypes.CharactersList => [await ListCharactersAsync(cancellationToken)],
                 WebMessageTypes.CharactersCreate => await CreateCharacterAsync(envelope.Payload, cancellationToken),

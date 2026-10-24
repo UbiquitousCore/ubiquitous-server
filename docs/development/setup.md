@@ -1,12 +1,22 @@
 # Development
 
+## Running without a toolchain
+
+`./run.sh` (`run.bat` on Windows) needs only Docker: `ingest` runs the
+importer in a container (`ingest` service, `tools` stage of the Dockerfile)
+against `incoming/` and `data/`, `start` brings up the stack. Everything below
+is the developer path.
+
 ## One command
 
-.NET 10 SDK (`scripts/setup/install-dotnet.ps1`); optionally `just` and
-Python 3.
+`./setup.sh` installs the .NET 10 SDK (to `~/.dotnet`) and `just` when
+missing, checks for Python 3, and with `--docker` checks Docker and Compose.
+On Windows run `setup.bat` (winget installs Git, .NET 10, just and Python;
+open a new terminal and run it again), then use Git Bash or PowerShell for
+`just`.
 
 ```bash
-just setup   # once: writes .env and server.json from their examples
+./setup.sh   # once: tools, then .env (generated secrets) and server.json
 just dev     # development: saves as editable JSON files, no Docker, no Postgres
 just up      # production-like: the server plus Postgres in Docker, same port
 just down    # stop the Docker stack
@@ -30,9 +40,29 @@ or the real environment, and anything set there wins over the file.
 Precedence is defaults, then `server.json` (`--config` or `UBIQUITOUS_CONFIG`
 points elsewhere), then `UBIQUITOUS_*` environment variables, then flags.
 
+## Accounts
+
+Accounts are made from the command line, never over the wire:
+`just account create <name>` (file saves), `./run.sh account create <name>`
+(Docker, server running), or `dotnet run --project src/server -- account
+create <name>`. `password <name>` changes one, `gm <name> on|off` grants or removes GM (admin
+tools such as teleport; it applies at their next sign-in and covers every
+character on the account), and `list` shows them with GMs marked. The
+password is read without echo (or one line from piped stdin), needs 8
+characters, and is stored as a salted hash. Postgres takes the change at once;
+file saves reload `accounts.json` when it changes, so the server need not stop.
+The first account also writes an empty `characters.json`; from then on the
+development logins below are gone, since the server only falls back to them
+when those files are missing.
+
 ## Development logins
 
-With `UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true` and no saved `accounts.json`, two logins
+For `just dev` (file saves) only. With a Postgres connection the server
+ignores them and `dev.enterWorld` is refused, whatever `.env` says.
+
+`./setup.sh` turns these on in `.env` with a generated password for
+`developer`; without one nobody can sign in. With
+`UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true` and no saved `accounts.json`, two logins
 exist: `UBIQUITOUS_DEVELOPMENT_USER_ID` (default `developer`) and
 `UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID` (default `developer2`), each only when its
 `UBIQUITOUS_DEVELOPMENT_PASS_HASH` / `UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH` is set. Each
@@ -76,7 +106,7 @@ read-only and runtime state in the `ubiquitous-state` volume
 (`UBIQUITOUS_STATE_DIRECTORY`). When `server.json` exists it is mounted read-only
 too, so the same game settings apply; `.env` supplies only secrets. For
 production secrets, keep them in `.env.production` and run
-`just up .env.production`, or export them. Patrol routes saved under Docker
+`just up .env.production` (and `just down .env.production`), or export them. The port is published on loopback only; set `UBIQUITOUS_PUBLISH_ADDRESS=0.0.0.0` to serve a LAN. Patrol routes saved under Docker
 land inside the container unless `content/` is mounted.
 
 ## Tests

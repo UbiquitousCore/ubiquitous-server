@@ -42,7 +42,7 @@ public sealed class WebSocketGateway : IAsyncDisposable
         PlaySessionHub? hub = null,
         Func<DateTimeOffset, CancellationToken, Task>? afterTick = null)
     {
-        _listener.Prefixes.Add($"http://{options.BindAddress}:{options.WebSocketPort}/");
+        _listener.Prefixes.Add(ListenerPrefix(options.BindAddress, options.WebSocketPort));
         _sessionFactory = sessionFactory;
         _readiness = readiness ?? new ServerReadinessState();
         _idleTimeout = idleTimeout ?? DefaultIdleTimeout;
@@ -82,6 +82,10 @@ public sealed class WebSocketGateway : IAsyncDisposable
         IgnoreListenerErrors(_listener.Close);
         _shutdown.Dispose();
     }
+
+    // HttpListener on Linux refuses an all-interfaces IP; it wants the `+` wildcard.
+    public static string ListenerPrefix(string bindAddress, int port) =>
+        $"http://{(bindAddress is "0.0.0.0" or "::" or "[::]" ? "+" : bindAddress)}:{port}/";
 
     private static void IgnoreListenerErrors(Action action)
     {

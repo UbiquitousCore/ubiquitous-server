@@ -166,3 +166,13 @@ public sealed class InMemoryCharacterStore : ICharacterStore
         return Task.FromResult(_byGuid.Remove(guid));
     }
 }
+
+public interface IAccountAdmin : IAccountStore
+{
+    // Null when the user id is already taken.
+    Task<AccountRecord?> CreateAsync(string userId, string passHash, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AccountRecord>> ListAsync(CancellationToken cancellationToken = default);
+
+    Task SetAdminAsync(int accountId, bool isAdmin, CancellationToken cancellationToken = default);
+}

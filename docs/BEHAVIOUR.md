@@ -11,12 +11,20 @@ comes from is in `PROVENANCE.md`.
 - A missing or null required field gets `protocol.error invalid_payload`; any
   other handler failure gets one `protocol.error internal` with a generic
   reason, never the exception text.
-- `account.login {userId, passHash}`, once per connection. The client sends
+- `account.login {userId, passHash}`. A refused login may be retried on the same
+  connection, up to five times; after five refusals, or once signed in, a
+  further login gets `invalid_state`. `account.loginResult` carries `isAdmin`,
+  true only for a GM account that signed in; the client shows its admin panel
+  from it. The client sends
   the typed password as `passHash`; the server stores it as
   `pbkdf2-sha256$<iterations>$<salt>$<hash>` and compares in constant time. A
   stored value without that prefix is accepted once and rehashed. Five failures
   for one user id within a minute lock it for a minute, with the ordinary
-  invalid-credentials answer. Accounts are never created by the server.
+  invalid-credentials answer. Accounts are never created over the wire; the operator makes them with the
+  `account create` command (see docs/development/setup.md).
+- `account.logout` signs the connection out (reply `account.loggedOut`) so it can
+  log in again; refused with `not_authenticated` before a login and `invalid_state`
+  while a character is in the world.
 - `characters.create` is refused (`characters.created {ok:false, code}`) for a
   fifth character, a name that is not 2-16 letters or is taken (ignoring case),
   a race/class pair with no loadout, or an out-of-range gender or look.

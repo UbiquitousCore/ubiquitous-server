@@ -117,6 +117,7 @@ public sealed class ServerContentLoader(
 
         return fallback with
         {
+            StartingCurrency = 0,
             Creatures = creatures ?? fallback.Creatures,
             Npcs = npcs ?? fallback.Npcs,
             Quests = quests ?? fallback.Quests,

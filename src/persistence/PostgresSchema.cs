@@ -83,6 +83,9 @@ public static class PostgresSchema
         new Migration("0007_action_bar", """
             ALTER TABLE characters ADD COLUMN IF NOT EXISTS action_bar JSONB;
             """),
+        new Migration("0008_account_admin", """
+            ALTER TABLE accounts ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+            """),
     ];
 
     public static async Task EnsureCreatedAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken = default)

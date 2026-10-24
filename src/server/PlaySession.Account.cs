@@ -31,7 +31,12 @@ public sealed partial class PlaySession
     {
         if (_loginAttempted)
         {
-            return Error(WireCodes.ProtocolError.InvalidState, "Only one login attempt is allowed per connection.");
+            return Error(WireCodes.ProtocolError.InvalidState, "This connection is already signed in or signing in.");
+        }
+
+        if (_failedLogins >= MaxFailedLogins)
+        {
+            return Error(WireCodes.ProtocolError.InvalidState, "Too many failed sign-ins on this connection; reload the page.");
         }
 
         _loginAttempted = true;
@@ -42,9 +47,27 @@ public sealed partial class PlaySession
         {
             _account = await FindAccountAsync(request.UserId, cancellationToken);
         }
+        else
+        {
+            _loginAttempted = false;
+            _failedLogins++;
+        }
 
-        return Reply(WebMessageTypes.AccountLoginResult, new ResultPayload(
-            result.Ok, (int)result.Code, result.Reason));
+        return Reply(WebMessageTypes.AccountLoginResult, new LoginResultPayload(
+            result.Ok, (int)result.Code, result.Reason, result.Ok && _account?.IsAdmin == true));
+    }
+
+    // Back to the sign-in screen on the same connection; a character in the world must leave first.
+    private string Logout()
+    {
+        if (_account is null)
+            return Error(WireCodes.ProtocolError.NotAuthenticated, "There is no signed-in account.");
+        if (_character is not null)
+            return Error(WireCodes.ProtocolError.InvalidState, "Leave the world before signing out.");
+        _account = null;
+        _loginAttempted = false;
+        _failedLogins = 0;
+        return Reply(WebMessageTypes.AccountLoggedOut, new { });
     }
 
     private async Task<AccountRecord?> FindAccountAsync(string userId, CancellationToken cancellationToken)

@@ -2,10 +2,11 @@ using System.Text.Json;
 
 namespace Ubiquitous.Persistence;
 
-public sealed class FileAccountStore : IAccountStore
+public sealed class FileAccountStore : IAccountAdmin
 {
     private readonly string _path;
-    private readonly List<AccountRecord> _accounts;
+    private List<AccountRecord> _accounts;
+    private DateTime _loadedAt;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
@@ -13,42 +14,92 @@ public sealed class FileAccountStore : IAccountStore
     {
         _path = path;
         _accounts = accounts;
+        _loadedAt = File.GetLastWriteTimeUtc(path);
     }
 
-    public static FileAccountStore Load(string path)
+    public static FileAccountStore Load(string path) => new(path, Read(path));
+
+    private static List<AccountRecord> Read(string path)
     {
         var text = File.ReadAllText(path);
-        if (string.IsNullOrWhiteSpace(text)) return new FileAccountStore(path, []);
+        if (string.IsNullOrWhiteSpace(text)) return [];
         var accounts = JsonSerializer.Deserialize<List<AccountRecord>>(text, JsonOptions)
             ?? throw new InvalidDataException("Account file must contain a JSON array.");
         if (accounts.GroupBy(account => account.UserId, StringComparer.Ordinal).Any(group => group.Count() > 1))
             throw new InvalidDataException("Account file contains duplicate user IDs.");
-        return new FileAccountStore(path, accounts);
+        return accounts;
+    }
+
+    // Accounts are added from the command line while the server runs.
+    private void ReloadIfChanged()
+    {
+        var modified = File.GetLastWriteTimeUtc(_path);
+        if (modified == _loadedAt) return;
+        var fresh = Read(_path);
+        lock (_accounts)
+        {
+            _accounts = fresh;
+            _loadedAt = modified;
+        }
     }
 
     public Task<AccountRecord?> FindByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ReloadIfChanged();
         lock (_accounts) return Task.FromResult(_accounts.FirstOrDefault(account => account.UserId == userId));
     }
 
-    public async Task SetPassHashAsync(int accountId, string passHash, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<AccountRecord>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        ReloadIfChanged();
+        lock (_accounts) return Task.FromResult<IReadOnlyList<AccountRecord>>([.. _accounts.OrderBy(account => account.Id)]);
+    }
+
+    public Task<AccountRecord?> CreateAsync(string userId, string passHash, CancellationToken cancellationToken = default) =>
+        MutateAsync(accounts =>
+        {
+            if (accounts.Any(account => account.UserId == userId)) return null;
+            var created = new AccountRecord(accounts.Count == 0 ? 1 : accounts.Max(account => account.Id) + 1, userId, passHash);
+            accounts.Add(created);
+            return created;
+        }, cancellationToken);
+
+    public Task SetPassHashAsync(int accountId, string passHash, CancellationToken cancellationToken = default) =>
+        Update(accountId, account => account with { PassHash = passHash }, cancellationToken);
+
+    public Task SetAdminAsync(int accountId, bool isAdmin, CancellationToken cancellationToken = default) =>
+        Update(accountId, account => account with { IsAdmin = isAdmin }, cancellationToken);
+
+    private Task Update(int accountId, Func<AccountRecord, AccountRecord> change, CancellationToken cancellationToken) =>
+        MutateAsync<object>(accounts =>
+        {
+            for (var index = 0; index < accounts.Count; index++)
+            {
+                if (accounts[index].Id == accountId) accounts[index] = change(accounts[index]);
+            }
+
+            return null;
+        }, cancellationToken);
+
+    private async Task<T?> MutateAsync<T>(Func<List<AccountRecord>, T?> change, CancellationToken cancellationToken)
+        where T : class
     {
         await _writeLock.WaitAsync(cancellationToken);
         try
         {
+            ReloadIfChanged();
             List<AccountRecord> snapshot;
+            T? result;
             lock (_accounts)
             {
-                for (var index = 0; index < _accounts.Count; index++)
-                {
-                    if (_accounts[index].Id == accountId) _accounts[index] = _accounts[index] with { PassHash = passHash };
-                }
-
+                result = change(_accounts);
                 snapshot = [.. _accounts];
             }
 
             await JsonFile.WriteAsync(_path, snapshot, cancellationToken);
+            lock (_accounts) _loadedAt = File.GetLastWriteTimeUtc(_path);
+            return result;
         }
         finally
         {

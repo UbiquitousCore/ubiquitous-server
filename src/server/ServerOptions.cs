@@ -142,6 +142,10 @@ public sealed record ServerOptions(
         return this with { Modules = modules };
     }
 
+    // Development logins and `dev.enterWorld` are for file-backed local runs only; a Postgres server uses real accounts.
+    public ServerOptions ForStore(bool usesPostgres) =>
+        usesPostgres && DevelopmentAccountsEnabled ? this with { DevelopmentAccountsEnabled = false } : this;
+
     public IReadOnlyList<(int AccountId, string UserId, string PassHash)> DevelopmentLogins()
     {
         if (!DevelopmentAccountsEnabled) return [];

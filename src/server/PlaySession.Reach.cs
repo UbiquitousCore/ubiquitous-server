@@ -92,6 +92,7 @@ public sealed partial class PlaySession
 
             [WebMessageTypes.SessionPing] = NoBody,
             [WebMessageTypes.AccountLogin] = NoBody,
+            [WebMessageTypes.AccountLogout] = NoBody,
             [WebMessageTypes.DevEnterWorld] = NoBody,
             [WebMessageTypes.DevStressTest] = NoBody,
             [WebMessageTypes.CharactersList] = NoBody,

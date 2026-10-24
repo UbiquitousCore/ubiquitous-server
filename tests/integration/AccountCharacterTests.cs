@@ -77,6 +77,93 @@ public sealed class AccountCharacterTests
         Assert.Contains("invalid_state", secondLogin);
     }
 
+    private static async Task<string> Login(PlaySession session, int id, string password) =>
+        (await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, id, new LoginRequest("developer", password)))))[0];
+
+    [Fact]
+    public async Task LoginResult_SaysWhetherTheAccountIsAGameMaster()
+    {
+        var accounts = new DevelopmentAccountStore(
+        [
+            new AccountRecord(1, "gm", "gm-secret", IsAdmin: true),
+            new AccountRecord(2, "player", "player-secret"),
+        ]);
+
+        async Task<string> LoginAs(string userId, string password)
+        {
+            var session = TestSessions.Create(accounts, new InMemoryCharacterStore([]));
+            return (await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.AccountLogin, 1, new LoginRequest(userId, password)))))[0];
+        }
+
+        Assert.Contains("\"isAdmin\":true", await LoginAs("gm", "gm-secret"));
+        Assert.Contains("\"isAdmin\":false", await LoginAs("player", "player-secret"));
+        Assert.Contains("\"isAdmin\":false", await LoginAs("gm", "wrong"));
+    }
+
+    private static async Task<string> Send(PlaySession session, int id, string type) =>
+        (await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(type, id))))[0];
+
+    [Fact]
+    public async Task PlaySession_LoggingOut_LetsTheSameConnectionSignInAgainAsSomeoneElse()
+    {
+        var accounts = new DevelopmentAccountStore(
+        [
+            new AccountRecord(1, "one", "one-secret"),
+            new AccountRecord(2, "two", "two-secret"),
+        ]);
+        var session = TestSessions.Create(accounts, new InMemoryCharacterStore([]));
+        await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 1, new LoginRequest("one", "one-secret"))));
+
+        var loggedOut = await Send(session, 2, WebMessageTypes.AccountLogout);
+        var listed = await Send(session, 3, WebMessageTypes.CharactersList);
+        var second = (await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 4, new LoginRequest("two", "two-secret")))))[0];
+
+        Assert.Contains("account.loggedOut", loggedOut);
+        Assert.Contains("not_authenticated", listed);
+        Assert.Contains("\"ok\":true", second);
+    }
+
+    [Fact]
+    public async Task PlaySession_LoggingOutWhenNotSignedIn_IsRefused()
+    {
+        var session = TestSessions.Create(
+            new DevelopmentAccountStore("one", "one-secret"), new InMemoryCharacterStore([]));
+
+        Assert.Contains("not_authenticated", await Send(session, 1, WebMessageTypes.AccountLogout));
+    }
+
+    [Fact]
+    public async Task PlaySession_AfterAWrongPassword_TheSameConnectionCanTryAgain()
+    {
+        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var session = TestSessions.Create(account, new InMemoryCharacterStore([]), developmentEntry: true);
+
+        var wrong = await Login(session, 1, "not-it");
+        var right = await Login(session, 2, "dev-secret");
+        var again = await Login(session, 3, "dev-secret");
+
+        Assert.Contains("\"ok\":false", wrong);
+        Assert.Contains("\"ok\":true", right);
+        Assert.Contains("invalid_state", again);
+    }
+
+    [Fact]
+    public async Task PlaySession_AfterFiveWrongPasswords_TheConnectionStopsTakingLogins()
+    {
+        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var session = TestSessions.Create(account, new InMemoryCharacterStore([]), developmentEntry: true);
+
+        for (var attempt = 1; attempt <= 5; attempt++)
+            Assert.Contains("account.loginResult", await Login(session, attempt, "not-it"));
+        var sixth = await Login(session, 6, "dev-secret");
+
+        Assert.Contains("invalid_state", sixth);
+    }
+
     [Fact]
     public async Task PlaySession_ChoosingCharacter_EmitsLoadingThenEntered()
     {

@@ -38,6 +38,13 @@ public sealed class WebSocketGatewayLoopbackTests
         throw new TimeoutException($"No message containing \"{marker}\" arrived within 20 frames.");
     }
 
+    [Theory]
+    [InlineData("0.0.0.0", "http://+:8781/")]
+    [InlineData("::", "http://+:8781/")]
+    [InlineData("127.0.0.1", "http://127.0.0.1:8781/")]
+    public void ListenerPrefix_UsesTheWildcardForAllInterfaces(string bindAddress, string expected) =>
+        Assert.Equal(expected, WebSocketGateway.ListenerPrefix(bindAddress, 8781));
+
     [Fact]
     public async Task LoopbackSocket_LoginThenChooseCharacter_RoundTripsTheSameJsonTheBrowserSends()
     {

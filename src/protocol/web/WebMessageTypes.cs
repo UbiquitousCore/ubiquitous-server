@@ -8,6 +8,8 @@ public static partial class WebMessageTypes
 
     public const string AccountLogin = "account.login";
     public const string AccountLoginResult = "account.loginResult";
+    public const string AccountLogout = "account.logout";
+    public const string AccountLoggedOut = "account.loggedOut";
     public const string DevEnterWorld = "dev.enterWorld";
     public const string DevStressTest = "dev.stressTest";
     public const string CharactersList = "characters.list";

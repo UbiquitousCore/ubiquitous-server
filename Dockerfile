@@ -14,12 +14,30 @@ COPY src/module-api/module-api.csproj src/module-api/
 COPY modules/ modules/
 RUN dotnet restore src/server/server.csproj
 COPY src/ src/
+# Patrol routes are linked into the publish output by server.csproj.
+COPY content/ content/
 RUN dotnet publish src/server/server.csproj -c Release --no-restore -o /app/publish
+
+# Data import tooling, for `docker compose run ingest` (see run.sh): just, python
+# and the asset extractor, so importing needs nothing installed on the host.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS tools
+ENV NUGET_PACKAGES=/nuget DOTNET_NOLOGO=1 DOTNET_CLI_TELEMETRY_OPTOUT=1
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+WORKDIR /work
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig justfile ./
+COPY src/ src/
+COPY tools/ tools/
+RUN dotnet build tools/asset-extractor -v quiet \
+    && chmod -R a+rwX /nuget /work
+CMD ["just", "ingest"]
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget \
+    && apt-get install -y --no-install-recommends wget libgssapi-krb5-2 \
     && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /data/state && chown app:app /data/state
 COPY --from=build /app/publish .

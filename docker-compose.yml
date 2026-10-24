@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ubiquitous
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set; see the Docker development doc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set; run ./setup.sh}
       POSTGRES_DB: ubiquitous
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ubiquitous -d ubiquitous"]
@@ -18,6 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runtime
     environment:
       UBIQUITOUS_BIND_ADDRESS: 0.0.0.0
       # No `:-default` fallbacks here on purpose: an unset variable arrives
@@ -27,11 +28,6 @@ services:
       UBIQUITOUS_WEBSOCKET_PORT: ${UBIQUITOUS_WEBSOCKET_PORT:-}
       UBIQUITOUS_DATA_DIRECTORY: /data/generated
       UBIQUITOUS_STATE_DIRECTORY: /data/state
-      UBIQUITOUS_DEVELOPMENT_ACCOUNTS: ${UBIQUITOUS_DEVELOPMENT_ACCOUNTS:-}
-      UBIQUITOUS_DEVELOPMENT_USER_ID: ${UBIQUITOUS_DEVELOPMENT_USER_ID:-}
-      UBIQUITOUS_DEVELOPMENT_PASS_HASH: ${UBIQUITOUS_DEVELOPMENT_PASS_HASH:-}
-      UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID: ${UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID:-}
-      UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH: ${UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH:-}
       UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED: ${UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED:-}
       UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT: ${UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT:-}
       UBIQUITOUS_POSTGRES_CONNECTION_STRING: "Host=db;Username=ubiquitous;Password=${POSTGRES_PASSWORD};Database=ubiquitous"
@@ -39,7 +35,8 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${UBIQUITOUS_WEBSOCKET_PORT:-8781}:${UBIQUITOUS_WEBSOCKET_PORT:-8781}"
+      # Loopback only by default; set UBIQUITOUS_PUBLISH_ADDRESS=0.0.0.0 to serve a LAN.
+      - "${UBIQUITOUS_PUBLISH_ADDRESS:-127.0.0.1}:${UBIQUITOUS_WEBSOCKET_PORT:-8781}:${UBIQUITOUS_WEBSOCKET_PORT:-8781}"
     healthcheck:
       test: ["CMD-SHELL", "wget --spider --quiet http://127.0.0.1:${UBIQUITOUS_WEBSOCKET_PORT:-8781}/health"]
       interval: 10s
@@ -49,6 +46,21 @@ services:
       - ./data/generated:/data/generated:ro
       - ubiquitous-state:/data/state
     restart: unless-stopped
+
+  # `./run.sh ingest`: turns incoming/*.ipa into data/generated/ with nothing
+  # installed on the host. Not started by `up`.
+  ingest:
+    profiles: ["ingest"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: tools
+    user: "${UBIQUITOUS_UID:-0}:${UBIQUITOUS_GID:-0}"
+    environment:
+      HOME: /tmp
+    volumes:
+      - ./incoming:/work/incoming
+      - ./data:/work/data
 
 volumes:
   postgres-data:

@@ -18,6 +18,7 @@ public static class Program
 
     public static async Task<int> Main(string[] args)
     {
+        var accountCommand = args is ["account", ..];
         ServerOptions options;
         LogLevel logLevel;
         try
@@ -33,13 +34,15 @@ public static class Program
         }
 
         using var loggerFactory = LoggerFactory.Create(builder => builder
-            .SetMinimumLevel(logLevel)
+            .SetMinimumLevel(accountCommand && logLevel < LogLevel.Warning ? LogLevel.Warning : logLevel)
             .AddSimpleConsole(console =>
             {
                 console.SingleLine = true;
                 console.TimestampFormat = "HH:mm:ss ";
             }));
         var logger = loggerFactory.CreateLogger("Ubiquitous.Server");
+
+        if (accountCommand) return await RunAccountCommandAsync(args[1..], options, logger);
 
         var readiness = new ServerReadinessState();
         if (!TryLoadCatalog(options.DataDirectory, readiness, logger, out var catalog)) return ExitInvalidData;
@@ -52,6 +55,9 @@ public static class Program
         }
 
         await using var _ = postgres;
+        if (postgres is not null && options.DevelopmentAccountsEnabled)
+            logger.LogWarning("Development accounts are ignored with Postgres; create real ones with: account create <name>");
+        options = options.ForStore(postgres is not null);
 
         SessionStores stores;
         try
@@ -119,6 +125,45 @@ public static class Program
         await WaitForShutdownAsync();
         await modules.ShutdownAsync(CancellationToken.None);
         return 0;
+    }
+
+    private static async Task<int> RunAccountCommandAsync(string[] args, ServerOptions options, ILogger logger)
+    {
+        NpgsqlDataSource? postgres = null;
+        if (!string.IsNullOrWhiteSpace(options.PostgresConnectionString))
+        {
+            postgres = await ConnectPostgresAsync(options.PostgresConnectionString, logger);
+            if (postgres is null) return ExitDatabaseUnavailable;
+        }
+
+        await using var _ = postgres;
+        string? piped = null;
+        string? ReadPassword(string prompt)
+        {
+            if (Console.IsInputRedirected) return piped ??= Console.In.ReadLine();
+            Console.Error.Write(prompt);
+            var typed = new System.Text.StringBuilder();
+            while (Console.ReadKey(intercept: true) is var key && key.Key != ConsoleKey.Enter)
+            {
+                if (key.Key == ConsoleKey.Backspace && typed.Length > 0) typed.Length--;
+                else if (!char.IsControl(key.KeyChar)) typed.Append(key.KeyChar);
+            }
+
+            Console.Error.WriteLine();
+            return typed.ToString();
+        }
+
+        try
+        {
+            return await AccountCommands.RunAsync(
+                args, SessionStoreFactory.OpenAccountAdmin(options, postgres), ReadPassword, Console.Out, Console.Error);
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException or UnauthorizedAccessException
+            or NpgsqlException)
+        {
+            Console.Error.WriteLine($"Account store error: {ex.Message}");
+            return ExitStoreUnreadable;
+        }
     }
 
     private static LogLevel ParseLogLevel(string value) =>

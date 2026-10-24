@@ -30,6 +30,20 @@ public static class SessionStoreFactory
             Progress: postgres is not null ? new PostgresProgressStore(postgres) : null);
     }
 
+    // Real accounts need both files: with either missing the server falls back to the development fixtures.
+    public static IAccountAdmin OpenAccountAdmin(ServerOptions options, NpgsqlDataSource? postgres)
+    {
+        if (postgres is not null) return new PostgresAccountStore(postgres);
+        Directory.CreateDirectory(options.ResolvedStateDirectory);
+        foreach (var name in new[] { AccountsFile, CharactersFile })
+        {
+            var path = Path.Combine(options.ResolvedStateDirectory, name);
+            if (!File.Exists(path)) File.WriteAllText(path, "[]");
+        }
+
+        return FileAccountStore.Load(Path.Combine(options.ResolvedStateDirectory, AccountsFile));
+    }
+
     private static (IAccountAuthenticator, ICharacterStore) LoadAccountsAndCharacters(ServerOptions options, ILogger logger)
     {
         var accountPath = Path.Combine(options.ResolvedStateDirectory, AccountsFile);

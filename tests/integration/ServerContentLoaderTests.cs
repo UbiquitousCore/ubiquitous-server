@@ -93,6 +93,24 @@ public sealed class ServerContentLoaderTests
         }
     }
 
+    [Fact]
+    public void ARealPackage_StartsNewCharactersWithNoMoney()
+    {
+        var package = Directory.CreateTempSubdirectory("ubiquitous-package-");
+        try
+        {
+            var catalog = new DataCatalog(Manifest(new()), package.FullName);
+
+            var content = new ServerContentLoader(catalog, ServerOptions.Defaults, NullLogger.Instance, ContentDirectory.Find()).Load();
+
+            Assert.Equal(0, content.Game.StartingCurrency);
+        }
+        finally
+        {
+            package.Delete(recursive: true);
+        }
+    }
+
     private static DataManifest Manifest(Dictionary<string, string> datasets) =>
         new("test", DataManifest.TargetGameVersion, "hash", DateTimeOffset.UnixEpoch, datasets);
 
