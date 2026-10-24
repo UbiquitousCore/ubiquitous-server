@@ -10,14 +10,24 @@ public sealed class FileAccountStore : IAccountAdmin
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
-    private FileAccountStore(string path, List<AccountRecord> accounts)
+    // Own choice: ids below this are the development logins', so a real account never shares one with them.
+    public const int FirstAccountId = 100;
+
+    private readonly Action? _beforeFirstWrite;
+
+    private FileAccountStore(string path, List<AccountRecord> accounts, Action? beforeFirstWrite = null)
     {
         _path = path;
         _accounts = accounts;
-        _loadedAt = File.GetLastWriteTimeUtc(path);
+        _beforeFirstWrite = beforeFirstWrite;
+        _loadedAt = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
     }
 
     public static FileAccountStore Load(string path) => new(path, Read(path));
+
+    // Reading never creates the file: its existence is what tells the server real accounts are in use.
+    public static FileAccountStore Open(string path, Action beforeFirstWrite) =>
+        new(path, File.Exists(path) ? Read(path) : [], beforeFirstWrite);
 
     private static List<AccountRecord> Read(string path)
     {
@@ -33,6 +43,7 @@ public sealed class FileAccountStore : IAccountAdmin
     // Accounts are added from the command line while the server runs.
     private void ReloadIfChanged()
     {
+        if (!File.Exists(_path)) return;
         var modified = File.GetLastWriteTimeUtc(_path);
         if (modified == _loadedAt) return;
         var fresh = Read(_path);
@@ -60,7 +71,7 @@ public sealed class FileAccountStore : IAccountAdmin
         MutateAsync(accounts =>
         {
             if (accounts.Any(account => account.UserId == userId)) return null;
-            var created = new AccountRecord(accounts.Count == 0 ? 1 : accounts.Max(account => account.Id) + 1, userId, passHash);
+            var created = new AccountRecord(Math.Max(FirstAccountId, accounts.Count == 0 ? 0 : accounts.Max(account => account.Id) + 1), userId, passHash);
             accounts.Add(created);
             return created;
         }, cancellationToken);
@@ -97,6 +108,7 @@ public sealed class FileAccountStore : IAccountAdmin
                 snapshot = [.. _accounts];
             }
 
+            if (!File.Exists(_path)) _beforeFirstWrite?.Invoke();
             await JsonFile.WriteAsync(_path, snapshot, cancellationToken);
             lock (_accounts) _loadedAt = File.GetLastWriteTimeUtc(_path);
             return result;

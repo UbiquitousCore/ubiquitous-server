@@ -105,13 +105,15 @@ public static class DevelopmentFixtures
         [366] = 5, [367] = 5, [368] = 1, [369] = 1, [370] = 1,
     };
 
-    public static InMemoryCharacterStore Characters() => new(
+    public static InMemoryCharacterStore Characters() => new(CharacterRecords());
+
+    public static IReadOnlyList<CharacterRecord> CharacterRecords() =>
     [
         Geared("dev-warrior-1", 1, "Bastion", PlayerClassIds.Warrior, PlayerBodies.Male, StrongDefenderWarriorGear, BastionTalents),
         Geared("dev-mage-1", 1, "Arlen", PlayerClassIds.Mage, PlayerBodies.Female, MagicSpillMageGear, ArlenTalents),
         Geared("dev-ranger-2", 2, "Kestrel", PlayerClassIds.Ranger, PlayerBodies.Male, UnfeelingSneakRangerGear, KestrelTalents),
         Geared("dev-healer-2", 2, "Liora", PlayerClassIds.Monk, PlayerBodies.Female, DevoutHealerMonkGear, LioraTalents),
-    ]);
+    ];
 
     private static CharacterRecord Geared(
         string guid, int accountId, string name, int playerClass, int gender, IReadOnlyList<int> gear,

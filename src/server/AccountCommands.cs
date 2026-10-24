@@ -13,6 +13,9 @@ public static partial class AccountCommands
     [GeneratedRegex("^[A-Za-z0-9_.@-]{3,32}$")]
     private static partial Regex UserIdPattern();
 
+    // The words before the first option: `create alice --config server.json` is `create alice`.
+    public static string[] Words(string[] args) => [.. args.TakeWhile(arg => !arg.StartsWith('-'))];
+
     public static async Task<int> RunAsync(
         string[] args, IAccountAdmin accounts, Func<string, string?> readPassword, TextWriter output, TextWriter error,
         int iterations = PasswordHasher.DefaultIterations)

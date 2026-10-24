@@ -21,4 +21,22 @@ public static class SpellRanks
 
         return best;
     }
+
+    // The highest rank of the same spell that is still known, or null when none is: for a button whose rank was lost.
+    public static uint? HighestKnownOfChain(uint spellId, IEnumerable<uint> known, IReadOnlyDictionary<uint, SpellDefinition> spells)
+    {
+        if (!spells.TryGetValue(spellId, out var spell)) return null;
+        uint? best = null;
+        var bestRank = int.MinValue;
+        foreach (var id in known)
+        {
+            if (!spells.TryGetValue(id, out var other)) continue;
+            if (!string.Equals(other.NameKey, spell.NameKey, StringComparison.Ordinal)) continue;
+            if (other.Rank <= bestRank) continue;
+            best = id;
+            bestRank = other.Rank;
+        }
+
+        return best;
+    }
 }

@@ -20,7 +20,7 @@
 
   // Seasonal scenery and creatures. Off hides the whole event; the entry
   // lists hide only those entries while leaving the rest of it up.
-  "festivalContentEnabled": true,
+  "festivalContentEnabled": false,
   // "festivalStaticEntries": [288, 145],
   // "festivalCreatureEntries": [3012, 2781],
 

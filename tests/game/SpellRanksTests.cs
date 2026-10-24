@@ -38,4 +38,18 @@ public sealed class SpellRanksTests
     {
         Assert.Equal(5233u, SpellRanks.HighestKnown(5233, [5233, 5007], Spells));
     }
+
+    [Fact]
+    public void HighestKnownOfChain_FallsBackToTheHighestRankStillKnown()
+    {
+        Assert.Equal(5006u, SpellRanks.HighestKnownOfChain(5007, [5000, 5006, 5233], Spells));
+        Assert.Equal(5000u, SpellRanks.HighestKnownOfChain(5007, [5000, 5233], Spells));
+    }
+
+    [Fact]
+    public void HighestKnownOfChain_IsNothingWhenNoRankOfItIsKnown()
+    {
+        Assert.Null(SpellRanks.HighestKnownOfChain(5007, [5233, 108], Spells));
+        Assert.Null(SpellRanks.HighestKnownOfChain(999_999, [5000], Spells));
+    }
 }

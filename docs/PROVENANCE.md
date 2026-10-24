@@ -217,7 +217,14 @@ this project's own:
   column 1 is the talent tree a spell belongs to, column 6 its rank and
   column 27 the first rank of its chain; a chain whose first rank is a
   `spell_talent` rank spell is a talent ability. That 60 grants every rank
-  is this project's own rule; the data carries no learning level.
+  is this project's own rule.
+- The level a class spell is learned at is the required level of the lesson
+  item that teaches it (the item's on-use spell has the spell as a learn
+  effect), the lowest among the items the class may use; for example Fireball
+  II, III and IV are taught at levels 6, 12 and 18. A spell no item teaches
+  comes with the class (level 1), and a talent ability's higher rank no item
+  teaches counts as level 60 (`SpellLearning`). The GM commands
+  `admin.setLevel` and `admin.learnSpells` use this.
 - Talents can be reset at any time, for free (`talent.reset`). The game has a
   reset (the operator's `String_Spell` names a "Reset Talents" spell); its
   cost and where it is offered are not in the data.

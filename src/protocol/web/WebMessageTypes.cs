@@ -125,6 +125,10 @@ public static partial class WebMessageTypes
     public const string BusRequest = "bus.request";
     public const string BusConfirm = "bus.confirm";
     public const string AdminTeleport = "admin.teleport";
+    public const string AdminGiveItem = "admin.giveItem";
+    public const string AdminGiveGold = "admin.giveGold";
+    public const string AdminSetLevel = "admin.setLevel";
+    public const string AdminLearnSpells = "admin.learnSpells";
     public const string BusFare = "bus.fare";
     public const string SpellRequest = "spell.request";
     public const string SpellAbort = "spell.abort";

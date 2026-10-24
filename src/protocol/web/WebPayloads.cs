@@ -135,7 +135,9 @@ public sealed record VendorItemPayload(
     [property: JsonPropertyName("displayInfoId")] int DisplayInfoId,
     [property: JsonPropertyName("buyPrice")] int BuyPrice,
     [property: JsonPropertyName("stock")] int? Stock,
-    [property: JsonPropertyName("stackCount")] int StackCount);
+    [property: JsonPropertyName("stackCount")] int StackCount,
+    // Set only for a spell lesson the player cannot take (see WireCodes.Lesson).
+    [property: JsonPropertyName("lesson")] string? Lesson = null);
 
 public sealed record VendorTabPayload(
     [property: JsonPropertyName("tabIndex")] int TabIndex,
@@ -537,6 +539,14 @@ public sealed record AdminTeleportPayload(
     [property: JsonPropertyName("x")] float X,
     [property: JsonPropertyName("z")] float Z,
     [property: JsonPropertyName("y")] float? Y = null);
+
+public sealed record AdminGiveItemPayload(
+    [property: JsonPropertyName("entry")] int Entry,
+    [property: JsonPropertyName("count")] int Count);
+
+public sealed record AdminSetLevelPayload([property: JsonPropertyName("level")] int Level);
+
+public sealed record AdminGiveGoldPayload([property: JsonPropertyName("gold")] int Gold);
 
 public sealed record StressTestPayload([property: JsonPropertyName("count")] int Count);
 

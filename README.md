@@ -83,13 +83,13 @@ just dev           # run with editable JSON saves, no Docker
 just up            # or the Docker stack, built from your checkout
 ```
 
-`just dev` rebuilds on every start; for the Docker stack, `just up` rebuilds
-the image after a pull.
+`just dev` rebuilds and reloads while you edit (live where .NET can, a restart
+where it cannot); for the Docker stack, `just up` rebuilds the image after a
+pull.
 
 Make a login with `just account create alice` (also `password`, `gm` and
-`list`; works while the server runs). `setup` also prints a throwaway test login that
-works for `just dev` only until the first real account exists, and never in
-Docker. Point [ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client)
+`list`; works while the server runs). `setup` also prints a throwaway test login
+that is always there in `just dev`, next to any real accounts, and never in Docker. Point [ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client)
 at `ws://127.0.0.1:8781/` and sign in.
 
 No client data is needed to build, test or run; the server falls back to a
@@ -105,7 +105,7 @@ Game settings live in `server.json` (git-ignored; `just setup` copies it from
 
 ```json
 {
-  "festivalContentEnabled": true,
+  "festivalContentEnabled": false,
   "modules": { "playerbots": { "enabled": true, "randomBotCount": 5 } }
 }
 ```

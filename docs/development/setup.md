@@ -51,14 +51,18 @@ character on the account), and `list` shows them with GMs marked. The
 password is read without echo (or one line from piped stdin), needs 8
 characters, and is stored as a salted hash. Postgres takes the change at once;
 file saves reload `accounts.json` when it changes, so the server need not stop.
-The first account also writes an empty `characters.json`; from then on the
-development logins below are gone, since the server only falls back to them
-when those files are missing.
+The first account also writes an empty `characters.json`. Real accounts are
+numbered from 100, and listing accounts changes nothing on disk. The
+development logins below stay available in `just dev` next to them.
 
 ## Development logins
 
-For `just dev` (file saves) only. With a Postgres connection the server
-ignores them and `dev.enterWorld` is refused, whatever `.env` says.
+For `just dev` (file saves) only, and always there in it, whether or not real
+accounts exist: their characters are added to the saves (once, then kept as
+you play them). With a Postgres connection the server ignores them and
+`dev.enterWorld` is refused, whatever `.env` says. `just dev` runs
+`dotnet watch`, so source edits are applied live where .NET can and restart the
+server where it cannot.
 
 `./setup.sh` turns these on in `.env` with a generated password for
 `developer`; without one nobody can sign in. With

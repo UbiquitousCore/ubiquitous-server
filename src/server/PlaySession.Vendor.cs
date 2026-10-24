@@ -28,7 +28,23 @@ public sealed partial class PlaySession
                 new VendorTabPayload(tab.TabIndex, tab.Currency, tab.Count, tab.ItemDataDecoded,
                     tab.Items.Select(item => new VendorItemPayload(item.Slot, item.Entry,
                         item.NameTextId, item.DisplayInfoId, item.BuyPrice, null,
-                        item.StackCount)).ToArray())).ToArray()));
+                        item.StackCount, LessonStatusOf(item.Entry))).ToArray())).ToArray()));
+    }
+
+    // What a vendor card says of a spell lesson: already known, or not takeable by this character (another class, too
+    // high a level, a skill missing). The rules are those of reading the lesson, so the card never promises otherwise.
+    private string? LessonStatusOf(int entry)
+    {
+        if (!_content.Items.TryGetValue(checked((uint)entry), out var proto)
+            || proto.OnUseSpellId is not uint lessonId
+            || !_content.Spells.TryGetValue(lessonId, out var lesson))
+            return null;
+        var taught = SpellLessons.Taught(lesson).Where(_content.Spells.ContainsKey).ToArray();
+        if (taught.Length == 0) return null;
+        if (taught.All(_spells.Known.Contains)) return WireCodes.Lesson.Learned;
+        var takeable = MeetsItemRequirements(proto)
+            && SpellLessons.KnowsRequiredSpell(proto, _spells.Known, _content.Items.Values, _content.Spells, MeetsItemRequirements);
+        return takeable ? null : WireCodes.Lesson.Cannot;
     }
 
     private IReadOnlyList<string> VendorBuy(JsonElement payload)

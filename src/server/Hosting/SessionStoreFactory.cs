@@ -34,14 +34,12 @@ public static class SessionStoreFactory
     public static IAccountAdmin OpenAccountAdmin(ServerOptions options, NpgsqlDataSource? postgres)
     {
         if (postgres is not null) return new PostgresAccountStore(postgres);
-        Directory.CreateDirectory(options.ResolvedStateDirectory);
-        foreach (var name in new[] { AccountsFile, CharactersFile })
+        var characters = Path.Combine(options.ResolvedStateDirectory, CharactersFile);
+        return FileAccountStore.Open(Path.Combine(options.ResolvedStateDirectory, AccountsFile), () =>
         {
-            var path = Path.Combine(options.ResolvedStateDirectory, name);
-            if (!File.Exists(path)) File.WriteAllText(path, "[]");
-        }
-
-        return FileAccountStore.Load(Path.Combine(options.ResolvedStateDirectory, AccountsFile));
+            Directory.CreateDirectory(options.ResolvedStateDirectory);
+            if (!File.Exists(characters)) File.WriteAllText(characters, "[]");
+        });
     }
 
     private static (IAccountAuthenticator, ICharacterStore) LoadAccountsAndCharacters(ServerOptions options, ILogger logger)
@@ -65,6 +63,30 @@ public static class SessionStoreFactory
             logger.LogInformation("{File} is empty; starting with no persisted accounts", AccountsFile);
         if (new FileInfo(characterPath).Length == 0)
             logger.LogInformation("{File} is empty; starting with no persisted characters", CharactersFile);
-        return (new AccountAuthenticator(FileAccountStore.Load(accountPath)), FileCharacterStore.Load(characterPath));
+        var accounts = FileAccountStore.Load(accountPath);
+        var characters = FileCharacterStore.Load(characterPath);
+        if (options.DevelopmentLogins().Count == 0) return (new AccountAuthenticator(accounts), characters);
+
+        // A local run keeps its development logins next to the real accounts, and their characters in the saves.
+        SeedDevelopmentCharacters(characters, options);
+        return (new AccountAuthenticator(new DevelopmentOverlayAccountStore(
+            DevelopmentFixtures.Accounts(options).WithHashedSecrets(), accounts)), characters);
+    }
+
+    private static void SeedDevelopmentCharacters(ICharacterStore characters, ServerOptions options)
+    {
+        var accountIds = options.DevelopmentLogins().Select(login => login.AccountId).ToHashSet();
+        foreach (var character in DevelopmentFixtures.CharacterRecords().Where(one => accountIds.Contains(one.AccountId)))
+        {
+            if (characters.GetByGuidAsync(character.Guid).GetAwaiter().GetResult() is not null) continue;
+            try
+            {
+                characters.CreateAsync(character).GetAwaiter().GetResult();
+            }
+            catch (CharacterNameTakenException)
+            {
+                // A real character already has the name: that one stays, and this fixture is not added.
+            }
+        }
     }
 }

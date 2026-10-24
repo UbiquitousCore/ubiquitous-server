@@ -44,14 +44,15 @@ setup *args:
     ./setup.sh {{args}}
 
 # Run the server for development: saves stay as editable JSON files, no
-# Docker, no Postgres. Reads server.json when it exists (`just setup`).
+# Docker, no Postgres, and it rebuilds and restarts when source files change.
+# Reads server.json when it exists (`just setup`).
 # Another port: `just dev --port 9000`, or `just port=9000 up` for any recipe.
 dev *args:
     #!/usr/bin/env bash
     set -euo pipefail
     config=()
     if [ -f server.json ]; then config=(--config server.json); fi
-    UBIQUITOUS_POSTGRES_CONNECTION_STRING= dotnet run --project src/server -- --port {{port}} ${config[@]+"${config[@]}"} {{args}}
+    UBIQUITOUS_POSTGRES_CONNECTION_STRING= dotnet watch --project src/server --non-interactive run -- --port {{port}} ${config[@]+"${config[@]}"} {{args}}
 
 # Run the full stack in Docker: the server plus Postgres, on the same port
 # as `just dev`. Reads server.json too when it exists; `just up

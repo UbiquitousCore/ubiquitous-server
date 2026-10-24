@@ -24,30 +24,7 @@ public sealed partial class PlaySession
             [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(result.Level),
         };
 
-        if (result.LevelsGained > 0)
-        {
-            _level = result.Level;
-            _character = _character with { Level = _level };
-            _combat.EnterAsCharacter(_character.Class, _level, PlayerUnitId, _character.Health);
-            RefreshWornAttributes();
-            _spells.EnterAsCharacter(_character.Class, _level);
-            var staminaBonus = _attributeModifiers.GetFlatAmount(PlayerUnitId, AttributeIds.Stamina, now);
-            var wisdomBonus = _attributeModifiers.GetFlatAmount(PlayerUnitId, AttributeIds.Wisdom, now);
-            values[WireCodes.UnitValue.Level] = _level;
-            values[WireCodes.UnitValue.Health] = _combat.PlayerHealth;
-            values[WireCodes.UnitValue.MaxHealth] = _combat.EffectiveMaxHealth(staminaBonus);
-            values[WireCodes.UnitValue.Power] = _spells.Power;
-            values[WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(wisdomBonus);
-            AddAttributesTo(values, now);
-            MarkUnitValues(PlayerUnitId, new Dictionary<string, int>
-            {
-                [WireCodes.UnitValue.Level] = _level,
-                [WireCodes.UnitValue.Health] = _combat.PlayerHealth,
-                [WireCodes.UnitValue.MaxHealth] = _combat.EffectiveMaxHealth(staminaBonus),
-                [WireCodes.UnitValue.Power] = _spells.Power,
-                [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(wisdomBonus),
-            }, now);
-        }
+        if (result.LevelsGained > 0) ApplyLevel(result.Level, _character.Health, values, now);
 
         var responses = new List<string>
         {
@@ -73,5 +50,31 @@ public sealed partial class PlaySession
         responses.Add(Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(
             new Dictionary<string, int> { [WireCodes.UnitValue.Gold] = _belongings.Currency })));
         return responses;
+    }
+
+    // Everything that follows from the level changing, and what to tell the client of it.
+    private void ApplyLevel(int level, int? health, Dictionary<string, int> values, DateTimeOffset now)
+    {
+        _level = level;
+        _character = _character! with { Level = _level };
+        _combat.EnterAsCharacter(_character.Class, _level, PlayerUnitId, health);
+        RefreshWornAttributes();
+        _spells.EnterAsCharacter(_character.Class, _level);
+        var staminaBonus = _attributeModifiers.GetFlatAmount(PlayerUnitId, AttributeIds.Stamina, now);
+        var wisdomBonus = _attributeModifiers.GetFlatAmount(PlayerUnitId, AttributeIds.Wisdom, now);
+        values[WireCodes.UnitValue.Level] = _level;
+        values[WireCodes.UnitValue.Health] = _combat.PlayerHealth;
+        values[WireCodes.UnitValue.MaxHealth] = _combat.EffectiveMaxHealth(staminaBonus);
+        values[WireCodes.UnitValue.Power] = _spells.Power;
+        values[WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(wisdomBonus);
+        AddAttributesTo(values, now);
+        MarkUnitValues(PlayerUnitId, new Dictionary<string, int>
+        {
+            [WireCodes.UnitValue.Level] = _level,
+            [WireCodes.UnitValue.Health] = _combat.PlayerHealth,
+            [WireCodes.UnitValue.MaxHealth] = _combat.EffectiveMaxHealth(staminaBonus),
+            [WireCodes.UnitValue.Power] = _spells.Power,
+            [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(wisdomBonus),
+        }, now);
     }
 }

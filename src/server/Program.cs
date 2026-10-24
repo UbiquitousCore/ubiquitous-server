@@ -156,7 +156,8 @@ public static class Program
         try
         {
             return await AccountCommands.RunAsync(
-                args, SessionStoreFactory.OpenAccountAdmin(options, postgres), ReadPassword, Console.Out, Console.Error);
+                AccountCommands.Words(args), SessionStoreFactory.OpenAccountAdmin(options, postgres), ReadPassword,
+                Console.Out, Console.Error);
         }
         catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException or UnauthorizedAccessException
             or NpgsqlException)

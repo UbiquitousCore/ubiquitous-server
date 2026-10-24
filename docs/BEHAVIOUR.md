@@ -25,6 +25,10 @@ comes from is in `PROVENANCE.md`.
 - `account.logout` signs the connection out (reply `account.loggedOut`) so it can
   log in again; refused with `not_authenticated` before a login and `invalid_state`
   while a character is in the world.
+- A vendor row for a spell lesson carries `lesson: "learned"` when the character knows
+  everything it teaches, else `lesson: "cannot"` when it could not be read now (another
+  class, too low a level, a missing skill: the rules of using it). Any other row has no
+  `lesson`; the client lays "Already learned" or "Can't learn" over the card.
 - `characters.create` is refused (`characters.created {ok:false, code}`) for a
   fifth character, a name that is not 2-16 letters or is taken (ignoring case),
   a race/class pair with no loadout, or an out-of-range gender or look.
@@ -32,6 +36,20 @@ comes from is in `PROVENANCE.md`.
   already in the world is refused and the other connection is left alone.
 - `characters.return` saves and leaves exactly as a disconnect does, then
   keeps the connection signed in for `characters.list` / `characters.choose`.
+- `admin.giveItem {entry, count}` and `admin.giveGold {gold}` add to the sender's own
+  character, for a GM account only (`forbidden` otherwise). The item must exist
+  and the count is 1-1000; gold is 1-100,000 whole gold. A full bag answers
+  `item.refused`. Items arrive as `inventory.itemAdded`, gold as
+  `player.valuesChanged`. Each is logged with the account name.
+- `admin.setLevel {level}` (1 to 60) and `admin.learnSpells` are GM-only too. A new level
+  restores health and power, resets experience, and sends `player.valuesChanged` and
+  `talent.state`, plus `player.expGained` with `levelUp` when the level went up, so the
+  banner, sound and glow play as for an earned level. Learning teaches every rank of
+  the character's class and of the talent abilities it holds that the current level
+  has reached (the level of the lesson that teaches it), as `spell.learned` and
+  `spell.book`; with nothing new it answers `invalid_state`. A level change also sends a
+  fresh `spell.book`: ranks above the new level are forgotten, and an action button
+  that held one takes the highest rank still known, or empties.
 - `dev.enterWorld {characterRef}` skips login and joins the same entry path.
 
 ## World entry, maps and movement

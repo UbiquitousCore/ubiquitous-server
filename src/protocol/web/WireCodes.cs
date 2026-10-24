@@ -154,6 +154,12 @@ public static class WireCodes
         public const string Prerequisite = "prerequisite";
     }
 
+    public static class Lesson
+    {
+        public const string Learned = "learned";
+        public const string Cannot = "cannot";
+    }
+
     public static class UnitValue
     {
         public const string Level = "level";

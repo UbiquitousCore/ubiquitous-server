@@ -102,7 +102,7 @@ public sealed class AccountCommandsTests : IDisposable
         var authenticator = new AccountAuthenticator(store, iterations: Iterations);
         Assert.False((await authenticator.AuthenticateAsync("alice", "first password")).Ok);
         Assert.True((await authenticator.AuthenticateAsync("alice", "second password")).Ok);
-        Assert.Equal($"1\talice{Environment.NewLine}2\tbob{Environment.NewLine}", listed.Out);
+        Assert.Equal($"{FileAccountStore.FirstAccountId}\talice{Environment.NewLine}{FileAccountStore.FirstAccountId + 1}\tbob{Environment.NewLine}", listed.Out);
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class AccountCommandsTests : IDisposable
 
         Assert.Equal(0, (await Run(store, ["gm", "alice", "on"])).Code);
         Assert.True((await store.FindByUserIdAsync("alice"))!.IsAdmin);
-        Assert.Equal($"1\talice\tGM{Environment.NewLine}", (await Run(store, ["list"])).Out);
+        Assert.Equal($"{FileAccountStore.FirstAccountId}\talice\tGM{Environment.NewLine}", (await Run(store, ["list"])).Out);
 
         await Run(store, ["gm", "alice", "off"]);
         Assert.False((await store.FindByUserIdAsync("alice"))!.IsAdmin);
@@ -155,5 +155,25 @@ public sealed class AccountCommandsTests : IDisposable
 
         Assert.False(options.ForStore(usesPostgres: true).DevelopmentAccountsEnabled);
         Assert.True(options.ForStore(usesPostgres: false).DevelopmentAccountsEnabled);
+    }
+
+    [Fact]
+    public async Task ListingAndFailedCommands_LeaveTheStateDirectoryAlone()
+    {
+        var store = OpenStore();
+
+        await Run(store, ["list"]);
+        await Run(store, ["gm", "nobody", "on"]);
+        await Run(store, ["create", "ab"], "long enough", "long enough");
+
+        Assert.False(Directory.Exists(_directory) && Directory.EnumerateFileSystemEntries(_directory).Any());
+    }
+
+    [Fact]
+    public void TheCommandWords_StopAtTheFirstOption()
+    {
+        Assert.Equal(["create", "alice"], AccountCommands.Words(["create", "alice", "--config", "server.json"]));
+        Assert.Equal(["list"], AccountCommands.Words(["list"]));
+        Assert.Empty(AccountCommands.Words(["--config", "server.json"]));
     }
 }
