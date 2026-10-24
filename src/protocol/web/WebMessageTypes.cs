@@ -128,6 +128,8 @@ public static partial class WebMessageTypes
     public const string AdminGiveItem = "admin.giveItem";
     public const string AdminGiveGold = "admin.giveGold";
     public const string AdminSetLevel = "admin.setLevel";
+    public const string AdminSetInvincible = "admin.setInvincible";
+    public const string AdminInvincible = "admin.invincible";
     public const string AdminLearnSpells = "admin.learnSpells";
     public const string BusFare = "bus.fare";
     public const string SpellRequest = "spell.request";

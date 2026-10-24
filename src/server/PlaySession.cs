@@ -454,6 +454,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 WebMessageTypes.AdminGiveItem => AdminGiveItem(envelope.Payload),
                 WebMessageTypes.AdminGiveGold => AdminGiveGold(envelope.Payload),
                 WebMessageTypes.AdminSetLevel => AdminSetLevel(envelope.Payload),
+                WebMessageTypes.AdminSetInvincible => AdminSetInvincible(envelope.Payload),
                 WebMessageTypes.AdminLearnSpells => AdminLearnSpells(),
                 WebMessageTypes.DevStressTest => StressTest(envelope.Payload),
                 WebMessageTypes.InventoryMove => InventoryMove(envelope.Payload),

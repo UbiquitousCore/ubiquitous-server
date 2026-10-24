@@ -50,6 +50,9 @@ comes from is in `PROVENANCE.md`.
   `spell.book`; with nothing new it answers `invalid_state`. A level change also sends a
   fresh `spell.book`: ranks above the new level are forgotten, and an action button
   that held one takes the highest rank still known, or empties.
+- `admin.setInvincible {on}` is GM-only. While on, nothing damages the character (creatures,
+  spells, auras, other players); the server answers `admin.invincible {on}`. It lasts until
+  the character leaves the world, and each entry starts without it.
 - `dev.enterWorld {characterRef}` skips login and joins the same entry path.
 
 ## World entry, maps and movement

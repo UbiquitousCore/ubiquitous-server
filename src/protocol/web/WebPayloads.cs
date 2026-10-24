@@ -544,6 +544,8 @@ public sealed record AdminGiveItemPayload(
     [property: JsonPropertyName("entry")] int Entry,
     [property: JsonPropertyName("count")] int Count);
 
+public sealed record AdminInvinciblePayload([property: JsonPropertyName("on")] bool On);
+
 public sealed record AdminSetLevelPayload([property: JsonPropertyName("level")] int Level);
 
 public sealed record AdminGiveGoldPayload([property: JsonPropertyName("gold")] int Gold);
