@@ -171,6 +171,12 @@ inspect archive=tables:
     @test -n "{{archive}}" || { echo "set UBIQUITOUS_TABLES, or: just inspect /path/to/tables.bin"; exit 2; }
     dotnet run --project tools/asset-extractor -- --inspect "{{archive}}"
 
+# Capture a build fingerprint (table shapes as JSON), optionally comparing
+# against a golden file: just fingerprint /path/to/tables.bin --golden tools/asset-extractor/fingerprints/1.1.4.json
+fingerprint archive=tables *args='':
+    @test -n "{{archive}}" || { echo "set UBIQUITOUS_TABLES, or: just fingerprint /path/to/tables.bin"; exit 2; }
+    dotnet run --project tools/asset-extractor -- --fingerprint "{{archive}}" {{args}}
+
 # Unpack a client archive, once, so later imports read plain files.
 extract archive=tables:
     @test -n "{{archive}}" || { echo "set UBIQUITOUS_TABLES, or: just extract /path/to/tables.bin"; exit 2; }

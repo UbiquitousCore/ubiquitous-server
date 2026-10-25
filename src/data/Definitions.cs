@@ -101,6 +101,12 @@ public sealed record SpellEffectDefinition(
     uint TargetCondition = 0,
     uint CasterCondition = 0);
 
+// A dungeon completion reward: finishing the map on the given difficulty
+// grants the item. The two amounts' meaning (a money figure and a second,
+// sometimes zero, figure) is not settled by the tables.
+public sealed record DungeonRewardDefinition(
+    uint Id, ushort MapId, uint Difficulty, uint ItemId, uint AmountA, uint AmountB);
+
 public sealed record MapDefinition(
     ushort Id, string InternalName, string? File = null,
     float? MinX = null, float? MaxX = null, float? MinZ = null, float? MaxZ = null,

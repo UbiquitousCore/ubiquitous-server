@@ -50,6 +50,12 @@ public static class Program
             Console.WriteLine("  asset-extractor --synthetic --out <dir>   Write a minimal synthetic package.");
             Console.WriteLine("  asset-extractor --check <dir>              Validate an existing package.");
             Console.WriteLine("  asset-extractor --inspect <archive>        List the tables a packed archive carries.");
+            Console.WriteLine("  asset-extractor --fingerprint <archive|dir> [--out <file>] [--golden <file>]");
+            Console.WriteLine("                                              Capture the shape (rows, cols, format)");
+            Console.WriteLine("                                              of every tables/*.tbl entry as JSON — the");
+            Console.WriteLine("                                              build fingerprint. With --golden, compare");
+            Console.WriteLine("                                              the capture against a golden file and fail");
+            Console.WriteLine("                                              on shape drift (row-count drift is a note).");
             Console.WriteLine("  asset-extractor --extract <archive> --out <dir>");
             Console.WriteLine("                                              Unpack every .tbl entry to <dir>, once,");
             Console.WriteLine("                                              so later work reads plain files instead");
@@ -124,6 +130,12 @@ public static class Program
         if (inspectPath is not null)
         {
             return Inspect(inspectPath);
+        }
+
+        var fingerprintPath = GetValue("--fingerprint");
+        if (fingerprintPath is not null)
+        {
+            return Fingerprint(fingerprintPath, GetValue("--out"), GetValue("--golden"));
         }
 
         var extractPath = GetValue("--extract");
@@ -402,6 +414,92 @@ public static class Program
     private static IReadOnlyDictionary<string, byte[]>? ReadArchive(string archivePath) =>
         ReadArchive(archivePath, out _);
 
+    private static IReadOnlyDictionary<string, byte[]>? ReadFingerprintSource(string path, out string sourceHash)
+    {
+        if (Directory.Exists(path))
+        {
+            var entries = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+            foreach (var file in Directory.GetFiles(path))
+            {
+                if (!file.EndsWith(".tbl", StringComparison.OrdinalIgnoreCase)) continue;
+                entries[$"tables/{Path.GetFileName(file)}"] = File.ReadAllBytes(file);
+            }
+
+            if (entries.Count == 0)
+            {
+                Console.WriteLine($"No .tbl files under {path}.");
+                sourceHash = string.Empty;
+                return null;
+            }
+
+            sourceHash = TableFingerprint.HashDirectory(entries);
+            return entries;
+        }
+
+        if (ReadArchive(path, out var archiveBytes) is not { } archived)
+        {
+            sourceHash = string.Empty;
+            return null;
+        }
+
+        sourceHash = PackageImporter.HashArchive(archiveBytes);
+        return archived;
+    }
+
+    private static int Fingerprint(string source, string? outPath, string? goldenPath)
+    {
+        if (ReadFingerprintSource(source, out var sourceHash) is not { } entries)
+        {
+            return 1;
+        }
+
+        var captured = TableFingerprint.Capture(entries, sourceHash);
+        Console.WriteLine($"{captured.Tables.Count} tables, source {sourceHash}.");
+        if (outPath is not null)
+        {
+            captured.Save(outPath);
+            Console.WriteLine($"Wrote fingerprint to {outPath}.");
+        }
+        else if (goldenPath is null)
+        {
+            foreach (var table in captured.Tables)
+            {
+                Console.WriteLine(table.Error is not null
+                    ? $"  {table.Name}: unreadable ({table.Error})"
+                    : $"  {table.Name}: {table.Rows} rows, {table.Cols} cols, format \"{table.Format}\"");
+            }
+        }
+
+        if (goldenPath is null) return 0;
+
+        TableFingerprint golden;
+        try
+        {
+            golden = TableFingerprint.Load(goldenPath);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException)
+        {
+            Console.WriteLine($"Could not read golden file: {ex.Message}");
+            return 1;
+        }
+
+        var problems = TableFingerprint.Compare(golden, captured);
+        var failures = problems.Where(p => !TableFingerprint.IsNote(p)).ToList();
+        foreach (var problem in problems)
+        {
+            Console.WriteLine($"  {(TableFingerprint.IsNote(problem) ? "~" : "!")} {problem}");
+        }
+
+        if (failures.Count > 0)
+        {
+            Console.WriteLine($"{failures.Count} shape difference(s) from {goldenPath}.");
+            return 1;
+        }
+
+        Console.WriteLine($"Matches {goldenPath}.");
+        return 0;
+    }
+
     private static int Inspect(string archivePath)
     {
         if (ReadArchive(archivePath) is not { } entries)
@@ -586,6 +684,24 @@ public static class Program
         return copied == 0 ? 1 : 0;
     }
 
+    private static void ReportBuildIdentity(IReadOnlyDictionary<string, byte[]> entries)
+    {
+        // Phase 1: name the build before the pinned column layouts run, so a
+        // new build fails with its drift listed, not a bare column error.
+        var identity = TableFingerprint.Capture(entries, sourceHash: string.Empty);
+        var build = TableSchemas.IdentifyBuild(identity);
+        if (build != "unknown")
+        {
+            Console.WriteLine($"Tables read as build {build} ({identity.Tables.Count} tables).");
+            return;
+        }
+
+        Console.WriteLine("Tables match no pinned build; drift from 1.1.4 on load-bearing tables:");
+        var drift = TableSchemas.DescribeDrift(identity, "1.1.4");
+        if (drift.Count == 0) Console.WriteLine("  (shapes match; new or renamed tables only)");
+        foreach (var line in drift) Console.WriteLine($"  ! {line}");
+    }
+
     private static int Import(string archivePath, string outDirectory, IReadOnlyDictionary<string, byte[]>? worldArchives = null)
     {
         if (ReadArchive(archivePath, out var archiveBytes) is not { } entries)
@@ -593,6 +709,7 @@ public static class Program
             return 1;
         }
 
+        ReportBuildIdentity(entries);
         PackageImporter.ImportResult result;
         try
         {
@@ -604,6 +721,7 @@ public static class Program
             return 1;
         }
 
+        WriteImportFingerprint(entries, outDirectory);
         ReportImportResult(outDirectory, result);
         return 0;
     }
@@ -617,6 +735,7 @@ public static class Program
             entries[$"tables/{Path.GetFileName(file)}"] = File.ReadAllBytes(file);
         }
 
+        ReportBuildIdentity(entries);
         PackageImporter.ImportResult result;
         try
         {
@@ -628,13 +747,38 @@ public static class Program
             return 1;
         }
 
+        WriteImportFingerprint(entries, outDirectory);
         ReportImportResult(outDirectory, result);
         return 0;
     }
 
+    private static void WriteImportFingerprint(IReadOnlyDictionary<string, byte[]> entries, string outDirectory)
+    {
+        try
+        {
+            var names = entries.Keys.OrderBy(n => n, StringComparer.Ordinal).ToList();
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            foreach (var name in names)
+            {
+                var nameBytes = System.Text.Encoding.UTF8.GetBytes(name);
+                sha.TransformBlock(nameBytes, 0, nameBytes.Length, null, 0);
+                sha.TransformBlock(entries[name], 0, entries[name].Length, null, 0);
+            }
+
+            sha.TransformFinalBlock([], 0, 0);
+            TableFingerprint.Capture(entries, Convert.ToHexString(sha.Hash ?? []))
+                .Save(Path.Combine(outDirectory, TableFingerprint.FileName));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Console.WriteLine($"Warning: could not write fingerprint: {ex.Message}");
+        }
+    }
+
     private static void ReportImportResult(string outDirectory, PackageImporter.ImportResult result)
     {
-        Console.WriteLine($"Wrote package to {outDirectory}:");
+        Console.WriteLine($"Wrote package to {outDirectory} (build {result.Build}, " +
+            $"spell effect slots {result.SpellEffectSlotColumns}):");
         Console.WriteLine($"  {result.MapCount} maps, {result.CreatureCount} creatures, " +
             $"{result.SpawnCount} creature spawns ({result.DroppedSpawnCount} dropped: unresolvable creature entry), " +
             $"{result.SpellCount} spells, {result.ItemCount} items, " +
@@ -653,6 +797,6 @@ public static class Program
             $"{result.CreatureQuestFinisherCount} creature quest finishers, " +
             $"{result.CreatureLootTableCount} per-creature loot tables, " +
             $"{result.GossipMenuCount} conversation menus ({result.DroppedGossipTeleportCount} teleport offers dropped), " +
-            $"{result.TalentTreeCount} talent trees.");
+            $"{result.TalentTreeCount} talent trees, {result.DungeonRewardCount} dungeon rewards.");
     }
 }

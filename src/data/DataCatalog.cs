@@ -120,6 +120,7 @@ public sealed class DataCatalog
         "storageUpgrades",
         "staticObjectTypes",
         "talentTrees",
+        "dungeonRewards",
         PlayerLookDefinition.Dataset,
     };
 
@@ -448,6 +449,30 @@ public sealed class DataCatalog
             {
                 throw new InvalidDataException(
                     $"Dataset 'questRewards' references missing quest {reward.QuestId}.");
+            }
+        }
+
+        return rewards;
+    }
+
+    public IReadOnlyList<DungeonRewardDefinition> LoadDungeonRewards()
+    {
+        if (Manifest.Datasets is null || !Manifest.Datasets.ContainsKey("dungeonRewards"))
+        {
+            return [];
+        }
+
+        var mapIds = LoadMaps().Select(map => map.Id).ToHashSet();
+        var itemIds = LoadItems().Select(item => item.Id).ToHashSet();
+        var rewards = LoadDefinitions<DungeonRewardDefinition>("dungeonRewards", "dungeon rewards");
+
+        foreach (var reward in rewards)
+        {
+            ValidateMapReference("dungeonRewards", reward.Id, reward.MapId, mapIds);
+            if (!itemIds.Contains(reward.ItemId))
+            {
+                throw new InvalidDataException(
+                    $"Dataset 'dungeonRewards' references missing item {reward.ItemId}.");
             }
         }
 
