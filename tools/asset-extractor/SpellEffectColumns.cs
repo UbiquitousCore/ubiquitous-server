@@ -2,6 +2,25 @@ namespace Ubiquitous.AssetExtractor;
 
 public static class SpellEffectColumns
 {
+    public static SpellEffectTableColumns Resolve(FTableDocument document)
+    {
+        const string Table = "tables/spell_effect.tbl";
+        string format = document.Header.ColumnTypes;
+        if (TableSchemas.Matches(Table, format, "1.1.4")) return Build114;
+        TableShape.Expect(Table, format,
+            (Build114.Id, "uk"),
+            (Build114.Target, "iu"),
+            (Build114.Type, "iu"),
+            (Build114.SubType, "iu"),
+            (Build114.School, "iu"),
+            (Build114.BaseValue, "iu"),
+            (Build114.Spread, "iu"),
+            (Build114.EffectArgument, "u"),
+            (Build114.TargetCondition, "u"),
+            (Build114.CasterCondition, "u"));
+        return Build114;
+    }
+
     public static readonly SpellEffectTableColumns Build114 = new(
         Id: 0,
         Type: 6,

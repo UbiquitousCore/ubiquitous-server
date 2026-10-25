@@ -3,6 +3,7 @@
     <PackageReference Include="DotRecast.Core" />
     <PackageReference Include="DotRecast.Recast" />
     <PackageReference Include="DotRecast.Detour" />
+    <PackageReference Include="SharpCompress" />
   </ItemGroup>
 
   <ItemGroup>
