@@ -101,32 +101,45 @@ public static class SpellEffectClassifier
         };
     }
 
+    // Classic roles, derived from the slot order: the first slot leads,
+    // the next two are the secondary pair the slow/mount/trigger searches
+    // scan, and the third doubles as the aura-merge slot. Callers pass the
+    // resolved EffectSlots; the two-argument overload keeps the 1.1.4 order
+    // for the existing tests.
     public static SpellDefinition ApplySlots(SpellDefinition spell, IReadOnlyList<(int Column, SpellEffectDefinition? Effect)> slots)
+        => ApplySlots(spell, slots, slots.Select(slot => slot.Column).OrderBy(column => column).ToList());
+
+    public static SpellDefinition ApplySlots(SpellDefinition spell, IReadOnlyList<(int Column, SpellEffectDefinition? Effect)> slots, IReadOnlyList<int> slotOrder)
     {
+        if (slotOrder.Count == 0) return spell;
         SpellEffectDefinition? At(int column) => slots.FirstOrDefault(slot => slot.Column == column).Effect;
         static bool Unconditioned(SpellEffectDefinition effect) => effect.TargetCondition == 0 && effect.CasterCondition == 0;
 
-        var used = new HashSet<int> { 33 };
-        if (At(33) is { } lead) spell = Apply(spell with { EffectTarget = lead.Target }, lead);
+        int leadColumn = slotOrder[0];
+        var secondary = slotOrder.Skip(1).Take(2).ToList();
+        int? mergeColumn = slotOrder.Count >= 3 ? slotOrder[2] : null;
 
-        if (At(35) is { } second && Unconditioned(second))
+        var used = new HashSet<int> { leadColumn };
+        if (At(leadColumn) is { } lead) spell = Apply(spell with { EffectTarget = lead.Target }, lead);
+
+        if (mergeColumn is { } merge && At(merge) is { } second && Unconditioned(second))
         {
             var withSecond = Apply(Blank(spell, second), second);
             if (spell.AuraTriggerSpellId is null && withSecond.AuraTriggerSpellId is not null)
             {
                 spell = spell with { AuraTriggerSpellId = withSecond.AuraTriggerSpellId, AuraTriggerChancePercent = withSecond.AuraTriggerChancePercent };
-                used.Add(35);
+                used.Add(merge);
             }
             else if (!spell.AuraChill && withSecond.AuraChill)
             {
                 spell = spell with { AuraChill = true };
-                used.Add(35);
+                used.Add(merge);
             }
         }
 
         if (spell.EffectDamage is not null && spell.AuraSlowPercent is null)
         {
-            foreach (var column in new[] { 34, 35 })
+            foreach (var column in secondary)
             {
                 if (used.Contains(column) || At(column) is not { } candidate || !Unconditioned(candidate)) continue;
                 var withSlow = Apply(Blank(spell, candidate), candidate);
@@ -139,7 +152,7 @@ public static class SpellEffectClassifier
 
         if (spell.AuraMountId is not null)
         {
-            foreach (var column in new[] { 34, 35 })
+            foreach (var column in secondary)
             {
                 if (used.Contains(column) || At(column) is not { } candidate || !Unconditioned(candidate)) continue;
                 var withSpeed = Apply(Blank(spell, candidate), candidate);
@@ -150,7 +163,7 @@ public static class SpellEffectClassifier
             }
         }
 
-        foreach (var column in new[] { 34, 35 })
+        foreach (var column in secondary)
         {
             if (spell.EffectTriggerSpellId is not null) break;
             if (used.Contains(column)) continue;

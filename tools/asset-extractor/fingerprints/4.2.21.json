@@ -1,0 +1,2958 @@
+{
+  "sourceHash": "F68930281074C7611A4FAC06D376617BB4F079AC674F0A944664E6F8A176C9B5",
+  "tables": [
+    {
+      "name": "tables/String_AI_.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_ar.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_bi.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_br.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_de.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_en.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_es.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_fr.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_ind.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_it.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_ja.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_ko.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_pt.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_ru.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_tc.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_th.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_tr.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_tw.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_zh.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_AI_zt.tbl",
+      "rows": 3,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_ar.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_bi.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_br.tbl",
+      "rows": 283,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_de.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_en.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_es.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_fr.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_ind.tbl",
+      "rows": 1589,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_it.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_ja.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_ko.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_pt.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_ru.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_tc.tbl",
+      "rows": 1589,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_th.tbl",
+      "rows": 1589,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_tr.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_tw.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_zh.tbl",
+      "rows": 2391,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Achievement_zt.tbl",
+      "rows": 1673,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_ar.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_bi.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_br.tbl",
+      "rows": 5,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_de.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_en.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_es.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_fr.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_ind.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_it.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_ja.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_ko.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_pt.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_ru.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_tc.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_th.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_tr.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_tw.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_zh.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Character_zt.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_ar.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_bi.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_br.tbl",
+      "rows": 2622,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_de.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_en.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_es.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_fr.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_ind.tbl",
+      "rows": 5931,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_it.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_ja.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_ko.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_pt.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_ru.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_tc.tbl",
+      "rows": 5931,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_th.tbl",
+      "rows": 5931,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_tr.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_tw.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_zh.tbl",
+      "rows": 7969,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Creature_zt.tbl",
+      "rows": 6149,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_ar.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_bi.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_de.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_en.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_es.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_fr.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_it.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_ja.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_ko.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_pt.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_ru.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_tr.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_tw.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_zh.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_DailyActivity_zt.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_ar.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_bi.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_de.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_en.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_es.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_fr.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_ind.tbl",
+      "rows": 183462,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_it.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_ja.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_ko.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_pt.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_ru.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_tc.tbl",
+      "rows": 183462,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_th.tbl",
+      "rows": 183462,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_tr.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_tw.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_zh.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_EventCalendar_zt.tbl",
+      "rows": 6,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_ar.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_bi.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_de.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_en.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_es.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_fr.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_ind.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_it.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_ja.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_ko.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_pt.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_ru.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_tc.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_th.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_tr.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_tw.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_zh.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Invitation_zt.tbl",
+      "rows": 13,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_ar.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_bi.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_br.tbl",
+      "rows": 5184,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_de.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_en.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_es.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_fr.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_ind.tbl",
+      "rows": 11420,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_it.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_ja.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_ko.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_pt.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_ru.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_tc.tbl",
+      "rows": 11420,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_th.tbl",
+      "rows": 11420,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_tr.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_tw.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_zh.tbl",
+      "rows": 16381,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Item_zt.tbl",
+      "rows": 11778,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_ar.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_bi.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_br.tbl",
+      "rows": 36,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_de.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_en.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_es.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_fr.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_ind.tbl",
+      "rows": 63,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_it.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_ja.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_ko.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_pt.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_ru.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_tc.tbl",
+      "rows": 63,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_th.tbl",
+      "rows": 63,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_tr.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_tw.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_zh.tbl",
+      "rows": 110,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Mail_zt.tbl",
+      "rows": 67,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_ar.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_bi.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_br.tbl",
+      "rows": 538,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_de.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_en.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_es.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_fr.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_ind.tbl",
+      "rows": 987,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_it.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_ja.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_ko.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_pt.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_ru.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_tc.tbl",
+      "rows": 987,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_th.tbl",
+      "rows": 987,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_tr.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_tw.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_zh.tbl",
+      "rows": 1429,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Menu_zt.tbl",
+      "rows": 1051,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_ar.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_bi.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_br.tbl",
+      "rows": 4590,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_de.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_en.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_es.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_fr.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_ind.tbl",
+      "rows": 12986,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_it.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_ja.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_ko.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_pt.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_ru.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_tc.tbl",
+      "rows": 12986,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_th.tbl",
+      "rows": 12986,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_tr.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_tw.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_zh.tbl",
+      "rows": 16371,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Quest_zt.tbl",
+      "rows": 13570,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_ar.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_bi.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_br.tbl",
+      "rows": 260,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_de.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_en.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_es.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_fr.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_ind.tbl",
+      "rows": 545,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_it.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_ja.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_ko.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_pt.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_ru.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_tc.tbl",
+      "rows": 545,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_th.tbl",
+      "rows": 545,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_tr.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_tw.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_zh.tbl",
+      "rows": 763,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Script_zt.tbl",
+      "rows": 589,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_ar.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_bi.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_br.tbl",
+      "rows": 95,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_de.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_en.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_es.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_fr.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_ind.tbl",
+      "rows": 125,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_it.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_ja.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_ko.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_pt.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_ru.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_tc.tbl",
+      "rows": 125,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_th.tbl",
+      "rows": 125,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_tr.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_tw.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_zh.tbl",
+      "rows": 131,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_ShoutContent_zt.tbl",
+      "rows": 125,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_ar.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_bi.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_br.tbl",
+      "rows": 9562,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_de.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_en.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_es.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_fr.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_ind.tbl",
+      "rows": 18111,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_it.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_ja.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_ko.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_pt.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_ru.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_tc.tbl",
+      "rows": 18111,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_th.tbl",
+      "rows": 18111,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_tr.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_tw.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_zh.tbl",
+      "rows": 30490,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Spell_zt.tbl",
+      "rows": 19502,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_ar.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_bi.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_br.tbl",
+      "rows": 6245,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_de.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_en.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_es.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_fr.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_ind.tbl",
+      "rows": 23344,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_it.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_ja.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_ko.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_pt.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_ru.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_tc.tbl",
+      "rows": 23344,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_th.tbl",
+      "rows": 23344,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_tr.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_tw.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_zh.tbl",
+      "rows": 43811,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_StaticObject_zt.tbl",
+      "rows": 25728,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_ar.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_bi.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_de.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_en.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_es.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_fr.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_ind.tbl",
+      "rows": 10,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_it.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_ja.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_ko.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_pt.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_ru.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_tc.tbl",
+      "rows": 10,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_th.tbl",
+      "rows": 10,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_tr.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_tw.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_zh.tbl",
+      "rows": 12,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Sticker_zt.tbl",
+      "rows": 10,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_ar.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_bi.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_de.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_en.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_es.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_fr.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_ind.tbl",
+      "rows": 795,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_it.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_ja.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_ko.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_pt.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_ru.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_tc.tbl",
+      "rows": 795,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_th.tbl",
+      "rows": 795,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_tr.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_tw.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_zh.tbl",
+      "rows": 1460,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Talent_zt.tbl",
+      "rows": 1058,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_ar.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_bi.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_de.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_en.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_es.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_fr.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_ind.tbl",
+      "rows": 122,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_it.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_ja.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_ko.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_pt.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_ru.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_tc.tbl",
+      "rows": 122,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_th.tbl",
+      "rows": 122,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_tr.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_tw.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_zh.tbl",
+      "rows": 201,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Title_zt.tbl",
+      "rows": 126,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_ar.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_bi.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_br.tbl",
+      "rows": 222,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_de.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_en.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_es.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_fr.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_ind.tbl",
+      "rows": 483,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_it.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_ja.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_ko.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_pt.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_ru.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_tc.tbl",
+      "rows": 483,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_th.tbl",
+      "rows": 483,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_tr.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_tw.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_zh.tbl",
+      "rows": 648,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_Zones_zt.tbl",
+      "rows": 516,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_ar.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_bi.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_de.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_en.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_es.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_fr.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_ind.tbl",
+      "rows": 57,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_it.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_ja.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_ko.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_pt.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_ru.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_tc.tbl",
+      "rows": 57,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_th.tbl",
+      "rows": 57,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_tr.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_tw.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_zh.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/String_dailyevent_zt.tbl",
+      "rows": 59,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/ZoneSpecialMusic.tbl",
+      "rows": 84,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/achievement.tbl",
+      "rows": 478,
+      "cols": 91,
+      "format": "uiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiuuuuuuuuuuuiiuuuuuuuuuuuuuusuuuuuu"
+    },
+    {
+      "name": "tables/achievement_guild.tbl",
+      "rows": 0,
+      "cols": 85,
+      "format": "uiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiuuuuuuuuuuuiiuuuuuuuuuuuuuus"
+    },
+    {
+      "name": "tables/achievement_type.tbl",
+      "rows": 36,
+      "cols": 3,
+      "format": "uss"
+    },
+    {
+      "name": "tables/c_animationdata.tbl",
+      "rows": 173,
+      "cols": 5,
+      "format": "usuuu"
+    },
+    {
+      "name": "tables/c_sound.tbl",
+      "rows": 1824,
+      "cols": 18,
+      "format": "uuusfffuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/c_sound_bank.tbl",
+      "rows": 33,
+      "cols": 3,
+      "format": "usu"
+    },
+    {
+      "name": "tables/c_spellvisual.tbl",
+      "rows": 1563,
+      "cols": 13,
+      "format": "uuuuuuuuuuuss"
+    },
+    {
+      "name": "tables/c_spellvisualeffect.tbl",
+      "rows": 1207,
+      "cols": 10,
+      "format": "ussiiiuuuu"
+    },
+    {
+      "name": "tables/c_spellvisualstate.tbl",
+      "rows": 2036,
+      "cols": 12,
+      "format": "uuuuuuuuuuus"
+    },
+    {
+      "name": "tables/character_class.tbl",
+      "rows": 5,
+      "cols": 8,
+      "format": "uuuuuuuu"
+    },
+    {
+      "name": "tables/character_race.tbl",
+      "rows": 5,
+      "cols": 7,
+      "format": "uuuuuuu"
+    },
+    {
+      "name": "tables/chat_menu.tbl",
+      "rows": 1433,
+      "cols": 14,
+      "format": "uuuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/creature_ai.tbl",
+      "rows": 3,
+      "cols": 5,
+      "format": "uusss"
+    },
+    {
+      "name": "tables/creature_appearance.tbl",
+      "rows": 6253,
+      "cols": 7,
+      "format": "ukkkuuu"
+    },
+    {
+      "name": "tables/creature_display_filter.tbl",
+      "rows": 1305,
+      "cols": 3,
+      "format": "usu"
+    },
+    {
+      "name": "tables/creature_displayinfo_shortcut.tbl",
+      "rows": 143,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/creature_machant_sell_program.tbl",
+      "rows": 630,
+      "cols": 3,
+      "format": "usu"
+    },
+    {
+      "name": "tables/creature_machant_sell_program_item.tbl",
+      "rows": 5366,
+      "cols": 11,
+      "format": "uuuuuuuuuuu"
+    },
+    {
+      "name": "tables/creature_proto.tbl",
+      "rows": 6253,
+      "cols": 79,
+      "format": "uuuuuuuuuufuuuuuuuuuuuuuuuuuuuuuuuffsuuuuuuuuuuuuuuuuuusuuuuufuuuuufuuuuuuuuuuf"
+    },
+    {
+      "name": "tables/creature_quest_finisher.tbl",
+      "rows": 1693,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/creature_quest_starter.tbl",
+      "rows": 1564,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/creature_shout.tbl",
+      "rows": 131,
+      "cols": 41,
+      "format": "uuuuuuuuuuuuuuuuuuuuuiiiiiiiiiiiiiiiiiiii"
+    },
+    {
+      "name": "tables/creature_skill.tbl",
+      "rows": 2,
+      "cols": 4,
+      "format": "uusu"
+    },
+    {
+      "name": "tables/creature_spawns.tbl",
+      "rows": 22110,
+      "cols": 42,
+      "format": "uuuffffcuuuuuuuuhuuhuuuuuuufuuuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/creature_vender.tbl",
+      "rows": 7,
+      "cols": 5,
+      "format": "uuuuu"
+    },
+    {
+      "name": "tables/creaturedisplayinfo.tbl",
+      "rows": 6478,
+      "cols": 8,
+      "format": "uuuuussu"
+    },
+    {
+      "name": "tables/creaturedisplayinfoextra.tbl",
+      "rows": 5471,
+      "cols": 16,
+      "format": "uiiiuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/creaturemodeldata.tbl",
+      "rows": 867,
+      "cols": 17,
+      "format": "uissssssssssssssu"
+    },
+    {
+      "name": "tables/daily_activity.tbl",
+      "rows": 11,
+      "cols": 9,
+      "format": "uuuuuuuss"
+    },
+    {
+      "name": "tables/daily_activity_reward.tbl",
+      "rows": 6,
+      "cols": 5,
+      "format": "uuuuu"
+    },
+    {
+      "name": "tables/daily_bonus.tbl",
+      "rows": 43,
+      "cols": 24,
+      "format": "usuuuuusssssssssssssssuu"
+    },
+    {
+      "name": "tables/daily_dungeon.tbl",
+      "rows": 15,
+      "cols": 10,
+      "format": "uuuuuuuuuu"
+    },
+    {
+      "name": "tables/dailyevent_type.tbl",
+      "rows": 40,
+      "cols": 8,
+      "format": "uuuuuuss"
+    },
+    {
+      "name": "tables/dungeon_reward.tbl",
+      "rows": 44,
+      "cols": 7,
+      "format": "uuuuuus"
+    },
+    {
+      "name": "tables/event_calendar.tbl",
+      "rows": 2,
+      "cols": 11,
+      "format": "uuuuuuuuuuu"
+    },
+    {
+      "name": "tables/festival.tbl",
+      "rows": 26,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/gemlotto_common.tbl",
+      "rows": 56,
+      "cols": 5,
+      "format": "uuuus"
+    },
+    {
+      "name": "tables/gemlotto_rare.tbl",
+      "rows": 28,
+      "cols": 5,
+      "format": "uuuus"
+    },
+    {
+      "name": "tables/invitation.tbl",
+      "rows": 11,
+      "cols": 17,
+      "format": "uiiiiiiiiiiiiiiii"
+    },
+    {
+      "name": "tables/item_set.tbl",
+      "rows": 170,
+      "cols": 41,
+      "format": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/item_synthetic_cost.tbl",
+      "rows": 12,
+      "cols": 6,
+      "format": "uuuuuu"
+    },
+    {
+      "name": "tables/item_synthetic_initrate.tbl",
+      "rows": 10,
+      "cols": 4,
+      "format": "uuuu"
+    },
+    {
+      "name": "tables/itemdisplayinfo.tbl",
+      "rows": 12460,
+      "cols": 10,
+      "format": "uuussssuuu"
+    },
+    {
+      "name": "tables/itemmodeldata.tbl",
+      "rows": 6340,
+      "cols": 15,
+      "format": "uisssssssssssss"
+    },
+    {
+      "name": "tables/items.tbl",
+      "rows": 12731,
+      "cols": 136,
+      "format": "uuukuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuffuffuuuufuuuuuuuuuuuuukuuuuuuuufuuuuuuuuuuuuuuuusuuuusuuuuuuuuuusuuuuuufsusssuuuuuuuuuu"
+    },
+    {
+      "name": "tables/league_config.tbl",
+      "rows": 5,
+      "cols": 12,
+      "format": "ussuuuuuuuuu"
+    },
+    {
+      "name": "tables/list_faction.tbl",
+      "rows": 3,
+      "cols": 9,
+      "format": "usiiiiiii"
+    },
+    {
+      "name": "tables/map_crc_key.tbl",
+      "rows": 325,
+      "cols": 3,
+      "format": "usu"
+    },
+    {
+      "name": "tables/map_graveyard.tbl",
+      "rows": 299,
+      "cols": 8,
+      "format": "uffffuuu"
+    },
+    {
+      "name": "tables/map_info.tbl",
+      "rows": 60,
+      "cols": 21,
+      "format": "uuuuuffffffussuuufuuu"
+    },
+    {
+      "name": "tables/mount2skill.tbl",
+      "rows": 220,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/mountprototype.tbl",
+      "rows": 250,
+      "cols": 9,
+      "format": "uussuuuus"
+    },
+    {
+      "name": "tables/new_daily_bonus.tbl",
+      "rows": 6,
+      "cols": 38,
+      "format": "uussssssssssssssssssssssssssssssssssss"
+    },
+    {
+      "name": "tables/prefixes.tbl",
+      "rows": 380,
+      "cols": 21,
+      "format": "uuuuuuuuuuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/quests.tbl",
+      "rows": 1707,
+      "cols": 168,
+      "format": "uuuuuuuuuuuuuuuuuuuuuuuukkkkkkkkkkkuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuiiiiiiuiuuuuuuuuuuuusuuuusuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusuuuuuuu"
+    },
+    {
+      "name": "tables/quests_zones.tbl",
+      "rows": 1743,
+      "cols": 10,
+      "format": "uuffffffff"
+    },
+    {
+      "name": "tables/sound_solution.tbl",
+      "rows": 242,
+      "cols": 17,
+      "format": "uuuuuuuuuuuuuuuus"
+    },
+    {
+      "name": "tables/spell_affect_type.tbl",
+      "rows": 26,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/spell_aura_sub.tbl",
+      "rows": 76,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/spell_creation.tbl",
+      "rows": 1110,
+      "cols": 81,
+      "format": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/spell_effect.tbl",
+      "rows": 24013,
+      "cols": 28,
+      "format": "uuuuufuuiiiuuuuuuuuuusssuuuu"
+    },
+    {
+      "name": "tables/spell_imm_sub.tbl",
+      "rows": 70,
+      "cols": 2,
+      "format": "us"
+    },
+    {
+      "name": "tables/spell_new.tbl",
+      "rows": 15949,
+      "cols": 74,
+      "format": "uuusuuuuuusuiuuuuuffffuuuuuuuuuuuuuuuuufuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/spell_shapeshift.tbl",
+      "rows": 22,
+      "cols": 4,
+      "format": "uuuu"
+    },
+    {
+      "name": "tables/spell_skillpool.tbl",
+      "rows": 30,
+      "cols": 4,
+      "format": "usss"
+    },
+    {
+      "name": "tables/spell_skillset.tbl",
+      "rows": 46,
+      "cols": 3,
+      "format": "uus"
+    },
+    {
+      "name": "tables/spell_skillset_skills.tbl",
+      "rows": 185,
+      "cols": 5,
+      "format": "uuuuu"
+    },
+    {
+      "name": "tables/spell_skillset_upgrade.tbl",
+      "rows": 46,
+      "cols": 5,
+      "format": "uusuu"
+    },
+    {
+      "name": "tables/spell_talent.tbl",
+      "rows": 456,
+      "cols": 42,
+      "format": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusuuuuuuu"
+    },
+    {
+      "name": "tables/spell_talent_skills.tbl",
+      "rows": 300,
+      "cols": 4,
+      "format": "uuuu"
+    },
+    {
+      "name": "tables/spell_talent_upgrade.tbl",
+      "rows": 219,
+      "cols": 8,
+      "format": "uuuuusuu"
+    },
+    {
+      "name": "tables/spell_tool_filter.tbl",
+      "rows": 5,
+      "cols": 3,
+      "format": "uuu"
+    },
+    {
+      "name": "tables/spellfilter.tbl",
+      "rows": 1029,
+      "cols": 3,
+      "format": "usu"
+    },
+    {
+      "name": "tables/staticobject_displayinfo.tbl",
+      "rows": 995,
+      "cols": 19,
+      "format": "usuuuuussssssssssss"
+    },
+    {
+      "name": "tables/staticobject_guidepost.tbl",
+      "rows": 87,
+      "cols": 11,
+      "format": "uuuuuuuuuuu"
+    },
+    {
+      "name": "tables/staticobject_proto.tbl",
+      "rows": 1113,
+      "cols": 20,
+      "format": "uuuuuuufuuuuuuuuuuuu"
+    },
+    {
+      "name": "tables/staticobject_quest_finisher.tbl",
+      "rows": 9,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/staticobject_quest_item_binding.tbl",
+      "rows": 159,
+      "cols": 4,
+      "format": "uuuu"
+    },
+    {
+      "name": "tables/staticobject_quest_starter.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/staticobject_spawns.tbl",
+      "rows": 8532,
+      "cols": 16,
+      "format": "uuuffffffuufffuf"
+    },
+    {
+      "name": "tables/sticker.tbl",
+      "rows": 60,
+      "cols": 9,
+      "format": "uiiiiiiss"
+    },
+    {
+      "name": "tables/sticker_package.tbl",
+      "rows": 12,
+      "cols": 4,
+      "format": "uiii"
+    },
+    {
+      "name": "tables/sticker_price.tbl",
+      "rows": 0,
+      "cols": 3,
+      "format": "uii"
+    },
+    {
+      "name": "tables/storage_upgrade.tbl",
+      "rows": 96,
+      "cols": 8,
+      "format": "uuuuuuuu"
+    },
+    {
+      "name": "tables/t_bus_route.tbl",
+      "rows": 81,
+      "cols": 6,
+      "format": "uuuuuu"
+    },
+    {
+      "name": "tables/teleport_spot.tbl",
+      "rows": 315,
+      "cols": 8,
+      "format": "usuffffu"
+    },
+    {
+      "name": "tables/teleport_spot_displayinfo.tbl",
+      "rows": 2,
+      "cols": 4,
+      "format": "uuff"
+    },
+    {
+      "name": "tables/title.tbl",
+      "rows": 201,
+      "cols": 3,
+      "format": "uuu"
+    },
+    {
+      "name": "tables/tracking_achievement_name_game_internal_id.tbl",
+      "rows": 484,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/tracking_gem_id_game_internal_id.tbl",
+      "rows": 221,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/tracking_item_name_game_internal_id.tbl",
+      "rows": 12617,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/tracking_npc_mount_id_game_internal_id.tbl",
+      "rows": 137,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/tracking_quest_name_game_internal_id.tbl",
+      "rows": 1753,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/tracking_skill_id_game_internal_id.tbl",
+      "rows": 12573,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/tracking_zone_name_game_internal_id.tbl",
+      "rows": 640,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/vip.tbl",
+      "rows": 16,
+      "cols": 8,
+      "format": "uuuuuuuu"
+    },
+    {
+      "name": "tables/vip_spells.tbl",
+      "rows": 19,
+      "cols": 2,
+      "format": "uu"
+    },
+    {
+      "name": "tables/weather.tbl",
+      "rows": 10,
+      "cols": 5,
+      "format": "ussss"
+    },
+    {
+      "name": "tables/wheelfortune_item.tbl",
+      "rows": 129,
+      "cols": 7,
+      "format": "uuuuuus"
+    },
+    {
+      "name": "tables/wheelfortune_slot.tbl",
+      "rows": 10,
+      "cols": 13,
+      "format": "uuuuuuuuuuusu"
+    },
+    {
+      "name": "tables/zones.tbl",
+      "rows": 707,
+      "cols": 39,
+      "format": "iiiuffffffffuuffffuuuussssssfffffusiiiu"
+    }
+  ],
+  "capturedAt": "2026-10-25T06:47:51.133179+00:00"
+}

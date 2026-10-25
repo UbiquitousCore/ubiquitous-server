@@ -72,6 +72,8 @@ public sealed class PackedArchive : IDisposable
         {
             0 => compressed,
             8 => Inflate(compressed, entry.UncompressedSize, name),
+            14 => LzmaMethod.Decode(name, compressed, entry.UncompressedSize,
+                message => new PackedArchiveFormatException(message)),
             _ => throw new PackedArchiveFormatException(
                 $"Entry '{name}' uses compression method {entry.Method}, which this reader does not know."),
         };

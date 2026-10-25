@@ -5,7 +5,8 @@ namespace Ubiquitous.AssetExtractor;
 public sealed record SpellTableColumns(
     int Id, int Name, int CastTimeMs, int CooldownMs, int MaxRange, int NameTextId = -1,
     int DurationMs = -1, int WornSlotNeeded = -1, int RequiredItemClass = -1,
-    int ItemSubclassesAllowed = -1, int Speed = -1, int Rank = -1);
+    int ItemSubclassesAllowed = -1, int Speed = -1, int Rank = -1,
+    int PowerCost = -1, IReadOnlyList<int>? GroupMaskColumns = null, IReadOnlyList<int>? EffectSlots = null);
 
 public static class SpellTableMapper
 {

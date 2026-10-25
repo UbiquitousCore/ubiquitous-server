@@ -95,6 +95,8 @@ public static class TableArchiveReader
         {
             0 => compressed.ToArray(),
             8 => Inflate(compressed, uncompressedSize, name),
+            14 => LzmaMethod.Decode(name, compressed, uncompressedSize,
+                message => new TableArchiveFormatException(message)),
             _ => throw new TableArchiveFormatException($"Entry '{name}' uses unsupported compression method {method}."),
         };
     }

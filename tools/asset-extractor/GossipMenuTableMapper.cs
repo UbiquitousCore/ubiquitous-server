@@ -18,6 +18,9 @@ public static partial class GossipMenuTableMapper
         IReadOnlyDictionary<uint, string> strings,
         IReadOnlyDictionary<uint, ushort> mapByZone)
     {
+        TableShape.Expect("tables/chat_menu.tbl", menuRows.Header.ColumnTypes,
+            (0, "uk"), (1, "u"), (2, "u"), (3, "u"), (4, "u"), (5, "u"), (6, "u"), (7, "u"),
+            (8, "u"), (9, "u"), (10, "u"), (11, "u"), (12, "u"), (13, "u"));
         var menus = new List<GossipMenuDefinition>();
         var seen = new HashSet<uint>();
         int dropped = 0;
