@@ -16,6 +16,40 @@ public sealed partial class BotBrain
         return new SendMessage(accept ? WebMessageTypes.DuelAccept : WebMessageTypes.DuelDecline, new { });
     }
 
+    private BotDecision? DuelReady(BotView view, DateTimeOffset now)
+    {
+        if (view.DuelOpponent is not { } rival || now >= view.DuelStartsAt)
+        {
+            _duelReadyFor = null;
+            return null;
+        }
+        if (!string.Equals(_duelReadyFor, rival, StringComparison.Ordinal))
+        {
+            _duelReadyFor = rival;
+            _duelReadyFaced = false;
+        }
+        if (!view.Units.TryGetValue(rival, out var opponent) || opponent.Dead) return Hold.Instance;
+        const float gap = 4f;
+        if (Flat(view.Position, opponent.Position) < gap - 0.5f)
+        {
+            _duelReadyFaced = false;
+            var dx = view.Position.X - opponent.Position.X;
+            var dz = view.Position.Z - opponent.Position.Z;
+            var len = Math.Sqrt(dx * dx + dz * dz);
+            if (len < 0.01) { dx = 0; dz = 1; len = 1; }
+            return new WalkTo(new Ubiquitous.Common.Position(
+                opponent.Position.X + (float)(dx / len * gap),
+                view.Position.Y,
+                opponent.Position.Z + (float)(dz / len * gap)), 0.5f, "duel");
+        }
+        if (_duelReadyFaced) return Hold.Instance;
+        _duelReadyFaced = true;
+        return new SendMessage(WebMessageTypes.PlayerMove, new PlayerMovePayload(
+            view.Position.X, view.Position.Y, view.Position.Z,
+            Math.Atan2(opponent.Position.X - view.Position.X, -(opponent.Position.Z - view.Position.Z)),
+            false, MovementState.Standing));
+    }
+
     // A group mate's summons is answered yes, as a player would come to their group; anyone
     // else's, or one that arrives mid-fight or mid-trade, is turned down.
     private static BotDecision? AnswerSummon(BotView view)

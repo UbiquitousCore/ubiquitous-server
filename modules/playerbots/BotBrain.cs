@@ -70,6 +70,8 @@ public sealed partial class BotBrain(BotKnowledge knowledge, PlayerbotSettings s
     private string? _commandTarget;
     private string? _talkingTo;
     private string? _lootingId;
+    private string? _duelReadyFor;
+    private bool _duelReadyFaced;
     private Position? _wanderTo;
     private bool _followWhenGrouped = true;
 
@@ -177,6 +179,8 @@ public sealed partial class BotBrain(BotKnowledge knowledge, PlayerbotSettings s
 
         if ((AnswerDuel(view) ?? AnswerTrade(view) ?? AnswerSummon(view)) is { } social) return social;
 
+        if (DuelReady(view, now) is { } ready) return ready;
+
         while (view.Heard.Count > 0)
         {
             var heard = view.Heard[0];
@@ -204,6 +208,7 @@ public sealed partial class BotBrain(BotKnowledge knowledge, PlayerbotSettings s
             BotCommandKind.Attack => Assist(view, master),
             BotCommandKind.Leave => "Leaving the party.",
             BotCommandKind.Report => $"Level {view.Level}, health {view.Health}/{view.MaxHealth}, {view.Quests.Count} quests.",
+            BotCommandKind.Help => BotCommand.Help(),
             _ => null,
         };
         if (answer is null) return null;

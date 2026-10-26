@@ -370,6 +370,55 @@ public sealed class BotBrainTests
     }
 
     [Fact]
+    public void ADuelCountdown_OpensDistanceAndFacesTheChallengerBeforeFighting()
+    {
+        var brain = Brain();
+        var view = InWorld();
+        Player(view, "player:hero", "Hero", 1, 0);
+        Hear(view, WebMessageTypes.DuelChallenged, new DuelChallengedPayload(WebNetworkId.FromString("player:hero")));
+        Assert.Equal(WebMessageTypes.DuelAccept, Assert.IsType<SendMessage>(brain.Decide(view, Start)).Type);
+        Hear(view, WebMessageTypes.DuelStarted, new DuelStartedPayload(WebNetworkId.FromString("player:hero"), 5), Start);
+
+        var ready = Assert.IsType<WalkTo>(brain.Decide(view, Start));
+        Assert.Equal("duel", ready.Purpose);
+        Assert.True(MathF.Sqrt(MathF.Pow(ready.Target.X - 1, 2) + MathF.Pow(ready.Target.Z, 2)) >= 3.5f);
+
+        Arrive(view, ready);
+        var face = Assert.IsType<SendMessage>(brain.Decide(view, Start));
+        Assert.Equal(WebMessageTypes.PlayerMove, face.Type);
+
+        var closing = Assert.IsType<WalkTo>(brain.Decide(view, Start.AddSeconds(6)));
+        Assert.Contains("hero", closing.Purpose, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ADuelCountdown_StopsEvenWhenTheChallengerIsUnseen()
+    {
+        var brain = Brain();
+        var view = InWorld();
+        Hear(view, WebMessageTypes.DuelChallenged, new DuelChallengedPayload(WebNetworkId.FromString("player:hero")));
+        Assert.Equal(WebMessageTypes.DuelAccept, Assert.IsType<SendMessage>(brain.Decide(view, Start)).Type);
+        Hear(view, WebMessageTypes.DuelStarted, new DuelStartedPayload(WebNetworkId.FromString("player:hero"), 5), Start);
+
+        Assert.IsType<Hold>(brain.Decide(view, Start));
+    }
+
+    [Fact]
+    public void Help_ListsTheLeaderCommands()
+    {
+        var brain = Brain();
+        var view = InWorld();
+        Grouped(view, "player:hero");
+        Hear(view, WebMessageTypes.ChatReceived, new ChatReceivedPayload("party", "Lead", "help"));
+
+        var reply = Assert.IsType<SendMessage>(brain.Decide(view, Start.AddSeconds(1)));
+
+        Assert.Equal(WebMessageTypes.PlayerChat, reply.Type);
+        Assert.Contains("Here are the commands you can use", Text(reply), StringComparison.Ordinal);
+        Assert.Contains("attack (attack the leader", Text(reply), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Trades_AreTakenOnlyFromGroupMatesAndConfirmedOnceTheyConfirm()
     {
         var brain = Brain();

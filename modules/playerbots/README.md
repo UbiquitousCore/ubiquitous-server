@@ -43,6 +43,7 @@ Each turn it does the first of these that applies (`BotBrain.Decide`):
 
 1. Dead: waits a few seconds, then releases (`player.unstuck`).
 2. Answers group invites, duels, trades, summons and its leader's commands.
+   While a duel countdown runs it stops, faces its challenger and backs off.
    It comes when a group mate summons it, unless it is fighting or trading.
 3. Mid-trade: confirms once the other side has.
 4. A healer in a group heals the most hurt group mate below 60%.
@@ -167,3 +168,4 @@ fight. Say these in party chat, or whisper them, as the group leader:
 | `attack` | attack the leader's target |
 | `leave` | leave the group |
 | `report` (`stats`) | say its level, health and quest count |
+| `help` (`commands`) | list these commands |
