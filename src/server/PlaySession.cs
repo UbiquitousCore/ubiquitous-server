@@ -184,6 +184,15 @@ public sealed partial class PlaySession : ISessionPlayer
 
     internal string UnitId => PlayerUnitId;
 
+    internal string? CharacterGuid => _character?.Guid;
+
+    internal async Task<bool> IgnoresAsync(string characterGuid)
+    {
+        if (_character is null) return false;
+        var list = await _socialHandler.ListStateAsync(_character.Guid);
+        return list.Ignored.Any(entry => string.Equals(entry.CharacterGuid, characterGuid, StringComparison.Ordinal));
+    }
+
     public IReadOnlyList<string> PartyMemberIdsExcludingSelf() => _partyHandler.MemberIdsExcludingSelf();
 
     public Task GoOfflineInPartyAsync() => _partyHandler.GoOfflineAsync();

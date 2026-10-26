@@ -20,6 +20,8 @@ internal sealed class SocialHandler(ISessionPlayer player, SessionOutbox outbox,
 
     public Task<string> RemoveIgnore(JsonElement payload) => Remove(payload, SocialListKind.Ignore);
 
+    internal Task<SocialListState> ListStateAsync(string ownerGuid) => _friends.ListAsync(ownerGuid);
+
     public async Task<string> List()
     {
         if (player.Character is null)
@@ -67,15 +69,20 @@ internal sealed class SocialHandler(ISessionPlayer player, SessionOutbox outbox,
         if (player.Character is null)
             return outbox.Error(WireCodes.ProtocolError.NotInWorld, "Character selection is required before removing a friend.");
 
-        var targetGuid = TargetGuid(payload);
+        var targetGuid = await TargetGuid(payload);
         if (targetGuid is null) return outbox.Error(WireCodes.ProtocolError.InvalidTarget, "A target is required.");
 
         var list = await _friends.RemoveAsync(player.Character.Guid, kind, targetGuid);
         return outbox.Reply(WebMessageTypes.SocialListUpdated, ToPayload(list));
     }
 
-    private static string? TargetGuid(JsonElement payload) =>
-        PlayerWireIds.GuidOf(WebMessageJson.DeserializePayload<SocialTargetPayload>(payload).TargetId);
+    private async Task<string?> TargetGuid(JsonElement payload)
+    {
+        var parsed = WebMessageJson.DeserializePayload<SocialTargetPayload>(payload);
+        if (PlayerWireIds.GuidOf(parsed.TargetId) is { } guid) return guid;
+        if (player.Character is null || string.IsNullOrWhiteSpace(parsed.Name)) return null;
+        return (await characters.FindByNameAsync(parsed.Name.Trim()))?.Guid;
+    }
 
     private SocialListUpdatedPayload ToPayload(SocialListState list) =>
         new([.. list.Friends.Select(ToEntryPayload)], [.. list.Ignored.Select(ToEntryPayload)]);

@@ -85,7 +85,7 @@ public sealed class FriendServiceTests
     }
 
     [Fact]
-    public async Task AddAsync_TheSameTargetCanBeBothAFriendAndIgnored()
+    public async Task AddAsync_IgnoringAFriendDropsThemFromFriends()
     {
         var friends = new FriendService(new FakeFriendStore());
 
@@ -93,7 +93,7 @@ public sealed class FriendServiceTests
         var result = await friends.AddAsync("char-a", SocialListKind.Ignore, "char-b", "Borin");
 
         Assert.Equal(SocialAddOutcome.Ok, result.Outcome);
-        Assert.Single(result.List!.Friends);
+        Assert.Empty(result.List!.Friends);
         Assert.Single(result.List.Ignored);
     }
 

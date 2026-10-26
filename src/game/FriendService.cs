@@ -33,6 +33,11 @@ public sealed class FriendService
             return new SocialAddResult(SocialAddOutcome.Ok, ToState(persisted));
 
         var updated = With(persisted, kind, [.. list, new PersistedSocialEntry(targetGuid, targetName)]);
+        if (kind == SocialListKind.Ignore)
+            updated = updated with
+            {
+                Friends = updated.Friends.Where(entry => !string.Equals(entry.CharacterGuid, targetGuid, StringComparison.Ordinal)).ToArray(),
+            };
         await _store.SaveAsync(ownerGuid, updated, cancellationToken);
         return new SocialAddResult(SocialAddOutcome.Ok, ToState(updated));
     }

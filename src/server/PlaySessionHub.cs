@@ -235,12 +235,14 @@ public sealed class PlaySessionHub(ILogger? logger = null)
         foreach (var chat in events.Where(IsChatMessage))
         {
             var channel = chat.ChatChannel!;
+            var senderGuid = sender.CharacterGuid;
             if (ChatService.IsPartyChannel(channel))
             {
                 foreach (var memberId in sender.PartyMemberIdsExcludingSelf())
                 {
                     var target = FindByCharacterNetworkId(WebNetworkId.FromString(memberId));
-                    if (target is not null) await DeliverAsync(target, chat);
+                    if (target is not null && (senderGuid is null || !await target.IgnoresAsync(senderGuid)))
+                        await DeliverAsync(target, chat);
                 }
                 continue;
             }
@@ -249,6 +251,7 @@ public sealed class PlaySessionHub(ILogger? logger = null)
             {
                 if (ReferenceEquals(pair.Key, sender) || !SameLocation(pair.Key, sender)) continue;
                 if (!CanDeliverChat(channel, sender, pair.Key)) continue;
+                if (senderGuid is not null && await pair.Key.IgnoresAsync(senderGuid)) continue;
                 await DeliverAsync(pair.Key, chat);
             }
         }

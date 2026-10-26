@@ -285,7 +285,9 @@ comes from is in `PROVENANCE.md`.
 
 - Chat: `say` (20 units), `general` and `trade` (map-wide, joined; `general`
   starts joined), `party`; trimmed to 256 characters. Whispers reach anyone
-  online. The ignore list does not filter yet.
+  online. A player who ignores the sender gets neither channel chat nor
+  whispers from them; the whisper still reads sent. Ignoring drops the
+  target from friends and leaves parties untouched.
 - Parties of up to five; the leader invites (same map) and kicks. Membership
   belongs to the character: a member who leaves the world shows offline and
   keeps their place and lead for five minutes. Parties are not saved.

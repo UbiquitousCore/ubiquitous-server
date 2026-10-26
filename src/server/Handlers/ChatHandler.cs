@@ -43,6 +43,9 @@ internal sealed class ChatHandler(ISessionPlayer player, SessionOutbox outbox)
         var targetSession = player.Hub?.FindByCharacterNetworkId(WebNetworkId.FromString(whisper.TargetId));
         if (targetSession?.Presence is not { } targetPresence)
             return [outbox.Error(WireCodes.ProtocolError.InvalidTarget, "That player is not available.")];
+        if (await targetSession.IgnoresAsync(player.Character.Guid))
+            return [outbox.Reply(WebMessageTypes.ChatWhisperSent,
+                new ChatWhisperSentPayload(targetPresence.NetworkId, targetPresence.Name, whisper.Text))];
 
         if (player.Hub is not null)
         {
