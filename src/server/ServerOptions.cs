@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Npgsql;
 
 namespace Ubiquitous.Server;
 
@@ -21,7 +22,8 @@ public sealed record ServerOptions(
     int MaxConnections = 500,
     int MaxMessagesPerSecond = 30,
     IReadOnlyList<string>? AllowedOrigins = null,
-    IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? Modules = null)
+    IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? Modules = null,
+    string? PostgresPasswordFile = null)
 {
     private const string ModuleEnvironmentPrefix = "UBIQUITOUS_MODULE_";
 
@@ -72,6 +74,8 @@ public sealed record ServerOptions(
             (options, value, _) => options with { LogLevel = value }),
         new("postgresConnectionString", "UBIQUITOUS_POSTGRES_CONNECTION_STRING", ["--postgres-connection-string"],
             (options, value, _) => options with { PostgresConnectionString = value }),
+        new("postgresPasswordFile", "UBIQUITOUS_POSTGRES_PASSWORD_FILE", ["--postgres-password-file"],
+            (options, value, _) => options with { PostgresPasswordFile = value }),
         new("festivalContentEnabled", "UBIQUITOUS_FESTIVAL_CONTENT_ENABLED", ["--festival-content"],
             (options, value, name) => options with { FestivalContentEnabled = ParseBool(value, name) }),
         new("festivalStaticEntries", "UBIQUITOUS_FESTIVAL_STATIC_ENTRIES", ["--festival-static-entries"],
@@ -121,7 +125,7 @@ public sealed record ServerOptions(
                 options = setting.Apply(options, value, setting.Arguments[0]);
         }
 
-        return options;
+        return options.WithPostgresPasswordFromFile();
     }
 
     public IReadOnlyDictionary<string, string> ModuleSettings(string module) =>
@@ -140,6 +144,19 @@ public sealed record ServerOptions(
         };
         modules[name] = settings;
         return this with { Modules = modules };
+    }
+
+    // Docker generates the database password inside a volume, so no script on the host has to write it into .env.
+    private ServerOptions WithPostgresPasswordFromFile()
+    {
+        if (string.IsNullOrWhiteSpace(PostgresPasswordFile) || string.IsNullOrWhiteSpace(PostgresConnectionString)) return this;
+        if (!File.Exists(PostgresPasswordFile))
+            throw new InvalidDataException($"UBIQUITOUS_POSTGRES_PASSWORD_FILE names '{PostgresPasswordFile}', which does not exist.");
+        var builder = new NpgsqlConnectionStringBuilder(PostgresConnectionString)
+        {
+            Password = File.ReadAllText(PostgresPasswordFile).Trim(),
+        };
+        return this with { PostgresConnectionString = builder.ConnectionString };
     }
 
     // Development logins and `dev.enterWorld` are for file-backed local runs only; a Postgres server uses real accounts.

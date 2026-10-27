@@ -42,6 +42,50 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
+    public void PostgresPasswordFile_FillsThePasswordIntoTheConnectionString()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ubiquitous-pg-{Guid.NewGuid():N}");
+        File.WriteAllText(path, "s3cret\n");
+        try
+        {
+            var options = ServerOptions.Load([], new Dictionary<string, string?>
+            {
+                ["UBIQUITOUS_POSTGRES_CONNECTION_STRING"] = "Host=db;Username=ubiquitous;Database=ubiquitous",
+                ["UBIQUITOUS_POSTGRES_PASSWORD_FILE"] = path,
+            });
+
+            var builder = new Npgsql.NpgsqlConnectionStringBuilder(options.PostgresConnectionString);
+            Assert.Equal("s3cret", builder.Password);
+            Assert.Equal("db", builder.Host);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void PostgresPasswordFile_WithoutAConnectionString_StaysFileBacked()
+    {
+        var options = ServerOptions.Load([], new Dictionary<string, string?>
+        {
+            ["UBIQUITOUS_POSTGRES_PASSWORD_FILE"] = "/does/not/matter",
+        });
+
+        Assert.Null(options.PostgresConnectionString);
+    }
+
+    [Fact]
+    public void PostgresPasswordFile_ThatIsMissing_IsRejected()
+    {
+        Assert.Throws<InvalidDataException>(() => ServerOptions.Load([], new Dictionary<string, string?>
+        {
+            ["UBIQUITOUS_POSTGRES_CONNECTION_STRING"] = "Host=db",
+            ["UBIQUITOUS_POSTGRES_PASSWORD_FILE"] = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}"),
+        }));
+    }
+
+    [Fact]
     public void RepeatedArgument_TakesTheLastOne()
     {
         var options = ServerOptions.Load(
