@@ -77,6 +77,36 @@ services:
       - ubiquitous-secrets:/run/ubiquitous:ro
     restart: unless-stopped
 
+  # The built ubiquitous-client: static files, served only through the proxy.
+  client:
+    image: ghcr.io/ubiquitouscore/ubiquitous-client:latest
+    restart: unless-stopped
+
+  # The one address players open. Browsers keep the unpacked game data only
+  # for a page on https (or localhost), and an https page may only open a wss
+  # socket, so the client and the game socket share this origin and its
+  # certificate. Caddy makes its own for localhost and IP addresses, and gets
+  # a real one for a public domain.
+  proxy:
+    image: caddy:2-alpine
+    environment:
+      UBIQUITOUS_SITE: ${UBIQUITOUS_SITE:-localhost}
+      UBIQUITOUS_WEBSOCKET_PORT: ${UBIQUITOUS_WEBSOCKET_PORT:-8781}
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    ports:
+      - "${UBIQUITOUS_HTTPS_PORT:-443}:443"
+      - "${UBIQUITOUS_HTTP_PORT:-80}:80"
+    volumes:
+      # Holds the certificate authority a phone is told to trust; losing it
+      # means installing a new one on every device.
+      - caddy-data:/data
+    depends_on:
+      - client
+      - server
+    restart: unless-stopped
+
   # `docker compose run --rm ingest`: turns incoming/*.ipa into data/generated/.
   # Not started by `up`. On Linux, set UBIQUITOUS_UID/GID to your own ids so
   # the files it writes are yours rather than root's.
@@ -92,7 +122,29 @@ services:
       - ./incoming:/work/incoming
       - ./data:/work/data
 
+configs:
+  caddyfile:
+    content: |
+      {
+      	# A browser sends no server name when it is given an IP address.
+      	default_sni {$$UBIQUITOUS_SITE}
+      }
+
+      localhost, {$$UBIQUITOUS_SITE} {
+      	handle_path /ubiquitous-server* {
+      		reverse_proxy server:{$$UBIQUITOUS_WEBSOCKET_PORT}
+      	}
+      	handle /root.crt {
+      		root * /data/caddy/pki/authorities/local
+      		file_server
+      	}
+      	handle {
+      		reverse_proxy client:8780
+      	}
+      }
+
 volumes:
   postgres-data:
   ubiquitous-state:
   ubiquitous-secrets:
+  caddy-data:
