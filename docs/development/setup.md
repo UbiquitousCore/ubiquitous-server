@@ -109,7 +109,9 @@ generates the database password into a volume (or keeps the
 made with it), Postgres, the server with `data/generated/` mounted read-only
 and runtime state in the `ubiquitous-state` volume
 (`UBIQUITOUS_STATE_DIRECTORY`), the published client, and Caddy in front of
-both. Images come from GHCR; `up --build` builds the server from the
+both. The server gets every `UBIQUITOUS_*` line of `.env` beside the compose
+file, except the paths, bind address and database the compose file sets
+itself. Images come from GHCR; `up --build` builds the server from the
 checkout instead. CI publishes `ubiquitous-server`, `ubiquitous-server-ingest`
 and `ubiquitous-client` for amd64 and arm64 on pushes to `main`.
 

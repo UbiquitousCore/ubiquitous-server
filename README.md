@@ -62,13 +62,38 @@ memory limit (Settings → Resources) and run it again. On Linux, put
 in a `.env` beside the compose file, so the files it writes are yours rather
 than root's.
 
+### Changing settings
+
+Settings go in a text file named `.env` beside the compose file, one
+`NAME=value` per line, and take effect with `docker compose up -d`. For
+example, to turn the seasonal festival items off and run ten bots:
+
+```
+UBIQUITOUS_FESTIVAL_CONTENT_ENABLED=false
+UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED=true
+UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=10
+```
+
+| Setting | Default | Does |
+|---|---|---|
+| `UBIQUITOUS_FESTIVAL_CONTENT_ENABLED` | `true` | winter solstice and anniversary scenery, creatures and items |
+| `UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED` | `false` | start bots |
+| `UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT` | `5` | how many bots play on their own (0-500) |
+| `UBIQUITOUS_MAX_CONNECTIONS` | `500` | players connected at once |
+| `UBIQUITOUS_DISABLED_RACES` | none | race ids that cannot be picked, comma-separated |
+| `UBIQUITOUS_LOG_LEVEL` | `Information` | `Trace` to `Critical` |
+| `UBIQUITOUS_SITE` | `localhost` | the address other devices open (below) |
+| `UBIQUITOUS_HTTP_PORT`, `UBIQUITOUS_HTTPS_PORT` | `80`, `443` | the proxy's ports (then open `http://localhost:<port>`) |
+
+Every other server setting works the same way, by its `UBIQUITOUS_*` name;
+[env.example](env.example) lists them.
+
 ### Play from a phone or another computer
 
 Browsers keep the unpacked game data only for a page on https (or on
 localhost), so for other devices the stack serves everything through one
-https address with its own certificate. Create a text file named `.env`
-beside the compose file, naming the address other devices will use (this
-machine's LAN address here):
+https address with its own certificate. In `.env`, name the address
+other devices will use (this machine's LAN address here):
 
 ```
 UBIQUITOUS_SITE=192.168.1.20
@@ -85,9 +110,6 @@ To play from anywhere, give it a real domain instead
 machine): the proxy then gets a public certificate on its own and no device
 needs anything installed. [Tailscale](https://tailscale.com) is the way to
 reach it from your own devices without opening ports.
-
-`UBIQUITOUS_HTTP_PORT` and `UBIQUITOUS_HTTPS_PORT` in `.env` move the proxy off
-80 and 443 (then open `http://localhost:<port>`).
 
 ### Updating
 
