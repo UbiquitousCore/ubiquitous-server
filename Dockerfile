@@ -18,21 +18,21 @@ COPY src/ src/
 COPY content/ content/
 RUN dotnet publish src/server/server.csproj -c Release --no-restore -o /app/publish
 
-# Data import tooling, for `docker compose run ingest` (see run.sh): just, python
-# and the asset extractor, so importing needs nothing installed on the host.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS tools
-ENV NUGET_PACKAGES=/nuget DOTNET_NOLOGO=1 DOTNET_CLI_TELEMETRY_OPTOUT=1
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-WORKDIR /work
-COPY global.json Directory.Build.props Directory.Packages.props .editorconfig justfile ./
+# `docker compose run --rm ingest`: turns the client build in incoming/ into
+# data/generated/, so importing needs nothing installed on the host.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS ingest-build
+WORKDIR /src
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/ src/
 COPY tools/ tools/
-RUN dotnet build tools/asset-extractor -v quiet \
-    && chmod -R a+rwX /nuget /work
-CMD ["just", "ingest"]
+RUN dotnet publish tools/asset-extractor -c Release -o /app/extractor
+
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS ingest
+ENV DOTNET_NOLOGO=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 HOME=/tmp
+WORKDIR /work
+COPY --from=ingest-build /app/extractor /opt/extractor
+ENTRYPOINT ["dotnet", "/opt/extractor/asset-extractor.dll"]
+CMD ["--ingest", "incoming"]
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

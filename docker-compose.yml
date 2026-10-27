@@ -75,17 +75,16 @@ services:
       - ubiquitous-secrets:/run/ubiquitous:ro
     restart: unless-stopped
 
-  # `./run.sh ingest`: turns incoming/*.ipa into data/generated/ with nothing
-  # installed on the host. Not started by `up`.
+  # `docker compose run --rm ingest`: turns incoming/*.ipa into data/generated/.
+  # Not started by `up`. On Linux, set UBIQUITOUS_UID/GID to your own ids so
+  # the files it writes are yours rather than root's.
   ingest:
     profiles: ["ingest"]
     build:
       context: .
       dockerfile: Dockerfile
-      target: tools
+      target: ingest
     user: "${UBIQUITOUS_UID:-0}:${UBIQUITOUS_GID:-0}"
-    environment:
-      HOME: /tmp
     volumes:
       - ./incoming:/work/incoming
       - ./data:/work/data

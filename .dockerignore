@@ -4,7 +4,6 @@
 !modules/
 !content/
 !tools/
-!justfile
 !*.sln
 !Directory.*.props
 !Directory.Packages.props
