@@ -169,6 +169,10 @@ configs:
       		reverse_proxy server:{$$UBIQUITOUS_WEBSOCKET_PORT}
       	}
       	handle /root.crt {
+      		# Without the type, Android shows the certificate as text
+      		# instead of offering to install it.
+      		header Content-Type application/x-x509-ca-cert
+      		header Content-Disposition "attachment; filename=ubiquitous-root.crt"
       		root * /data/caddy/pki/authorities/local
       		file_server
       	}
