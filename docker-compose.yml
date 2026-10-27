@@ -14,9 +14,11 @@ services:
         f=/secrets/postgres_password
         [ -s "$$f" ] && exit 0
         umask 022
-        if [ -n "$$POSTGRES_PASSWORD" ]; then printf '%s' "$$POSTGRES_PASSWORD" > "$$f"
-        else tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32 > "$$f"; fi
-        echo "generated the database password"
+        if [ -n "$$POSTGRES_PASSWORD" ]; then
+          printf '%s' "$$POSTGRES_PASSWORD" > "$$f"; echo "kept the database password from .env"
+        else
+          tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32 > "$$f"; echo "generated the database password"
+        fi
     volumes:
       - ubiquitous-secrets:/secrets
 
