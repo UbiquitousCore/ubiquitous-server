@@ -115,8 +115,9 @@ and `ubiquitous-client` for amd64 and arm64 on pushes to `main`.
 
 The server's own port is published on loopback only, for a client run with
 `npm run dev`; set `UBIQUITOUS_PUBLISH_ADDRESS=0.0.0.0` to serve it to a LAN
-directly. Players reach the stack through the proxy instead, on
-`UBIQUITOUS_SITE` (see the README). Patrol routes saved under Docker land
+directly. Players reach the stack through the proxy instead: plain
+`http://localhost` on the machine running it, and https on `UBIQUITOUS_SITE`
+from other devices (see the README). Patrol routes saved under Docker land
 inside the container unless `content/` is mounted.
 
 ## Tests
