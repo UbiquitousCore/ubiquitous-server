@@ -48,6 +48,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runtime
+    # Every UBIQUITOUS_* setting in .env reaches the server; the entries under
+    # environment below win over it, so .env cannot move the container's own
+    # paths, address or database.
+    env_file:
+      - path: .env
+        required: false
     environment:
       UBIQUITOUS_BIND_ADDRESS: 0.0.0.0
       # No `:-default` fallbacks here on purpose: an unset variable arrives
