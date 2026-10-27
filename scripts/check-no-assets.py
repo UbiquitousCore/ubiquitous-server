@@ -16,7 +16,10 @@ ASSET_EXTENSIONS = {
 
 MAX_JSON_BYTES = 64 * 1024
 
-ALLOWED: dict[str, str] = {}
+ALLOWED: dict[str, str] = {
+    'content/patrol-routes/map-1.json': 'patrol stops recorded with our own patrol editor; large because the map has many walkers',
+    'content/patrol-routes/map-4.json': 'patrol stops recorded with our own patrol editor; large because the map has many walkers',
+}
 
 
 def main() -> int:
