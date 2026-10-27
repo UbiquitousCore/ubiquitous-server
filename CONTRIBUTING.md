@@ -13,7 +13,7 @@ src/      one project per subsystem
 tests/    one test project per subsystem, plus behavior/ and integration/
 tools/    asset-extractor (client data import and walkable-ground bake)
 content/  project-authored JSON content (placed patrol routes)
-scripts/  setup, test and hygiene helpers
+scripts/  test and hygiene helpers
 data/     generated/ and cache/, both git-ignored
 ```
 

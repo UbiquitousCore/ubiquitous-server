@@ -1,7 +1,7 @@
 # Reads the shared game settings (bots, festival items, ports) from server.json
-# inside the container. `just up` adds this file automatically when server.json
-# exists; environment variables still win over the file. Kept separate so a
-# checkout without server.json still composes.
+# inside the container; environment variables still win over the file. Add it
+# with COMPOSE_FILE=docker-compose.yml:docker-compose.server-json.yml in .env.
+# Kept separate so a folder without server.json still composes.
 services:
   server:
     environment:

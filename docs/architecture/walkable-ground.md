@@ -10,11 +10,11 @@ Players are not checked against it.
 
 Terrain from the package; collision models placed by the spawn tables
 (placement → entry → display → model → `.phy`); and the map's own scenery from
-its world archive (`just extract-world`), without which a town bakes as the
+its world archive (`--extract-world`), without which a town bakes as the
 field it stands on. A house's interior is a separate unplaced model named
 `<house>_inside`, placed with the house's transform. Scenery positions are
 relative to the tile the file's header declares. Collision models come from the tables
-(`just extract`); `just extract-collision <build>` adds those a client build's
+(`--extract`); `--extract-collision <build>` adds those a client build's
 `model_phy.bin`, `tables.bin` or `res.bin` ship, keeping any already there, so
 a later build fills models the map's own build lacks. A model with no `.phy` of its
 own takes the one shipped under its base name: `<model>_s` uses `<model>.phy`,
@@ -97,9 +97,9 @@ fails the bake.
 
 ## Inspecting a bake
 
-- `just bake` prints per map how many spawn-table creatures stand on baked
+- `--bake` prints per map how many spawn-table creatures stand on baked
   ground; this checks the whole chain against placements nobody here chose.
-- `just nav-probe <map> x,y,z` re-bakes one tile and prints which stage
+- `--nav-probe <package> --map <id> --at x,y,z` re-bakes one tile and prints which stage
   removed the ground at a point (`collision`, `slope`, `ledges`, `headroom`,
   `body radius`, `islands`), then how much ground around it is reachable.
   Islands of one or two polygons are prop tops; islands of hundreds are a torn

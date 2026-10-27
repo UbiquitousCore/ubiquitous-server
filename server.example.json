@@ -1,7 +1,8 @@
 {
-  // Game settings shared by `just dev` and `just up` (Docker). Copy to
-  // server.json and edit it; environment variables and command-line flags
-  // still win over anything here. See docs/development/setup.md.
+  // Game settings. Copy to server.json beside it and edit; the server reads
+  // it from the folder it starts in, and the Docker stack when COMPOSE_FILE
+  // names docker-compose.server-json.yml. Environment variables and
+  // command-line flags still win over anything here. See docs/development/setup.md.
   // Comments are allowed in this file.
 
   "bindAddress": "127.0.0.1",

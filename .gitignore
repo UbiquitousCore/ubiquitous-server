@@ -20,7 +20,7 @@ coverage/
 # Proprietary client data - NEVER commit
 *.ipa
 *.apk
-# Drop folder for the client build (`just ingest`); never commit its contents.
+# Drop folder for the client build (`--ingest`); never commit its contents.
 incoming/*
 !incoming/.gitkeep
 data/*

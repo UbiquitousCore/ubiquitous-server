@@ -39,20 +39,15 @@ in the dispatch switch.
 ## Running
 
 ```powershell
-just setup   # once: writes .env and server.json from their examples
-just dev     # foreground, saves as editable JSON files, no Docker
-just up      # the server plus Postgres in Docker, on the same port
-```
-
-Or directly:
-
-```powershell
+dotnet watch --project src/server run   # file saves, rebuilds on edits
+docker compose up -d                    # the server plus Postgres in Docker
 dotnet run --project src/server -- [--config server.json] [--data-dir data/generated] [--port 8781]
 ```
 
 `server.example.json` documents the file (bots, festival content, ports);
-`UBIQUITOUS_CONFIG` points at it when no `--config` flag is given. Settings apply
-in order: defaults, JSON config, `UBIQUITOUS_*` environment variables,
+the server reads `server.json` and `.env` from the folder it starts in, and
+`UBIQUITOUS_CONFIG` or `--config` names another file. Settings apply in order:
+defaults, JSON config, `.env`, `UBIQUITOUS_*` environment variables,
 command-line options. `ServerOptions.Settings` declares each one once with its
 config key, environment variable and flags: bind address, port, data directory,
 content directory, Postgres connection string, development accounts, festival

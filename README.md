@@ -18,90 +18,120 @@ This server only works with the [ubiquitous-client](https://github.com/Ubiquitou
 
 ## Quick start
 
-Two ways in. Both start the same way: put your own legally obtained 1.1.4
-client build (the `.ipa`) in `incoming/`. This repo does not host any .ipa files, these should be supplied yourself.
+You need [Docker](https://docs.docker.com/get-docker/) (Docker Desktop,
+OrbStack or Docker Engine) and your own legally obtained 1.1.4 client build
+(the `.ipa`). This repo does not host any .ipa files, these should be supplied
+yourself. Nothing else is installed on your machine.
 
-### Just run the server (needs only Docker)
+### Run a server
 
-Install [Docker Desktop](https://docs.docker.com/get-docker/) (or OrbStack /
-Docker Engine), then:
-
-```bash
-./run.sh ingest    # once: builds the data package from incoming/*.ipa
-./run.sh start     # server + Postgres; ws://127.0.0.1:8781/
-```
-
-The import is memory-hungry. If `ingest` is killed partway (a bare "Killed" or
-exit code 137), raise Docker Desktop's memory limit (Settings → Resources) and
-run it again; OrbStack and Docker Engine on Linux have no such cap by default.
-
-On Windows use `run.bat ingest` and `run.bat start` (or `.\run.ps1`).
-`./run.sh stop` stops it, `./run.sh logs` follows the log. Nothing else is
-installed on your machine; the first run creates `.env` with a generated
-database password.
-
-Nobody can sign in until you make an account, with the server running:
+Make a folder for it and put the compose file in it:
 
 ```bash
-./run.sh account create alice     # asks for a password (8+ characters)
-./run.sh account password alice   # change it later
-./run.sh account gm alice on      # make alice a GM (admin panel and tools); "off" removes it
-./run.sh account list             # GMs are marked
+mkdir ubiquitous && cd ubiquitous
+curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
+mkdir incoming     # copy your .ipa in here
 ```
 
-GM status applies at that player's next sign-in. It belongs to the account, so
-every character on it is a GM. Docker never uses development logins: with
-Postgres the server ignores them, so real accounts are the only way in.
+(A clone of this repository works the same way, from its root.) Then:
 
-On Windows: `run.bat account create alice`. Players sign in to
-[ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client) with
-that name and password; they make their characters in the game.
+```bash
+docker compose run --rm ingest   # once: builds the game data from incoming/*.ipa
+docker compose up -d             # server, database, client and proxy
+docker compose exec server dotnet server.dll account create alice
+```
+
+Open <https://localhost> and choose your `.ipa`; the first visit unpacks it
+in your browser, once. Sign in as `alice`. The containers restart on their
+own after a crash or a reboot, as long as Docker itself starts with your
+machine.
+
+`account` also takes `password alice`, `gm alice on` (admin panel and GM
+tools; `off` removes it) and `list`. GM status applies at the player's next
+sign-in and covers every character on the account.
+
+The import needs about 2 GB of memory. If `ingest` is killed partway (a bare
+"Killed" or exit code 137), raise Docker Desktop's memory limit (Settings →
+Resources) and run it again. On Linux, put `UBIQUITOUS_UID=` and
+`UBIQUITOUS_GID=` with your own ids (`id -u`, `id -g`) in a `.env` beside
+the compose file, so the files it writes are yours rather than root's.
+
+### Play from a phone or another computer
+
+Browsers keep the unpacked game data only for a page on https, so the stack
+serves everything through one https address with its own certificate. In a
+`.env` file beside the compose file, name the address other devices will
+use, then restart the proxy:
+
+```bash
+echo "UBIQUITOUS_SITE=192.168.1.20" >> .env   # this machine's LAN address
+docker compose up -d
+```
+
+On each device, open `https://192.168.1.20/root.crt` once, accept the warning,
+and install the certificate as trusted (iOS: Settings → General → About →
+Certificate Trust Settings). Then open `https://192.168.1.20`.
+
+To play from anywhere, give it a real domain instead
+(`UBIQUITOUS_SITE=play.example.com`, with ports 80 and 443 forwarded to this
+machine): the proxy then gets a public certificate on its own and no device
+needs anything installed. [Tailscale](https://tailscale.com) is the way to
+reach it from your own devices without opening ports.
+
+`UBIQUITOUS_HTTPS_PORT` and `UBIQUITOUS_HTTP_PORT` move the proxy off 443 and 80.
 
 ### Updating
 
-There is no published image yet, so the server is built from your checkout.
-After pulling new changes, rebuild and restart it:
-
 ```bash
-git pull
-./run.sh start     # rebuilds the server image, then restarts it (run.bat start on Windows)
+docker compose pull && docker compose up -d
 ```
 
-Your saves are kept: accounts, characters, inventory and quests are in the
-Postgres database; mail, guilds, friends and the auction house are files in the
-server's state volume. Both are Docker volumes, so they survive a rebuild and
-are removed only by `docker compose down -v`.
-Run `./run.sh ingest` again only when a change touches the importer or the data
-it produces; the importer image is rebuilt on each `ingest`.
+Saves are kept: accounts, characters, inventory and quests are in the
+Postgres volume; mail, guilds, friends and the auction house in the server's
+state volume. Only `docker compose down -v` removes them. Run
+`docker compose run --rm ingest` again only when a change touches the
+importer, then `docker compose restart server`.
 
-### Develop on it (.NET 10, just)
+## Develop on it
+
+Clone this repository and
+[ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client).
+Two ways to run the server from source; both serve `ws://127.0.0.1:8781/`,
+where the client's `npm run dev` looks for it, and both keep saves as
+editable JSON files in `data/generated/` instead of Postgres.
+
+**With .NET 10** (the usual way, for a debugger and an IDE):
 
 ```bash
-./setup.sh         # Windows: setup.bat. Installs .NET 10, just, Python if missing
-just ingest        # once: the same import, run natively
-just dev           # run with editable JSON saves, no Docker
-just up            # or the Docker stack, built from your checkout
+dotnet run --project tools/asset-extractor -- --ingest incoming   # once
+dotnet watch --project src/server run
 ```
 
-`just dev` rebuilds and reloads while you edit (live where .NET can, a restart
-where it cannot); for the Docker stack, `just up` rebuilds the image after a
-pull.
+**With Docker only:**
 
-Make a login with `just account create alice` (also `password`, `gm` and
-`list`; works while the server runs). `setup` also prints a throwaway test login
-that is always there in `just dev`, next to any real accounts, and never in Docker. Point [ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client)
-at `ws://127.0.0.1:8781/` and sign in.
+```bash
+docker compose run --rm ingest
+docker compose up dev            # dotnet watch inside a container
+```
+
+Run either instead of `docker compose up`, not beside it: they use the same
+port. `docker compose up -d --build` runs the full stack built from your
+checkout rather than the published images.
+
+To sign in without making accounts, copy `env.example` to `.env`, set
+`UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true` and a password in
+`UBIQUITOUS_DEVELOPMENT_PASS_HASH`, and sign in as `developer`. Real accounts
+work too: `dotnet run --project src/server -- account create alice` (or
+`docker compose exec dev dotnet run --project src/server -- account create alice`).
 
 No client data is needed to build, test or run; the server falls back to a
-tiny synthetic world. Other commands: `just --list`, `just port=9000 up`,
-`dotnet build && dotnet test`. Details:
+tiny synthetic world. `dotnet build && dotnet test` checks everything. Details:
 [docs/development/setup.md](docs/development/setup.md).
 
 ## Configuration
 
-Game settings live in `server.json` (git-ignored; `just setup` copies it from
-`server.example.json`). Both `just dev` and `just up` read it and serve
-`ws://127.0.0.1:8781/`:
+Game settings live in `server.json` (git-ignored; copy it from
+`server.example.json`). The server reads it from the folder it is started in:
 
 ```json
 {
@@ -110,9 +140,10 @@ Game settings live in `server.json` (git-ignored; `just setup` copies it from
 }
 ```
 
-Secrets come from `.env`, `.env.production` (`just up .env.production`) or the
-environment. Precedence: defaults, `server.json` (`--config` or
-`UBIQUITOUS_CONFIG` points elsewhere), `UBIQUITOUS_*` variables, flags.
+In a clone, the Docker stack reads it too when `.env` holds
+`COMPOSE_FILE=docker-compose.yml:docker-compose.server-json.yml` (on Windows,
+separate them with `;`). Settings apply in order: defaults, `server.json`,
+`.env`, `UBIQUITOUS_*` environment variables, command-line flags.
 
 ## Documentation
 
