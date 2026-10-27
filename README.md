@@ -25,15 +25,20 @@ yourself. Nothing else is installed on your machine.
 
 ### Run a server
 
-Make a folder for it and put the compose file in it:
+Make a folder for it, with `incoming` and `data` folders inside, and put
+[`docker-compose.yml`](https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml)
+in it (save the link, or download it as below). Copy your `.ipa` into
+`incoming`.
 
 ```bash
-mkdir ubiquitous && cd ubiquitous
+mkdir ubiquitous
+cd ubiquitous
+mkdir incoming data
 curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
-mkdir incoming     # copy your .ipa in here
 ```
 
-(A clone of this repository works the same way, from its root.) Then:
+On Windows, type `curl.exe` rather than `curl` in PowerShell. A clone of this
+repository works the same way, from its root. Then, in that folder:
 
 ```bash
 docker compose run --rm ingest   # once: builds the game data from incoming/*.ipa
@@ -41,7 +46,7 @@ docker compose up -d             # server, database, client and proxy
 docker compose exec server dotnet server.dll account create alice
 ```
 
-Open <https://localhost> and choose your `.ipa`; the first visit unpacks it
+Open <http://localhost> on this machine and choose your `.ipa`; the first visit unpacks it
 in your browser, once. Sign in as `alice`. The containers restart on their
 own after a crash or a reboot, as long as Docker itself starts with your
 machine.
@@ -50,23 +55,26 @@ machine.
 tools; `off` removes it) and `list`. GM status applies at the player's next
 sign-in and covers every character on the account.
 
-The import needs about 2 GB of memory. If `ingest` is killed partway (a bare
-"Killed" or exit code 137), raise Docker Desktop's memory limit (Settings →
-Resources) and run it again. On Linux, put `UBIQUITOUS_UID=` and
-`UBIQUITOUS_GID=` with your own ids (`id -u`, `id -g`) in a `.env` beside
-the compose file, so the files it writes are yours rather than root's.
+The import takes a few minutes and about 2 GB of memory. If `ingest` is
+killed partway (a bare "Killed" or exit code 137), raise Docker Desktop's
+memory limit (Settings → Resources) and run it again. On Linux, put
+`UBIQUITOUS_UID=` and `UBIQUITOUS_GID=` with your own ids (`id -u`, `id -g`)
+in a `.env` beside the compose file, so the files it writes are yours rather
+than root's.
 
 ### Play from a phone or another computer
 
-Browsers keep the unpacked game data only for a page on https, so the stack
-serves everything through one https address with its own certificate. In a
-`.env` file beside the compose file, name the address other devices will
-use, then restart the proxy:
+Browsers keep the unpacked game data only for a page on https (or on
+localhost), so for other devices the stack serves everything through one
+https address with its own certificate. Create a text file named `.env`
+beside the compose file, naming the address other devices will use (this
+machine's LAN address here):
 
-```bash
-echo "UBIQUITOUS_SITE=192.168.1.20" >> .env   # this machine's LAN address
-docker compose up -d
 ```
+UBIQUITOUS_SITE=192.168.1.20
+```
+
+then run `docker compose up -d` again.
 
 On each device, open `https://192.168.1.20/root.crt` once, accept the warning,
 and install the certificate as trusted (iOS: Settings → General → About →
@@ -78,12 +86,14 @@ machine): the proxy then gets a public certificate on its own and no device
 needs anything installed. [Tailscale](https://tailscale.com) is the way to
 reach it from your own devices without opening ports.
 
-`UBIQUITOUS_HTTPS_PORT` and `UBIQUITOUS_HTTP_PORT` move the proxy off 443 and 80.
+`UBIQUITOUS_HTTP_PORT` and `UBIQUITOUS_HTTPS_PORT` in `.env` move the proxy off
+80 and 443 (then open `http://localhost:<port>`).
 
 ### Updating
 
 ```bash
-docker compose pull && docker compose up -d
+docker compose pull
+docker compose up -d
 ```
 
 Saves are kept: accounts, characters, inventory and quests are in the
@@ -106,6 +116,9 @@ editable JSON files in `data/generated/` instead of Postgres.
 dotnet run --project tools/asset-extractor -- --ingest incoming   # once
 dotnet watch --project src/server run
 ```
+
+Run both from the repository root: the server reads `.env` and
+`server.json` from the folder it starts in.
 
 **With Docker only:**
 
