@@ -136,6 +136,7 @@ To sign in without making accounts, copy `env.example` to `.env`, set
 `UBIQUITOUS_DEVELOPMENT_PASS_HASH`, and sign in as `developer`. Real accounts
 work too: `dotnet run --project src/server -- account create alice` (or
 `docker compose exec dev dotnet run --project src/server -- account create alice`).
+The very first one takes effect once the server restarts; later ones at once.
 
 No client data is needed to build, test or run; the server falls back to a
 tiny synthetic world. `dotnet build && dotnet test` checks everything. Details:

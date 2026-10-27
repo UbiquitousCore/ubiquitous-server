@@ -51,7 +51,8 @@ with GMs marked. The password is read without echo (or one line from piped
 stdin), needs 8 characters, and is stored as a salted hash. Postgres takes the
 change at once; file saves reload `accounts.json` when it changes, so the
 server need not stop. The first account also writes an empty
-`characters.json`. Real accounts are numbered from 100, and listing accounts
+`characters.json`; until both files exist the server runs on the development
+fixtures, so it takes that first account only once it restarts. Real accounts are numbered from 100, and listing accounts
 changes nothing on disk. The development logins below stay available next to
 them.
 
