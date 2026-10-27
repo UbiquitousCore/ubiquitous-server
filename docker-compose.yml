@@ -77,6 +77,40 @@ services:
       - ubiquitous-secrets:/run/ubiquitous:ro
     restart: unless-stopped
 
+  # `docker compose up dev`: the server from this checkout under dotnet watch,
+  # with no .NET on the host. Like a native `dotnet run`, it saves to editable
+  # JSON files in data/generated and reads the development logins from .env.
+  # Run it instead of the stack above, not beside it: both use the same port.
+  dev:
+    profiles: ["dev"]
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    working_dir: /src
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      UBIQUITOUS_BIND_ADDRESS: 0.0.0.0
+      UBIQUITOUS_WEBSOCKET_PORT: "8781"
+      UBIQUITOUS_POSTGRES_CONNECTION_STRING: ""
+      # Bind mounts from macOS and Windows do not deliver change events.
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      # Build output goes to a volume, so the container and a build on the
+      # host never overwrite each other's bin/ and obj/.
+      UseArtifactsOutput: "true"
+      ArtifactsPath: /artifacts
+    command:
+      - sh
+      - -c
+      - |
+        if [ -f server.json ]; then set -- --config server.json; fi
+        exec dotnet watch --project src/server --non-interactive run -- "$$@"
+    ports:
+      - "127.0.0.1:${UBIQUITOUS_WEBSOCKET_PORT:-8781}:8781"
+    volumes:
+      - .:/src
+      - dev-artifacts:/artifacts
+      - dev-nuget:/root/.nuget/packages
+
   # The built ubiquitous-client: static files, served only through the proxy.
   client:
     image: ghcr.io/ubiquitouscore/ubiquitous-client:latest
@@ -148,3 +182,5 @@ volumes:
   ubiquitous-state:
   ubiquitous-secrets:
   caddy-data:
+  dev-artifacts:
+  dev-nuget:
