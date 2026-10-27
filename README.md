@@ -101,9 +101,41 @@ UBIQUITOUS_SITE=192.168.1.20
 
 then run `docker compose up -d` again.
 
-On each device, open `https://192.168.1.20/root.crt` once, accept the warning,
-and install the certificate as trusted (iOS: Settings → General → About →
-Certificate Trust Settings). Then open `https://192.168.1.20`.
+On each device, open `https://192.168.1.20/root.crt` once, accept the
+warning, and install the certificate as trusted:
+
+- **iPhone / iPad:** Settings → General → VPN & Device Management → install
+  the downloaded profile, then Settings → General → About → Certificate Trust
+  Settings → turn on full trust for it.
+- **Android:** the link only downloads the file. Install it from Settings →
+  Security → Encryption & credentials → Install a certificate → **CA
+  certificate** (menu names vary by brand; search Settings for "CA
+  certificate").
+
+Then open `https://192.168.1.20`.
+
+If the page still says "Not secure":
+
+- **Restart the browser.** If you opened the page and went past the warning
+  before installing the certificate, the browser keeps treating it as
+  insecure until it restarts. On Android, force-stop Chrome (Settings → Apps →
+  Chrome → Force stop) and open the address again; on iOS, close the tab.
+- **Check where it was installed.** On Android it must be a CA certificate:
+  it should be listed as "Caddy Local Authority" under Settings → Encryption &
+  credentials → Trusted credentials → User. "VPN & app user certificate" and
+  "Wi-Fi certificate" do not work.
+- **Firefox on Android** ignores certificates you install unless you turn on
+  Settings → About Firefox (tap the logo five times) → back to Settings →
+  Secret Settings → "Use third party CA certificates". Chrome and Samsung
+  Internet use them as they are.
+- **The address changed.** The router assigns this machine's LAN address and
+  can change it; update `UBIQUITOUS_SITE` and run `docker compose up -d`.
+  Reserving a fixed address for the machine in the router stops this.
+- **Nothing loads at all.** Check that the phone is on the same network, and
+  that this machine's firewall lets Docker (or OrbStack) accept incoming
+  connections.
+- **The certificate changed.** It lives in the `caddy-data` volume; after
+  `docker compose down -v`, every device has to install the new one.
 
 To play from anywhere, give it a real domain instead
 (`UBIQUITOUS_SITE=play.example.com`, with ports 80 and 443 forwarded to this
