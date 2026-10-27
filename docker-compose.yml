@@ -156,7 +156,7 @@ configs:
       	default_sni {$$UBIQUITOUS_SITE}
       }
 
-      localhost, {$$UBIQUITOUS_SITE} {
+      (app) {
       	handle_path /ubiquitous-server* {
       		reverse_proxy server:{$$UBIQUITOUS_WEBSOCKET_PORT}
       	}
@@ -167,6 +167,16 @@ configs:
       	handle {
       		reverse_proxy client:8780
       	}
+      }
+
+      # This machine needs no certificate: browsers already treat
+      # http://localhost as secure.
+      http://localhost {
+      	import app
+      }
+
+      localhost, {$$UBIQUITOUS_SITE} {
+      	import app
       }
 
 volumes:
