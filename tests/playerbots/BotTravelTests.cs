@@ -39,7 +39,12 @@ public sealed class BotTravelTests
         Hear(view, WebMessageTypes.WorldEntered, new WorldEnteredPayload(1, new WirePosition(x, 0, z), WebNetworkId.FromString(Self)));
         Hear(view, WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(new()
         {
-            ["level"] = level, ["health"] = 100, ["maxHealth"] = 100, ["power"] = 100, ["maxPower"] = 100, ["gold"] = 500,
+            ["level"] = level,
+            ["health"] = 100,
+            ["maxHealth"] = 100,
+            ["power"] = 100,
+            ["maxPower"] = 100,
+            ["gold"] = 500,
         }));
         Hear(view, WebMessageTypes.QuestStatuses, new QuestStatusesPayload([]));
         return view;

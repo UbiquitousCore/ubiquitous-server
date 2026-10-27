@@ -109,7 +109,10 @@ public sealed class PlayerbotWorldTests
         var content = QuestContent() with { PlayableRaces = Ubiquitous.Data.PlayerRaceIds.All };
         var world = new BotTestWorld(content, [], new Dictionary<string, string>
         {
-            ["enabled"] = "true", ["randomBotCount"] = "4", ["loginsPerTick"] = "4", ["seed"] = "3",
+            ["enabled"] = "true",
+            ["randomBotCount"] = "4",
+            ["loginsPerTick"] = "4",
+            ["seed"] = "3",
         });
 
         await world.RunUntilAsync(() => world.Bots.Count == 4 && world.Bots.All(bot => bot.Playing), mostTicks: 50);
@@ -190,8 +193,10 @@ public sealed class PlayerbotWorldTests
         var settings = new Dictionary<string, string>(OneBot())
         {
             ["logInAndOut"] = "true",
-            ["onlineMinutesMin"] = "1", ["onlineMinutesMax"] = "1",
-            ["offlineMinutesMin"] = "1", ["offlineMinutesMax"] = "1",
+            ["onlineMinutesMin"] = "1",
+            ["onlineMinutesMax"] = "1",
+            ["offlineMinutesMin"] = "1",
+            ["offlineMinutesMax"] = "1",
         };
         var world = new BotTestWorld(QuestContent(), [], settings);
         await world.RunUntilAsync(() => world.Bots is [{ Playing: true }], mostTicks: 50);

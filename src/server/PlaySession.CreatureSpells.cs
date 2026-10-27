@@ -205,7 +205,10 @@ public sealed partial class PlaySession
 
         var lasting = effect with
         {
-            EffectDamage = null, EffectDamageRandom = null, EffectHeal = null, EffectMeleeWeaponHit = false,
+            EffectDamage = null,
+            EffectDamageRandom = null,
+            EffectHeal = null,
+            EffectMeleeWeaponHit = false,
             ExtraEffects = null,
         };
         if (!LeavesSomethingBehind(lasting)) return;

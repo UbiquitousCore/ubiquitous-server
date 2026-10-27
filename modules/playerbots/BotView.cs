@@ -468,8 +468,13 @@ public sealed class BotView
             var player = Read<PlayerSpawnedPayload>(payload);
             Units[id] = new SeenUnit(id, UnitKind.Player)
             {
-                Position = At(player.Position), Name = player.Name, Level = player.Level,
-                Health = player.Health, MaxHealth = player.MaxHealth, Dead = player.Health <= 0, Class = player.Class,
+                Position = At(player.Position),
+                Name = player.Name,
+                Level = player.Level,
+                Health = player.Health,
+                MaxHealth = player.MaxHealth,
+                Dead = player.Health <= 0,
+                Class = player.Class,
             };
             LastSeenPlayers.Remove(id);
             return;

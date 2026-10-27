@@ -400,7 +400,8 @@ public sealed class BossScriptTests
         Assert.Equal(2781u, ExecutionerScript.Instance.Act(Turn(castCount: armoured, secondsSinceCast: since) with { Legend = true })!.Cast);
         Assert.NotEqual(2781u, ExecutionerScript.Instance.Act(Turn(castCount: armoured, secondsSinceCast: since))?.Cast);
         Assert.NotEqual(2781u, ExecutionerScript.Instance.Act(Turn(
-            castCount: new Dictionary<uint, int> { [2674] = 1, [2781] = 1 }, secondsSinceCast: since) with { Legend = true })?.Cast);
+            castCount: new Dictionary<uint, int> { [2674] = 1, [2781] = 1 }, secondsSinceCast: since) with
+        { Legend = true })?.Cast);
     }
 
     [Fact]
