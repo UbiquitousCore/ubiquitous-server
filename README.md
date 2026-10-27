@@ -114,9 +114,15 @@ reach it from your own devices without opening ports.
 ### Updating
 
 ```bash
+curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
 docker compose pull
-docker compose up -d
+docker compose up -d --force-recreate
 ```
+
+The first line refreshes the compose file itself (`curl.exe` on Windows; in
+a clone, `git pull` instead); your `.env` is kept. `--force-recreate` is
+needed because Docker does not notice a change to the proxy's settings,
+which live inside the compose file.
 
 Saves are kept: accounts, characters, inventory and quests are in the
 Postgres volume; mail, guilds, friends and the auction house in the server's
