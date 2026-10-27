@@ -86,10 +86,14 @@ public sealed record ServerOptions(
             (options, value, name) => options with { DisabledRaces = ParseRaceList(value, name) }),
     ];
 
-    public static ServerOptions Load(string[] args, IReadOnlyDictionary<string, string?>? environment = null)
+    // A native run picks up .env and server.json from where it is started, as
+    // Docker Compose does, so `dotnet run` needs no wrapper to pass them on.
+    public static ServerOptions Load(
+        string[] args, IReadOnlyDictionary<string, string?>? environment = null, string? workingDirectory = null)
     {
         var options = Defaults;
-        var variables = environment ?? ReadEnvironment();
+        var directory = workingDirectory ?? Directory.GetCurrentDirectory();
+        var variables = WithDotEnv(environment ?? ReadEnvironment(), Path.Combine(directory, ".env"));
         var configPath = FindArgument(args, "--config", "-c");
         if (configPath is null
             && variables.TryGetValue("UBIQUITOUS_CONFIG", out var configFromEnvironment)
@@ -97,6 +101,9 @@ public sealed record ServerOptions(
         {
             configPath = configFromEnvironment;
         }
+
+        if (configPath is null && File.Exists(Path.Combine(directory, "server.json")))
+            configPath = Path.Combine(directory, "server.json");
 
         if (configPath is not null)
             options = ApplyConfigFile(options, configPath);
@@ -271,14 +278,34 @@ public sealed record ServerOptions(
 
     private static string? FindArgument(string[] args, params string[] names)
     {
-        // The last occurrence wins, so `just dev --port 9000` overrides the
-        // port the recipe passes first.
+        // The last occurrence wins, so a port added after a script's own
+        // arguments overrides the one it passes first.
         for (var index = args.Length - 2; index >= 0; index--)
         {
             if (names.Contains(args[index], StringComparer.OrdinalIgnoreCase)) return args[index + 1];
         }
 
         return null;
+    }
+
+    // A variable already in the environment wins over the same name in .env.
+    private static IReadOnlyDictionary<string, string?> WithDotEnv(IReadOnlyDictionary<string, string?> environment, string path)
+    {
+        if (!File.Exists(path)) return environment;
+        var merged = new Dictionary<string, string?>(environment, StringComparer.OrdinalIgnoreCase);
+        foreach (var line in File.ReadLines(path))
+        {
+            var text = line.Trim();
+            if (text.Length == 0 || text.StartsWith('#')) continue;
+            if (text.StartsWith("export ", StringComparison.Ordinal)) text = text["export ".Length..];
+            var equals = text.IndexOf('=', StringComparison.Ordinal);
+            if (equals <= 0) continue;
+            var value = text[(equals + 1)..].Trim();
+            if (value.Length >= 2 && value[0] is ('"' or '\'') && value[^1] == value[0]) value = value[1..^1];
+            merged.TryAdd(text[..equals].Trim(), value);
+        }
+
+        return merged;
     }
 
     private static IReadOnlyDictionary<string, string?> ReadEnvironment() =>

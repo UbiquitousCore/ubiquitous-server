@@ -86,6 +86,54 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
+    public void DotEnvBesideTheServer_IsRead_ButTheEnvironmentWins()
+    {
+        var directory = Directory.CreateTempSubdirectory("ubiquitous-dotenv-").FullName;
+        File.WriteAllText(Path.Combine(directory, ".env"), """
+            # comment
+            UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true
+            UBIQUITOUS_DEVELOPMENT_PASS_HASH="from-dotenv"
+            export UBIQUITOUS_LOG_LEVEL=Debug
+            UBIQUITOUS_WEBSOCKET_PORT=9002
+            """);
+        try
+        {
+            var options = ServerOptions.Load([], new Dictionary<string, string?>
+            {
+                ["UBIQUITOUS_WEBSOCKET_PORT"] = "9003",
+            }, directory);
+
+            Assert.True(options.DevelopmentAccountsEnabled);
+            Assert.Equal("from-dotenv", options.DevelopmentPassHash);
+            Assert.Equal("Debug", options.LogLevel);
+            Assert.Equal(9003, options.WebSocketPort);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ServerJsonBesideTheServer_IsRead_UnlessAnotherIsNamed()
+    {
+        var directory = Directory.CreateTempSubdirectory("ubiquitous-server-json-").FullName;
+        File.WriteAllText(Path.Combine(directory, "server.json"), "{ \"webSocketPort\": 9004 }");
+        var other = Path.Combine(directory, "other.json");
+        File.WriteAllText(other, "{ \"webSocketPort\": 9005 }");
+        try
+        {
+            var empty = new Dictionary<string, string?>();
+            Assert.Equal(9004, ServerOptions.Load([], empty, directory).WebSocketPort);
+            Assert.Equal(9005, ServerOptions.Load(["--config", other], empty, directory).WebSocketPort);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void RepeatedArgument_TakesTheLastOne()
     {
         var options = ServerOptions.Load(
