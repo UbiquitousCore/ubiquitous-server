@@ -75,7 +75,8 @@ public static class BuildPacks
             }
         }
 
-        return [.. names.Where(found.ContainsKey).Select(name => (name, found[name]))];
+        // The pack keeps the name the build gives it, whatever case it was asked for in.
+        return [.. names.Where(found.ContainsKey).Select(name => (found.Keys.First(key => key.Equals(name, StringComparison.OrdinalIgnoreCase)), found[name]))];
     }
 
     // Writes one named pack (usually tables.bin) out of a build — its .ipa,
