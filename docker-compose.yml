@@ -85,9 +85,6 @@ services:
     profiles: ["dev"]
     image: mcr.microsoft.com/dotnet/sdk:10.0
     working_dir: /src
-    env_file:
-      - path: .env
-        required: false
     environment:
       UBIQUITOUS_BIND_ADDRESS: 0.0.0.0
       UBIQUITOUS_WEBSOCKET_PORT: "8781"
@@ -98,12 +95,7 @@ services:
       # host never overwrite each other's bin/ and obj/.
       UseArtifactsOutput: "true"
       ArtifactsPath: /artifacts
-    command:
-      - sh
-      - -c
-      - |
-        if [ -f server.json ]; then set -- --config server.json; fi
-        exec dotnet watch --project src/server --non-interactive run -- "$$@"
+    command: ["dotnet", "watch", "--project", "src/server", "--non-interactive", "run"]
     ports:
       - "127.0.0.1:${UBIQUITOUS_WEBSOCKET_PORT:-8781}:8781"
     volumes:
