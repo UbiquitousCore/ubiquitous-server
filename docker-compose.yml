@@ -39,7 +39,9 @@ services:
       - ubiquitous-secrets:/run/ubiquitous:ro
     restart: unless-stopped
 
+  # Pulled from GHCR; `up --build` builds it from this checkout instead.
   server:
+    image: ghcr.io/ubiquitouscore/ubiquitous-server:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -80,6 +82,7 @@ services:
   # the files it writes are yours rather than root's.
   ingest:
     profiles: ["ingest"]
+    image: ghcr.io/ubiquitouscore/ubiquitous-server-ingest:latest
     build:
       context: .
       dockerfile: Dockerfile

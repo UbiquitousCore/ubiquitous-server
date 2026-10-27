@@ -1,4 +1,7 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# The SDK stages run on the builder's own architecture and cross-compile, so
+# an arm64 image does not compile .NET under emulation.
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG TARGETARCH
 WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/common/common.csproj src/common/
@@ -12,20 +15,21 @@ COPY src/world/world.csproj src/world/
 COPY src/module-api/module-api.csproj src/module-api/
 # Modules are built into the server, so their projects are needed to restore it.
 COPY modules/ modules/
-RUN dotnet restore src/server/server.csproj
+RUN dotnet restore src/server/server.csproj -a $TARGETARCH
 COPY src/ src/
 # Patrol routes are linked into the publish output by server.csproj.
 COPY content/ content/
-RUN dotnet publish src/server/server.csproj -c Release --no-restore -o /app/publish
+RUN dotnet publish src/server/server.csproj -c Release --no-restore -a $TARGETARCH -o /app/publish
 
 # `docker compose run --rm ingest`: turns the client build in incoming/ into
 # data/generated/, so importing needs nothing installed on the host.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS ingest-build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS ingest-build
+ARG TARGETARCH
 WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/ src/
 COPY tools/ tools/
-RUN dotnet publish tools/asset-extractor -c Release -o /app/extractor
+RUN dotnet publish tools/asset-extractor -c Release -a $TARGETARCH -o /app/extractor
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0 AS ingest
 ENV DOTNET_NOLOGO=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 HOME=/tmp
