@@ -47,6 +47,12 @@ public static class Program
         if (args.Contains("--help", StringComparer.OrdinalIgnoreCase))
         {
             Console.WriteLine("Usage:");
+            Console.WriteLine("  asset-extractor --ingest <build-or-dir> [--data <dir>]");
+            Console.WriteLine("                                              The whole import from a dropped-in client");
+            Console.WriteLine("                                              build (or tables.bin): unpack, import,");
+            Console.WriteLine("                                              validate, install into <dir>/generated");
+            Console.WriteLine("                                              keeping saves, add looks, bake walkable");
+            Console.WriteLine("                                              ground. <dir> defaults to data.");
             Console.WriteLine("  asset-extractor --synthetic --out <dir>   Write a minimal synthetic package.");
             Console.WriteLine("  asset-extractor --check <dir>              Validate an existing package.");
             Console.WriteLine("  asset-extractor --inspect <archive>        List the tables a packed archive carries.");
@@ -119,6 +125,12 @@ public static class Program
             return 0;
         }
 
+
+        var ingestSource = GetValue("--ingest");
+        if (ingestSource is not null)
+        {
+            return IngestCommand.Run(ingestSource, GetValue("--data") ?? "data", Console.Out);
+        }
 
         var inspectPath = GetValue("--inspect");
         if (inspectPath is not null)
@@ -323,33 +335,38 @@ public static class Program
         var checkDir = GetValue("--check");
         if (checkDir is not null)
         {
-            Ubiquitous.Data.DataValidationResult validation;
-            try
-            {
-                validation = Ubiquitous.Data.DataPackageWriter.ValidatePackage(checkDir);
-            }
-            catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException or System.Text.Json.JsonException)
-            {
-                Console.WriteLine($"Invalid package: {ex.Message}");
-                return 1;
-            }
-
-            if (!validation.IsValid)
-            {
-                foreach (var error in validation.Errors)
-                {
-                    Console.WriteLine($"  - {error}");
-                }
-
-                return 1;
-            }
-
-            Console.WriteLine("Package valid.");
-            return 0;
+            return Check(checkDir);
         }
 
-        Console.WriteLine("Usage: asset-extractor (--synthetic --out <dir> | --check <dir> | --inspect <archive> | --extract <archive> --out <dir> | --extract-world <archive-or-dir> --out <dir> | --extract-pack <build> --pack <name> --out <dir> | --import <archive> --out <dir> | --import-from-dir <dir> --out <dir> | --bake <package-dir> | --nav-probe <package-dir> --map <id> --at <x,y,z> | --help)");
+        Console.WriteLine("Usage: asset-extractor (--ingest <build-or-dir> | --synthetic --out <dir> | --check <dir> | --inspect <archive> | --extract <archive> --out <dir> | --extract-world <archive-or-dir> --out <dir> | --extract-pack <build> --pack <name> --out <dir> | --import <archive> --out <dir> | --import-from-dir <dir> --out <dir> | --bake <package-dir> | --nav-probe <package-dir> --map <id> --at <x,y,z> | --help)");
         return 2;
+    }
+
+    internal static int Check(string checkDir)
+    {
+        Ubiquitous.Data.DataValidationResult validation;
+        try
+        {
+            validation = Ubiquitous.Data.DataPackageWriter.ValidatePackage(checkDir);
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException or System.Text.Json.JsonException)
+        {
+            Console.WriteLine($"Invalid package: {ex.Message}");
+            return 1;
+        }
+
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+            {
+                Console.WriteLine($"  - {error}");
+            }
+
+            return 1;
+        }
+
+        Console.WriteLine("Package valid.");
+        return 0;
     }
 
     private static bool TryReadPoint(string text, out Ubiquitous.Common.Position point)
@@ -432,7 +449,7 @@ public static class Program
         return 0;
     }
 
-    private static int Extract(string archivePath, string outDirectory)
+    internal static int Extract(string archivePath, string outDirectory)
     {
         if (ReadArchive(archivePath) is not { } entries)
         {
@@ -517,7 +534,7 @@ public static class Program
         archive.Names.Any(name => WorldItemReader.TileOfEntry(name) is not null)
         || archive.Names.Any(name => name.Contains("/terrain/", StringComparison.OrdinalIgnoreCase));
 
-    private static int ExtractWorld(string source, string outDirectory)
+    internal static int ExtractWorld(string source, string outDirectory)
     {
         var archives = new List<string>();
         var insideBuild = new List<(string Name, Func<byte[]> Read)>();
@@ -608,7 +625,7 @@ public static class Program
         return 0;
     }
 
-    private static int ImportFromDir(
+    internal static int ImportFromDir(
         string tablesDirectory, string outDirectory, IReadOnlyDictionary<string, byte[]>? worldArchives = null)
     {
         var entries = new Dictionary<string, byte[]>();
