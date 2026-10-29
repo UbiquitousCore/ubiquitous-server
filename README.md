@@ -31,18 +31,24 @@ in it (save the link, or download it as below). Copy your `.ipa` into
 `incoming`.
 
 ```bash
-mkdir ubiquitous
-cd ubiquitous
-mkdir incoming data
+mkdir ubiquitous         # a folder for the server; any name and place will do
+cd ubiquitous            # every command from here on runs inside it
+mkdir incoming data      # incoming/ takes your .ipa, data/ the game data built from it
+# Download the compose file, which describes every container the server runs:
 curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
+# Now copy your .ipa into incoming/ (drag it there, or use cp).
 ```
 
 On Windows, type `curl.exe` rather than `curl` in PowerShell. A clone of this
 repository works the same way, from its root. Then, in that folder:
 
 ```bash
-docker compose run --rm ingest   # once: asks a few setup questions, then builds the game data from incoming/*.ipa
-docker compose up -d             # server, database, client and proxy
+# Once: asks a few setup questions, then builds the game data from incoming/*.ipa
+# (--rm deletes the one-off container afterwards; your files stay).
+docker compose run --rm ingest
+# Start the server, database, client and proxy in the background (-d).
+docker compose up -d
+# Make your first account; it asks for a password (8 characters or more) twice.
 docker compose exec server dotnet server.dll account create alice
 ```
 
@@ -54,21 +60,38 @@ leaves that file alone.
 The server will not start until `ingest` has run: `docker compose logs server`
 says so rather than running on placeholder content.
 
+The import takes a few minutes and about 2 GB of memory. If `ingest` is
+killed partway (a bare "Killed" or exit code 137), raise Docker Desktop's
+memory limit (Settings → Resources) and run it again. On Linux, run it as
+`UBIQUITOUS_UID=$(id -u) UBIQUITOUS_GID=$(id -g) docker compose run --rm ingest`
+so the files it writes, `.env` included, are yours rather than root's.
+
 Open <http://localhost> on this machine and choose your `.ipa`; the first visit unpacks it
 in your browser, once. Sign in as `alice`. The containers restart on their
 own after a crash or a reboot, as long as Docker itself starts with your
 machine.
 
-`account` also takes `password alice` (set a new password), `list`, and
-`gm alice on` / `gm alice off`, which makes an account an admin or takes it
-away:
+### Accounts
+
+Accounts are made and changed from this machine, with the server running.
+Each command is the whole line to type; swap `alice` for the account's name
+(3-32 letters, digits or `_ . @ -`).
 
 ```bash
+# Make an account; you are asked for its password twice.
+docker compose exec server dotnet server.dll account create alice
+# Set a new password for an account.
+docker compose exec server dotnet server.dll account password alice
+# Make an account an admin (GM)...
 docker compose exec server dotnet server.dll account gm alice on
+# ...or take it away again.
+docker compose exec server dotnet server.dll account gm alice off
+# List every account, with GM beside the admins.
+docker compose exec server dotnet server.dll account list
 ```
 
-It applies at the player's next sign-in and covers every character on the
-account. An admin gets an admin panel in the game, with:
+Admin status applies at the player's next sign-in and covers every character
+on the account. An admin gets an admin panel in the game, with:
 
 - teleport to any zone, a faster walking speed, and fly (space up, shift down);
 - give themselves items or gold, set their level (1-60), learn every spell;
@@ -79,12 +102,6 @@ In the world, an admin also passes the server's movement checks, has a kill
 spell and a full heal, and can type `/stress <count>` in chat to spawn a crowd
 at the nearest training dummy for load testing. Give it only to people you
 trust with the whole server.
-
-The import takes a few minutes and about 2 GB of memory. If `ingest` is
-killed partway (a bare "Killed" or exit code 137), raise Docker Desktop's
-memory limit (Settings → Resources) and run it again. On Linux, run it as
-`UBIQUITOUS_UID=$(id -u) UBIQUITOUS_GID=$(id -g) docker compose run --rm ingest`
-so the files it writes, `.env` included, are yours rather than root's.
 
 ### Changing settings
 
@@ -170,8 +187,11 @@ reach it from your own devices without opening ports.
 ### Updating
 
 ```bash
+# Download the latest compose file over the old one (.env is not touched).
 curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
+# Fetch the newest version of every image the stack uses.
 docker compose pull
+# Restart every container on the new images and compose file.
 docker compose up -d --force-recreate
 ```
 
