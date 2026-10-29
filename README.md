@@ -59,9 +59,26 @@ in your browser, once. Sign in as `alice`. The containers restart on their
 own after a crash or a reboot, as long as Docker itself starts with your
 machine.
 
-`account` also takes `password alice`, `gm alice on` (admin panel and GM
-tools; `off` removes it) and `list`. GM status applies at the player's next
-sign-in and covers every character on the account.
+`account` also takes `password alice` (set a new password), `list`, and
+`gm alice on` / `gm alice off`, which makes an account an admin or takes it
+away:
+
+```bash
+docker compose exec server dotnet server.dll account gm alice on
+```
+
+It applies at the player's next sign-in and covers every character on the
+account. An admin gets an admin panel in the game, with:
+
+- teleport to any zone, a faster walking speed, and fly (space up, shift down);
+- give themselves items or gold, set their level (1-60), learn every spell;
+- invincibility until they leave the world;
+- draw distance, the debug HUD, the collision wireframe and fog off.
+
+In the world, an admin also passes the server's movement checks, has a kill
+spell and a full heal, and can type `/stress <count>` in chat to spawn a crowd
+at the nearest training dummy for load testing. Give it only to people you
+trust with the whole server.
 
 The import takes a few minutes and about 2 GB of memory. If `ingest` is
 killed partway (a bare "Killed" or exit code 137), raise Docker Desktop's
