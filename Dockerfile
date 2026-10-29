@@ -29,6 +29,7 @@ WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/ src/
 COPY tools/ tools/
+COPY env.example ./
 RUN dotnet publish tools/asset-extractor -c Release -a $TARGETARCH -o /app/extractor
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0 AS ingest

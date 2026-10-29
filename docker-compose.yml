@@ -156,8 +156,9 @@ services:
       target: ingest
     user: "${UBIQUITOUS_UID:-0}:${UBIQUITOUS_GID:-0}"
     volumes:
-      - ./incoming:/work/incoming
-      - ./data:/work/data
+      # The whole folder, not just incoming/ and data/: the first import
+      # writes .env beside this file.
+      - .:/work
 
 configs:
   caddyfile:

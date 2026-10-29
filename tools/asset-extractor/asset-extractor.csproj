@@ -9,6 +9,11 @@
     <ProjectReference Include="..\..\src\data\data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Written out as `.env` by the first import; see SettingsFile. -->
+    <EmbeddedResource Include="..\..\env.example" LogicalName="env.example" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>

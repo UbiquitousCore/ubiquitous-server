@@ -9,5 +9,7 @@
 !Directory.Packages.props
 !global.json
 !.editorconfig
+# Built into the import, which writes it out as the first .env.
+!env.example
 **/bin
 **/obj

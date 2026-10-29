@@ -129,6 +129,7 @@ public static class Program
         var ingestSource = GetValue("--ingest");
         if (ingestSource is not null)
         {
+            SettingsFile.EnsureExists(Directory.GetCurrentDirectory(), Console.In, Console.Out, !Console.IsInputRedirected);
             return IngestCommand.Run(ingestSource, GetValue("--data") ?? "data", Console.Out);
         }
 

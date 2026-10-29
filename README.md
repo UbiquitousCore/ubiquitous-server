@@ -41,10 +41,15 @@ On Windows, type `curl.exe` rather than `curl` in PowerShell. A clone of this
 repository works the same way, from its root. Then, in that folder:
 
 ```bash
-docker compose run --rm ingest   # once: builds the game data from incoming/*.ipa
+docker compose run --rm ingest   # once: asks a few setup questions, then builds the game data from incoming/*.ipa
 docker compose up -d             # server, database, client and proxy
 docker compose exec server dotnet server.dll account create alice
 ```
+
+The first `ingest` asks for the address other devices will open, festival
+content and bots (Enter keeps each default: this machine only, both off), and
+writes your answers into a `.env` beside the compose file. Run again, it
+leaves that file alone.
 
 The server will not start until `ingest` has run: `docker compose logs server`
 says so rather than running on placeholder content.
@@ -60,15 +65,14 @@ sign-in and covers every character on the account.
 
 The import takes a few minutes and about 2 GB of memory. If `ingest` is
 killed partway (a bare "Killed" or exit code 137), raise Docker Desktop's
-memory limit (Settings → Resources) and run it again. On Linux, put
-`UBIQUITOUS_UID=` and `UBIQUITOUS_GID=` with your own ids (`id -u`, `id -g`)
-in a `.env` beside the compose file, so the files it writes are yours rather
-than root's.
+memory limit (Settings → Resources) and run it again. On Linux, run it as
+`UBIQUITOUS_UID=$(id -u) UBIQUITOUS_GID=$(id -g) docker compose run --rm ingest`
+so the files it writes, `.env` included, are yours rather than root's.
 
 ### Changing settings
 
-Settings go in a text file named `.env` beside the compose file, one
-`NAME=value` per line, and take effect with `docker compose up -d`. For
+Settings go in the `.env` beside the compose file, which the first `ingest`
+wrote, one `NAME=value` per line, and take effect with `docker compose up -d`. For
 example, to turn the seasonal festival items on and run ten bots:
 
 ```
