@@ -45,7 +45,7 @@ public static class Program
         if (accountCommand) return await RunAccountCommandAsync(args[1..], options, logger);
 
         var readiness = new ServerReadinessState();
-        if (!TryLoadCatalog(options.DataDirectory, readiness, logger, out var catalog)) return ExitInvalidData;
+        if (!TryLoadCatalog(options, readiness, logger, out var catalog)) return ExitInvalidData;
 
         NpgsqlDataSource? postgres = null;
         if (!string.IsNullOrWhiteSpace(options.PostgresConnectionString))
@@ -173,8 +173,9 @@ public static class Program
             : throw new InvalidDataException($"Log level '{value}' is not one of {string.Join(", ", Enum.GetNames<LogLevel>())}.");
 
     private static bool TryLoadCatalog(
-        string dataDirectory, ServerReadinessState readiness, ILogger logger, out DataCatalog? catalog)
+        ServerOptions options, ServerReadinessState readiness, ILogger logger, out DataCatalog? catalog)
     {
+        var dataDirectory = options.DataDirectory;
         catalog = null;
         try
         {
@@ -182,8 +183,20 @@ public static class Program
         }
         catch (Exception ex) when (ex is FileNotFoundException or InvalidDataException or JsonException)
         {
+            // A deployed server with no imported data would run on development
+            // content and look like it works; it stops and says what to run.
+            if (options.RequireDataPackage)
+            {
+                logger.LogCritical(
+                    "No data package at {Manifest}. Import your .ipa first: docker compose run --rm ingest",
+                    Path.Combine(Path.GetFullPath(dataDirectory), DataManifest.FileName));
+                return false;
+            }
+
             logger.LogWarning(
-                "No data package at {Manifest}; running on development content. See docs/development/setup.md",
+                "No data package at {Manifest}: running on DEVELOPMENT CONTENT, a tiny synthetic world, not the game's. "
+                + "Import your .ipa with `docker compose run --rm ingest`, or natively "
+                + "`dotnet run --project tools/asset-extractor -- --ingest incoming`. See docs/development/setup.md",
                 Path.Combine(Path.GetFullPath(dataDirectory), DataManifest.FileName));
             readiness.SetDataUnavailable("No generated data package is loaded; using development fallback data.");
             return true;

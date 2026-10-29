@@ -23,7 +23,8 @@ public sealed record ServerOptions(
     int MaxMessagesPerSecond = 30,
     IReadOnlyList<string>? AllowedOrigins = null,
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? Modules = null,
-    string? PostgresPasswordFile = null)
+    string? PostgresPasswordFile = null,
+    bool RequireDataPackage = false)
 {
     private const string ModuleEnvironmentPrefix = "UBIQUITOUS_MODULE_";
 
@@ -82,6 +83,8 @@ public sealed record ServerOptions(
             (options, value, name) => options with { FestivalStaticEntries = ParseEntryList(value, name) }),
         new("festivalCreatureEntries", "UBIQUITOUS_FESTIVAL_CREATURE_ENTRIES", ["--festival-creature-entries"],
             (options, value, name) => options with { FestivalCreatureEntries = ParseEntryList(value, name) }),
+        new("requireDataPackage", "UBIQUITOUS_REQUIRE_DATA_PACKAGE", ["--require-data-package"],
+            (options, value, name) => options with { RequireDataPackage = ParseBool(value, name) }),
         new("disabledRaces", "UBIQUITOUS_DISABLED_RACES", ["--disabled-races"],
             (options, value, name) => options with { DisabledRaces = ParseRaceList(value, name) }),
     ];

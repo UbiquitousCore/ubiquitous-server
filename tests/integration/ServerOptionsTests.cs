@@ -256,6 +256,32 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
+    public void ADeployedServerCanBeToldItMustHaveImportedData()
+    {
+        Assert.False(ServerOptions.Load([], new Dictionary<string, string?>()).RequireDataPackage);
+        Assert.True(ServerOptions.Load([], new Dictionary<string, string?>
+        {
+            ["UBIQUITOUS_REQUIRE_DATA_PACKAGE"] = "true",
+        }).RequireDataPackage);
+    }
+
+    [Fact]
+    public async Task WithNoImportedDataAServerThatRequiresItStopsBeforeServing()
+    {
+        var empty = Directory.CreateTempSubdirectory("ubiquitous-no-data-");
+        try
+        {
+            var exit = await Ubiquitous.Server.Program.Main(
+                ["--data-dir", empty.FullName, "--require-data-package", "true", "--log-level", "None"]);
+            Assert.Equal(1, exit);
+        }
+        finally
+        {
+            empty.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
     public void TurningTheFestivalOff_NeedsNothingElseSaid()
     {
         var off = ServerOptions.Load(["--festival-content", "false"], new Dictionary<string, string?>());

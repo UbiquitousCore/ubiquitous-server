@@ -68,6 +68,9 @@ services:
       UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT: ${UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT:-}
       UBIQUITOUS_POSTGRES_CONNECTION_STRING: "Host=db;Username=ubiquitous;Database=ubiquitous"
       UBIQUITOUS_POSTGRES_PASSWORD_FILE: /run/ubiquitous/postgres_password
+      # Without `ingest` the server would run on development content; this
+      # stack stops instead and its log says to run it. `dev` keeps the fallback.
+      UBIQUITOUS_REQUIRE_DATA_PACKAGE: "true"
     depends_on:
       db:
         condition: service_healthy

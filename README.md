@@ -46,6 +46,9 @@ docker compose up -d             # server, database, client and proxy
 docker compose exec server dotnet server.dll account create alice
 ```
 
+The server will not start until `ingest` has run: `docker compose logs server`
+says so rather than running on placeholder content.
+
 Open <http://localhost> on this machine and choose your `.ipa`; the first visit unpacks it
 in your browser, once. Sign in as `alice`. The containers restart on their
 own after a crash or a reboot, as long as Docker itself starts with your
