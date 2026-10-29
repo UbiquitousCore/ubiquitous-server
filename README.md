@@ -25,7 +25,7 @@ yourself. Nothing else is installed on your machine.
 
 ### Run a server
 
-Make a folder for it, with `incoming` and `data` folders inside, and put
+Make a folder for it, with an `incoming` folder inside, and put
 [`docker-compose.yml`](https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml)
 in it (save the link, or download it as below). Copy your `.ipa` into
 `incoming`.
@@ -33,7 +33,7 @@ in it (save the link, or download it as below). Copy your `.ipa` into
 ```bash
 mkdir ubiquitous         # a folder for the server; any name and place will do
 cd ubiquitous            # every command from here on runs inside it
-mkdir incoming data      # incoming/ takes your .ipa, data/ the game data built from it
+mkdir incoming           # takes your .ipa; the import makes data/ for what it builds
 # Download the compose file, which describes every container the server runs:
 curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
 # Now copy your .ipa into incoming/ (drag it there, or use cp).
