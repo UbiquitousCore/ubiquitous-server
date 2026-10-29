@@ -184,11 +184,11 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
-    public void FestivalOptions_DefaultToEnabledWithNoEntries()
+    public void FestivalOptions_DefaultToDisabledWithNoEntries()
     {
         var options = ServerOptions.Load([], new Dictionary<string, string?>());
 
-        Assert.True(options.FestivalContentEnabled);
+        Assert.False(options.FestivalContentEnabled);
         Assert.Null(options.FestivalStaticEntries);
     }
 

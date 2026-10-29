@@ -11,7 +11,7 @@ public sealed record ServerOptions(
     string DevelopmentPassHash,
     string LogLevel,
     string? PostgresConnectionString = null,
-    bool FestivalContentEnabled = true,
+    bool FestivalContentEnabled = false,
     IReadOnlyList<uint>? FestivalStaticEntries = null,
     IReadOnlyList<uint>? FestivalCreatureEntries = null,
     IReadOnlyList<int>? DisabledRaces = null,

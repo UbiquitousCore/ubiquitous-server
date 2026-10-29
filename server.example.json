@@ -19,8 +19,8 @@
   "developmentAccounts": false,
   // "logLevel": "Information",
 
-  // Seasonal scenery and creatures. Off hides the whole event; the entry
-  // lists hide only those entries while leaving the rest of it up.
+  // Seasonal scenery and creatures, off by default. Off hides the whole
+  // event; the entry lists hide only those entries while leaving the rest up.
   "festivalContentEnabled": false,
   // "festivalStaticEntries": [288, 145],
   // "festivalCreatureEntries": [3012, 2781],

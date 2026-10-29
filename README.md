@@ -69,17 +69,17 @@ than root's.
 
 Settings go in a text file named `.env` beside the compose file, one
 `NAME=value` per line, and take effect with `docker compose up -d`. For
-example, to turn the seasonal festival items off and run ten bots:
+example, to turn the seasonal festival items on and run ten bots:
 
 ```
-UBIQUITOUS_FESTIVAL_CONTENT_ENABLED=false
+UBIQUITOUS_FESTIVAL_CONTENT_ENABLED=true
 UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED=true
 UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=10
 ```
 
 | Setting | Default | Does |
 |---|---|---|
-| `UBIQUITOUS_FESTIVAL_CONTENT_ENABLED` | `true` | winter solstice and anniversary scenery, creatures and items |
+| `UBIQUITOUS_FESTIVAL_CONTENT_ENABLED` | `false` | winter solstice and anniversary scenery, creatures and items |
 | `UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED` | `false` | start bots |
 | `UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT` | `5` | how many bots play on their own (0-500) |
 | `UBIQUITOUS_MAX_CONNECTIONS` | `500` | players connected at once |
@@ -212,7 +212,7 @@ Game settings live in `server.json` (git-ignored; copy it from
 
 ```json
 {
-  "festivalContentEnabled": false,
+  "festivalContentEnabled": true,
   "modules": { "playerbots": { "enabled": true, "randomBotCount": 5 } }
 }
 ```
