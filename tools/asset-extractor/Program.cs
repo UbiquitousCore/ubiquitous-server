@@ -456,11 +456,18 @@ public static class Program
             return 1;
         }
 
+        var (destinations, refused) = ArchivePaths.AllInside(outDirectory, entries.Keys);
+        if (destinations is null)
+        {
+            Console.Error.WriteLine(
+                $"Refusing {archivePath}: entry \"{refused}\" would be written outside {outDirectory}. The file may have been tampered with.");
+            return 1;
+        }
+
         int written = 0;
         foreach (var (name, bytes) in entries)
         {
-            string relative = name.Replace('/', Path.DirectorySeparatorChar);
-            string destination = Path.Combine(outDirectory, relative);
+            string destination = destinations[name];
             string? destinationDirectory = Path.GetDirectoryName(destination);
             if (!string.IsNullOrEmpty(destinationDirectory))
             {

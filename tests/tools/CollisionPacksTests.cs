@@ -47,6 +47,21 @@ public sealed class CollisionPacksTests : IDisposable
     }
 
     [Fact]
+    public void ATamperedPackNamingAPathOutsideTheOutputIsRefusedAndNothingIsWritten()
+    {
+        var packs = Path.Combine(_root, "packs");
+        Directory.CreateDirectory(packs);
+        File.WriteAllBytes(Path.Combine(packs, "model_phy.bin"), PackedArchiveFixture.Build(
+            ("model/scene/house.phy", [7]), ("../../escape.phy", [6])));
+        var output = Path.Combine(_root, "deep", "raw");
+
+        Assert.Equal(1, CollisionPacks.Extract(packs, output, TextWriter.Null));
+
+        Assert.False(File.Exists(Path.Combine(_root, "escape.phy")));
+        Assert.False(File.Exists(Path.Combine(output, "model", "scene", "house.phy")));
+    }
+
+    [Fact]
     public void ABuildWithNoCollisionPackIsReported()
     {
         Directory.CreateDirectory(_root);

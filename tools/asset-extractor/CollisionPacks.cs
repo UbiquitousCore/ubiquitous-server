@@ -40,11 +40,18 @@ public static class CollisionPacks
             }
 
             var chosen = Choose([.. opened.Select(pack => (IEnumerable<string>)pack.Archive.Names)]);
+            var (destinations, refused) = ArchivePaths.AllInside(outDirectory, chosen.Keys);
+            if (destinations is null)
+            {
+                log.WriteLine($"Refusing {source}: entry \"{refused}\" would be written outside {outDirectory}. The file may have been tampered with.");
+                return 1;
+            }
+
             var written = new int[opened.Count];
             int kept = 0;
             foreach (var (entry, pack) in chosen)
             {
-                var destination = Path.Combine(outDirectory, entry.Replace('/', Path.DirectorySeparatorChar));
+                var destination = destinations[entry];
                 if (File.Exists(destination))
                 {
                     kept++;
