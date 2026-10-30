@@ -52,53 +52,55 @@ The first dungeon most players see. It's a prison full of inmates and golems, wi
 
 ### Getting through the cells
 
-- **Andare**, a prisoner near the start, yells at the other prisoners now and then ("I'll tell you again: the judgment on me is not justice!"). He's flavour only and doesn't fight.
-- **Human Prisoners** pick a random player and throw them to the ground (*Knock Throw*). Healers, stay out of melee range.
-- **Vicious Elf Prisoners** do a *Crazy Dance* and stun people with *Throat Seal* (2 seconds). **Elf Prisoners** make the tank bleed every few seconds.
-- **Vicious Orc Prisoners** get angrier as they lose health. They gain *Bloodlust* at around 80%, 60%, 40% and 20% health, so burn them down instead of dragging the fight out.
-- **Vicious Human Prisoners** and **Human Prisoner Capos** set a random player on fire with *Burning Blood*. It also burns anyone standing within a few metres of that player, **so whoever is on fire should step away from the group**. If a Vicious Human Prisoner drops to about half health with an Orc Prisoner nearby, it uses *Siphon Life* to drain the target and heal itself. Capos also cast *Entice from Hell* as the fight opens.
-- **Flesh Golems** drain the tank with *Flesh Siphon*, which heals the golem, and puff out a *Rotten Cloud* every few seconds. **Rotten Flesh Golems** also throw rotten flesh at a random player, cutting that player's attack and spell power for a while.
-- **Rotten Jail Hounds** stack *Poison Teeth* on the tank (up to 5 stacks, slowing movement, attacks and casting). Kill them quickly so the stacks don't build up.
+- **Andare**, a prisoner near the start, yells at the other prisoners. About every 30 seconds, while a Human Prisoner is within 30 metres of him, he shouts one of two lines in turn: "I'll tell you again: the judgment on me is not justice!" and "Forget about it! I will never join you!". He doesn't fight. Talk to him and he blesses you with *Holy Cloak* (+150 shadow resistance for 30 minutes): "It's a blessing from the Lord of the Dead!"
+- **Human Prisoners** pick a random player and throw them to the ground (*Knock Throw*), first about 5 seconds in and then every 10 seconds. Healers, stay out of melee range.
+- **Vicious Elf Prisoners** do a *Crazy Dance* (double attack speed for 5 seconds) about 5 seconds in and then every 15 seconds, and stun their target with *Throat Seal* every 8 seconds (a hard hit and a stun of about 1½ seconds; the tooltip says 2). **Elf Prisoners** make the tank bleed almost at once, then every 10 seconds.
+- **Vicious Orc Prisoners** get angrier as they lose health. They gain a stack of *Bloodlust* (+10% attack power) at 80%, 60%, 40% and 20% health, and the stacks last the whole fight, so burn them down instead of dragging the fight out.
+- **Vicious Human Prisoners** and **Human Prisoner Capos** set a random player on fire with *Burning Blood* every 10 seconds (105 damage every 2 seconds for 6 seconds). It also burns anyone within 5 metres of that player for 55 every 2 seconds, **so whoever is on fire should step away from the group**. If a Vicious Human Prisoner drops to half health with a Vicious Orc Prisoner nearby, it uses *Siphon Life* to drain the target and heal itself. Capos open the fight with *Entice from Hell*, which gives every ally within 6 metres +10% attack power and +50% attack speed for a minute.
+- **Flesh Golems** drain the tank with *Flesh Siphon*, which heals the golem, about 5 seconds in and then every 10 seconds, and puff out a *Rotten Cloud* every 3 seconds. **Rotten Flesh Golems** also throw rotten flesh at a random player about 5 seconds in and then every 15 seconds, cutting that player's attack and spell power for a while.
+- **Rotten Jail Hounds** stack *Poison Teeth* on the tank about 3 seconds in and then every 6 seconds (up to 5 stacks, slowing movement, attacks and casting). Kill them quickly so the stacks don't build up.
 - **Bone Golems** open with *Bone Thorn*. **When one dies it breaks into two Inferior Bone Golems**. They have nothing special but need cleaning up, so AoE helps here.
 
 ### Boss: Executioner of Knahswahs
 
 A straight tank-and-spank with two cooldowns that take turns:
 
-- **Osseous Blade Armor**: he puts on bone armour (you'll see the buff on him) and holds it for several seconds.
-- **Whirlwind**: he yells “Cyclone Slash!” and spins. Melee players should back off when they hear it.
-- When neither of those is up he uses *Reaping* on the tank every few seconds.
+- **Osseous Blade Armor**: he puts on bone armour (you'll see the buff on him) and stands still in it for 8 seconds. **While it's up he reflects all physical and magic damage back at whoever hits him, so stop attacking until it drops.** He puts it on the same way in Normal and Legendary.
+- **Whirlwind**: he yells “Cyclone Slash!” and spins for 8 seconds at half speed, hitting everyone within about 9 metres. Melee players should back off when they hear it.
+- When neither of those is up, he uses *Reaping* on the tank about every 4 seconds.
 
-The armour comes first, then the Cyclone Slash, then they repeat. The first armour comes up quickly after the pull, and after that the cycle runs on a steady timer.
+The armour comes first, about 8 seconds after the pull. After that the Cyclone Slash and the armour take turns, one every 16 seconds.
 
 ### Boss: Ariel
 
-- Applies *Putrefying* as soon as the fight starts.
-- About every 10 seconds she plants a *Decayed Seed* on a random player, stunning them for 3 seconds. The first one comes very early.
-- **At around 10% health she casts *Detonation* and blows herself up.** Let the cast finish with everyone spread out and topped up. Once it goes off she's dead and the kill counts.
+- Applies *Putrefying* as soon as the fight starts. It pulses a little damage on everyone in the room for the rest of the fight.
+- She plants a *Decayed Seed* on a random player about 5 seconds in, then every 12 seconds. It stuns that player for 3 seconds and bursts on everyone within 6 metres of them, so spread out.
+- **At 10% health she starts a 20-second *Detonation* cast** and stops moving. **Kill her before the cast finishes.** If it completes, the blast kills everyone within 100 metres, and she dies with it.
 
 > **Event:** Once **both** the Executioner and Ariel are dead you'll get the message “You hear a faraway gate creaking open...”, and about 10 seconds later **Cosmo** appears.
 
 ### Final boss: Cosmo
 
-**Phase 1 (100% to about 75%): curses.** Cosmo cycles three curses in order, with a few seconds between each:
+**Phase 1 (100% to 75%): curses.** Cosmo cycles three curses in order, one every 6 seconds or so:
 
-1. *Thunder Curse*: a big energy nuke on his target.
-2. *Cold Curse*: slows the target by 30% for 3 seconds.
-3. *Flame Curse*: dropped on a random player's position. It burns for 15 seconds, so get out of it.
+1. *Thunder Curse*: a 5-second cast that ends in a big energy nuke on his target.
+2. *Cold Curse*: a 5-second cast that hits **everyone within 35 metres** and slows them by 30% for 3 seconds.
+3. *Flame Curse*: dropped on a random player's position, burning everyone within 5 metres of that spot. Get out of it.
 
-**Phase 2 (about 75%): demon form.** He yells “The demons stir within me!” and transforms (*Demon Metamorphosis*). From then on:
+**Phase 2 (75%): demon form.** He yells “The demons stir within me!” and transforms (*Demon Metamorphosis*). From then on:
 
-- He uses *Shadow Erode* on his target every so often. It's shadow damage.
-- About every 10 seconds he does one of two things, taking turns:
+- He uses *Shadow Erode* about 3 seconds after transforming and then every 12 seconds. It's shadow damage over a few seconds.
+- Every 10 seconds he does one of two things, taking turns:
   - He yells “The dead fight for ME!” and raises an **Undead Puppet**.
-  - On the next turn, **if a puppet is still standing near him**, he yells “Give me your power!” and eats it (*Devour Puppet*), healing himself by a big chunk.
+  - On the next turn, **if a puppet is still standing within 60 metres of him**, he yells “Give me your power!” and eats it (*Devour Puppet*), healing himself for 4,000.
 
-> **Tip:** **Kill every Undead Puppet as soon as it appears.** If one is still alive the next time he calls for power, he heals. Puppets also crumble on their own after about 12 seconds, so pulling one away from Cosmo works too.
+> **Tip:** **Kill every Undead Puppet as soon as it appears.** If one is still alive the next time he calls for power, he heals. Puppets also crumble on their own after about 12 seconds.
 
-**Phase 3 (about 25%): shield.** He drops the demon form, puts up a *Shadow Shield* that absorbs half of all damage he takes, and goes back to cycling his three curses for the rest of the fight. Save your burst for this phase.
+**Phase 3 (25%): shield.** He drops the demon form, puts up a *Shadow Shield* that halves all the damage he takes for the rest of the fight, with no limit on how much it soaks, and goes back to cycling his three curses. Save your burst for this phase.
 
-> **◆ Legendary:** Every boss and trash mechanic is the same. The difference is the numbers. Burning Blood, Bleeding, Thunder Curse and the rest hit several times harder, and the bosses have many times more health, so the Cosmo puppet heal and the 25% shield matter far more. Bleeds on the tank in particular go from minor to dangerous.
+If the party wipes or gets away from him, he loses the demon form and the shield, and the next attempt starts again from phase 1.
+
+> **◆ Legendary:** Every boss and trash mechanic is the same. The difference is the numbers. Burning Blood, Bleeding, Thunder Curse and the rest hit several times harder, and the bosses have many times more health, so the Cosmo puppet heal (40,000 instead of 4,000) and the 25% shield matter far more. Ariel's Decayed Seed burst goes from 250 to 1,500. Bleeds on the tank in particular go from minor to dangerous. Each boss kill also adds to everyone's Exhaustion: 5 for the Executioner and Ariel, 8 for Cosmo (see the [Gameplay Field Guide](gameplay-field-guide.md#-legendary-exhaustion)).
 
 ## Relic's Key
 
@@ -110,33 +112,52 @@ A swamp defence run. Instead of clearing your way to the bosses, you escort the 
 
 ### The escort and the ritual
 
-1. Talk to Tharrath. He says “Follow me!” and walks to the ritual site. Stay with him.
-2. When he gets there he starts casting *Summoning* and the waves begin. **Keep him alive. If Tharrath dies, the ritual fails.**
-3. **Block 1, swamp spirits:** “Here they come, right on time!” Three waves of Sons of the Earth and Sons of the Lake arrive about half a minute apart. When the last wave is dead, Tharrath warns “The air is humming... Must be a giant one!” and **Hathraad** arrives a little later.
-4. **Block 2, ghosts:** after Hathraad, “More of them are coming!” Three waves of Ghostly Hunters, Gladiators, Mages and Priests. Then “An angry spirit approaches!” and **Kermode** arrives.
-5. **Block 3, mixed:** “You've got to hold them off!” Four bigger waves that mix lake spirits, ghosts, Flame Strikers, Lava-Skin Burners and Rock-Wings Assassins. Then “I'm almost finished!” and **Alr-Rahjil** arrives.
-6. Kill Alr-Rahjil and Tharrath finishes with “It's done!”. A few seconds later he says he's exhausted and will wait for you in Wyrgast's Library. The dungeon is complete.
+1. Talk to Tharrath. He says “Follow me!” and walks to the ritual site. Stay with him. From here on, **his health bar is shown on everyone's screen**.
+2. When he gets there he starts casting *Summoning* and the waves begin. He also gets much sturdier at this point, going from 8,000 health on the walk to 30,000 during the ritual. **Keep him alive. If Tharrath dies, the ritual fails** and no more waves or bosses come.
+3. **Block 1, swamp spirits.** The first wave arrives as soon as he starts, and about 5 seconds later he says “Here they come, right on time!”. Three waves in all, with the gaps measured from the wave before:
+   - At once: a Son of the Earth and a Son of the Lake.
+   - 35 seconds later: a Son of the Earth, a Son of the Lake and a Rotten Son of the Lake.
+   - 30 seconds after that: two Sons of the Earth and a Rotten Son of the Lake.
+
+   Once every monster in the block is dead, **Hathraad** appears about 20 seconds later. Tharrath warns “The air is humming... Must be a giant one!” about 5 seconds after he arrives.
+4. **Block 2, ghosts.** About 10 seconds after Hathraad dies, Tharrath calls “More of them are coming!”.
+   - 25 seconds after Hathraad dies: a Ghostly Hunter and two Ghostly Gladiators.
+   - 30 seconds later: a Ghostly Hunter, a Ghostly Gladiator and a Ghostly Mage.
+   - 30 seconds after that: a Ghostly Hunter, a Ghostly Gladiator and a Ghostly Priest.
+
+   When the block is clear, **Kermode** appears about 20 seconds later, and about 5 seconds after that Tharrath says “An angry spirit approaches!”.
+5. **Block 3, mixed.** About 10 seconds after Kermode dies, Tharrath calls “You've got to hold them off!”. This block has **five** waves, getting bigger and further apart:
+   - 20 seconds after Kermode dies: a Son of the Lake, a Ghostly Gladiator and a Rock-Wings Assassin.
+   - 30 seconds later: a Son of the Lake, a Ghostly Hunter and a Flame Striker.
+   - 40 seconds later: a Rotten Son of the Lake, a Ghostly Gladiator and a Lava-Skin Burner.
+   - 45 seconds later: a Ghostly Mage, a Lava-Skin Burner, a Rock-Wings Assassin and a Flame Striker.
+   - 50 seconds later: a Ghostly Mage, a Ghostly Priest, a Rock-Wings Assassin and a Flame Striker.
+
+   When the block is clear, **Alr-Rahjil** appears about 20 seconds later, and about 5 seconds after that Tharrath says “I'm almost finished!”.
+6. Kill Alr-Rahjil and Tharrath finishes with “It's done!” and stops his Summoning a few seconds later. About 10 seconds after that he says he's exhausted and will wait for you in Wyrgast's Library. The dungeon is complete.
+
+Each wave comes in from one of three spots around the ritual ground, so keep an eye on all three.
 
 > **Tip:** The next wave in a block comes on a timer whether or not you've finished the last one, so don't fall behind. The boss only comes once **every** monster in that block is dead.
 
 ### Wave monsters to watch
 
-- **Ghostly Priest**: **kill it first.** Every so often it heals a nearby ally that's under half health, or heals itself, for a big amount.
-- **Ghostly Mage**: puts up an *Energy Field* that absorbs damage as soon as it engages, and again much later in a long fight. The field breaks once it's taken enough damage. Between shields it spams *Frost Bolt* (damage plus a 40% slow).
-- **Ghostly Hunter**: shoots from range and calls in a **Ghost Wolf** a few seconds into the fight.
-- **Ghostly Gladiator**: stacks *Break Armor* on the tank (up to 5 stacks).
-- **Son of the Earth**: heals itself over time once it drops to about half health.
-- **Son of the Lake**: *Wave Charge*: rushes a random player and knocks them down.
-- **Rotten Son of the Lake**: *Slow Poison* slows attack and run speed.
-- **Lava-Skin Burner**: pulses *Fire Barrier* around itself every few seconds. Melee take constant damage.
-- **Flame Striker**: *Pounding Glow* burns everyone within about 8 metres.
-- **Rock-Wings Assassin**: hard-hitting *Claw Strike* on the tank.
-- Swamp wildlife on the way in: **Swamp Giant Tortoise** (*Ankle Bite*, a 50% slow), **Giant Tail Crocodile** (*Tail Lash* knockdown), **Swamp Guardian** (*Wolf Howl* stacks attack power on itself, so kill it fast).
+- **Ghostly Priest**: **kill it first.** Every 20 seconds it heals an ally within 20 metres that's under half health, or heals itself, for 1,800–2,000.
+- **Ghostly Mage**: puts up an *Energy Field* about 5 seconds after it engages, and again every 45 seconds. The field absorbs all damage until it has soaked 400, then breaks. Between shields it casts *Frost Bolt* (damage plus a 40% slow). Its spells cost mana from a limited pool, so in a very long fight it can run dry.
+- **Ghostly Hunter**: shoots from range and calls in a **Ghost Wolf** about 5 seconds into the fight.
+- **Ghostly Gladiator**: stacks *Break Armor* on the tank about 5 seconds in and then every 8 seconds (up to 5 stacks).
+- **Son of the Earth**: heals itself over time once it drops to half health.
+- **Son of the Lake**: *Wave Charge*: rushes a random player and knocks them down, about 6 seconds in and then every 9 seconds.
+- **Rotten Son of the Lake**: *Slow Poison* slows attack and run speed, about 5 seconds in and then every 20 seconds.
+- **Lava-Skin Burner**: pulses *Fire Barrier* around itself every 3 seconds. Melee take constant damage.
+- **Flame Striker**: *Pounding Glow* burns everyone within about 8 metres, about 5 seconds in and then every 8 seconds.
+- **Rock-Wings Assassin**: hard-hitting *Claw Strike* on the tank, about 3 seconds in and then every 8 seconds.
+- Swamp wildlife on the way in: **Swamp Giant Tortoise** (*Ankle Bite*, a 50% slow, about 5 seconds in and then every 10 seconds), **Giant Tail Crocodile** (*Tail Lash* knockdown, about 5 seconds in and then every 15 seconds), **Swamp Guardian** (*Wolf Howl*, +10 attack power for 30 seconds, about 5 seconds in and then every 10 seconds, stacking up to 5 times, so kill it fast).
 
 ### Boss: Hathraad
 
 - Throws *Water Balls* at his target constantly. He's a caster, so he'll happily fight from range.
-- About every 10 seconds he yells “Tempest!” and hits everyone within a wide radius with *Multi Water Ball*. Healers, be ready.
+- About every 10 seconds he yells “Tempest!” and hits everyone within 25 metres with *Multi Water Ball*. Healers, be ready.
 - **At around 75%, 50% and 25% health he yells “Dividedness!” and splits off two mirror images** (smaller Hathraads). By the end there can be six of them. The mirrors only cast weak water balls, but they add up. Either AoE them down or kill each pair before the next split.
 
 ### Boss: Kermode
@@ -148,19 +169,19 @@ A spirit bear with two room-wide shouts. He uses one about every 8 seconds, taki
 
 The first shout is the Growl, then the Roar. Get heals and shields out just before each one, because nobody can act for a couple of seconds after it lands.
 
-**At around 30% health he goes into *Spirit Bear Frenzy*** (+50% attack power and attack speed). The tank takes much more damage from here, so use defensive cooldowns.
+**At 30% health he goes into *Spirit Bear Frenzy*** (+50% attack power and attack speed) and visibly grows much larger. The frenzy lasts the rest of the fight. The tank takes much more damage from here, so use defensive cooldowns.
 
 ### Final boss: Alr-Rahjil
 
 About every 5 seconds he casts one of three spells, in a fixed rotation:
 
 1. *Siphon Life* on a random player. It drains them and heals him.
-2. *Shadow Mire*: he yells “Tremble in terror!” and drops a shadow pool on a random player. It damages and slows everyone inside it, so **move out of it**.
+2. *Shadow Mire*: he yells “Tremble in terror!” and drops a shadow pool on a random player. For 15 seconds it damages everyone within 5 metres of that spot every second and slows them by 30%, so **move out of it**.
 3. *Ignite* on a random player. It's a fire damage-over-time.
 
-**At around 30% health he visibly grows larger. That's your warning.** He then yells “Out, brief life!” and casts *Wraith Blast*, which hits everyone within about 20 metres for a huge amount of shadow damage. Either run well away from him while he's big, or have everyone topped up with shields on. He only does it once, then shrinks back and continues his rotation.
+**At around 30% health he visibly grows larger. That's your warning.** He then yells “Out, brief life!” and starts a 6-second *Wraith Blast*, which hits everyone within 20 metres for 3,000 shadow damage. Either run well away from him while he's big, or have everyone topped up with shields on. He only does it once, then shrinks back and continues his rotation.
 
-> **◆ Legendary:** This is its own entrance (Lv 60+). The ritual and waves run exactly the same, and every boss keeps its moveset with much bigger numbers. One change you'll notice: **Kermode opens with Deafening Roar (stun) instead of Soul Growl**, then alternates. Tharrath has a lot more health, but the waves hit far harder, so keeping him alive becomes the real challenge.
+> **◆ Legendary:** Same entrance: set the dungeon mode to Legend before you go in (Lv 60+). The ritual and waves run exactly the same, with the same timings and the same mix of monsters, and every boss keeps its moveset with much bigger numbers. One change you'll notice: **Kermode opens with Deafening Roar (stun) instead of Soul Growl**, then alternates. Tharrath has 25,000 health on the walk and 80,000 during the ritual, but the waves hit far harder, so keeping him alive becomes the real challenge. Each boss kill also adds to everyone's Exhaustion: 4 for Hathraad and Kermode, 9 for Alr-Rahjil.
 
 ## Eristar Temple (Young Deity's Realm)
 
