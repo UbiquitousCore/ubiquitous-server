@@ -247,9 +247,22 @@ public sealed class PlaySessionHub(ILogger? logger = null)
                 continue;
             }
 
+            if (ChatService.IsGuildChannel(channel))
+            {
+                foreach (var memberId in await sender.GuildMemberIdsExcludingSelfAsync())
+                {
+                    var target = FindByCharacterNetworkId(WebNetworkId.FromString(memberId));
+                    if (target is not null && (senderGuid is null || !await target.IgnoresAsync(senderGuid)))
+                        await DeliverAsync(target, chat);
+                }
+                continue;
+            }
+
+            var serverWide = ChatService.IsServerWide(channel);
             foreach (var pair in _sessions)
             {
-                if (ReferenceEquals(pair.Key, sender) || !SameLocation(pair.Key, sender)) continue;
+                if (ReferenceEquals(pair.Key, sender)) continue;
+                if (serverWide ? pair.Key.CurrentMapId is null : !SameLocation(pair.Key, sender)) continue;
                 if (!CanDeliverChat(channel, sender, pair.Key)) continue;
                 if (senderGuid is not null && await pair.Key.IgnoresAsync(senderGuid)) continue;
                 await DeliverAsync(pair.Key, chat);
@@ -264,12 +277,12 @@ public sealed class PlaySessionHub(ILogger? logger = null)
 
     private static bool CanDeliverChat(string channel, PlaySession sender, PlaySession observer)
     {
-        if (ChatService.IsRangeLimited(channel))
+        if (ChatService.RangeOf(channel) is { } range)
         {
             var from = sender.PlayerPosition;
             var to = observer.PlayerPosition;
             return from is not null && to is not null
-                && from.Value.DistanceSquaredTo(to.Value) <= ChatService.SayRange * ChatService.SayRange;
+                && from.Value.DistanceSquaredTo(to.Value) <= range * range;
         }
 
         return observer.IsChatChannelJoined(channel);

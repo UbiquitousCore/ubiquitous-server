@@ -293,8 +293,14 @@ comes from is in `PROVENANCE.md`.
 
 ## Social
 
-- Chat: `say` (20 units), `general` and `trade` (map-wide, joined; `general`
-  starts joined), `party`; trimmed to 256 characters. Whispers reach anyone
+- Chat: `say` (20 units) and `yell` (100 units), `party`, `guild` (every
+  member online, any map; refused outside a guild), `local` (the sender's map,
+  joined) and `global` (every map, joined), and `trade` (map-wide, joined on
+  request). `general` is read as `local`. Lines are cut to 255 characters.
+  `local`, `global` and `trade` allow 3 lines in 10 seconds and `say` and
+  `yell` 10, counted from the first line of each window; more is refused with
+  `chat_too_frequent`. Admins are not limited. A creature's yell still reaches
+  the whole map. Whispers reach anyone
   online. A player who ignores the sender gets neither channel chat nor
   whispers from them; the whisper still reads sent. Ignoring drops the
   target from friends and leaves parties untouched.

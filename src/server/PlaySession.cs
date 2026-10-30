@@ -68,6 +68,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly ReportHandler _reportHandler;
     private readonly SocialHandler _socialHandler;
     private readonly GuildHandler _guildHandler;
+    private readonly GuildService _guilds;
     private readonly PartyHandler _partyHandler;
     private readonly NavigationHandler _navigationHandler;
 
@@ -195,6 +196,16 @@ public sealed partial class PlaySession : ISessionPlayer
 
     public IReadOnlyList<string> PartyMemberIdsExcludingSelf() => _partyHandler.MemberIdsExcludingSelf();
 
+    /// <summary>The ids of the rest of this character's guild, or none outside one.</summary>
+    public async Task<IReadOnlyList<string>> GuildMemberIdsExcludingSelfAsync()
+    {
+        if (_character is null) return [];
+        var roster = await _guilds.RosterOf(PlayerUnitId);
+        return roster is null
+            ? []
+            : [.. roster.Members.Select(member => member.Id).Where(id => !string.Equals(id, PlayerUnitId, StringComparison.Ordinal))];
+    }
+
     public Task GoOfflineInPartyAsync() => _partyHandler.GoOfflineAsync();
 
     public PlaySession(
@@ -247,7 +258,7 @@ public sealed partial class PlaySession : ISessionPlayer
         _combat.UseTargetStats(CombatStatsFor);
         _chase = new CreatureChaseService(ChaseRoute);
 
-        _chatHandler = new ChatHandler(this, _outbox);
+        _chatHandler = new ChatHandler(this, _outbox, world.Guilds);
         _emoteHandler = new EmoteHandler(this, _outbox, _emotes);
         _reportHandler = new ReportHandler(this, _outbox, _characters, stores.Report ?? new InMemoryReportStore());
         _socialHandler = new SocialHandler(this, _outbox, _characters, stores.Friend ?? new InMemoryFriendStore());
@@ -259,6 +270,7 @@ public sealed partial class PlaySession : ISessionPlayer
         _summonHandler = new SummonHandler(this, _outbox, _content, world.Parties);
         _auctionHandler = new AuctionHandler(this, _outbox, _belongings, _content, world.Auctions);
         _tradeHandler = new TradeHandler(this, _outbox, _belongings, world.Trades);
+        _guilds = world.Guilds;
         _guildHandler = new GuildHandler(this, _outbox, world.Guilds);
         _vendorTabs = _content.VendorTabs.ToDictionary(kv => kv.Key, kv => kv.Value.ToList());
         _belongings.Currency = _content.StartingCurrency;
@@ -435,7 +447,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 WebMessageTypes.CharactersChoose => await ChooseCharacterAsync(envelope.Payload, cancellationToken),
                 WebMessageTypes.CharactersReturn => [ReturnToCharacterList()],
                 WebMessageTypes.PlayerMove => await MovePlayerAsync(envelope.Payload, cancellationToken),
-                WebMessageTypes.PlayerChat => [_chatHandler.Say(envelope.Payload, IsInParty)],
+                WebMessageTypes.PlayerChat => [await _chatHandler.Say(envelope.Payload, IsInParty)],
                 WebMessageTypes.TargetChange => [Target(envelope.Payload)],
                 WebMessageTypes.NpcTalk => [NpcTalk(envelope.Payload)],
                 WebMessageTypes.NpcPreviousPage => [NpcPreviousPage(envelope.Payload)],

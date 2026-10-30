@@ -1,8 +1,9 @@
-
 namespace Ubiquitous.Game.Tests;
 
 public sealed class ChatServiceTests
 {
+    private static readonly DateTimeOffset Start = new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
+
     [Fact]
     public void Create_TrimsText()
     {
@@ -23,9 +24,18 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
-    public void Create_AllowsGeneral_JoinedByDefault()
+    public void Create_AllowsLocalAndGlobal_JoinedByDefault()
     {
-        Assert.Equal(new ChatEvent("general", "Ayla", "hello"),
+        Assert.Equal(new ChatEvent("local", "Ayla", "hello"),
+            new ChatService().Create(new ChatCommand("local", "hello"), "Ayla"));
+        Assert.Equal(new ChatEvent("global", "Ayla", "hello"),
+            new ChatService().Create(new ChatCommand("global", "hello"), "Ayla"));
+    }
+
+    [Fact]
+    public void Create_ReadsTheOldGeneralNameAsLocal()
+    {
+        Assert.Equal(new ChatEvent("local", "Ayla", "hello"),
             new ChatService().Create(new ChatCommand("general", "hello"), "Ayla"));
     }
 
@@ -47,15 +57,29 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
+    public void Create_CutsALineAtTheGamesLongest()
+    {
+        var chat = new ChatService().Create(new ChatCommand("say", new string('a', 300)), "Ayla");
+        Assert.Equal(ChatService.MaxLength, chat!.Text.Length);
+    }
+
+    [Fact]
     public void Join_RejectsAnUnknownChannel()
     {
         Assert.False(new ChatService().Join("not-a-real-channel"));
     }
 
-    [Fact]
-    public void Join_RejectsSay_ItIsAlwaysOn()
+    [Theory]
+    [InlineData("say")]
+    [InlineData("yell")]
+    [InlineData("party")]
+    [InlineData("guild")]
+    public void AlwaysOnChannels_CanBeNeitherJoinedNorLeft(string channel)
     {
-        Assert.False(new ChatService().Join("say"));
+        var chat = new ChatService();
+        Assert.True(chat.IsJoined(channel));
+        Assert.False(chat.Join(channel));
+        Assert.False(chat.Leave(channel));
     }
 
     [Fact]
@@ -71,16 +95,10 @@ public sealed class ChatServiceTests
     public void Leave_RemovesMembership_SoFurtherMessagesAreRejected()
     {
         var chat = new ChatService();
-        Assert.True(chat.IsJoined("general"));
-        Assert.True(chat.Leave("general"));
-        Assert.False(chat.IsJoined("general"));
-        Assert.Null(chat.Create(new ChatCommand("general", "hello"), "Ayla"));
-    }
-
-    [Fact]
-    public void Leave_RejectsSay_ItCanNeverBeLeft()
-    {
-        Assert.False(new ChatService().Leave("say"));
+        Assert.True(chat.IsJoined("global"));
+        Assert.True(chat.Leave("global"));
+        Assert.False(chat.IsJoined("global"));
+        Assert.Null(chat.Create(new ChatCommand("global", "hello"), "Ayla"));
     }
 
     [Fact]
@@ -90,53 +108,82 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
-    public void IsRangeLimited_OnlyTrueForSay()
+    public void RangeOf_SpeakCarries20_YellCarries100_OthersAnyDistance()
     {
-        Assert.True(ChatService.IsRangeLimited("say"));
-        Assert.True(ChatService.IsRangeLimited("SAY"));
-        Assert.False(ChatService.IsRangeLimited("general"));
-        Assert.False(ChatService.IsRangeLimited("trade"));
+        Assert.Equal(20f, ChatService.RangeOf("say"));
+        Assert.Equal(100f, ChatService.RangeOf("YELL"));
+        Assert.Null(ChatService.RangeOf("local"));
+        Assert.Null(ChatService.RangeOf("global"));
+        Assert.Null(ChatService.RangeOf("party"));
+        Assert.Null(ChatService.RangeOf("guild"));
     }
 
     [Fact]
-    public void IsKnownChannel_RecognizesExactlyTheFourNamedChannels()
+    public void IsKnownChannel_RecognizesTheGamesChannels()
     {
-        Assert.True(ChatService.IsKnownChannel("say"));
-        Assert.True(ChatService.IsKnownChannel("general"));
-        Assert.True(ChatService.IsKnownChannel("trade"));
-        Assert.True(ChatService.IsKnownChannel("party"));
-        Assert.False(ChatService.IsKnownChannel("guild"));
+        foreach (var channel in new[] { "say", "yell", "party", "guild", "local", "global", "trade", "general" })
+            Assert.True(ChatService.IsKnownChannel(channel), channel);
+        Assert.False(ChatService.IsKnownChannel("notice"));
         Assert.False(ChatService.IsKnownChannel(""));
         Assert.False(ChatService.IsKnownChannel(null));
     }
 
     [Fact]
+    public void OnlyGlobalReachesEveryMap()
+    {
+        Assert.True(ChatService.IsServerWide("global"));
+        Assert.False(ChatService.IsServerWide("local"));
+        Assert.False(ChatService.IsServerWide("say"));
+    }
+
+    [Fact]
     public void Party_IsAlwaysJoined_LikeSay()
     {
-        Assert.True(new ChatService().IsJoined("party"));
         Assert.Equal(new ChatEvent("party", "Ayla", "form up"),
             new ChatService().Create(new ChatCommand("party", "form up"), "Ayla"));
     }
 
-    [Fact]
-    public void Join_RejectsParty_ItIsAlwaysOn()
+    [Theory]
+    [InlineData("local")]
+    [InlineData("global")]
+    public void WideChannels_AllowThreeLinesInTenSeconds(string channel)
     {
-        Assert.False(new ChatService().Join("party"));
+        var chat = new ChatService();
+        for (var line = 0; line < 3; line++)
+            Assert.Equal(ChatRefusal.None, chat.Send(new ChatCommand(channel, "hi"), "Ayla", Start.AddSeconds(line)).Refusal);
+
+        Assert.Equal(ChatRefusal.TooFrequent, chat.Send(new ChatCommand(channel, "hi"), "Ayla", Start.AddSeconds(5)).Refusal);
+        Assert.Equal(ChatRefusal.None, chat.Send(new ChatCommand(channel, "hi"), "Ayla", Start.AddSeconds(11)).Refusal);
     }
 
     [Fact]
-    public void Leave_RejectsParty_ItCanNeverBeLeftThisWay()
+    public void NearbyChannels_AllowTenLinesInTenSeconds_SharedBetweenSayAndYell()
     {
-        Assert.False(new ChatService().Leave("party"));
+        var chat = new ChatService();
+        for (var line = 0; line < 10; line++)
+            Assert.Equal(ChatRefusal.None,
+                chat.Send(new ChatCommand(line % 2 == 0 ? "say" : "yell", "hi"), "Ayla", Start.AddSeconds(line * 0.5)).Refusal);
+
+        Assert.Equal(ChatRefusal.TooFrequent, chat.Send(new ChatCommand("say", "hi"), "Ayla", Start.AddSeconds(6)).Refusal);
     }
 
     [Fact]
-    public void IsPartyChannel_OnlyTrueForParty()
+    public void PartyAndGuildChat_AreNotLimited()
     {
-        Assert.True(ChatService.IsPartyChannel("party"));
-        Assert.True(ChatService.IsPartyChannel("PARTY"));
-        Assert.False(ChatService.IsPartyChannel("general"));
-        Assert.False(ChatService.IsPartyChannel("say"));
-        Assert.False(ChatService.IsPartyChannel("trade"));
+        var chat = new ChatService();
+        for (var line = 0; line < 30; line++)
+        {
+            Assert.Equal(ChatRefusal.None, chat.Send(new ChatCommand("party", "hi"), "Ayla", Start).Refusal);
+            Assert.Equal(ChatRefusal.None, chat.Send(new ChatCommand("guild", "hi"), "Ayla", Start).Refusal);
+        }
+    }
+
+    [Fact]
+    public void AnExemptSender_IsNotLimited()
+    {
+        var chat = new ChatService();
+        for (var line = 0; line < 10; line++)
+            Assert.Equal(ChatRefusal.None,
+                chat.Send(new ChatCommand("global", "hi"), "Ayla", Start, exemptFromLimits: true).Refusal);
     }
 }

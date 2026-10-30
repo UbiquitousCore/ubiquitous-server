@@ -6,6 +6,7 @@ public static class WireCodes
     {
         public const string BarrierClosed = "barrier_closed";
         public const string CannotUse = "cannot_use";
+        public const string ChatTooFrequent = "chat_too_frequent";
         public const string DuelRefused = "duel_refused";
         public const string DungeonModeRefused = "dungeon_mode_refused";
         public const string DungeonResetRefused = "dungeon_reset_refused";

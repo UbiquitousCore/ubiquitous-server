@@ -102,6 +102,58 @@ public sealed class ChatChannelTests
         Assert.Contains(leaveResponses, message => message.Contains("\"type\":\"protocol.error\""));
     }
 
+    [Fact]
+    public async Task Yell_ReachesAPlayerWithin100Metres_ButNotFurther()
+    {
+        var hub = new PlaySessionHub();
+        var (shouter, _) = await JoinAsync(hub, "a", "Ayla", x: 0f);
+        var (_, nearInbox) = await JoinAsync(hub, "b", "Borin", x: 80f);
+        var (_, farInbox) = await JoinAsync(hub, "c", "Cara", x: 150f);
+
+        await SendAsync(hub, shouter, WebMessageTypes.PlayerChat, 5, new ChatPayload("yell", "over here"));
+
+        Assert.Single(nearInbox.Forwarded, message => message.Contains("over here"));
+        Assert.DoesNotContain(farInbox.Forwarded, message => message.Contains("over here"));
+    }
+
+    [Fact]
+    public async Task Global_ReachesPlayersOnOtherMaps()
+    {
+        var hub = new PlaySessionHub();
+        var (speaker, _) = await JoinAsync(hub, "a", "Ayla", x: 0f, mapId: 13);
+        var (_, otherMapInbox) = await JoinAsync(hub, "b", "Borin", x: 0f, mapId: 14);
+
+        await SendAsync(hub, speaker, WebMessageTypes.PlayerChat, 5, new ChatPayload("global", "hello everyone"));
+
+        Assert.Contains(otherMapInbox.Forwarded, message => message.Contains("\"type\":\"chat.received\"")
+            && message.Contains("hello everyone"));
+    }
+
+    [Fact]
+    public async Task Global_TooManyLines_IsRefusedWithTheGamesWords()
+    {
+        var hub = new PlaySessionHub();
+        var (speaker, _) = await JoinAsync(hub, "a", "Ayla");
+
+        for (var line = 0; line < 3; line++)
+            await SendAsync(hub, speaker, WebMessageTypes.PlayerChat, 5 + line, new ChatPayload("global", $"line {line}"));
+        var refused = await SendAsync(hub, speaker, WebMessageTypes.PlayerChat, 8, new ChatPayload("global", "one more"));
+
+        Assert.Contains(refused, message => message.Contains("chat_too_frequent")
+            && message.Contains("You speak too frequently, please hold on."));
+    }
+
+    [Fact]
+    public async Task Guild_IsRefusedOutsideAGuild()
+    {
+        var hub = new PlaySessionHub();
+        var (speaker, _) = await JoinAsync(hub, "a", "Ayla");
+
+        var responses = await SendAsync(hub, speaker, WebMessageTypes.PlayerChat, 5, new ChatPayload("guild", "anyone?"));
+
+        Assert.Contains(responses, message => message.Contains("\"type\":\"protocol.error\""));
+    }
+
     private sealed record Inbox(List<string> Direct, List<string> Forwarded);
 
     private static async Task<(PlaySession Session, Inbox Inbox)> JoinAsync(

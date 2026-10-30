@@ -9,6 +9,7 @@ public sealed class ProtocolErrorCodeTests
     [
         "barrier_closed",
         "cannot_use",
+        "chat_too_frequent",
         "duel_refused",
         "dungeon_mode_refused",
         "dungeon_reset_refused",

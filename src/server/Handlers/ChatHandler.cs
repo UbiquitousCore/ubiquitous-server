@@ -4,23 +4,31 @@ using Ubiquitous.Protocol.Web;
 
 namespace Ubiquitous.Server;
 
-internal sealed class ChatHandler(ISessionPlayer player, SessionOutbox outbox)
+internal sealed class ChatHandler(ISessionPlayer player, SessionOutbox outbox, GuildService guilds)
 {
     private readonly ChatService _chat = new();
     private readonly ChatWhisperService _whispers = new();
 
     public bool IsJoined(string channel) => _chat.IsJoined(channel);
 
-    public string Say(JsonElement payload, bool inParty)
+    public async Task<string> Say(JsonElement payload, bool inParty)
     {
         if (player.Character is null) return NotInWorld();
         var request = WebMessageJson.DeserializePayload<ChatPayload>(payload);
-        if (ChatService.IsPartyChannel(request.Channel ?? string.Empty) && !inParty)
+        var channel = request.Channel ?? string.Empty;
+        if (ChatService.IsPartyChannel(channel) && !inParty)
             return outbox.Error(WireCodes.ProtocolError.InvalidChat, "Party chat requires being in a party.");
-        var chat = _chat.Create(new ChatCommand(request.Channel ?? string.Empty, request.Text), player.Character.Name);
-        return chat is null
-            ? outbox.Error(WireCodes.ProtocolError.InvalidChat, "Chat text is required, and the channel must be a known channel this session has joined.")
-            : outbox.Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(chat.Channel, chat.Sender, chat.Text));
+        if (ChatService.IsGuildChannel(channel) && await guilds.RosterOf(player.UnitId) is null)
+            return outbox.Error(WireCodes.ProtocolError.InvalidChat, "Guild chat requires being in a guild.");
+        var sent = _chat.Send(new ChatCommand(channel, request.Text), player.Character.Name, player.Now,
+            exemptFromLimits: player.IsAdmin);
+        return sent switch
+        {
+            { Event: { } chat } => outbox.Reply(WebMessageTypes.ChatReceived, new ChatReceivedPayload(chat.Channel, chat.Sender, chat.Text)),
+            // The game's own words for the flood limit.
+            { Refusal: ChatRefusal.TooFrequent } => outbox.Error(WireCodes.ProtocolError.ChatTooFrequent, "You speak too frequently, please hold on."),
+            _ => outbox.Error(WireCodes.ProtocolError.InvalidChat, "Chat text is required, and the channel must be a known channel this session has joined."),
+        };
     }
 
     public async Task<IReadOnlyList<string>> Whisper(JsonElement payload)
@@ -62,7 +70,7 @@ internal sealed class ChatHandler(ISessionPlayer player, SessionOutbox outbox)
         if (player.Character is null) return NotInWorld();
         var request = WebMessageJson.DeserializePayload<ChatChannelPayload>(payload);
         return _chat.Join(request.Channel)
-            ? outbox.Reply(WebMessageTypes.ChatChannelUpdated, new ChatChannelUpdatedPayload(request.Channel.Trim().ToLowerInvariant(), true))
+            ? outbox.Reply(WebMessageTypes.ChatChannelUpdated, new ChatChannelUpdatedPayload(ChatService.Normalize(request.Channel), true))
             : outbox.Error(WireCodes.ProtocolError.InvalidChannel, "Unknown chat channel, or a channel that is always on and cannot be joined.");
     }
 
@@ -71,7 +79,7 @@ internal sealed class ChatHandler(ISessionPlayer player, SessionOutbox outbox)
         if (player.Character is null) return NotInWorld();
         var request = WebMessageJson.DeserializePayload<ChatChannelPayload>(payload);
         return _chat.Leave(request.Channel)
-            ? outbox.Reply(WebMessageTypes.ChatChannelUpdated, new ChatChannelUpdatedPayload(request.Channel.Trim().ToLowerInvariant(), false))
+            ? outbox.Reply(WebMessageTypes.ChatChannelUpdated, new ChatChannelUpdatedPayload(ChatService.Normalize(request.Channel), false))
             : outbox.Error(WireCodes.ProtocolError.InvalidChannel, "Unknown chat channel, or a channel that is always on and cannot be left.");
     }
 
