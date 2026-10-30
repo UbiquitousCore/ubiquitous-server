@@ -13,6 +13,7 @@ Notes marked **◆ Legendary** describe how Legendary mode differs; **Tip** and 
 3. [Mounts](#mounts)
 4. [Parties: experience, money and loot](#parties-experience-money-and-loot)
 5. [Interface](#interface)
+6. [Chat](#chat)
 
 ## Dungeon runs
 
@@ -300,3 +301,50 @@ The leader picks one of three loot rules and a quality threshold:
   - Enable cellular data network (2G/3G)
 - Settings also has **Music** and **SFX** controls.
 - A separate **Hints** page lists the tutorial hints.
+
+## Chat
+
+### Channels
+
+You pick a channel from the chat bar before you type. Each has its own colour in the chat log.
+
+| Channel | Who hears it | How it shows | Colour |
+| --- | --- | --- | --- |
+| **Speak** | Everyone within **20 metres** | "Name: text" | White (your own lines a soft cream) |
+| **Yell** | Everyone within **100 metres** | "Name: text" | Red |
+| **Whisper** | One player, wherever they are | "Name: text", or "to Name: text" for what you sent | Purple |
+| **Team** | Your party, wherever they are (only offered while you're in one) | "Name: text" | Light blue |
+| **Guild** | Your guild, wherever they are (only offered while you're in one) | "Name: text" | Green |
+| **Local** | Everyone in the same region of the world as you | "[Local] Name: text" | White |
+| **Global** | Everyone online on the server | "[Global] Name: text" | White |
+
+- There's no separate Trade channel to pick in 1.1.4.
+- **Local** follows you: crossing into another region moves you into that region's Local channel.
+- Whatever channel the server talks on (notices, system messages) shows in yellow, and loot pick-ups in pink.
+- Free trial accounts can't speak on Local.
+
+### Whispers
+
+- Whisper someone from their menu (tap them in the world, on your friends list or in the party screen), or from the chat bar's **To last whisper**. If nobody has whispered you yet: "No one whispered to you yet."
+- A whisper to **GM Team** reaches the support team.
+
+### Emotes
+
+- The **Expression** page of the chat bar plays an emote. Everyone within **20 metres** sees the animation and a line of text in orange.
+- With someone selected, the line names them ("Hero waves to Archer."; they see "Hero waves to you."). With nobody selected it's to everyone ("Hero waves to everyone.").
+- The emotes: Bow, Wave, Kiss, Work, Talk, Amaze, No, Yes, Shout, Laugh, Point, Beg, Cheer, Applaud, Cry, Rude, Flex, Dance, Salute, Eat and Sit.
+
+### Quick phrases
+
+- The chat bar has ready-made lines you can send with one tap: "Hello!", "Thank you!", "Help me please!", "Congratulations!" and "See you!". **Edit** and **Custom** let you set lines of your own, and **Repeat** sends your last line again ("There are no conversations to repeat." if there isn't one).
+
+### Limits
+
+- A chat line is up to **255 characters**. The whisper box opened from a player's menu takes up to 100.
+- Bad words are filtered out of what you send.
+- **Slow down on the big channels:** on Local and Global you can send **3 lines every 10 seconds**. Say, Yell and emotes allow **10 every 10 seconds**. Past that the line isn't sent and you see "You speak too frequently, please hold on." GMs aren't limited.
+
+### Choosing what you see
+
+- Each channel can be switched off in chat settings, so you stop seeing it.
+- The **Language Blocker** hides Local and Global lines from players whose game is set to a language you've blocked. It doesn't touch Speak, Yell, whispers, party or guild chat.
