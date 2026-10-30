@@ -31,6 +31,20 @@ public sealed partial class CombatService
 
     public int PlayerHealth => _playerHealth;
 
+    // Health lost to the world (a fall), not to anyone: no armour, no shield,
+    // no fight entered, and no one to spare the player in a duel.
+    public CombatSwing? HurtPlayerByWorld(string playerId, int damage, DateTimeOffset now, int staminaBonus = 0)
+    {
+        if (_playerDead || damage <= 0) return null;
+        var max = EffectiveMaxHealth(staminaBonus);
+        var dealt = Math.Min(damage, _playerHealth);
+        _playerHealth -= dealt;
+        _nextRegen = now + RegenInterval;
+        var killed = _playerHealth == 0;
+        if (killed) SettleDeath(playerId, playerId, now);
+        return new CombatSwing(playerId, playerId, dealt, _playerHealth, max, killed);
+    }
+
     public PlayerRegen? TickRegen(DateTimeOffset now, int staminaBonus = 0, int healthRegenRating = 0)
     {
         var max = EffectiveMaxHealth(staminaBonus);

@@ -69,6 +69,16 @@ comes from is in `PROVENANCE.md`.
   X or Z is not finite or is outside the map rectangle, the player is stunned
   or asleep, or it crosses a shut dungeon barrier (`barrier_closed`). Height is
   taken as sent. An accepted move is answered and forwarded as `entity.moved`.
+- A fall hurts only when it began with a jump (`jumping`) and ends in a
+  ground landing (`landed` or `landedMoving`); a drop that started as
+  `falling`, and a jump that ends any other way (`swimming`, a teleport),
+  never hurt. The height is the highest accepted Y of the jump less the
+  landing's Y; landing speed is √(2·18·height). Above 18 units a second the
+  fall costs maximum health × (speed − 18) / 12, sent as `spell.outcome`
+  from and to the player with `result: "fall"` and spell 0; 30 or faster
+  kills (about a 25-unit fall). A fatal fall is a death to no one:
+  `unit.died`, then `player.death` naming the player, with the ordinary gold
+  penalty.
 - `moveSpeed` tells the player's own client the speed the cap allows.
 - Admins skip the step cap and bounds check, except after a map change until
   the first accepted move on the new map or three seconds: a client still

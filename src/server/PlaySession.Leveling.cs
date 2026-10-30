@@ -35,10 +35,10 @@ public sealed partial class PlaySession
         return responses;
     }
 
-    private IReadOnlyList<string> ApplyDeathPenalty(string killerId)
+    private IReadOnlyList<string> ApplyDeathPenalty(string killerId, bool? killedByPlayer = null)
     {
-        var killedByPlayer = killerId.StartsWith("player:", StringComparison.Ordinal);
-        var lost = DeathPenaltyService.GoldLost(_level, _belongings.Currency, killedByPlayer);
+        var byPlayer = killedByPlayer ?? killerId.StartsWith("player:", StringComparison.Ordinal);
+        var lost = DeathPenaltyService.GoldLost(_level, _belongings.Currency, byPlayer);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.PlayerDeath, new PlayerDeathPayload(

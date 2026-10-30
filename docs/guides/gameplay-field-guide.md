@@ -102,7 +102,9 @@ Once you've used or gathered an object, it comes back after:
 ### Moving around
 
 - Running speed is **6 metres a second**. Walking is 40% of that, swimming 50%, and a ghost runs 1.5× as fast.
-- There's **no fall damage**.
+- **Jumping down from high up hurts.** A jump that lands about 9 metres or more below where it peaked costs health, more the further you fall, and from about 25 metres it kills. You lose a third of your health at about 13 metres and two-thirds at about 19. A fatal fall sends you to the graveyard like any other death.
+- **Walking off a ledge never hurts**, however far you drop; only a fall that started with a jump counts. Landing in water is always safe.
+- Steep slopes can't be climbed: step onto ground steeper than about 55° and you slide back down it, unable to steer or jump, until you reach ground gentle enough to stand on (about 48° or less).
 - **If you leave the edge of the map, you are moved to the nearest graveyard.** You arrive alive.
 - The game doesn't kick you for moving unusually fast; the server tolerates it.
 - You can't jump while a slow has cut your speed by more than 90%.
@@ -120,7 +122,7 @@ Once you've used or gathered an object, it comes back after:
 
 - **At the surface, jump works as normal.** You leap out of the water with a splash and land back in it, or on the bank.
 - **Underwater, the jump button swims you straight up** towards the surface instead of jumping.
-- Jumping or dropping into water lands you in it with a splash, swimming. There's no fall damage, so a high drop into water is safe.
+- Jumping or dropping into water lands you in it with a splash, swimming. A landing in water never counts as a fall, so a high jump into water is safe.
 
 **Monsters and water**
 

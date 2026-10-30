@@ -10,7 +10,8 @@ error codes in `WireCodes.ProtocolError`.
 `outcome` on `attack.swingResult` / `attack.shotResult` and `result` on
 `spell.outcome`: `hit` (a damage-over-time tick included), `miss`, `dodge`,
 `parry`, `block`, `critical`, `evade` (the target is walking home and took
-nothing), and on `spell.outcome` only `heal` and `periodicHeal`.
+nothing), and on `spell.outcome` only `heal`, `periodicHeal` and `fall`
+(health lost to a fall: caster and target are both the player, spell 0).
 
 All three reach the whole map. A blow between players is reported by the
 victim's session, with the health the victim was left on; the attacker's

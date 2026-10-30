@@ -1247,6 +1247,7 @@ public sealed partial class PlaySession : ISessionPlayer
     {
         Arrivals++;
         _riding = null;
+        _fall.Cancel();
         if (instanceKey is null && _character is not null && IsDungeonMap(mapId))
         {
             var reopened = ResolveInstance(mapId);
@@ -1461,6 +1462,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 request.State,
                 request.Speed,
                 Velocity: request.Velocity)) };
+        FollowFall(request.State, decision.Position.Y, Now, responses);
         if (_instanceWorld is null)
         {
             RefreshView(responses);

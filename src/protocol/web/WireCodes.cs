@@ -57,6 +57,8 @@ public static class WireCodes
         public const string Heal = "heal";
 
         public const string PeriodicHeal = "periodicHeal";
+
+        public const string Fall = "fall";
     }
 
     public static class Hand

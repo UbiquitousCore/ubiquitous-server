@@ -96,6 +96,12 @@ read in the live game between 2026-10-03 and 2026-10-06; the readings are in
   spellbook, filled action-bar buttons and level-1 attributes, named by client
   ids (`src/game/StartingLoadouts.cs`).
 - Gold lost on death by level (`src/game/DeathPenaltyService.cs`).
+- Fall damage (`src/game/FallDamage.cs`), as the game behaves in play: a fall
+  pulls at 18 units a second squared; landings up to 18 units a second are
+  harmless, damage grows evenly to all of maximum health at 30, only a fall
+  that began with a jump counts, and landing in water is harmless (recorded
+  in `docs/guides/gameplay-field-guide.md`). Charging the ordinary death
+  penalty for a fatal fall is this project's choice.
 - Boss abilities, their order and the health at which a fight changes phase
   (`src/scripts/Prison/`). How often each ability comes round is this
   project's own choice.
