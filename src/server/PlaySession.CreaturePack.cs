@@ -35,13 +35,49 @@ public sealed partial class PlaySession
         {
             if (string.Equals(wireId, mobId, StringComparison.Ordinal)) continue;
             if (!AnswersPackCall(wireId, packRoot, now)) continue;
-            _combat.EnlistAttacker(wireId, playerId, now);
-            NotePackJoiner(wireId);
-            HoldEngaged(wireId);
-            _shared.ClearReturning(wireId);
-            EmitJoinResponses(responses, wireId, playerId);
+            JoinFight(wireId, playerId, responses, now);
+        }
+
+        var callers = new Queue<string>();
+        callers.Enqueue(mobId);
+        foreach (var joiner in _packJoiners) callers.Enqueue(joiner);
+        while (callers.TryDequeue(out var caller))
+        {
+            foreach (var wireId in _sight.Ids)
+            {
+                if (!AnswersFriendCall(wireId, caller, now)) continue;
+                JoinFight(wireId, playerId, responses, now);
+                callers.Enqueue(wireId);
+            }
         }
     }
+
+    private void JoinFight(string wireId, string playerId, List<string> responses, DateTimeOffset now)
+    {
+        _combat.EnlistAttacker(wireId, playerId, now);
+        NotePackJoiner(wireId);
+        HoldEngaged(wireId);
+        _shared!.ClearReturning(wireId);
+        EmitJoinResponses(responses, wireId, playerId);
+    }
+
+    private bool AnswersFriendCall(string wireId, string callerId, DateTimeOffset now)
+    {
+        if (string.Equals(wireId, callerId, StringComparison.Ordinal)) return false;
+        if (!_sight.SpawnIds.TryGetValue(wireId, out var spawnId)
+            || !_spawnById.TryGetValue(spawnId, out var spawn)
+            || !SimulatesNow(wireId, spawn, now) || BodyGone(wireId) || IsReturningHome(wireId))
+            return false;
+        if (CreatureFor(wireId) is not { } friend || CreatureFor(callerId) is not { } calling) return false;
+        bool kin = friend.EntryId == calling.EntryId
+            || (friend.Family is not null && friend.Family == calling.Family && friend.FactionType == calling.FactionType);
+        if (!kin) return false;
+        if (!_shared!.TryGetPosition(wireId, out var here) || !_shared.TryGetPosition(callerId, out var there)) return false;
+        if (GroundDistance(here, there) > FriendCallRange) return false;
+        return AnswersAsFreeHostile(wireId);
+    }
+
+    private const double FriendCallRange = 4.0;
 
     private bool AnswersPackCall(string wireId, uint packRoot, DateTimeOffset now)
     {
@@ -52,6 +88,11 @@ public sealed partial class PlaySession
         if (!SimulatesNow(wireId, spawn, now) || BodyGone(wireId)) return false;
         if (IsReturningHome(wireId)) return false;
 
+        return AnswersAsFreeHostile(wireId);
+    }
+
+    private bool AnswersAsFreeHostile(string wireId)
+    {
         _sight.Entries.TryGetValue(wireId, out var entry);
         bool fightsForItsGroup = IsHostile(CreatureFor(wireId))
             && !IsServiceNpc(entry)

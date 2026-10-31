@@ -149,4 +149,11 @@ public sealed class LevelingServiceTests
     {
         Assert.Equal(expected, LevelingService.HeldXp(level, stored));
     }
+
+    [Fact]
+    public void KillXp_IsDoubledForAnElite()
+    {
+        Assert.Equal(2 * LevelingService.KillXp(10, 12), LevelingService.KillXp(10, 12, elite: true));
+        Assert.Equal(0, LevelingService.KillXp(60, 1, elite: true));
+    }
 }

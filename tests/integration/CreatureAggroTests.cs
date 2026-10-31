@@ -190,7 +190,8 @@ public sealed class CreatureAggroTests
                 WebMessageTypes.PlayerMove, sequence++, new PlayerMovePayload(x, 2, 3, 0, true, MovementState.Walking))));
         }
 
-        var tick = session.TickCombat(DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2));
+        session.TickCombat(DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1));
+        var tick = session.TickCombat(DateTimeOffset.UtcNow + TimeSpan.FromSeconds(12));
 
         Assert.Contains(tick, message => message.Contains("\"type\":\"attack.halted\""));
         Assert.Contains(tick, message => message.Contains("\"type\":\"attack.exitCombat\""));
@@ -422,6 +423,21 @@ public sealed class CreatureAggroTests
 
         Assert.Contains(opened, message => message.Contains("\"type\":\"attack.meleeStart\"")
             && message.Contains("Creature:2"));
+    }
+
+    [Fact]
+    public async Task TickCombat_HittingOneCallsInIdleKindWithinFourUnitsAndTheirNeighboursInTurn()
+    {
+        var session = await SessionAsync(PackContent(),
+            new CreatureSpawnDefinition(1001, 13, 9500, 2, 2, 4, 0),
+            new CreatureSpawnDefinition(1002, 13, 9500, 5, 2, 4, 0),
+            new CreatureSpawnDefinition(1003, 13, 9500, 8, 2, 4, 0),
+            new CreatureSpawnDefinition(1004, 13, 9500, 20, 2, 4, 0));
+        var opened = await SendAsync(session, WebMessageTypes.AttackEngage, 2, new { targetId = "Creature:1" });
+
+        Assert.Contains(opened, m => m.Contains("\"type\":\"attack.meleeStart\"") && m.Contains("Creature:2"));
+        Assert.Contains(opened, m => m.Contains("\"type\":\"attack.meleeStart\"") && m.Contains("Creature:3"));
+        Assert.DoesNotContain(opened, m => m.Contains("\"type\":\"attack.meleeStart\"") && m.Contains("Creature:4"));
     }
 
     [Fact]

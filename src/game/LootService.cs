@@ -9,13 +9,16 @@ public sealed class LootService
 {
     public const int CorpseMoney = 50;
 
-    public const int MaxLootRowsPerCorpse = 8;
+    public const int MaxLootRowsPerCorpse = 9;
 
     private readonly Func<int, int, int> _rollRange;
     private readonly Func<double> _nextPercent;
+    private readonly Func<uint, int>? _qualityOf;
 
-    public LootService(Func<int, int, int>? rollRange = null, Func<double>? nextPercent = null)
+    public LootService(
+        Func<int, int, int>? rollRange = null, Func<double>? nextPercent = null, Func<uint, int>? qualityOf = null)
     {
+        _qualityOf = qualityOf;
         _rollRange = rollRange ?? ((min, max) => Random.Shared.Next(min, max + 1));
         _nextPercent = nextPercent ?? (() => Random.Shared.NextDouble() * 100.0);
     }
@@ -26,15 +29,23 @@ public sealed class LootService
             ? Roll(moneyMin.Value, moneyMax.Value)
             : CorpseMoney;
 
-        var rows = new List<LootRow>();
-        foreach (var group in lootTable?.Groups ?? [])
+        var drops = (lootTable?.Groups ?? []).SelectMany(RollGroup).ToList();
+        if (drops.Count > MaxLootRowsPerCorpse && _qualityOf is not null)
         {
-            foreach (var item in RollGroup(group))
-            {
-                if (rows.Count == MaxLootRowsPerCorpse) return new(money, rows);
-                var slot = rows.Count;
-                rows.Add(new LootRow(slot, $"loot-{item.ItemId}-{slot}", checked((int)item.ItemId), Roll(item.MinDropCount, item.MaxDropCount)));
-            }
+            var keep = drops.Select((item, index) => (item, index))
+                .OrderByDescending(entry => _qualityOf(entry.item.ItemId))
+                .ThenBy(entry => entry.index)
+                .Take(MaxLootRowsPerCorpse)
+                .OrderBy(entry => entry.index)
+                .Select(entry => entry.item);
+            drops = keep.ToList();
+        }
+
+        var rows = new List<LootRow>();
+        foreach (var item in drops.Take(MaxLootRowsPerCorpse))
+        {
+            var slot = rows.Count;
+            rows.Add(new LootRow(slot, $"loot-{item.ItemId}-{slot}", checked((int)item.ItemId), Roll(item.MinDropCount, item.MaxDropCount)));
         }
 
         return new(money, rows);

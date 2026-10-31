@@ -136,7 +136,7 @@ public sealed partial class CombatService
     private readonly HashSet<string> _dead = new(StringComparer.Ordinal);
     private readonly Dictionary<string, DateTimeOffset> _retaliation = new(StringComparer.Ordinal);
     private IHostilityLog _hostility;
-    public const double ThreatSwitchMargin = 0.3;
+    public const double ThreatSwitchMargin = 0.2;
 
     public void UseHostilityLog(IHostilityLog log) => _hostility = log;
     private readonly Dictionary<string, CreatureCombatStats> _stats = new(StringComparer.Ordinal);
@@ -485,11 +485,23 @@ public sealed partial class CombatService
         return (damage, critical ? StrikeResult.Critical : StrikeResult.Hit);
     }
 
+    private readonly Dictionary<string, DateTimeOffset> _lastDamage = new(StringComparer.Ordinal);
+
+    private void NoteDamageBetween(string sourceId, string targetId, DateTimeOffset now)
+    {
+        if (!LooksLikePlayerId(sourceId)) _lastDamage[sourceId] = now;
+        if (!LooksLikePlayerId(targetId)) _lastDamage[targetId] = now;
+    }
+
+    public DateTimeOffset? LastDamageOf(string creatureId) =>
+        _lastDamage.TryGetValue(creatureId, out var at) ? at : null;
+
     public void EnlistAttacker(string creatureId, string targetId, DateTimeOffset now)
     {
         if (_dead.Contains(creatureId) || _dead.Contains(targetId)) return;
         if (LooksLikePlayerId(creatureId) || IsTrainingDummyTarget(creatureId) || IsEvading(creatureId)) return;
         _retaliation[creatureId] = now + SwingIntervalFor(creatureId);
+        _lastDamage[creatureId] = now;
         _hostility.AddFighter(creatureId, targetId);
         _hostility.SetVictim(creatureId, targetId);
     }
@@ -532,6 +544,7 @@ public sealed partial class CombatService
             if (damage > 0) _nextRegen = now + RegenInterval;
         }
         else _health[targetId] = final;
+        if (damage > 0) NoteDamageBetween(sourceId, targetId, now);
         if (damage > 0 && !LooksLikePlayerId(targetId))
             _hostility.Add(targetId, sourceId, damage);
         var killed = final == 0;

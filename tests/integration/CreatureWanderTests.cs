@@ -110,10 +110,11 @@ public sealed class CreatureWanderTests
                 WebMessageTypes.PlayerMove, sequence++, new PlayerMovePayload(x, 2, 3, 0, true, MovementState.Walking))));
         }
 
-        var leashTick = session.TickCombat(now + TimeSpan.FromSeconds(2));
+        session.TickCombat(now + TimeSpan.FromSeconds(1));
+        var leashTick = session.TickCombat(now + TimeSpan.FromSeconds(12));
         Assert.Contains(leashTick, message => message.Contains("\"type\":\"attack.halted\""));
 
-        for (var i = 3; i <= 40; i++) session.TickWorld(now + TimeSpan.FromSeconds(i));
+        for (var i = 13; i <= 40; i++) session.TickWorld(now + TimeSpan.FromSeconds(i));
 
         var settled = now + TimeSpan.FromSeconds(40);
         session.TickCombat(settled);

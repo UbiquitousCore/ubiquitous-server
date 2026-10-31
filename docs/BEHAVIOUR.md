@@ -114,23 +114,27 @@ comes from is in `PROVENANCE.md`.
   takes effect at once.
 - **Escorts** keep their spawn-time offset from their leader, turned with it.
 - **Groups**: spawns naming the same leader are one group. Touching one brings
-  in every idle member and nobody else. A follower never gives up while its
+  in every idle member. Idle creatures of the same kind (or same family and
+  side) within 4 units of a creature in the fight join too, and call in
+  their own neighbours in turn. A follower never gives up while its
   leader fights.
 - **Noticing**: an idle hostile creature notices a living, unstealthed player
-  within its sight range (`creature_proto`, or 10), adjusted by level gap and
-  rank and clamped to 4-18 units. The ceiling is what keeps one dungeon group's
+  within its sight range (`creature_proto`, or 8), scaled 5% per level of
+  gap, by 1.1 for ranged creatures and by 1.2 or 1.3 for tougher ranks, and
+  clamped to 3-15 units. The ceiling is what keeps one dungeon group's
   pull from waking the next. The creature opens the fight (`attack.meleeStart`
   names it as attacker); the player swings back only once something strikes
   them, or at once if they attack it themselves.
 - **Chase** at 6 u/s to 3 units, following baked walkable ground.
-- **Giving up**: open world, beyond its leash (`creature_proto`, or 40) from
-  the player or from home. In a dungeon only outrunning counts (beyond leash and
+- **Giving up**: open world, beyond its leash (`creature_proto`, or 30) from
+  home; 15 s with no damage dealt or taken; or, 10 s into the fight, a target
+  further than 15 units (30 for ranged creatures). In a dungeon only outrunning counts (beyond leash and
   out of reach for 5 s), or a fight would switch off on entering each room.
 - **Evading**: a creature that gives up is at full health at once (sent to the
   whole map), loses its auras and threat, and walks home at 6 u/s on the map
   tick. Until home it takes 0 from everything (`evade`), cannot be attacked or
   pulled, and swings at nobody.
-- **Threat**: a creature switches target at 30% more hostility; an attacker
+- **Threat**: a creature switches target at 20% more hostility; an attacker
   that stops hurting it drops off after 10 s.
 - **Guards** answer a call within 15 units of a player's target.
 - **Hunting**: an idle hostile creature hunts small neutral animals it would

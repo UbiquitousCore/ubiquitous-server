@@ -31,7 +31,7 @@ public sealed class EvadeResetTests
         Assert.Contains(cast, m => m.Contains("\"type\":\"aura.applied\""));
 
         await RunAwayAsync(session, 4);
-        now += TimeSpan.FromSeconds(2);
+        now += TimeSpan.FromSeconds(12);
         var leash = session.TickCombat(now);
 
         Assert.Contains(leash, m => m.Contains("\"type\":\"attack.exitCombat\"") && m.Contains("Creature:1"));
@@ -63,7 +63,7 @@ public sealed class EvadeResetTests
 
         await RunAwayAsync(ayla, 3);
         borinInbox.Clear();
-        await hub.BroadcastAsync(ayla, ayla.TickCombat(now + TimeSpan.FromSeconds(2)));
+        await hub.BroadcastAsync(ayla, ayla.TickCombat(now + TimeSpan.FromSeconds(12)));
 
         Assert.Contains(borinInbox, m => IsHealthUpdate(m, "Creature:1", WolfHealth));
     }
@@ -189,7 +189,7 @@ public sealed class EvadeResetTests
             session.TickCombat(now);
         }
         await RunAwayAsync(session, 4);
-        now += TimeSpan.FromSeconds(2);
+        now += TimeSpan.FromSeconds(12);
         var leash = session.TickCombat(now);
         Assert.Contains(leash, m => m.Contains("\"type\":\"attack.exitCombat\"") && m.Contains("Creature:1"));
         Assert.True(session.IsReturningHome("Creature:1"));

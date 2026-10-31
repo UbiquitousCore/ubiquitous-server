@@ -8,7 +8,8 @@ public sealed record GiveUpContext(
     double DistanceFromHome,
     TimeSpan TimeInFight,
     bool LeaderStillFighting,
-    TimeSpan? TimeOutsideMeleeRange = null);
+    TimeSpan? TimeOutsideMeleeRange = null,
+    TimeSpan? TimeSinceDamage = null);
 
 public sealed record FleeContext(CreatureDefinition? Creature, double HealthFraction);
 
@@ -87,9 +88,12 @@ public abstract class CreatureScript
 
     public virtual bool GivesUp(GiveUpContext context)
     {
-        var hold = HoldRange(context.Creature);
-        bool drawnTooFar = Math.Max(context.DistanceToTarget, context.DistanceFromHome) > hold;
-        return drawnTooFar && !context.LeaderStillFighting;
+        if (context.LeaderStillFighting) return false;
+        if (context.DistanceFromHome > HoldRange(context.Creature)) return true;
+        if (context.TimeSinceDamage is { } quiet && quiet >= IdleGiveUp) return true;
+        if (context.TimeInFight < TrackingStarts) return false;
+        var tracks = context.Creature?.FightsAtRange == true ? RangedTrackingRange : MeleeTrackingRange;
+        return context.DistanceToTarget > tracks;
     }
 
     public virtual bool Flees(FleeContext context) =>
@@ -103,7 +107,15 @@ public abstract class CreatureScript
     protected static double HoldRange(CreatureDefinition? creature) =>
         creature?.LeashRange is float leash && leash > 0 ? leash : DefaultHoldRange;
 
-    public const double DefaultHoldRange = 40.0;
+    public const double DefaultHoldRange = 30.0;
+
+    public static readonly TimeSpan IdleGiveUp = TimeSpan.FromSeconds(15);
+
+    public static readonly TimeSpan TrackingStarts = TimeSpan.FromSeconds(10);
+
+    public const double MeleeTrackingRange = 15.0;
+
+    public const double RangedTrackingRange = 30.0;
 
     public const double FleeHealthFraction = 0.2;
 }

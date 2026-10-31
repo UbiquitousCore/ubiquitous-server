@@ -46,6 +46,9 @@ public static class LevelingService
         return QuestRewardPercentWellAbove;
     }
 
+    public static int KillXp(int playerLevel, int creatureLevel, bool elite = false) =>
+        KillXp(playerLevel, creatureLevel) * (elite ? 2 : 1);
+
     public static int KillXp(int playerLevel, int creatureLevel)
     {
         var baseXp = 5 * playerLevel + 50;

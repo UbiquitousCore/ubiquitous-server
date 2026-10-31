@@ -33,6 +33,7 @@ public sealed partial class CombatService
     {
         if (_dead.Contains(unitId)) return null;
         _health.Remove(unitId);
+        _lastDamage.Remove(unitId);
         return MaxHealthFor(unitId);
     }
 

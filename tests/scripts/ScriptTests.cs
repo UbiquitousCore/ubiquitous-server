@@ -9,25 +9,46 @@ public sealed class CreatureScriptTests
         new(9500, "prisoner", 20, 1900, LeashRange: hold,
             Rank: elite ? CreatureRank.Elite : CreatureRank.Ordinary);
 
-    [Fact]
-    public void Default_HoldsAFightInRangeAndDropsOneOutOfIt()
-    {
-        var script = DefaultCreatureScript.Instance;
-        var near = new GiveUpContext(Creature(), DistanceToTarget: 5, DistanceFromHome: 5,
-            TimeInFight: TimeSpan.FromMinutes(1), LeaderStillFighting: false);
-
-        Assert.False(script.GivesUp(near));
-        Assert.True(script.GivesUp(near with { DistanceToTarget = 999 }));
-    }
+    private static GiveUpContext Fight(double toTarget = 5, double fromHome = 5, CreatureDefinition? creature = null) =>
+        new(creature ?? Creature(), toTarget, fromHome, TimeInFight: TimeSpan.FromMinutes(1), LeaderStillFighting: false);
 
     [Fact]
     public void Default_DropsAFightItHasBeenDraggedTooFarFromHomeFor()
     {
         var script = DefaultCreatureScript.Instance;
-        var dragged = new GiveUpContext(Creature(), DistanceToTarget: 1, DistanceFromHome: 999,
-            TimeInFight: TimeSpan.FromMinutes(1), LeaderStillFighting: false);
 
-        Assert.True(script.GivesUp(dragged));
+        Assert.False(script.GivesUp(Fight(fromHome: CreatureScript.DefaultHoldRange - 1)));
+        Assert.True(script.GivesUp(Fight(fromHome: CreatureScript.DefaultHoldRange + 1)));
+    }
+
+    [Fact]
+    public void Default_DropsAFightOnceItsTargetIsOutOfTrackingReach()
+    {
+        var script = DefaultCreatureScript.Instance;
+        var archer = new CreatureDefinition(9501, "archer", 20, 1900, RangedAttackIntervalMs: 2000);
+
+        Assert.False(script.GivesUp(Fight(toTarget: CreatureScript.MeleeTrackingRange - 1)));
+        Assert.True(script.GivesUp(Fight(toTarget: CreatureScript.MeleeTrackingRange + 1)));
+        Assert.False(script.GivesUp(Fight(toTarget: CreatureScript.MeleeTrackingRange + 1, creature: archer)));
+        Assert.True(script.GivesUp(Fight(toTarget: CreatureScript.RangedTrackingRange + 1, creature: archer)));
+    }
+
+    [Fact]
+    public void Default_DoesNotLoseTrackOfAnyoneInTheFirstSecondsOfAFight()
+    {
+        var early = Fight(toTarget: 100) with { TimeInFight = CreatureScript.TrackingStarts - TimeSpan.FromSeconds(1) };
+
+        Assert.False(DefaultCreatureScript.Instance.GivesUp(early));
+    }
+
+    [Fact]
+    public void Default_DropsAFightNobodyHasDamagedAnyoneIn()
+    {
+        var script = DefaultCreatureScript.Instance;
+
+        Assert.False(script.GivesUp(Fight() with { TimeSinceDamage = CreatureScript.IdleGiveUp - TimeSpan.FromSeconds(1) }));
+        Assert.True(script.GivesUp(Fight() with { TimeSinceDamage = CreatureScript.IdleGiveUp }));
+        Assert.False(script.GivesUp(Fight() with { TimeSinceDamage = null }));
     }
 
     [Fact]
@@ -88,27 +109,15 @@ public sealed class CreatureScriptTests
     }
 
     [Fact]
-    public void HoldingAFight_ComesFromTheRowRatherThanTheRank()
-    {
-        var beyondTheFallback = new GiveUpContext(Creature(), DistanceToTarget: CreatureScript.DefaultHoldRange + 5,
-            DistanceFromHome: 0, TimeInFight: TimeSpan.FromMinutes(1), LeaderStillFighting: false);
-
-        Assert.True(DefaultCreatureScript.Instance.GivesUp(beyondTheFallback));
-        Assert.True(DefaultCreatureScript.Instance.GivesUp(
-            beyondTheFallback with { Creature = Creature(elite: true) }));
-
-        Assert.False(DefaultCreatureScript.Instance.GivesUp(
-            beyondTheFallback with { Creature = Creature(hold: (float)CreatureScript.DefaultHoldRange + 10f) }));
-    }
-
-    [Fact]
     public void ACreatureCarryingItsOwnHoldRangeUsesItInsteadOfTheFallback()
     {
-        var tight = new GiveUpContext(Creature(hold: 10), DistanceToTarget: 20, DistanceFromHome: 0,
-            TimeInFight: TimeSpan.FromMinutes(1), LeaderStillFighting: false);
+        var tight = Fight(fromHome: 20, creature: Creature(hold: 10));
+        var wide = Fight(fromHome: CreatureScript.DefaultHoldRange + 5, creature: Creature(hold: 50));
 
         Assert.True(DefaultCreatureScript.Instance.GivesUp(tight));
-        Assert.False(DefaultCreatureScript.Instance.GivesUp(tight with { DistanceToTarget = 5 }));
+        Assert.False(DefaultCreatureScript.Instance.GivesUp(wide));
+        Assert.True(DefaultCreatureScript.Instance.GivesUp(
+            wide with { Creature = Creature(elite: true) }));
     }
 }
 

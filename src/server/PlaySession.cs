@@ -132,7 +132,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly Dictionary<string, string> _helperFights = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _announcedMobVictims = new(StringComparer.Ordinal);
     private readonly Dictionary<string, CorpseLoot> _loot = new(StringComparer.Ordinal);
-    private readonly LootService _lootService = new();
+    private readonly LootService _lootService;
     private readonly GameContent _content;
     private readonly Dictionary<uint, List<VendorTab>> _vendorTabs;
     private int _level;
@@ -140,7 +140,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly PlayerBelongings _belongings;
     private const double LootRange = InteractionRange.Max;
     private const double MeleeRange = 3.0;
-    private const int DefaultAggroRange = 10;
+    private const int DefaultAggroRange = 8;
     private readonly Dictionary<string, DateTimeOffset> _outOfMeleeRangeSince = new(StringComparer.Ordinal);
     private bool _awaitingArrivalMove;
 
@@ -216,6 +216,8 @@ public sealed partial class PlaySession : ISessionPlayer
         ILogger? logger = null)
     {
         options ??= new PlaySessionOptions();
+        _lootService = new LootService(
+            qualityOf: entry => content.Game.Items.TryGetValue(entry, out var item) ? (int)(item.Quality ?? 0) : 0);
         _outbox = new SessionOutbox(ReportToAuraBoard);
         _logger = logger ?? NullLogger.Instance;
         _developmentEntry = options.DevelopmentEntry;

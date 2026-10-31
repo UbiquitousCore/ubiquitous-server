@@ -235,8 +235,10 @@ public sealed partial class PlaySession
         var toTarget = DistanceToPlayer(wireId) ?? 0;
         var fromHome = DistanceFromHome(wireId) ?? 0;
         var inFight = _fightStartedAt is { } started ? now - started : TimeSpan.Zero;
+        var lastDamage = _combat.LastDamageOf(wireId);
         return new GiveUpContext(creature, toTarget, fromHome, inFight,
-            LeaderStillFighting(wireId), TimeOutsideMeleeRange(wireId, now));
+            LeaderStillFighting(wireId), TimeOutsideMeleeRange(wireId, now),
+            lastDamage is { } at ? now - at : null);
     }
 
     private double? DistanceToPlayer(string wireId)

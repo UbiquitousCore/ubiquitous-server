@@ -5,43 +5,36 @@ namespace Ubiquitous.Game.Tests;
 public sealed class EncounterRulesTests
 {
     [Fact]
-    public void NoticeRange_AddsHalfAUnitPerLevelTheCreatureHoldsOverThePlayer()
+    public void NoticeRange_GrowsFivePercentForEachLevelTheCreatureHoldsOverThePlayer()
     {
-        Assert.Equal(10, EncounterRules.NoticeRange(10, 5, 5, CreatureRank.Ordinary));
-        Assert.Equal(12, EncounterRules.NoticeRange(10, 9, 5, CreatureRank.Ordinary));
-        Assert.Equal(8, EncounterRules.NoticeRange(10, 5, 9, CreatureRank.Ordinary));
-        Assert.Equal(11, EncounterRules.NoticeRange(10, 6, 5, CreatureRank.Ordinary));
+        Assert.Equal(8, EncounterRules.NoticeRange(8, 5, 5, CreatureRank.Ordinary));
+        Assert.Equal(12, EncounterRules.NoticeRange(8, 15, 5, CreatureRank.Ordinary));
+        Assert.Equal(4, EncounterRules.NoticeRange(8, 5, 15, CreatureRank.Ordinary));
     }
 
     [Fact]
     public void NoticeRange_CountsACreatureAboveTheLevelCapAsAtTheCap()
     {
         Assert.Equal(
-            EncounterRules.NoticeRange(8, LevelingService.MaxLevel, 58, CreatureRank.Ordinary),
-            EncounterRules.NoticeRange(8, LevelingService.MaxLevel + 20, 58, CreatureRank.Ordinary));
+            EncounterRules.NoticeRange(8, LevelingService.MaxLevel, 50, CreatureRank.Ordinary),
+            EncounterRules.NoticeRange(8, LevelingService.MaxLevel + 20, 50, CreatureRank.Ordinary));
     }
 
     [Theory]
-    [InlineData(CreatureRank.Ordinary, 8)]
-    [InlineData(CreatureRank.Rare, 10)]
-    [InlineData(CreatureRank.Elite, 11)]
-    [InlineData(CreatureRank.Boss, 12)]
-    [InlineData(CreatureRank.WorldBoss, 12)]
-    public void NoticeRange_AddsTheRankBonus(CreatureRank rank, int expected)
+    [InlineData(CreatureRank.Ordinary, 10)]
+    [InlineData(CreatureRank.Rare, 12)]
+    [InlineData(CreatureRank.Elite, 12)]
+    [InlineData(CreatureRank.Boss, 13)]
+    [InlineData(CreatureRank.WorldBoss, 13)]
+    public void NoticeRange_ScalesByRank(CreatureRank rank, int expected)
     {
-        Assert.Equal(expected, EncounterRules.NoticeRange(8, 5, 5, rank));
+        Assert.Equal(expected, EncounterRules.NoticeRange(10, 5, 5, rank));
     }
 
     [Fact]
-    public void NoticeRange_WidensForACreatureThatFightsAtRange()
+    public void NoticeRange_WidensTenPercentForACreatureThatFightsAtRange()
     {
-        Assert.Equal(10, EncounterRules.NoticeRange(8, 5, 5, CreatureRank.Ordinary, fightsAtRange: true));
-    }
-
-    [Fact]
-    public void NoticeRange_AddsTheRankAndRangedBonusesTogether()
-    {
-        Assert.Equal(12, EncounterRules.NoticeRange(6, 5, 5, CreatureRank.Boss, fightsAtRange: true));
+        Assert.Equal(11, EncounterRules.NoticeRange(10, 5, 5, CreatureRank.Ordinary, fightsAtRange: true));
     }
 
     [Fact]
@@ -57,9 +50,9 @@ public sealed class EncounterRulesTests
         var archer = new CreatureDefinition(1, "archer", 5, 100, RangedAttackIntervalMs: 2000);
         var lieutenant = new CreatureDefinition(2, "lieutenant", 5, 100, Rank: CreatureRank.Elite);
 
-        Assert.Equal(10, EncounterRules.NoticeRange(8, archer, playerLevel: 5));
-        Assert.Equal(11, EncounterRules.NoticeRange(8, lieutenant, playerLevel: 5));
-        Assert.Equal(8, EncounterRules.NoticeRange(8, creature: null, playerLevel: 5));
+        Assert.Equal(11, EncounterRules.NoticeRange(10, archer, playerLevel: 5));
+        Assert.Equal(12, EncounterRules.NoticeRange(10, lieutenant, playerLevel: 5));
+        Assert.Equal(10, EncounterRules.NoticeRange(10, creature: null, playerLevel: 5));
     }
 
     [Fact]

@@ -12,7 +12,7 @@ public sealed class EliteGuardTests
     public async Task TickCombat_ALieutenantNoticesFromWhereAnOrdinaryCreatureWouldNot()
     {
         var ordinary = await SessionAsync(ContentWithCreature(
-            new CreatureDefinition(9500, "wolf", 3, 100,
+            new CreatureDefinition(9500, "wolf", 3, 100, NoticeDistance: 12,
                 FactionType: UnitFactionTypes.Hostile)),
             new CreatureSpawnDefinition(1001, 13, 9500, 13, 2, 3, 0));
 
@@ -21,7 +21,7 @@ public sealed class EliteGuardTests
             message => message.Contains("type\":\"attack.meleeStart"));
 
         var lieutenant = await SessionAsync(ContentWithCreature(
-            new CreatureDefinition(9500, "wolf", 3, 100,
+            new CreatureDefinition(9500, "wolf", 3, 100, NoticeDistance: 12,
                 FactionType: UnitFactionTypes.Hostile, Rank: CreatureRank.Elite)),
             new CreatureSpawnDefinition(1001, 13, 9500, 13, 2, 3, 0));
 

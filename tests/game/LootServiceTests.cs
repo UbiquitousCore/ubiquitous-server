@@ -158,6 +158,20 @@ public sealed class LootServiceTests
     }
 
     [Fact]
+    public void Generate_WhenOverTheCap_LeavesOutTheLowestQualityItemsFirst()
+    {
+        var groups = Enumerable.Range(1, LootService.MaxLootRowsPerCorpse + 2)
+            .Select(itemId => new LootGroupDefinition(1, 1, [new LootTableItemDefinition((uint)itemId, 100, 1, 1)]))
+            .ToList();
+        var table = new CreatureLootTableDefinition(2802, groups);
+
+        var loot = new LootService(nextPercent: () => 0, qualityOf: item => item <= 2 ? 0 : 1).Generate(2802, table);
+
+        Assert.Equal(LootService.MaxLootRowsPerCorpse, loot.Rows.Count);
+        Assert.DoesNotContain(loot.Rows, row => row.Entry <= 2);
+    }
+
+    [Fact]
     public void Take_RemovesOnlyTheNamedRow()
     {
         var service = new LootService(nextPercent: () => 0);
