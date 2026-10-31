@@ -324,7 +324,12 @@ public sealed class QuestService
         }
 
         if (heldHere is not null) return new QuestStatusEvent(networkId, heldHere.Value);
-        if (!npcs.TryGetValue(entryId, out var npc) || !npc.OffersQuests) return null;
+        if (!npcs.TryGetValue(entryId, out var npc) || !npc.OffersQuests)
+        {
+            // Someone who only takes quests in still answers, so a mark they showed is cleared.
+            var takesQuestsIn = questFinishersByCreature?.Any(binding => binding.CreatureEntry == entryId) == true;
+            return takesQuestsIn ? new QuestStatusEvent(networkId, QuestMark.None) : null;
+        }
 
         var hasOffer = quests.Any(candidate =>
             candidate.GiverEntryId == entryId && !_accepted.ContainsKey(candidate.Id)

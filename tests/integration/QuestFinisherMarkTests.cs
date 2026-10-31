@@ -124,6 +124,33 @@ public sealed class QuestFinisherMarkTests
         Assert.Equal([RangerFinisher], marked);
     }
 
+    [Fact]
+    public async Task AFinisherWhoGivesNoQuestsLosesItsMarkOnceTheQuestIsHandedIn()
+    {
+        // Someone who only takes a quest in: once it is in, the mark over them
+        // has to be cleared, or the client still shows it and asks them for
+        // quests they do not have.
+        var session = await SessionAsync(HubContent with
+        {
+            Npcs = new Dictionary<uint, NpcDefinition>(HubContent.Npcs)
+            {
+                [9033] = new(9033, NpcFlags.None),
+            },
+        });
+        await Send(session, WebMessageTypes.QuestAccept, new { networkId = RangerGiver, questId = 7645u });
+        Assert.Equal("complete", await StatusOf(session, RangerFinisher));
+
+        await Send(session, WebMessageTypes.QuestComplete,
+            new { networkId = RangerFinisher, questId = 7645u, rewardIndex = 0 });
+
+        Assert.Equal("none", await StatusOf(session, RangerFinisher));
+        var sweep = Assert.Single(await Send(session, WebMessageTypes.QuestRefreshStatuses, new { }));
+        using var document = JsonDocument.Parse(sweep);
+        var finisher = Assert.Single(document.RootElement.GetProperty("payload").GetProperty("statuses")
+            .EnumerateArray(), row => row.GetProperty("networkId").GetString() == RangerFinisher);
+        Assert.Equal("none", finisher.GetProperty("status").GetString());
+    }
+
     private static async Task<string> StatusOf(PlaySession session, string networkId)
     {
         var response = Assert.Single(await Send(session, WebMessageTypes.QuestCheckMark, new { networkId }));
@@ -138,13 +165,13 @@ public sealed class QuestFinisherMarkTests
         session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(type, Interlocked.Increment(ref _sequence), payload)));
 
-    private static async Task<PlaySession> SessionAsync()
+    private static async Task<PlaySession> SessionAsync(GameContent? content = null)
     {
         var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, PlayerClassIds.Ranger, 4, 5, 6, 7, 8,
                 MapId: 1, X: 2f, Y: 7f, Z: 63f, Level: 8, [100, 200])]),
-            HubSpawns, null, HubContent);
+            HubSpawns, null, content ?? HubContent);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
