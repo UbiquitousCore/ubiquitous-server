@@ -6,25 +6,119 @@ public sealed class RelicsKeyTests
         double seconds = 0, bool alive = true, bool arrived = false, int living = 0, bool bossDead = false) =>
         new(TimeSpan.FromSeconds(seconds), alive, arrived, living, bossDead);
 
-    private static void RunBlock(Ritual ritual, RitualBlock block, RitualOrders opening)
-    {
-        Assert.Equal(block.Opening, opening.Say);
-        Assert.Equal(block.Waves[0], opening.Wave);
-        for (var wave = 1; wave < block.Waves.Count; wave++)
-        {
-            Assert.Null(ritual.Advance(View(seconds: (30 * wave) - 1, arrived: true, living: 3)));
-            Assert.Equal(block.Waves[wave], ritual.Advance(View(seconds: 30 * wave, arrived: true, living: 3))!.Wave);
-        }
+    private static RitualView At(double seconds, int living = 3, bool bossDead = false) =>
+        View(seconds, arrived: true, living: living, bossDead: bossDead);
 
-        Assert.Null(ritual.Advance(View(seconds: 200, arrived: true, living: 1)));
-        Assert.Equal(block.Warning, ritual.Advance(View(seconds: 200, arrived: true))!.Say);
-        Assert.Null(ritual.Advance(View(seconds: 7, arrived: true)));
-        Assert.Equal(block.Boss, ritual.Advance(View(seconds: 8, arrived: true))!.Boss);
-        Assert.Null(ritual.Advance(View(seconds: 60, arrived: true)));
+    private static uint[] Wave(params uint[] creatures) => creatures;
+
+    // Escort, then Tharrath at the ritual ground: the answer to the tick that opens the first block.
+    private static (Ritual Ritual, RitualOrders FirstBlock) AtTheRitualGround()
+    {
+        var ritual = RelicsKeyRitual.Create();
+        ritual.Start();
+        ritual.Advance(View(arrived: true));
+        return (ritual, ritual.Advance(View(arrived: true))!);
+    }
+
+    // Lets every wave still due go out, a tick at a time, with the creatures still standing.
+    private static void RunOutWaves(Ritual ritual)
+    {
+        while (ritual.Advance(At(1000)) is not null) { }
+    }
+
+    // Clears a block's last wave, waits out the pause before its boss, and checks the warning comes after it.
+    private static void CallsItsBoss(Ritual ritual, RitualBlock block)
+    {
+        Assert.Null(ritual.Advance(At(500, living: 1)));
+        Assert.Equal(RitualStage.Waves, ritual.Stage);
+        Assert.NotNull(ritual.Advance(At(500, living: 0)));
+        Assert.Equal(RitualStage.BossComing, ritual.Stage);
+
+        Assert.Null(ritual.Advance(At(19.9, living: 0)));
+        var boss = ritual.Advance(At(20, living: 0))!;
+        Assert.Equal(block.Boss, boss.Boss);
+        Assert.Null(boss.Say);
+
+        Assert.Null(ritual.Advance(At(4.9, living: 0)));
+        Assert.Equal(block.Warning, ritual.Advance(At(5, living: 0))!.Say);
+        Assert.Null(ritual.Advance(At(60, living: 0)));
     }
 
     [Fact]
-    public void TheRitual_RunsFromTheEscortThroughEveryBlockToTheFarewell()
+    public void TheFirstBlock_StartsAtOnce_ThenCallsHathraadOnceItsWavesAreDead()
+    {
+        var (ritual, first) = AtTheRitualGround();
+        Assert.Equal(Wave(2627, 2628), first.Wave);
+        Assert.Null(first.Say);
+
+        Assert.Null(ritual.Advance(At(4.9)));
+        Assert.Equal("Here they come, right on time!", ritual.Advance(At(5))!.Say);
+        Assert.Null(ritual.Advance(At(34.9)));
+        Assert.Equal(Wave(2627, 2628, 2629), ritual.Advance(At(35))!.Wave);
+        Assert.Null(ritual.Advance(At(64.9)));
+        Assert.Equal(Wave(2627, 2627, 2629), ritual.Advance(At(65))!.Wave);
+
+        CallsItsBoss(ritual, RelicsKeyRitual.Blocks[0]);
+        Assert.Equal(RelicsKeyRitual.Hathraad, RelicsKeyRitual.Blocks[0].Boss);
+        Assert.Equal("The air is humming... Must be a giant one!", RelicsKeyRitual.Blocks[0].Warning);
+    }
+
+    [Fact]
+    public void TheSecondBlock_CallsOutTenSecondsAfterHathraad_AndSendsGhostsFromTwentyFive()
+    {
+        var (ritual, _) = AtTheRitualGround();
+        RunOutWaves(ritual);
+        CallsItsBoss(ritual, RelicsKeyRitual.Blocks[0]);
+
+        Assert.Null(ritual.Advance(At(0, living: 0, bossDead: true))!.Wave);
+        Assert.Equal(1, ritual.Block);
+        Assert.Null(ritual.Advance(At(9.9, living: 0)));
+        Assert.Equal("More of them are coming!", ritual.Advance(At(10, living: 0))!.Say);
+        Assert.Null(ritual.Advance(At(24.9, living: 0)));
+        Assert.Equal(Wave(2630, 2631, 2631), ritual.Advance(At(25, living: 0))!.Wave);
+        Assert.Equal(Wave(2630, 2631, 2632), ritual.Advance(At(55))!.Wave);
+        Assert.Equal(Wave(2630, 2631, 2633), ritual.Advance(At(85))!.Wave);
+
+        CallsItsBoss(ritual, RelicsKeyRitual.Blocks[1]);
+        Assert.Equal(RelicsKeyRitual.Kermode, RelicsKeyRitual.Blocks[1].Boss);
+        Assert.Equal("An angry spirit approaches!", RelicsKeyRitual.Blocks[1].Warning);
+    }
+
+    [Fact]
+    public void TheLastBlock_SendsFiveWavesOnTheirOwnTimers_ThenAlrRahjil_ThenTheFarewell()
+    {
+        var (ritual, _) = AtTheRitualGround();
+        RunOutWaves(ritual);
+        CallsItsBoss(ritual, RelicsKeyRitual.Blocks[0]);
+        ritual.Advance(At(0, living: 0, bossDead: true));
+        RunOutWaves(ritual);
+        CallsItsBoss(ritual, RelicsKeyRitual.Blocks[1]);
+
+        ritual.Advance(At(0, living: 0, bossDead: true));
+        Assert.Equal(2, ritual.Block);
+        Assert.Equal("You've got to hold them off!", ritual.Advance(At(10, living: 0))!.Say);
+        Assert.Equal(Wave(2628, 2631, 2635), ritual.Advance(At(20, living: 0))!.Wave);
+        Assert.Null(ritual.Advance(At(49.9)));
+        Assert.Equal(Wave(2628, 2630, 2648), ritual.Advance(At(50))!.Wave);
+        Assert.Equal(Wave(2629, 2631, 2634), ritual.Advance(At(90))!.Wave);
+        Assert.Equal(Wave(2632, 2634, 2635, 2648), ritual.Advance(At(135))!.Wave);
+        Assert.Null(ritual.Advance(At(184.9)));
+        Assert.Equal(Wave(2632, 2633, 2635, 2648), ritual.Advance(At(185))!.Wave);
+
+        CallsItsBoss(ritual, RelicsKeyRitual.Blocks[2]);
+        Assert.Equal(RelicsKeyRitual.AlrRahjil, RelicsKeyRitual.Blocks[2].Boss);
+        Assert.Equal("I'm almost finished!", RelicsKeyRitual.Blocks[2].Warning);
+
+        Assert.Equal("It's done!", ritual.Advance(At(0, living: 0, bossDead: true))!.Say);
+        Assert.Null(ritual.Advance(At(9.9, living: 0, bossDead: true)));
+        var farewell = ritual.Advance(At(10, living: 0, bossDead: true))!;
+        Assert.True(farewell.Completes);
+        Assert.Contains("Wyrgast's Library", farewell.Say);
+        Assert.Equal(RitualStage.Done, ritual.Stage);
+    }
+
+    [Fact]
+    public void TheRitual_StartsWithTheEscort_AndTharrathBeginsAtTheGround()
     {
         var ritual = RelicsKeyRitual.Create();
         Assert.Equal("Follow me!", ritual.Start()!.Say);
@@ -34,27 +128,12 @@ public sealed class RelicsKeyTests
         var starting = ritual.Advance(View(arrived: true))!;
         Assert.Equal("I'm starting!", starting.Say);
         Assert.Equal(RelicsKeyRitual.Summoning, starting.KeeperCasts);
-        Assert.Null(ritual.Advance(View(seconds: 2, arrived: true)));
-
-        RunBlock(ritual, RelicsKeyRitual.Blocks[0], ritual.Advance(View(seconds: 3, arrived: true))!);
-        RunBlock(ritual, RelicsKeyRitual.Blocks[1], ritual.Advance(View(arrived: true, bossDead: true))!);
-        RunBlock(ritual, RelicsKeyRitual.Blocks[2], ritual.Advance(View(arrived: true, bossDead: true))!);
-
-        Assert.Equal("It's done!", ritual.Advance(View(arrived: true, bossDead: true))!.Say);
-        Assert.Null(ritual.Advance(View(seconds: 3, arrived: true, bossDead: true)));
-        var farewell = ritual.Advance(View(seconds: 4, arrived: true, bossDead: true))!;
-        Assert.True(farewell.Completes);
-        Assert.Contains("Wyrgast's Library", farewell.Say);
-        Assert.Equal(RitualStage.Done, ritual.Stage);
     }
 
     [Fact]
     public void TheRitual_FailsWhenTheKeeperDies_AndCanBeStartedAgainAfterAPause()
     {
-        var ritual = RelicsKeyRitual.Create();
-        ritual.Start();
-        ritual.Advance(View(arrived: true));
-        ritual.Advance(View(seconds: 3, arrived: true));
+        var (ritual, _) = AtTheRitualGround();
 
         var failed = ritual.Advance(View(seconds: 10, alive: false, living: 3))!;
         Assert.True(failed.Fails);
@@ -69,12 +148,10 @@ public sealed class RelicsKeyTests
     [Fact]
     public void TheRitual_SendsTheNextWaveOnItsTimer_EvenWithTheLastStillStanding()
     {
-        var ritual = RelicsKeyRitual.Create();
-        ritual.Start();
-        ritual.Advance(View(arrived: true));
-        ritual.Advance(View(seconds: 3, arrived: true));
+        var (ritual, _) = AtTheRitualGround();
+        ritual.Advance(At(5));
 
-        Assert.NotNull(ritual.Advance(View(seconds: 30, arrived: true, living: 3))!.Wave);
+        Assert.NotNull(ritual.Advance(At(35, living: 2))!.Wave);
     }
 
     private static CombatTurnContext Turn(

@@ -1,6 +1,15 @@
 namespace Ubiquitous.Scripts;
 
-public sealed record RitualBlock(string Opening, IReadOnlyList<IReadOnlyList<uint>> Waves, string Warning, uint Boss);
+// A block of waves and the boss that ends it. The opening line and the first wave are timed from the block's
+// start, each later wave from the one before; the warning comes once the boss is out.
+public sealed record RitualBlock(
+    string Opening,
+    TimeSpan OpeningAfter,
+    IReadOnlyList<RitualWave> Waves,
+    string Warning,
+    uint Boss);
+
+public sealed record RitualWave(TimeSpan After, IReadOnlyList<uint> Creatures);
 
 public enum RitualStage
 {
@@ -32,9 +41,8 @@ public sealed class Ritual(
     IReadOnlyList<RitualBlock> blocks,
     RitualLines lines,
     uint keeperSpell,
-    TimeSpan waveEvery,
-    TimeSpan beforeFirstWave,
     TimeSpan beforeBoss,
+    TimeSpan warningAfterBoss,
     TimeSpan beforeFarewell,
     TimeSpan beforeRetry)
 {
@@ -43,6 +51,9 @@ public sealed class Ritual(
     public int Block { get; private set; }
 
     private int _wavesSent;
+    private TimeSpan _nextWaveAt;
+    private bool _openingSaid;
+    private bool _warningSaid;
 
     public RitualOrders? Start()
     {
@@ -67,24 +78,25 @@ public sealed class Ritual(
                 Stage = RitualStage.Summoning;
                 return new RitualOrders(Say: lines.Starting, KeeperCasts: keeperSpell);
 
-            case RitualStage.Summoning when view.InStage >= beforeFirstWave:
-                return OpenBlock(0);
+            case RitualStage.Summoning:
+                return OpenBlock(0, view);
 
-            case RitualStage.Waves when _wavesSent < blocks[Block].Waves.Count && view.InStage >= waveEvery * _wavesSent:
-                return new RitualOrders(Wave: blocks[Block].Waves[_wavesSent++]);
-
-            case RitualStage.Waves when _wavesSent == blocks[Block].Waves.Count && view.LivingWaveCreatures == 0:
-                Stage = RitualStage.BossComing;
-                return new RitualOrders(Say: blocks[Block].Warning);
+            case RitualStage.Waves:
+                return WavesDue(view);
 
             case RitualStage.BossComing when view.InStage >= beforeBoss:
                 Stage = RitualStage.Boss;
+                _warningSaid = false;
                 return new RitualOrders(Boss: blocks[Block].Boss);
 
             case RitualStage.Boss when view.BossDead:
-                if (Block + 1 < blocks.Count) return OpenBlock(Block + 1);
+                if (Block + 1 < blocks.Count) return OpenBlock(Block + 1, view with { InStage = TimeSpan.Zero });
                 Stage = RitualStage.Finishing;
                 return new RitualOrders(Say: lines.Done);
+
+            case RitualStage.Boss when !_warningSaid && view.InStage >= warningAfterBoss:
+                _warningSaid = true;
+                return new RitualOrders(Say: blocks[Block].Warning);
 
             case RitualStage.Finishing when view.InStage >= beforeFarewell:
                 Stage = RitualStage.Done;
@@ -100,12 +112,40 @@ public sealed class Ritual(
         return null;
     }
 
-    private RitualOrders OpenBlock(int block)
+    // A change of stage always answers, even with nothing to do: the server starts the stage's clock on an answer.
+    private RitualOrders OpenBlock(int block, RitualView view)
     {
         Block = block;
         Stage = RitualStage.Waves;
-        _wavesSent = 1;
-        return new RitualOrders(Say: blocks[block].Opening, Wave: blocks[block].Waves[0]);
+        _wavesSent = 0;
+        _nextWaveAt = blocks[block].Waves[0].After;
+        _openingSaid = false;
+        return WavesDue(view) ?? new RitualOrders();
+    }
+
+    // The next wave goes out on its timer whether or not the last is still standing; the boss is only called
+    // once every wave is out and every creature in them is dead.
+    private RitualOrders? WavesDue(RitualView view)
+    {
+        var current = blocks[Block];
+        string? say = null;
+        if (!_openingSaid && view.InStage >= current.OpeningAfter)
+        {
+            _openingSaid = true;
+            say = current.Opening;
+        }
+
+        IReadOnlyList<uint>? wave = null;
+        if (_wavesSent < current.Waves.Count && view.InStage >= _nextWaveAt)
+        {
+            wave = current.Waves[_wavesSent++].Creatures;
+            if (_wavesSent < current.Waves.Count) _nextWaveAt += current.Waves[_wavesSent].After;
+        }
+
+        if (say is not null || wave is not null) return new RitualOrders(Say: say, Wave: wave);
+        if (_wavesSent < current.Waves.Count || view.LivingWaveCreatures > 0) return null;
+        Stage = RitualStage.BossComing;
+        return new RitualOrders();
     }
 }
 

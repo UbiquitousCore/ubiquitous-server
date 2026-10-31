@@ -288,7 +288,13 @@ this project's own:
 - Relic's Key (map 15, `swamp_eye`): the way the ritual runs (talk to
   Tharrath, follow him, three blocks of waves on a timer, a boss once a
   block is cleared, failure if he dies), the bosses' moves and thresholds
-  and which creature uses which move are the dungeon field guide's. Every
+  and which creature uses which move are the dungeon field guide's. So are
+  the creatures in every wave and when each comes (`RelicsKeyRitual.Blocks`):
+  the first wave at once, then 35 s and 30 s; the second block 25, 30 and
+  30 s after Hathraad dies; five waves 20, 30, 40, 45 and 50 s after Kermode
+  dies; each boss 20 s after its block is dead, its warning 5 s after it
+  appears; the block's opening line 5 s into the first block and 10 s after
+  each boss; the farewell 10 s after "It's done!". Every
   line Tharrath, Hathraad and Alr-Rahjil say is an operator `String_Script`
   row; which line is a boss's pull or death line ("Heretics must die!" /
   "No...." for Hathraad, "You dare disturb me! You will die!" / "I will
@@ -304,10 +310,9 @@ this project's own:
   where the ritual is held and where waves appear
   (`GameContent.RelicsKeyRitualSite`, each on a spot a creature in the
   swamp's spawn table stands on); the dungeon gates, laid round the gate
-  objects 205 and 206 the way the prison's are round theirs; how many
-  creatures make each wave; the pauses before the first wave (3 s), a boss
-  (8 s), the farewell (4 s) and a retry (15 s); every move's repeat time
-  where the guide says only "every so often". Waves 30 s apart, Kermode's
+  objects 205 and 206 the way the prison's are round theirs; the pause
+  before a retry (15 s); every move's repeat time where the guide says only
+  "every so often". Kermode's
   shouts every 8 s, Tempest every 10 s, Alr-Rahjil's rotation every 5 s and
   the reach of Kermode's shouts (30), Tempest (30), Wraith Blast (20) and
   Pounding Glow (8) are the guide's (`GameContent.SpellReach`). Break Armor

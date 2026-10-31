@@ -1,8 +1,8 @@
 namespace Ubiquitous.Scripts;
 
-// The blocks, their order, the bosses and Tharrath's lines are the dungeon field guide's (the lines are also the
-// operator's String_Script rows). Own choice: how many creatures make up each wave, and which kinds, within what
-// the guide says each block mixes; the pauses before the first wave, a boss, the farewell and a retry.
+// The blocks, their waves and when each comes, the bosses, Tharrath's lines and when he says them are the game as it
+// behaves in play, recorded in docs/guides/dungeon-field-guide.md (the lines are also the operator's String_Script
+// rows). Own choice: the pause before a retry.
 public static class RelicsKeyRitual
 {
     public const uint Hathraad = 2619;
@@ -22,30 +22,32 @@ public static class RelicsKeyRitual
 
     public const uint Summoning = 2387;
 
-    public static readonly TimeSpan WaveEvery = TimeSpan.FromSeconds(30);
+    private static RitualWave After(int seconds, params uint[] creatures) =>
+        new(TimeSpan.FromSeconds(seconds), creatures);
 
     public static readonly IReadOnlyList<RitualBlock> Blocks =
     [
-        new("Here they come, right on time!",
+        new("Here they come, right on time!", TimeSpan.FromSeconds(5),
         [
-            [SonOfTheEarth, SonOfTheLake, SonOfTheLake],
-            [SonOfTheEarth, SonOfTheLake, RottenSonOfTheLake],
-            [SonOfTheEarth, SonOfTheEarth, SonOfTheLake, RottenSonOfTheLake],
+            After(0, SonOfTheEarth, SonOfTheLake),
+            After(35, SonOfTheEarth, SonOfTheLake, RottenSonOfTheLake),
+            After(30, SonOfTheEarth, SonOfTheEarth, RottenSonOfTheLake),
         ],
         "The air is humming... Must be a giant one!", Hathraad),
-        new("More of them are coming!",
+        new("More of them are coming!", TimeSpan.FromSeconds(10),
         [
-            [GhostlyGladiator, GhostlyHunter, GhostlyPriest],
-            [GhostlyGladiator, GhostlyMage, GhostlyPriest],
-            [GhostlyGladiator, GhostlyHunter, GhostlyMage, GhostlyPriest],
+            After(25, GhostlyHunter, GhostlyGladiator, GhostlyGladiator),
+            After(30, GhostlyHunter, GhostlyGladiator, GhostlyMage),
+            After(30, GhostlyHunter, GhostlyGladiator, GhostlyPriest),
         ],
         "An angry spirit approaches!", Kermode),
-        new("You've got to hold them off!",
+        new("You've got to hold them off!", TimeSpan.FromSeconds(10),
         [
-            [SonOfTheLake, GhostlyGladiator, FlameStriker, LavaSkinBurner],
-            [RottenSonOfTheLake, GhostlyHunter, RockWingsAssassin, LavaSkinBurner],
-            [SonOfTheLake, GhostlyMage, FlameStriker, RockWingsAssassin],
-            [GhostlyGladiator, GhostlyPriest, FlameStriker, LavaSkinBurner, RockWingsAssassin],
+            After(20, SonOfTheLake, GhostlyGladiator, RockWingsAssassin),
+            After(30, SonOfTheLake, GhostlyHunter, FlameStriker),
+            After(40, RottenSonOfTheLake, GhostlyGladiator, LavaSkinBurner),
+            After(45, GhostlyMage, LavaSkinBurner, RockWingsAssassin, FlameStriker),
+            After(50, GhostlyMage, GhostlyPriest, RockWingsAssassin, FlameStriker),
         ],
         "I'm almost finished!", AlrRahjil),
     ];
@@ -58,9 +60,9 @@ public static class RelicsKeyRitual
         Failed: "My spell... failed.");
 
     public static Ritual Create() => new(
-        Blocks, Lines, Summoning, WaveEvery,
-        beforeFirstWave: TimeSpan.FromSeconds(3),
-        beforeBoss: TimeSpan.FromSeconds(8),
-        beforeFarewell: TimeSpan.FromSeconds(4),
+        Blocks, Lines, Summoning,
+        beforeBoss: TimeSpan.FromSeconds(20),
+        warningAfterBoss: TimeSpan.FromSeconds(5),
+        beforeFarewell: TimeSpan.FromSeconds(10),
         beforeRetry: TimeSpan.FromSeconds(15));
 }
