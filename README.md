@@ -1,279 +1,91 @@
 # Ubiquitous Server
 
-An independent, unofficial game server for a Order and Chaos Online (see
-[Legal](#legal)), written in C# on .NET 10. Every value it uses is a game fact
-a player can observe, comes from the operator's own client data files, or is
-this project's own design choice.
+A community-run server for Order & Chaos Online, with a web client that plays
+in your browser. Host a world for yourself and your friends, or play on one
+someone else hosts.
 
-This server only works with the [ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client), and does not support official clients such as the iOS, Android, MAc or Windows versions as this server uses it's own protocol to communicate.
+> Unofficial fan project, not affiliated with Gameloft. You supply your own
+> legally obtained copy of the game; nothing from it is hosted here.
+> See [Legal](#legal).
 
-> **Target build: 1.1.4.** Rules and data follow the 1.1.4 client. Other game
-> versions can be supported: builds close to 1.1.4 should need little work,
-> more distant ones more.
->
-> **Status: playable over WebSocket.** Login, movement, combat, spells, quests,
-> inventory and social systems run end to end against the client, persisting
-> to JSON files or Postgres. Open work is in the
-> [issue tracker](https://github.com/UbiquitousCore/ubiquitous-server/issues).
+**Status:** playable. Login, movement, combat, spells, quests, inventory and
+social features work end to end. Open work is in the
+[issue tracker](https://github.com/UbiquitousCore/ubiquitous-server/issues).
+
+This server speaks its own protocol, so it works with
+[ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client)
+(included below) and not with the official iOS, Android, Mac or Windows apps.
+
+## What you need
+
+- [Docker](https://docs.docker.com/get-docker/) (Docker Desktop or OrbStack on
+  Mac and Windows, Docker Engine on Linux). Nothing else is installed.
+- Your own **1.1.4** game file (the `.ipa`).
+- About 2 GB of free memory for the one-time import, and about 1.5 GB of disk
+  per player's browser for the unpacked game.
 
 ## Quick start
 
-You need [Docker](https://docs.docker.com/get-docker/) (Docker Desktop,
-OrbStack or Docker Engine) and your own legally obtained 1.1.4 client build
-(the `.ipa`). This repo does not host any .ipa files, these should be supplied
-yourself. Nothing else is installed on your machine.
-
-### Run a server
-
-Make a folder for it, with an `incoming` folder inside, and put
+**1. Set up a folder.** Make a folder, put an `incoming` folder in it, copy your
+`.ipa` into `incoming`, and download
 [`docker-compose.yml`](https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml)
-in it (save the link, or download it as below). Copy your `.ipa` into
-`incoming`.
+next to it:
 
 ```bash
-mkdir ubiquitous         # a folder for the server; any name and place will do
-cd ubiquitous            # every command from here on runs inside it
-mkdir incoming           # takes your .ipa; the import makes data/ for what it builds
-# Download the compose file, which describes every container the server runs:
+mkdir -p ubiquitous/incoming && cd ubiquitous
 curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
-# Now copy your .ipa into incoming/ (drag it there, or use cp).
 ```
 
-On Windows, type `curl.exe` rather than `curl` in PowerShell. A clone of this
-repository works the same way, from its root. Then, in that folder:
+On Windows PowerShell type `curl.exe` instead of `curl`.
+
+**2. Import the game data and start.** The import takes a few minutes and asks
+three questions; pressing Enter for each is fine.
 
 ```bash
-# Once: asks a few setup questions, then builds the game data from incoming/*.ipa
-# (--rm deletes the one-off container afterwards; your files stay).
 docker compose run --rm ingest
-# Start the server, database, client and proxy in the background (-d).
 docker compose up -d
-# Make your first account; it asks for a password (8 characters or more) twice.
+```
+
+**3. Make your account** (it asks for a password twice):
+
+```bash
 docker compose exec server dotnet server.dll account create alice
 ```
 
-The first `ingest` asks for the address other devices will open, festival
-content and bots (Enter keeps each default: this machine only, both off), and
-writes your answers into a `.env` beside the compose file. Run again, it
-leaves that file alone.
+**4. Play.** Open <http://localhost>, choose your `.ipa` (the first visit
+unpacks it in your browser, once; it is not uploaded anywhere), and sign in as
+`alice`.
 
-The server will not start until `ingest` has run: `docker compose logs server`
-says so rather than running on placeholder content.
+The server restarts by itself after a crash or reboot, as long as Docker
+starts with your machine.
 
-The import takes a few minutes and about 2 GB of memory. If `ingest` is
-killed partway (a bare "Killed" or exit code 137), raise Docker Desktop's
-memory limit (Settings → Resources) and run it again. On Linux, run it as
-`UBIQUITOUS_UID=$(id -u) UBIQUITOUS_GID=$(id -g) docker compose run --rm ingest`
-so the files it writes, `.env` included, are yours rather than root's.
-
-Open <http://localhost> on this machine and choose your `.ipa`; the first visit unpacks it
-in your browser, once. Sign in as `alice`. The containers restart on their
-own after a crash or a reboot, as long as Docker itself starts with your
-machine.
-
-### Accounts
-
-Accounts are made and changed from this machine, with the server running.
-Each command is the whole line to type; swap `alice` for the account's name
-(3-32 letters, digits or `_ . @ -`).
+Stop and start it later with:
 
 ```bash
-# Make an account; you are asked for its password twice.
-docker compose exec server dotnet server.dll account create alice
-# Set a new password for an account.
-docker compose exec server dotnet server.dll account password alice
-# Make an account an admin (GM)...
-docker compose exec server dotnet server.dll account gm alice on
-# ...or take it away again.
-docker compose exec server dotnet server.dll account gm alice off
-# List every account, with GM beside the admins.
-docker compose exec server dotnet server.dll account list
+docker compose stop
+docker compose start
 ```
 
-Admin status applies at the player's next sign-in and covers every character
-on the account. An admin gets an admin panel in the game, with:
+## Next
 
-- teleport to any zone, a faster walking speed, and fly (space up, shift down);
-- give themselves items or gold, set their level (1-60), learn every spell;
-- invincibility until they leave the world;
-- draw distance, the debug HUD, the collision wireframe and fog off.
-
-In the world, an admin also passes the server's movement checks, has a kill
-spell and a full heal, and can type `/stress <count>` in chat to spawn a crowd
-at the nearest training dummy for load testing. Give it only to people you
-trust with the whole server.
-
-### Changing settings
-
-Settings go in the `.env` beside the compose file, which the first `ingest`
-wrote, one `NAME=value` per line, and take effect with `docker compose up -d`. For
-example, to turn the seasonal festival items on and run ten bots:
-
-```
-UBIQUITOUS_FESTIVAL_CONTENT_ENABLED=true
-UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED=true
-UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=10
-```
-
-| Setting | Default | Does |
-|---|---|---|
-| `UBIQUITOUS_FESTIVAL_CONTENT_ENABLED` | `false` | winter solstice and anniversary scenery, creatures and items |
-| `UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED` | `false` | start bots |
-| `UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT` | `5` | how many bots play on their own (0-500) |
-| `UBIQUITOUS_MAX_CONNECTIONS` | `500` | players connected at once |
-| `UBIQUITOUS_DISABLED_RACES` | none | race ids that cannot be picked, comma-separated |
-| `UBIQUITOUS_LOG_LEVEL` | `Information` | `Trace` to `Critical` |
-| `UBIQUITOUS_SITE` | `localhost` | the address other devices open (below) |
-| `UBIQUITOUS_HTTP_PORT`, `UBIQUITOUS_HTTPS_PORT` | `80`, `443` | the proxy's ports (then open `http://localhost:<port>`) |
-
-Every other server setting works the same way, by its `UBIQUITOUS_*` name;
-[env.example](env.example) lists them.
-
-### Play from a phone or another computer
-
-Browsers keep the unpacked game data only for a page on https (or on
-localhost), so for other devices the stack serves everything through one
-https address with its own certificate. In `.env`, name the address
-other devices will use (this machine's LAN address here):
-
-```
-UBIQUITOUS_SITE=192.168.1.20
-```
-
-then run `docker compose up -d` again.
-
-On each device, open `https://192.168.1.20/root.crt` once, accept the
-warning, and install the certificate as trusted:
-
-- **iPhone / iPad:** Settings → General → VPN & Device Management → install
-  the downloaded profile, then Settings → General → About → Certificate Trust
-  Settings → turn on full trust for it.
-- **Android:** the link only downloads the file. Install it from Settings →
-  Security → Encryption & credentials → Install a certificate → **CA
-  certificate** (menu names vary by brand; search Settings for "CA
-  certificate").
-
-Then open `https://192.168.1.20`.
-
-If the page still says "Not secure":
-
-- **Restart the browser.** If you opened the page and went past the warning
-  before installing the certificate, the browser keeps treating it as
-  insecure until it restarts. On Android, force-stop Chrome (Settings → Apps →
-  Chrome → Force stop) and open the address again; on iOS, close the tab.
-- **Check where it was installed.** On Android it must be a CA certificate:
-  it should be listed as "Caddy Local Authority" under Settings → Encryption &
-  credentials → Trusted credentials → User. "VPN & app user certificate" and
-  "Wi-Fi certificate" do not work.
-- **Firefox on Android** ignores certificates you install unless you turn on
-  Settings → About Firefox (tap the logo five times) → back to Settings →
-  Secret Settings → "Use third party CA certificates". Chrome and Samsung
-  Internet use them as they are.
-- **The address changed.** The router assigns this machine's LAN address and
-  can change it; update `UBIQUITOUS_SITE` and run `docker compose up -d`.
-  Reserving a fixed address for the machine in the router stops this.
-- **Nothing loads at all.** Check that the phone is on the same network, and
-  that this machine's firewall lets Docker (or OrbStack) accept incoming
-  connections.
-- **The certificate changed.** It lives in the `caddy-data` volume; after
-  `docker compose down -v`, every device has to install the new one.
-
-To play from anywhere, give it a real domain instead
-(`UBIQUITOUS_SITE=play.example.com`, with ports 80 and 443 forwarded to this
-machine): the proxy then gets a public certificate on its own and no device
-needs anything installed. [Tailscale](https://tailscale.com) is the way to
-reach it from your own devices without opening ports.
-
-### Updating
-
-```bash
-# Download the latest compose file over the old one (.env is not touched).
-curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
-# Fetch the newest version of every image the stack uses.
-docker compose pull
-# Restart every container on the new images and compose file.
-docker compose up -d --force-recreate
-```
-
-The first line refreshes the compose file itself (`curl.exe` on Windows; in
-a clone, `git pull` instead); your `.env` is kept. `--force-recreate` is
-needed because Docker does not notice a change to the proxy's settings,
-which live inside the compose file.
-
-Saves are kept: accounts, characters, inventory and quests are in the
-Postgres volume; mail, guilds, friends and the auction house in the server's
-state volume. Only `docker compose down -v` removes them. Run
-`docker compose run --rm ingest` again only when a change touches the
-importer, then `docker compose restart server`.
-
-## Develop on it
-
-Clone this repository and
-[ubiquitous-client](https://github.com/UbiquitousCore/ubiquitous-client).
-Two ways to run the server from source; both serve `ws://127.0.0.1:8781/`,
-where the client's `npm run dev` looks for it, and both keep saves as
-editable JSON files in `data/generated/` instead of Postgres.
-
-**With .NET 10** (the usual way, for a debugger and an IDE):
-
-```bash
-dotnet run --project tools/asset-extractor -- --ingest incoming   # once
-dotnet watch --project src/server run
-```
-
-Run both from the repository root: the server reads `.env` and
-`server.json` from the folder it starts in.
-
-**With Docker only:**
-
-```bash
-docker compose run --rm ingest
-docker compose up dev            # dotnet watch inside a container
-```
-
-Run either instead of `docker compose up`, not beside it: they use the same
-port. `docker compose up -d --build` runs the full stack built from your
-checkout rather than the published images.
-
-To sign in without making accounts, copy `env.example` to `.env`, set
-`UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true` and a password in
-`UBIQUITOUS_DEVELOPMENT_PASS_HASH`, and sign in as `developer`. Real accounts
-work too: `dotnet run --project src/server -- account create alice` (or
-`docker compose exec dev dotnet run --project src/server -- account create alice`).
-The very first one takes effect once the server restarts; later ones at once.
-
-No client data is needed to build, test or run; the server falls back to a
-tiny synthetic world. `dotnet build && dotnet test` checks everything. Details:
-[docs/development/setup.md](docs/development/setup.md).
-
-## Configuration
-
-Game settings live in `server.json` (git-ignored; copy it from
-`server.example.json`). The server reads it from the folder it is started in:
-
-```json
-{
-  "festivalContentEnabled": true,
-  "modules": { "playerbots": { "enabled": true, "randomBotCount": 5 } }
-}
-```
-
-In a clone, the Docker stack reads it too when `.env` holds
-`COMPOSE_FILE=docker-compose.yml:docker-compose.server-json.yml` (on Windows,
-separate them with `;`). Settings apply in order: defaults, `server.json`,
-`.env`, `UBIQUITOUS_*` environment variables, command-line flags.
+| I want to... | Read |
+|---|---|
+| let friends or my phone connect, make more accounts, make someone an admin, turn on bots or festival content, update, or fix a problem | [docs/HOSTING.md](docs/HOSTING.md) |
+| run the server from source, change code, run the tests | [docs/development/setup.md](docs/development/setup.md) and [CONTRIBUTING.md](CONTRIBUTING.md) |
+| understand how it works | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the table below |
 
 ## Documentation
 
 | Doc | Covers |
 |---|---|
-| [AGENTS.md](AGENTS.md) | project contract: sources, naming, boundaries, done |
+| [docs/HOSTING.md](docs/HOSTING.md) | accounts, settings, phones and LAN, updating, troubleshooting |
+| [docs/development/setup.md](docs/development/setup.md) | setup, data import, Docker, tests |
 | [docs/BEHAVIOUR.md](docs/BEHAVIOUR.md) | what the server does, as a client sees it |
 | [docs/PROVENANCE.md](docs/PROVENANCE.md) | where each value comes from |
 | [docs/GAMEPLAY_READINGS.md](docs/GAMEPLAY_READINGS.md) | what the game shows, with dated readings and references |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | tick, delivery, scripts, data |
 | [docs/architecture/](docs/architecture) | wire codes, walkable ground |
-| [docs/development/setup.md](docs/development/setup.md) | setup, data import, Docker, tests |
+| [AGENTS.md](AGENTS.md) | project contract: sources, naming, boundaries, done |
 | [Issues](https://github.com/UbiquitousCore/ubiquitous-server/issues) | open work |
 
 ## License
