@@ -36,6 +36,50 @@ public sealed class EmoteTests
     }
 
     [Fact]
+    public async Task AnEmote_IsSeenOnlyWithinTwentyUnits()
+    {
+        var hub = new PlaySessionHub();
+        var (first, _) = await JoinAsync(hub, "a", "Ayla");
+        var (_, nearInbox) = await JoinAsync(hub, "b", "Borin", x: 1 + 19);
+        var (_, farInbox) = await JoinAsync(hub, "c", "Cael", x: 1 + 21);
+        nearInbox.Forwarded.Clear();
+        farInbox.Forwarded.Clear();
+
+        await SendAsync(hub, first, WebMessageTypes.PlayerEmote, 5, new { name = "wave" });
+
+        Assert.Contains(nearInbox.Forwarded, message => message.Contains("emote.performed"));
+        Assert.DoesNotContain(farInbox.Forwarded, message => message.Contains("emote.performed"));
+    }
+
+    [Fact]
+    public async Task AnEmoteAtSomeone_NamesThemForEveryoneWhoSeesIt()
+    {
+        var hub = new PlaySessionHub();
+        var (first, _) = await JoinAsync(hub, "a", "Ayla");
+        var (_, secondInbox) = await JoinAsync(hub, "b", "Borin");
+        secondInbox.Forwarded.Clear();
+
+        var direct = await SendAsync(hub, first, WebMessageTypes.PlayerEmote, 5,
+            new { name = "wave", targetId = "player:char-b" });
+
+        Assert.Contains(direct, message => message.Contains("emote.performed")
+            && message.Contains("\"targetId\":\"player:char-b\""));
+        Assert.Contains(secondInbox.Forwarded, message => message.Contains("emote.performed")
+            && message.Contains("\"targetId\":\"player:char-b\""));
+    }
+
+    [Fact]
+    public async Task AnEmoteAtNobody_CarriesNoTarget()
+    {
+        var hub = new PlaySessionHub();
+        var (first, _) = await JoinAsync(hub, "a", "Ayla");
+
+        var direct = await SendAsync(hub, first, WebMessageTypes.PlayerEmote, 5, new { name = "wave" });
+
+        Assert.DoesNotContain(direct, message => message.Contains("targetId"));
+    }
+
+    [Fact]
     public async Task AnUnknownEmoteName_IsRefusedAndNeverBroadcast()
     {
         var hub = new PlaySessionHub();
@@ -64,10 +108,10 @@ public sealed class EmoteTests
     private sealed record Inbox(List<string> Direct, List<string> Forwarded);
 
     private static async Task<(PlaySession Session, Inbox Inbox)> JoinAsync(
-        PlaySessionHub hub, string guid, string name, ushort mapId = 13)
+        PlaySessionHub hub, string guid, string name, ushort mapId = 13, float x = 1)
     {
         var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
-            new InMemoryCharacterStore([Character(guid, name, mapId)]));
+            new InMemoryCharacterStore([Character(guid, name, mapId, x)]));
         var inbox = new Inbox([], []);
         hub.Register(session, message => { inbox.Forwarded.Add(message); return Task.CompletedTask; });
 
@@ -91,6 +135,6 @@ public sealed class EmoteTests
         return [.. responses, .. presence];
     }
 
-    private static CharacterRecord Character(string guid, string name, ushort mapId) => new(
-        $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, mapId, 1, 2, 3, 4, [100, 200]);
+    private static CharacterRecord Character(string guid, string name, ushort mapId, float x) => new(
+        $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, mapId, x, 2, 3, 4, [100, 200]);
 }

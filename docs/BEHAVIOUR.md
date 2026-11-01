@@ -89,8 +89,9 @@ comes from is in `PROVENANCE.md`.
 - Creatures and static objects within 60 units are spawned and removed per
   session and never broadcast: fanning them out would despawn bodies other
   clients can still see. Players on the same map instance see each other
-  map-wide. Movement, combat, deaths, loot state and emotes go to every session
-  on the map instance.
+  map-wide. Movement, combat, deaths and loot state go to every session on the
+  map instance; an emote reaches only those within 20 units, and names the
+  sender's selected target as `targetId` when there is one.
 - A map's population is built in spawn-id order the first time anyone enters;
   ids come from a per-instance counter, stable within a boot only.
 - A creature simulates while its home tile (16 units) is within 2 tiles of a

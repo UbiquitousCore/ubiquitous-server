@@ -24,6 +24,25 @@ public sealed class EmoteServiceTests
     }
 
     [Fact]
+    public void Create_CarriesTheTargetItWasAimedAt()
+    {
+        var emote = new EmoteService().Create(new EmoteRequest("wave", "player:b"), "player:a");
+
+        Assert.Equal("player:b", emote!.TargetId);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("player:a")]
+    public void Create_WithNobodyElseSelected_IsToEveryone(string? targetId)
+    {
+        var emote = new EmoteService().Create(new EmoteRequest("wave", targetId), "player:a");
+
+        Assert.Null(emote!.TargetId);
+    }
+
+    [Fact]
     public void Create_RejectsAnUnknownName()
     {
         Assert.Null(new EmoteService().Create(new EmoteRequest("moonwalk"), "player:a"));

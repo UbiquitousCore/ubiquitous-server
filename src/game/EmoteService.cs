@@ -2,9 +2,9 @@ namespace Ubiquitous.Game;
 
 public sealed record EmoteDefinition(int Id, string Name);
 
-public sealed record EmoteRequest(string Name);
+public sealed record EmoteRequest(string Name, string? TargetId = null);
 
-public sealed record EmoteEvent(string SenderId, int Id, string Name);
+public sealed record EmoteEvent(string SenderId, int Id, string Name, string? TargetId = null);
 
 public sealed class EmoteService
 {
@@ -33,6 +33,8 @@ public sealed class EmoteService
         new(169, "whistle"),
     ];
 
+    public const float Range = ChatService.SayRange;
+
     private static readonly Dictionary<string, EmoteDefinition> ByName =
         All.ToDictionary(emote => emote.Name, StringComparer.OrdinalIgnoreCase);
 
@@ -40,7 +42,8 @@ public sealed class EmoteService
     {
         if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(senderId)) return null;
         return ByName.TryGetValue(request.Name.Trim(), out var definition)
-            ? new EmoteEvent(senderId, definition.Id, definition.Name)
+            ? new EmoteEvent(senderId, definition.Id, definition.Name,
+                string.IsNullOrWhiteSpace(request.TargetId) || request.TargetId == senderId ? null : request.TargetId)
             : null;
     }
 }

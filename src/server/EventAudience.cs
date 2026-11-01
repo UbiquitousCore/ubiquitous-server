@@ -33,7 +33,6 @@ internal static class EventAudience
         WebMessageTypes.LootBusy,
         WebMessageTypes.LootSlotEmptied,
         WebMessageTypes.DungeonCompleted,
-        WebMessageTypes.EmotePerformed,
     }.ToFrozenSet(StringComparer.Ordinal);
 
     public static bool IsMapWide(OutboundEvent outbound)
