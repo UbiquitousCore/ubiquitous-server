@@ -23,6 +23,8 @@ public sealed record SpellDefinition(
     bool AuraChill = false,
     uint? AuraTriggerSpellId = null,
     int? AuraTriggerChancePercent = null,
+    uint? AuraBreakTriggerSpellId = null,
+    int? AuraBreakTriggerChancePercent = null,
     IReadOnlyList<uint>? SpellGroupMask = null,
     int? AuraSpellModifierType = null,
     bool AuraSpellModifierIsPercent = false,

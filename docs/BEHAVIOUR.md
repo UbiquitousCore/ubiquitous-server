@@ -215,7 +215,9 @@ comes from is in `PROVENANCE.md`.
   that is a non-opponent player, otherwise to the caster. The target's session
   applies, reports, holds and ends the effect.
 - A shield lands on the caster and takes its percentage of each blow after
-  armour until spent or expired; reports carry `damage` and `absorbed`.
+  armour until spent or expired; reports carry `damage` and `absorbed`. A shield
+  whose data names a break penalty applies it when the shield is broken by
+  damage, not when it lands and not when it expires (Energy Field's Flashover).
 - A power restore only works for a class that spends that power.
 - A spell with no cost, cooldown or cast time is passive and refused.
 - A leap (Charge, Shadow Blink...) puts the caster 1.5 units short of the

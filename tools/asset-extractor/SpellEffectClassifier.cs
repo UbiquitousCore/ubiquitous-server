@@ -161,6 +161,17 @@ public static class SpellEffectClassifier
             used.Add(column);
         }
 
+        foreach (var column in new[] { 36, 37 })
+        {
+            if (spell.AuraBreakTriggerSpellId is not null) break;
+            if (used.Contains(column)) continue;
+            if (At(column) is not { } candidate || !Unconditioned(candidate)) continue;
+            var withBreak = Apply(Blank(spell, candidate), candidate);
+            if (withBreak.AuraTriggerSpellId is null) continue;
+            spell = spell with { AuraBreakTriggerSpellId = withBreak.AuraTriggerSpellId, AuraBreakTriggerChancePercent = withBreak.AuraTriggerChancePercent };
+            used.Add(column);
+        }
+
         var extras = new List<SpellDefinition>();
         foreach (var (column, effect) in slots)
         {

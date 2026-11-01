@@ -379,10 +379,27 @@ public sealed partial class PlaySession
     {
         if (_character is null) return [];
         var casterId = WebNetworkId.FromString(PlayerUnitId);
-        return _absorb.TickExpired(now)
-            .Select(ended => Reply(WebMessageTypes.AuraEnded, new AuraEndedPayload(ended.SpellId, WebNetworkId.FromString(ended.TargetId),
-                casterId)))
-            .ToList();
+        var responses = new List<string>();
+        foreach (var ended in _absorb.TickExpired(now))
+        {
+            responses.Add(Reply(WebMessageTypes.AuraEnded, new AuraEndedPayload(ended.Shield.SpellId,
+                WebNetworkId.FromString(ended.Shield.TargetId), casterId)));
+            if (!ended.Broken) continue;
+            if (!_content.Spells.TryGetValue(ended.Shield.SpellId, out var shield)) continue;
+            uint? breakSpellId = shield.AuraBreakTriggerSpellId
+                ?? shield.ExtraEffects?.FirstOrDefault(extra => extra.AuraTriggerSpellId is not null)?.AuraTriggerSpellId;
+            int chance = shield.AuraBreakTriggerChancePercent
+                ?? shield.ExtraEffects?.FirstOrDefault(extra => extra.AuraTriggerSpellId is not null)?.AuraTriggerChancePercent
+                ?? 100;
+            if (breakSpellId is not uint triggeredId) continue;
+            if (!_content.Spells.TryGetValue(triggeredId, out var triggered)
+                || !SpellService.HasResolvableEffect(triggered)
+                || !_spells.RollTriggerChance(chance))
+                continue;
+            var at = triggered.EffectTarget == SpellEffectTargets.Self ? casterId.Text! : ended.Shield.TargetId;
+            responses.AddRange(ResolveSpellEffect(casterId, at, triggeredId, triggered, now));
+        }
+        return responses;
     }
 
     private IReadOnlyList<string> ResolveStealthEffectApply(

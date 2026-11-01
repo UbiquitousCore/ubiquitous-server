@@ -196,4 +196,18 @@ public sealed class SpellEffectClassifierTests
         Assert.Equal(20, spell.EffectDamage);
         Assert.Null(spell.ExtraEffects);
     }
+
+    [Fact]
+    public void AnAuraTriggerInTheLastSlotIsABreakTriggerNotACastTimeExtra()
+    {
+        var spell = Classify(
+            (33, Effect(1, 1, SpellEffectColumns.AbsorbSubType, baseValue: 50, argument: 100, target: 1)),
+            (37, Effect(2, 1, SpellEffectColumns.TriggerSpellSubType, baseValue: 100, argument: 7108, target: 1)));
+
+        Assert.Equal(50, spell.AuraAbsorbAmount);
+        Assert.Equal(7108u, spell.AuraBreakTriggerSpellId);
+        Assert.Equal(100, spell.AuraBreakTriggerChancePercent);
+        Assert.Null(spell.AuraTriggerSpellId);
+        Assert.Null(spell.ExtraEffects);
+    }
 }

@@ -235,6 +235,7 @@ public sealed partial class PlaySession
         foreach (var extra in spell.ExtraEffects)
         {
             if (!LandsOnCaster(extra, targetId, casterId) || !SpellService.HasResolvableEffect(extra)) continue;
+            if (spell.AuraAbsorbAmount is not null && extra.AuraTriggerSpellId is not null) continue;
             responses.AddRange(WithoutRelease(ResolveSpellEffect(casterId, casterId.Text!, spellId, extra, now)));
         }
     }
@@ -249,6 +250,7 @@ public sealed partial class PlaySession
         foreach (var (extra, index) in spell.ExtraEffects.Select((extra, index) => (extra, index)))
         {
             if (LandsOnCaster(extra, targetId, casterId) || !SpellService.HasResolvableEffect(extra)) continue;
+            if (spell.AuraAbsorbAmount is not null && extra.AuraTriggerSpellId is not null) continue;
             if (!landed && !IsStrike(extra)) continue;
             if (targetId == casterId.Text || _combat.IsDead(targetId)) continue;
             if (!_sight.Contains(targetId)

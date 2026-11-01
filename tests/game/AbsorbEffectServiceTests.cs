@@ -25,7 +25,7 @@ public sealed class AbsorbEffectServiceTests
     }
 
     [Fact]
-    public void AShieldUsedUpEndsOnTheNextTick_AndOnePastItsDurationEndsThen()
+    public void AShieldUsedUpEndsBrokenOnTheNextTick_AndOnePastItsDurationEndsUnbroken()
     {
         var shields = new AbsorbEffectService();
         shields.Apply("player:1", spellId: 5118, amount: 10, percent: 100, durationMs: 300000, Now);
@@ -33,10 +33,14 @@ public sealed class AbsorbEffectServiceTests
         shields.Absorb("player:1", 45, Now);
 
         var ended = shields.TickExpired(Now + TimeSpan.FromMilliseconds(1));
-        Assert.Equal("player:1", Assert.Single(ended).TargetId);
+        var broken = Assert.Single(ended);
+        Assert.Equal("player:1", broken.Shield.TargetId);
+        Assert.True(broken.Broken);
 
         Assert.Equal(45, shields.Absorb("player:2", 45, Now + TimeSpan.FromMilliseconds(2000)));
-        Assert.Equal("player:2", Assert.Single(shields.TickExpired(Now + TimeSpan.FromMilliseconds(2000))).TargetId);
+        var timedOut = Assert.Single(shields.TickExpired(Now + TimeSpan.FromMilliseconds(2000)));
+        Assert.Equal("player:2", timedOut.Shield.TargetId);
+        Assert.False(timedOut.Broken);
         Assert.Empty(shields.TickExpired(Now + TimeSpan.FromSeconds(10)));
     }
 

@@ -2,6 +2,8 @@ namespace Ubiquitous.Game;
 
 public sealed record ActiveAbsorbEffect(string TargetId, uint SpellId, int Remaining, int Percent, DateTimeOffset ExpiresAt);
 
+public sealed record AbsorbEnded(ActiveAbsorbEffect Shield, bool Broken);
+
 public sealed class AbsorbEffectService
 {
     public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
@@ -37,14 +39,14 @@ public sealed class AbsorbEffectService
         return [shield.SpellId];
     }
 
-    public IReadOnlyList<ActiveAbsorbEffect> TickExpired(DateTimeOffset now)
+    public IReadOnlyList<AbsorbEnded> TickExpired(DateTimeOffset now)
     {
-        var ended = new List<ActiveAbsorbEffect>(_usedUp);
+        var ended = new List<AbsorbEnded>(_usedUp.Select(shield => new AbsorbEnded(shield, true)));
         _usedUp.Clear();
         foreach (var shield in _active.Values.Where(shield => now >= shield.ExpiresAt).ToArray())
         {
             _active.Remove(shield.TargetId);
-            ended.Add(shield);
+            ended.Add(new AbsorbEnded(shield, false));
         }
         return ended;
     }
