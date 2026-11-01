@@ -86,7 +86,8 @@ off the player's own body, so `world.entered` carries none after a crossing.
 server carries out), `onCooldown`, `notEnoughPower`, `invalidTarget`
 (missing, out of range, dead or invisible), `incapacitated` (stunned or
 asleep), `silenced`, `missingEquipment`, `alreadyCasting` (the cast under way
-carries on).
+carries on), `outOfRange`, `inCombat` (a mount summoned in a fight) and
+`mountNotHere` (a mount summoned inside a dungeon).
 
 ## Item results
 

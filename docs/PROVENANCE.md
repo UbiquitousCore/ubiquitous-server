@@ -163,6 +163,10 @@ read in the live game between 2026-10-03 and 2026-10-06; the readings are in
 - Any vendor buys a bag stack of anything that has a price, whether or not it
   stocks that item, and pays the item's sell price for each one in the stack
   (`VendorService.Sell`).
+- A mount cannot be summoned in a fight or inside a dungeon
+  (`MountRules.WhyNotMount`), from the gameplay field guide
+  (`docs/guides/gameplay-field-guide.md`, Mounts). The refusal words the
+  client shows are this project's own.
 
 ## Design choices that follow CypherCore
 

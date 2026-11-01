@@ -9,4 +9,15 @@ public static class MountRules
     public const float SpeedRatio = 1.6f;
 
     public static bool IsMount(SpellDefinition? spell) => spell?.AuraMountId is not null;
+
+    public static MountRefusal? WhyNotMount(bool inCombat, bool inDungeon) =>
+        inCombat ? MountRefusal.InCombat
+        : inDungeon ? MountRefusal.NotHere
+        : null;
+}
+
+public enum MountRefusal
+{
+    InCombat,
+    NotHere,
 }

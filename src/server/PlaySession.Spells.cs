@@ -40,6 +40,13 @@ public sealed partial class PlaySession
         _content.Spells.TryGetValue(spellId, out var peekedSpell);
         if (_riding is not null && MountRules.IsMount(peekedSpell) && _spells.Known.Contains(spellId))
             return MountDismount(now);
+        if (MountRules.IsMount(peekedSpell)
+            && MountRules.WhyNotMount(_combat.PlayerInCombat, InDungeon) is { } cannotRide)
+            return [Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(casterId, spellId, cannotRide switch
+            {
+                MountRefusal.InCombat => WireCodes.SpellRefusal.InCombat,
+                _ => WireCodes.SpellRefusal.MountNotHere,
+            }))];
         if (peekedSpell is not null && !MeetsEquipRequirement(peekedSpell))
             return [Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(casterId, spellId, WireCodes.SpellRefusal.MissingEquipment))];
         bool isSelfHeal = peekedSpell is not null && (peekedSpell.EffectHeal is not null || peekedSpell.AuraPeriodicHeal is not null);
