@@ -886,6 +886,7 @@ public sealed partial class PlaySession : ISessionPlayer
         if (_world is null || _character is null) return [];
         var playerId = PlayerUnitId;
         var responses = new List<string>();
+        TakePartyShares(now, responses);
         if ((_combat.IsPlayerDead || _combat.IsDead(playerId))
             && _combat.CurrentTargetOf(playerId) is string dyingTarget)
         {
@@ -1036,9 +1037,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 var lootTable = _content.LootTables.TryGetValue(victimEntry, out var table) ? table : null;
                 _loot[swing.TargetId] = _lootService.Generate(
                     checked((int)victimEntry), lootTable, creature?.MoneyDropMin, creature?.MoneyDropMax);
-                foreach (var update in _quests.RecordKill(victimEntry, _content.Quests))
-                    responses.Add(Reply(WebMessageTypes.QuestUpdated, QuestUpdatePayloadFor(update)));
-                responses.AddRange(GrantKillXp(creature, now));
+                responses.AddRange(RewardKill(victimEntry, creature, swing.TargetId, now));
             }
             var carriesLoot = _loot.TryGetValue(swing.TargetId, out var spoils)
                 && !LootService.IsEmpty(spoils);
