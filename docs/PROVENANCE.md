@@ -155,6 +155,8 @@ read in the live game between 2026-10-03 and 2026-10-06; the readings are in
   as the character sheet shows.
 - Losing a duel leaves the loser on 10 health (`PlaySession.Duel.cs`).
 - Speech is heard out to 20 units (`ChatService.SayRange`).
+- An emote is seen out to 20 units and names the emoter's selected target
+  (`EmoteService.Range`), from the gameplay field guide (Chat, Emotes).
 - A group of creatures keeps the arrangement it spawns in and turns with its
   leader as it walks (`src/game/CreatureFollowService.cs`). The turn
   threshold of about ten degrees is this project's own choice.

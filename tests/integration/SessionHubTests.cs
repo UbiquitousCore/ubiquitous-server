@@ -109,7 +109,6 @@ public sealed class SessionHubTests
         WebMessageTypes.AuraEnded, WebMessageTypes.AttackHalted, WebMessageTypes.AttackEnterCombat,
         WebMessageTypes.AttackExitCombat, WebMessageTypes.UnitDied, WebMessageTypes.PlayerRevived,
         WebMessageTypes.LootBusy, WebMessageTypes.LootSlotEmptied, WebMessageTypes.DungeonCompleted,
-        WebMessageTypes.EmotePerformed,
     ];
 
     // Loot belongs to the session that won it, so nobody else sees the corpse sparkle.

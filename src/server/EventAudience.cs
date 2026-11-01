@@ -33,7 +33,6 @@ internal static class EventAudience
         WebMessageTypes.LootBusy,
         WebMessageTypes.LootSlotEmptied,
         WebMessageTypes.DungeonCompleted,
-        WebMessageTypes.EmotePerformed,
     }.ToFrozenSet(StringComparer.Ordinal);
 
     // The moment-to-moment events a bot only acts on when they happen near it; arrivals, departures and notices still reach it.

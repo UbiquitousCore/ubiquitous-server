@@ -239,6 +239,16 @@ public sealed class PlaySessionHub(ILogger? logger = null)
             }
         }
 
+        foreach (var emote in events.Where(outbound => outbound.Type == WebMessageTypes.EmotePerformed))
+        {
+            foreach (var pair in _sessions)
+            {
+                if (ReferenceEquals(pair.Key, sender) || !SameLocation(pair.Key, sender)) continue;
+                if (!WithinReach(sender, pair.Key, EmoteService.Range) || IsAboutHiddenBody(pair.Key, emote)) continue;
+                await DeliverAsync(pair.Key, emote);
+            }
+        }
+
         foreach (var chat in events.Where(IsChatMessage))
         {
             var channel = chat.ChatChannel!;
@@ -291,17 +301,17 @@ public sealed class PlaySessionHub(ILogger? logger = null)
     private static bool IsChatMessage(OutboundEvent outbound) =>
         outbound is { Type: WebMessageTypes.ChatReceived, ChatChannel: not null };
 
-    private static bool CanDeliverChat(string channel, PlaySession sender, PlaySession observer)
-    {
-        if (ChatService.RangeOf(channel) is { } range)
-        {
-            var from = sender.PlayerPosition;
-            var to = observer.PlayerPosition;
-            return from is not null && to is not null
-                && from.Value.DistanceSquaredTo(to.Value) <= range * range;
-        }
+    private static bool CanDeliverChat(string channel, PlaySession sender, PlaySession observer) =>
+        ChatService.RangeOf(channel) is { } range
+            ? WithinReach(sender, observer, range)
+            : observer.IsChatChannelJoined(channel);
 
-        return observer.IsChatChannelJoined(channel);
+    private static bool WithinReach(PlaySession sender, PlaySession observer, float range)
+    {
+        var from = sender.PlayerPosition;
+        var to = observer.PlayerPosition;
+        return from is not null && to is not null
+            && from.Value.DistanceSquaredTo(to.Value) <= range * range;
     }
 
     private async Task<IReadOnlyList<string>> SyncPresenceAsync(PlaySession session)

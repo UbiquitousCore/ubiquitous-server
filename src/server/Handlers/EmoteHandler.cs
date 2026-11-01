@@ -13,10 +13,11 @@ internal sealed class EmoteHandler(ISessionPlayer player, SessionOutbox outbox, 
 
         var request = WebMessageJson.DeserializePayload<EmoteRequestPayload>(payload);
         var senderId = player.UnitId;
-        var emote = emotes.Create(new EmoteRequest(request.Name), senderId);
+        var emote = emotes.Create(new EmoteRequest(request.Name, request.TargetId), senderId);
         return emote is null
             ? [outbox.Error(WireCodes.ProtocolError.InvalidEmote, "Unknown emote.")]
             : [outbox.Reply(WebMessageTypes.EmotePerformed,
-                new EmotePerformedPayload(WebNetworkId.FromString(senderId), emote.Id, emote.Name))];
+                new EmotePerformedPayload(WebNetworkId.FromString(senderId), emote.Id, emote.Name,
+                    emote.TargetId is { } targetId ? WebNetworkId.FromString(targetId) : null))];
     }
 }
