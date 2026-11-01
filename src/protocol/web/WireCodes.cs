@@ -145,6 +145,8 @@ public static class WireCodes
         public const string MissingEquipment = "missingEquipment";
         public const string AlreadyCasting = "alreadyCasting";
         public const string OutOfRange = "outOfRange";
+        public const string InCombat = "inCombat";
+        public const string MountNotHere = "mountNotHere";
     }
 
     public static class TalentRefusal

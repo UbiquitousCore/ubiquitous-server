@@ -214,6 +214,31 @@ public sealed class MountTests
     }
 
     [Fact]
+    public async Task AMountCannotBeSummonedInAFight()
+    {
+        var duels = new DuelService(countdown: TimeSpan.Zero);
+        var (hub, ayla, borin) = await PairAsync("m8", duels);
+        await SendAsync(hub, ayla, WebMessageTypes.DuelChallenge, new { targetId = borin.Id });
+        await TickAsync(hub, DateTimeOffset.UtcNow);
+        await SendAsync(hub, borin, WebMessageTypes.DuelAccept, new { });
+        await TickAsync(hub, DateTimeOffset.UtcNow);
+
+        var refused = await SendAsync(hub, ayla, WebMessageTypes.SpellRequest, new { spellId = Horse, targetId = ayla.Id });
+
+        var failed = Assert.Single(PayloadsOf(refused, WebMessageTypes.SpellFailed));
+        Assert.Equal(WireCodes.SpellRefusal.InCombat, failed.GetProperty("reason").GetString());
+        Assert.DoesNotContain(refused, message => Is(message, WebMessageTypes.SpellCasting));
+    }
+
+    [Theory]
+    [InlineData(false, false, null)]
+    [InlineData(true, false, MountRefusal.InCombat)]
+    [InlineData(false, true, MountRefusal.NotHere)]
+    [InlineData(true, true, MountRefusal.InCombat)]
+    public void MountingIsRefusedInAFightAndInsideADungeon(bool inCombat, bool inDungeon, MountRefusal? expected) =>
+        Assert.Equal(expected, MountRules.WhyNotMount(inCombat, inDungeon));
+
+    [Fact]
     public async Task ADevelopmentLogin_EntersWithEnoughGoldForEveryMount()
     {
         var session = TestSessions.Create(Accounts(), new InMemoryCharacterStore([Rider()]), content: Content,
@@ -257,22 +282,23 @@ public sealed class MountTests
 
     private sealed record Side(PlaySession Session, List<string> Inbox, string Id);
 
-    private static async Task<(PlaySessionHub Hub, Side Ayla, Side Borin)> PairAsync(string tag)
+    private static async Task<(PlaySessionHub Hub, Side Ayla, Side Borin)> PairAsync(string tag, DuelService? duels = null)
     {
         var hub = new PlaySessionHub();
-        var ayla = await JoinAsync(hub, tag, "Ayla", [Horse]);
-        var borin = await JoinAsync(hub, tag, "Borin");
+        var ayla = await JoinAsync(hub, tag, "Ayla", [Horse], duels);
+        var borin = await JoinAsync(hub, tag, "Borin", duels: duels);
         ayla.Inbox.Clear();
         borin.Inbox.Clear();
         return (hub, ayla, borin);
     }
 
-    private static async Task<Side> JoinAsync(PlaySessionHub hub, string tag, string name, IReadOnlyList<uint>? learned = null)
+    private static async Task<Side> JoinAsync(
+        PlaySessionHub hub, string tag, string name, IReadOnlyList<uint>? learned = null, DuelService? duels = null)
     {
         var guid = $"char-{tag}{name}";
         var character = Rider() with { Guid = guid, Name = name, LearnedSpells = learned };
         var session = TestSessions.Create(Accounts(), new InMemoryCharacterStore([character]),
-            content: Content, combatRollUnit: () => 1.0, spellRollUnit: () => 0.5);
+            content: Content, combatRollUnit: () => 1.0, spellRollUnit: () => 0.5, duels: duels);
         var inbox = new List<string>();
         hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });
         var side = new Side(session, inbox, $"player:{guid}");
