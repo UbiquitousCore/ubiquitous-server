@@ -15,7 +15,7 @@ public sealed class ChatWhisperService
         if (string.IsNullOrWhiteSpace(text)) return new ValidateResult(ValidateOutcome.EmptyText, null);
 
         var trimmed = text.Trim();
-        if (trimmed.Length > 256) trimmed = trimmed[..256];
+        if (trimmed.Length > ChatService.MaxLength) trimmed = trimmed[..ChatService.MaxLength];
         return new ValidateResult(ValidateOutcome.Ok, new WhisperEvent(targetId, trimmed));
     }
 }

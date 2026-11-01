@@ -53,13 +53,13 @@ public sealed class ChatWhisperServiceTests
     }
 
     [Fact]
-    public void Validate_ClampsTextToTwoHundredFiftySixCharacters()
+    public void Validate_ClampsTextToTheChatLineLimit()
     {
         var whispers = new ChatWhisperService();
         var longText = new string('a', 300);
 
         var result = whispers.Validate("player:a", "player:b", longText);
 
-        Assert.Equal(256, result.Event!.Text.Length);
+        Assert.Equal(ChatService.MaxLength, result.Event!.Text.Length);
     }
 }
