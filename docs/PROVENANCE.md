@@ -155,6 +155,11 @@ read in the live game between 2026-10-03 and 2026-10-06; the readings are in
   as the character sheet shows.
 - Losing a duel leaves the loser on 10 health (`PlaySession.Duel.cs`).
 - Speech is heard out to 20 units (`ChatService.SayRange`).
+- Teammates within 50 units of a body share its kill XP (valued at the
+  highest nearby level, 160/180/200% in total for two/three/four, split by
+  level), its kill-quest credit and its money (`PartyRewards`), from the
+  gameplay field guide (Parties). Rounding each share down is this project's
+  own choice.
 - An emote is seen out to 20 units and names the emoter's selected target
   (`EmoteService.Range`), from the gameplay field guide (Chat, Emotes).
 - A group of creatures keeps the arrangement it spawns in and turns with its

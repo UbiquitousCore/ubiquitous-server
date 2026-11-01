@@ -6,12 +6,6 @@ namespace Ubiquitous.Server;
 
 public sealed partial class PlaySession
 {
-    private IReadOnlyList<string> GrantKillXp(CreatureDefinition? creature, DateTimeOffset now)
-    {
-        if (creature is null || _character is null) return [];
-        return GrantXp(LevelingService.KillXp(_level, creature.Level, creature.Rank == CreatureRank.Elite), now);
-    }
-
     private IReadOnlyList<string> GrantXp(int gained, DateTimeOffset now)
     {
         if (_character is null || gained <= 0 || _level >= LevelingService.MaxLevel) return [];

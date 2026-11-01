@@ -245,7 +245,14 @@ comes from is in `PROVENANCE.md`.
   nothing.
 - Level cap 60. Kill XP is `5 × level + 50`, +5% per level above (to +50%),
   -10% per level for one or two below, then to nothing across a grey window of
-  at least five levels; killer only. Quest XP is scaled 120/110/100/80/50/10% by
+  at least five levels; elites pay double. Teammates on the same map copy
+  within 50 units of the body share a kill: it is valued at the highest
+  level among them, worth 160/180/200% in total for two/three/four, and split
+  in proportion to each one's level; each of them also gets the kill-quest
+  credit. Money taken from a body is split evenly among the same teammates,
+  the picker keeping any coins left over. Teammates take their share on
+  their own next tick. Who wins a kill (the head start, most damage) and the
+  loot rules are not modelled: the killer's session keeps the body. Quest XP is scaled 120/110/100/80/50/10% by
   level gap (repeatables pay in full). At the cap nothing is paid and stored
   XP reads 0. Level-up refills health and power.
 - One talent point per level from 10. `talent.learn` is refused off-class,

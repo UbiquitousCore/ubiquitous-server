@@ -67,7 +67,7 @@ public sealed partial class PlaySession
         var (amount, remaining) = _lootService.TakeMoney(loot);
         if (amount <= 0) return [];
         _loot[networkId] = remaining;
-        _belongings.Currency += amount;
+        _belongings.Currency += SplitPickedMoney(networkId, amount);
         var target = WebNetworkId.FromString(networkId);
         var responses = new List<string>
         {

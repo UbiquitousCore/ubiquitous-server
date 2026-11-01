@@ -526,9 +526,7 @@ public sealed partial class PlaySession
                         var lootTable = _content.LootTables.TryGetValue(victimEntry, out var table) ? table : null;
                         _loot[tick.TargetId] = _lootService.Generate(
                             checked((int)victimEntry), lootTable, creature?.MoneyDropMin, creature?.MoneyDropMax);
-                        foreach (var update in _quests.RecordKill(victimEntry, _content.Quests))
-                            responses.Add(Reply(WebMessageTypes.QuestUpdated, QuestUpdatePayloadFor(update)));
-                        responses.AddRange(GrantKillXp(creature, now));
+                        responses.AddRange(RewardKill(victimEntry, creature, tick.TargetId, now));
                     }
 
                     var carriesLoot = _loot.TryGetValue(tick.TargetId, out var spoils) && !LootService.IsEmpty(spoils);
