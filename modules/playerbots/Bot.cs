@@ -104,9 +104,10 @@ public sealed class Bot
     public async Task TickAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
         if (!_connection.IsOpen) return;
-        var before = (View.Level, View.MapId, Quests: View.Quests.Keys.ToHashSet(), View.DuelOpponent, Worn: Worn());
+        var narrating = _stage == Stage.InWorld && _host.Logger.IsEnabled(LogLevel.Debug);
+        var before = narrating ? (View.Level, View.MapId, Quests: View.Quests.Keys.ToHashSet(), View.DuelOpponent, Worn: Worn()) : default;
         foreach (var message in _connection.TakeReceived()) View.Apply(message, now);
-        if (_stage == Stage.InWorld) Narrate(before.Level, before.MapId, before.Quests, before.DuelOpponent, before.Worn);
+        if (narrating) Narrate(before.Level, before.MapId, before.Quests!, before.DuelOpponent, before.Worn);
         if (_stage != Stage.InWorld)
         {
             await SignInAsync(cancellationToken);
@@ -147,7 +148,6 @@ public sealed class Bot
 
     private void Narrate(int level, ushort mapId, HashSet<uint> quests, string? duel, int worn)
     {
-        if (!_host.Logger.IsEnabled(LogLevel.Debug)) return;
         foreach (var taken in View.Quests.Keys.Except(quests)) _host.Logger.LogDebug("Bot {Name} took quest {Quest}", Name, taken);
         foreach (var done in quests.Except(View.Quests.Keys)) _host.Logger.LogDebug("Bot {Name} finished quest {Quest}", Name, done);
         if (View.Level != level) _host.Logger.LogDebug("Bot {Name} reached level {Level}", Name, View.Level);

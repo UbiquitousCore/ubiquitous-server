@@ -36,6 +36,15 @@ internal static class EventAudience
         WebMessageTypes.EmotePerformed,
     }.ToFrozenSet(StringComparer.Ordinal);
 
+    // The moment-to-moment events a bot only acts on when they happen near it; arrivals, departures and notices still reach it.
+    public static bool IsLocalToBots(OutboundEvent outbound) =>
+        outbound.Type is WebMessageTypes.EntityMoved or WebMessageTypes.EntityValuesChanged
+            or WebMessageTypes.EntityAppearanceChanged or WebMessageTypes.EmotePerformed
+            or WebMessageTypes.AttackMeleeStart or WebMessageTypes.AttackSwingResult or WebMessageTypes.AttackShotResult
+            or WebMessageTypes.SpellOutcome or WebMessageTypes.SpellCasting or WebMessageTypes.SpellReleased
+            or WebMessageTypes.SpellInterrupted or WebMessageTypes.SpellFailed
+            or WebMessageTypes.AuraApplied or WebMessageTypes.AuraEnded;
+
     public static bool IsMapWide(OutboundEvent outbound)
     {
         // A creature's yell (it names its shouter) and a dungeon's notice are heard by everyone

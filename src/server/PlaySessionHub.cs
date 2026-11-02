@@ -26,10 +26,14 @@ public sealed class PlaySessionHub(ILogger? logger = null)
     private readonly ConcurrentDictionary<PlaySession, HashSet<PlaySession>> _hiddenFrom = new();
 
     private readonly ConcurrentDictionary<PlaySession, byte> _playedByModules = new();
+    private readonly ConcurrentDictionary<PlaySession, byte> _playedByPeople = new();
+    // Sessions that currently hide from at least one observer, so a delivery need not scan every session's set.
+    private readonly ConcurrentDictionary<PlaySession, byte> _hiding = new();
 
     public void Register(PlaySession session, Func<string, Task> send, bool playedByModule = false)
     {
         if (playedByModule) _playedByModules[session] = 0;
+        else _playedByPeople[session] = 0;
         _sessions[session] = send;
         _outbound[session] = new SemaphoreSlim(1, 1);
         _inbox[session] = Channel.CreateUnbounded<OutboundEvent>(new UnboundedChannelOptions { SingleReader = false });
@@ -98,6 +102,7 @@ public sealed class PlaySessionHub(ILogger? logger = null)
     {
         _sessions.TryRemove(session, out _);
         _playedByModules.TryRemove(session, out _);
+        _playedByPeople.TryRemove(session, out _);
         _presentLocation.TryRemove(session, out _);
         _joined.TryRemove(session, out _);
         ForgetSight(session);
@@ -146,9 +151,9 @@ public sealed class PlaySessionHub(ILogger? logger = null)
 
     public bool IsPlayerNear(ushort mapId, Ubiquitous.Common.Position at, float within)
     {
-        foreach (var session in _sessions.Keys)
+        foreach (var (session, _) in _playedByPeople)
         {
-            if (_playedByModules.ContainsKey(session) || session.CurrentMapId != mapId) continue;
+            if (session.CurrentMapId != mapId) continue;
             if (session.PlayerPosition is { } standing && standing.DistanceSquaredTo(at) <= within * within) return true;
         }
         return false;
@@ -224,8 +229,10 @@ public sealed class PlaySessionHub(ILogger? logger = null)
             foreach (var pair in _sessions)
             {
                 if (ReferenceEquals(pair.Key, sender) || !SameLocation(pair.Key, sender)) continue;
+                var farFromBot = _playedByModules.ContainsKey(pair.Key) && !IsWithinBotInterest(sender, pair.Key);
                 foreach (var outbound in worldEvents)
                 {
+                    if (farFromBot && EventAudience.IsLocalToBots(outbound)) continue;
                     if (IsAboutHiddenBody(pair.Key, outbound)) continue;
                     await DeliverAsync(pair.Key, outbound);
                 }
@@ -271,6 +278,15 @@ public sealed class PlaySessionHub(ILogger? logger = null)
 
         return await SyncPresenceAsync(sender);
     }
+
+    // A bot plays only what is near it, so it is spared the movement and combat of everything across the map.
+    private static bool IsWithinBotInterest(PlaySession sender, PlaySession bot)
+    {
+        if (sender.PlayerPosition is not { } from || bot.PlayerPosition is not { } to) return true;
+        return from.DistanceSquaredTo(to) <= BotInterestRange * BotInterestRange;
+    }
+
+    private const float BotInterestRange = 120f;
 
     private static bool IsChatMessage(OutboundEvent outbound) =>
         outbound is { Type: WebMessageTypes.ChatReceived, ChatChannel: not null };
@@ -354,17 +370,13 @@ public sealed class PlaySessionHub(ILogger? logger = null)
             lock (hidden) wasHidden = hidden.Contains(observer);
             if (!SameLocation(observer, subject) || !IsAnnouncedWhereItStands(observer))
             {
-                if (wasHidden) lock (hidden) hidden.Remove(observer);
+                if (wasHidden) SetHidden(subject, hidden, observer, false);
                 continue;
             }
 
             bool hide = subject.HidesFrom(observer);
             if (hide == wasHidden) continue;
-            lock (hidden)
-            {
-                if (hide) hidden.Add(observer);
-                else hidden.Remove(observer);
-            }
+            SetHidden(subject, hidden, observer, hide);
 
             IEnumerable<OutboundEvent> events;
             if (hide)
@@ -387,28 +399,37 @@ public sealed class PlaySessionHub(ILogger? logger = null)
     {
         var hide = subject.HidesFrom(observer);
         var hidden = _hiddenFrom.GetOrAdd(subject, static _ => new HashSet<PlaySession>());
+        SetHidden(subject, hidden, observer, hide);
+        return hide;
+    }
+
+    private void SetHidden(PlaySession subject, HashSet<PlaySession> hidden, PlaySession observer, bool hide)
+    {
         lock (hidden)
         {
             if (hide) hidden.Add(observer);
             else hidden.Remove(observer);
+            if (hidden.Count > 0) _hiding[subject] = 0;
+            else _hiding.TryRemove(subject, out _);
         }
-        return hide;
     }
 
     private void ForgetSight(PlaySession session)
     {
         if (_hiddenFrom.TryRemove(session, out var own)) lock (own) own.Clear();
-        foreach (var pair in _hiddenFrom)
-            lock (pair.Value) pair.Value.Remove(session);
+        _hiding.TryRemove(session, out _);
+        foreach (var (subject, _) in _hiding)
+            if (_hiddenFrom.TryGetValue(subject, out var set)) SetHidden(subject, set, session, false);
     }
 
     private bool IsAboutHiddenBody(PlaySession observer, OutboundEvent outbound)
     {
-        foreach (var pair in _hiddenFrom)
+        foreach (var (subject, _) in _hiding)
         {
+            if (!_hiddenFrom.TryGetValue(subject, out var set)) continue;
             bool hidden;
-            lock (pair.Value) hidden = pair.Value.Contains(observer);
-            if (!hidden || pair.Key.PlayerNetworkIdText is not { } id) continue;
+            lock (set) hidden = set.Contains(observer);
+            if (!hidden || subject.PlayerNetworkIdText is not { } id) continue;
             if (outbound.MentionedPlayerIds.Contains(id, StringComparer.Ordinal)) return true;
         }
         return false;
