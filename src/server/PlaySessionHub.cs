@@ -226,13 +226,15 @@ public sealed class PlaySessionHub(ILogger? logger = null)
         var worldEvents = events.Where(EventAudience.IsMapWide).ToArray();
         if (worldEvents.Length > 0)
         {
+            IReadOnlyList<string>? sendersParty = null;
             foreach (var pair in _sessions)
             {
                 if (ReferenceEquals(pair.Key, sender) || !SameLocation(pair.Key, sender)) continue;
-                var farFromBot = _playedByModules.ContainsKey(pair.Key) && !IsWithinBotInterest(sender, pair.Key);
+                var farFromBot = _playedByModules.ContainsKey(pair.Key) && !IsWithinBotInterest(sender, pair.Key)
+                    && !(sendersParty ??= sender.PartyMemberIdsExcludingSelf()).Contains(pair.Key.PlayerNetworkIdText);
                 foreach (var outbound in worldEvents)
                 {
-                    if (farFromBot && EventAudience.IsLocalToBots(outbound)) continue;
+                    if (farFromBot && EventAudience.IsLocalToBots(outbound) && !Mentions(outbound, pair.Key)) continue;
                     if (IsAboutHiddenBody(pair.Key, outbound)) continue;
                     await DeliverAsync(pair.Key, outbound);
                 }
@@ -289,14 +291,18 @@ public sealed class PlaySessionHub(ILogger? logger = null)
         return await SyncPresenceAsync(sender);
     }
 
-    // A bot plays only what is near it, so it is spared the movement and combat of everything across the map.
+    // A bot plays only what a client could see, and its own party wherever they are, so it is
+    // spared the movement and combat of everything else on the map.
     private static bool IsWithinBotInterest(PlaySession sender, PlaySession bot)
     {
         if (sender.PlayerPosition is not { } from || bot.PlayerPosition is not { } to) return true;
         return from.DistanceSquaredTo(to) <= BotInterestRange * BotInterestRange;
     }
 
-    private const float BotInterestRange = 120f;
+    private static bool Mentions(OutboundEvent outbound, PlaySession session) =>
+        session.PlayerNetworkIdText is { } id && outbound.MentionedPlayerIds.Contains(id, StringComparer.Ordinal);
+
+    private const float BotInterestRange = Ubiquitous.World.WorldSessionState.DefaultViewRange;
 
     private static bool IsChatMessage(OutboundEvent outbound) =>
         outbound is { Type: WebMessageTypes.ChatReceived, ChatChannel: not null };
@@ -417,8 +423,7 @@ public sealed class PlaySessionHub(ILogger? logger = null)
     {
         lock (hidden)
         {
-            if (hide) hidden.Add(observer);
-            else hidden.Remove(observer);
+            if (!(hide ? hidden.Add(observer) : hidden.Remove(observer))) return;
             if (hidden.Count > 0) _hiding[subject] = 0;
             else _hiding.TryRemove(subject, out _);
         }

@@ -1,3 +1,5 @@
+using System.Buffers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -24,6 +26,26 @@ public static class WebMessageJson
 
     public static string Serialize(WebMessageEnvelope message) =>
         JsonSerializer.Serialize(message, Options);
+
+    public static string SerializePayload(JsonElement payload) =>
+        JsonSerializer.Serialize(payload, Options);
+
+    // What Serialize writes for an envelope, around a payload already written once for many recipients.
+    public static string Serialize(string type, long sequence, string payloadJson)
+    {
+        var buffer = new ArrayBufferWriter<byte>(payloadJson.Length + type.Length + 48);
+        using (var writer = new Utf8JsonWriter(buffer, new JsonWriterOptions { Encoder = Options.Encoder }))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("type", type);
+            writer.WriteNumber("sequence", sequence);
+            writer.WritePropertyName("payload");
+            writer.WriteRawValue(payloadJson, skipInputValidation: true);
+            writer.WriteEndObject();
+        }
+
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
+    }
 
     public static WebMessageEnvelope Deserialize(string json)
     {

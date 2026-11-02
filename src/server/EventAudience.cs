@@ -35,14 +35,17 @@ internal static class EventAudience
         WebMessageTypes.DungeonCompleted,
     }.ToFrozenSet(StringComparer.Ordinal);
 
-    // The moment-to-moment events a bot only acts on when they happen near it; arrivals, departures and notices still reach it.
+    // The moment-to-moment events a bot only acts on when they happen near it or name it;
+    // arrivals, departures and notices still reach it.
     public static bool IsLocalToBots(OutboundEvent outbound) =>
         outbound.Type is WebMessageTypes.EntityMoved or WebMessageTypes.EntityValuesChanged
             or WebMessageTypes.EntityAppearanceChanged or WebMessageTypes.EmotePerformed
             or WebMessageTypes.AttackMeleeStart or WebMessageTypes.AttackSwingResult or WebMessageTypes.AttackShotResult
             or WebMessageTypes.SpellOutcome or WebMessageTypes.SpellCasting or WebMessageTypes.SpellReleased
             or WebMessageTypes.SpellInterrupted or WebMessageTypes.SpellFailed
-            or WebMessageTypes.AuraApplied or WebMessageTypes.AuraEnded;
+            or WebMessageTypes.AuraApplied or WebMessageTypes.AuraEnded
+            or WebMessageTypes.AttackEnterCombat or WebMessageTypes.AttackExitCombat or WebMessageTypes.AttackHalted
+            or WebMessageTypes.LootBusy or WebMessageTypes.LootSlotEmptied;
 
     public static bool IsMapWide(OutboundEvent outbound)
     {

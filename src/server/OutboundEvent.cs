@@ -11,6 +11,10 @@ public sealed record OutboundEvent(
     IReadOnlyList<string> MentionedPlayerIds)
 {
     private const string PlayerIdPrefix = "player:";
+    private string? _payloadJson;
+
+    // Written once and shared by every observer the event goes to.
+    public string PayloadJson => _payloadJson ??= WebMessageJson.SerializePayload(Payload);
 
     public static OutboundEvent? From(string raw)
     {

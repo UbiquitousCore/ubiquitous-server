@@ -605,7 +605,7 @@ public sealed partial class PlaySession : ISessionPlayer
     public string EncodeObserverEvent(OutboundEvent outbound)
     {
         if (outbound is { Type: WebMessageTypes.UnitDied, NetworkId: { } deadId }) NoteRemoteDeath(deadId);
-        return WebMessageJson.Serialize(WebMessageEnvelope.Create(outbound.Type, _outbox.NextSequence(), outbound.Payload));
+        return WebMessageJson.Serialize(outbound.Type, _outbox.NextSequence(), outbound.PayloadJson);
     }
 
     private string Target(JsonElement payload)

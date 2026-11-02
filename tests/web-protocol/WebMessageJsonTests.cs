@@ -29,6 +29,23 @@ public class WebMessageJsonTests
     }
 
     [Fact]
+    public void Envelope_AroundAPayloadWrittenOnce_IsTheSameTextAsTheWholeEnvelope()
+    {
+        var payload = WebMessageJson.ToElement(new
+        {
+            networkId = "player:7",
+            text = "Ça va? <b>\"quoted\"</b> & 'apostrophe' + ✓",
+            position = new { x = 1.25, y = -0.5, z = 1e-7 },
+            list = new object?[] { 1, "two", null, new { } },
+        });
+
+        var whole = WebMessageJson.Serialize(WebMessageEnvelope.Create("chat.received", 9_000_000_001, payload));
+        var shared = WebMessageJson.Serialize("chat.received", 9_000_000_001, WebMessageJson.SerializePayload(payload));
+
+        Assert.Equal(whole, shared);
+    }
+
+    [Fact]
     public void Deserialize_Garbage_Throws()
     {
         Assert.ThrowsAny<JsonException>(() => WebMessageJson.Deserialize("{not json"));

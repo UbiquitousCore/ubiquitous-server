@@ -130,14 +130,31 @@ public sealed class BotView
 
     public float HealthFraction => MaxHealth <= 0 ? 1f : (float)Health / MaxHealth;
 
+    private static readonly JsonElement EmptyPayload = JsonDocument.Parse("{}").RootElement;
+
+    // Read straight from a pooled document: a bot in a crowd hears hundreds of messages a turn.
     public void Apply(string message, DateTimeOffset now)
     {
-        WebMessageEnvelope envelope;
-        try { envelope = WebMessageJson.Deserialize(message); }
-        catch (Exception ex) when (ex is JsonException or InvalidDataException) { return; }
+        JsonDocument document;
+        try { document = JsonDocument.Parse(message); }
+        catch (JsonException) { return; }
 
-        var payload = envelope.Payload;
-        switch (envelope.Type)
+        using (document)
+        {
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("type", out var type)
+                || type.ValueKind != JsonValueKind.String || type.GetString() is not { Length: > 0 } name)
+                return;
+            if (!root.TryGetProperty("payload", out var payload) || payload.ValueKind == JsonValueKind.Null)
+                payload = EmptyPayload;
+            if (payload.ValueKind != JsonValueKind.Object) return;
+            Apply(name, payload, now);
+        }
+    }
+
+    private void Apply(string type, JsonElement payload, DateTimeOffset now)
+    {
+        switch (type)
         {
             case WebMessageTypes.AccountLoginResult:
                 LoggedIn = Read<ResultPayload>(payload).Ok;
@@ -201,9 +218,10 @@ public sealed class BotView
                 Spawned(payload);
                 break;
             case WebMessageTypes.EntityMoved:
-                var moved = Read<EntityMovedPayload>(payload);
-                if (Units.TryGetValue(Id(moved.NetworkId), out var mover))
-                    mover.Position = At(moved.Target ?? moved.Position ?? new WirePosition(mover.Position.X, mover.Position.Y, mover.Position.Z));
+                // Read in place, being most of what a bot hears: it only wants who moved and where to.
+                if (payload.TryGetProperty("networkId", out var moverId) && Units.TryGetValue(Id(moverId), out var mover)
+                    && (Point(payload, "target") ?? Point(payload, "position")) is { } movedTo)
+                    mover.Position = movedTo;
                 break;
             case WebMessageTypes.EntityRemoved:
                 var removed = Id(Read<EntityRemovedPayload>(payload).NetworkId);
@@ -589,6 +607,12 @@ public sealed class BotView
     private static QuestZone Zone(QuestZonePayload zone) => new(zone.MapId, new Position(zone.X, zone.Y, zone.Z), zone.Radius);
 
     private static T Read<T>(JsonElement payload) => WebMessageJson.DeserializePayload<T>(payload);
+
+    private static Position? Point(JsonElement payload, string name) =>
+        payload.TryGetProperty(name, out var point) && point.ValueKind == JsonValueKind.Object
+        && point.TryGetProperty("x", out var x) && point.TryGetProperty("y", out var y) && point.TryGetProperty("z", out var z)
+            ? new Position((float)x.GetDouble(), (float)y.GetDouble(), (float)z.GetDouble())
+            : null;
 
     private static Position At(WirePosition position) => new((float)position.X, (float)position.Y, (float)position.Z);
 
