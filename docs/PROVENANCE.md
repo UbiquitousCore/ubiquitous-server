@@ -170,10 +170,23 @@ read in the live game between 2026-10-03 and 2026-10-06; the readings are in
 - Any vendor buys a bag stack of anything that has a price, whether or not it
   stocks that item, and pays the item's sell price for each one in the stack
   (`VendorService.Sell`).
-- A mount cannot be summoned in a fight or inside a dungeon
-  (`MountRules.WhyNotMount`), from the gameplay field guide
-  (`docs/guides/gameplay-field-guide.md`, Mounts). The refusal words the
-  client shows are this project's own.
+- A mount cannot be summoned in a fight, inside a dungeon or while swimming,
+  and starting to swim dismounts (`MountRules.WhyNotMount`,
+  `PlaySession.FollowSwimming`), from the gameplay field guide
+  (`docs/guides/gameplay-field-guide.md`, Mounts; Water and lava). The
+  refusal words the client shows are this project's own.
+- A creature gives up 30 units from where it stood when its fight began
+  (`SharedMapState.NotePulledFrom`), from the gameplay field guide (Monsters).
+- Leaving the map's edge moves a living player to the nearest graveyard
+  (`WorldSessionState`, `PlaySession.MoveToNearestGraveyard`), from the
+  gameplay field guide (Moving around).
+- Legend exhaustion: 1 per 45 s inside, each boss's amount on its death, a
+  cap of 100 and a daily reset (`Exhaustion`, `CreatureScript.ExhaustsOnDeath`),
+  from the gameplay field guide (Legendary: Exhaustion). The reset hour,
+  midnight UTC, is this project's own choice.
+- Mail holds at most 5 attachments, lists the newest 20 letters, and can be
+  sent back to its writer (`MailService`), from the gameplay field guide
+  (Mail). The refusal "5 attachments are maxed out." is the game's own words.
 
 ## Design choices that follow CypherCore
 

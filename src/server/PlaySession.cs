@@ -351,6 +351,8 @@ public sealed partial class PlaySession : ISessionPlayer
             TalentRanks = _talents.Ranks.ToDictionary(),
             LearnedSpells = _learnedSpells.Count == 0 ? null : [.. _learnedSpells],
             ActionBar = [.. _actionBar.Select(button => new PersistedActionButton(button.Key, button.Value.Id, button.Value.Type))],
+            Exhaustion = _exhaustionDay is null ? null : _exhaustion,
+            ExhaustionDay = _exhaustionDay,
         };
     }
 
@@ -1083,6 +1085,7 @@ public sealed partial class PlaySession : ISessionPlayer
         }
 
         TickDungeonCompletion(now, responses);
+        TickExhaustion(now, responses);
         AnnounceEvades(now, responses);
         if (_combat.TakePlayerStruck() | struckOut)
         {

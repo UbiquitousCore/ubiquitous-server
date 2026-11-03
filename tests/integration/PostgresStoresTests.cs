@@ -123,7 +123,7 @@ public sealed class PostgresStoresTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PostgresCharacterStore_RoundTripsHealthStorageSizesTalentRanksAndLearnedSpells()
+    public async Task PostgresCharacterStore_RoundTripsHealthStorageSizesTalentRanksLearnedSpellsAndExhaustion()
     {
         if (_dataSource is null) return;
         var store = new PostgresCharacterStore(_dataSource);
@@ -137,6 +137,8 @@ public sealed class PostgresStoresTests : IAsyncLifetime
             TalentRanks = new Dictionary<uint, int> { [5] = 2, [9] = 1 },
             LearnedSpells = [6978, 7047],
             ActionBar = [new PersistedActionButton(0, 108, 0), new PersistedActionButton(7, 5006, 0)],
+            Exhaustion = 12,
+            ExhaustionDay = 20_395,
         };
 
         await store.UpdateAsync(saved);
@@ -149,6 +151,8 @@ public sealed class PostgresStoresTests : IAsyncLifetime
         Assert.Equal(saved.TalentRanks, loaded.TalentRanks);
         Assert.Equal(saved.LearnedSpells, loaded.LearnedSpells);
         Assert.Equal(saved.ActionBar, loaded.ActionBar);
+        Assert.Equal(12, loaded.Exhaustion);
+        Assert.Equal(20_395, loaded.ExhaustionDay);
     }
 
     [Fact]

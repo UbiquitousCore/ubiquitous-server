@@ -80,6 +80,9 @@ public abstract class CreatureScript
 
     public virtual IReadOnlyList<string> Shouts => [];
 
+    // What killing it in a Legend copy adds to the exhaustion of everyone inside.
+    public virtual int ExhaustsOnDeath => 0;
+
     // Own choice: how often a creature with idle lines speaks.
     public virtual TimeSpan ShoutEvery => TimeSpan.FromSeconds(45);
 

@@ -35,7 +35,9 @@ public sealed record CharacterRecord(
     int? Health = null,
     IReadOnlyDictionary<uint, int>? TalentRanks = null,
     IReadOnlyList<uint>? LearnedSpells = null,
-    IReadOnlyList<PersistedActionButton>? ActionBar = null);
+    IReadOnlyList<PersistedActionButton>? ActionBar = null,
+    int? Exhaustion = null,
+    int? ExhaustionDay = null);
 
 public sealed record PersistedActionButton(int Slot, uint Id, int Type);
 

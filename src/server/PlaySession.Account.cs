@@ -306,6 +306,8 @@ public sealed partial class PlaySession
         _character = character;
         _level = character.Level;
         _xp = LevelingService.HeldXp(character.Level, character.Xp);
+        _exhaustion = character.Exhaustion ?? 0;
+        _exhaustionDay = character.ExhaustionDay;
         _belongings.Currency = character.Currency ?? _content.StartingCurrency;
         if (_account is not null && _developmentUserIds.Contains(_account.UserId))
             _belongings.Currency = Math.Max(_belongings.Currency, DevelopmentFixtures.Purse);
@@ -359,6 +361,7 @@ public sealed partial class PlaySession
             [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(enterWisdomBonus),
             [WireCodes.UnitValue.Xp] = _xp,
             [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level),
+            [WireCodes.UnitValue.Exhaustion] = ExhaustionNow(enterNow),
         };
         AddAttributesTo(enterValues, enterNow);
         responses.Add(Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(enterValues)));

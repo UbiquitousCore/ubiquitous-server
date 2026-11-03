@@ -108,6 +108,42 @@ public sealed partial class DungeonTests
     }
 
     [Fact]
+    public async Task ALegendCopy_WearsThePlayerDownOverTimeAndMoreForEachBoss()
+    {
+        var instances = new InstanceService();
+        var (session, _) = await JoinAsync("mode7", "Ayla", [], LegendContent(), instances);
+        await ChooseModeAsync(session, 2, WireCodes.DungeonMode.Legend);
+        await MoveAsync(session, 3, GateInsideX, 2, GateApproachZ);
+        var key = session.CurrentInstanceKey!;
+
+        var now = DateTimeOffset.UtcNow;
+        var log = new List<string>();
+        log.AddRange(session.TickCombat(now));
+        log.AddRange(session.TickCombat(now + TimeSpan.FromSeconds(44)));
+        Assert.DoesNotContain(log, m => m.Contains("\"exhaustion\""));
+
+        log.AddRange(session.TickCombat(now + TimeSpan.FromSeconds(91)));
+        Assert.Contains(log, m => m.Contains("\"type\":\"player.updated\"") && m.Contains("\"exhaustion\":2"));
+
+        instances.Reach(key, "boss.2667.down");
+        var afterCosmo = session.TickCombat(now + TimeSpan.FromSeconds(92));
+        Assert.Contains(afterCosmo, m => m.Contains("\"exhaustion\":10"));
+    }
+
+    [Fact]
+    public async Task ANormalCopy_NeverWearsThePlayerDown()
+    {
+        var (session, _) = await JoinAsync("mode8", "Ayla", [], LegendContent());
+        await MoveAsync(session, 2, GateInsideX, 2, GateApproachZ);
+
+        var now = DateTimeOffset.UtcNow;
+        session.TickCombat(now);
+        var later = session.TickCombat(now + TimeSpan.FromMinutes(5));
+
+        Assert.DoesNotContain(later, m => m.Contains("\"exhaustion\""));
+    }
+
+    [Fact]
     public async Task ChangingTheModeWhileInside_IsRefused()
     {
         var instances = new InstanceService();

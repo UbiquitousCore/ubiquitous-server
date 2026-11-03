@@ -8,6 +8,8 @@ public sealed class KermodeScript : CreatureScript
 
     public override string Name => "boss.kermode";
 
+    public override int ExhaustsOnDeath => 4;
+
     private const uint DeafeningRoar = 2370;
     private const uint SoulGrowl = 2371;
     private const uint SpiritBearFrenzy = 2372;

@@ -8,6 +8,8 @@ public sealed class HathraadScript : CreatureScript
 
     public override string Name => "boss.hathraad";
 
+    public override int ExhaustsOnDeath => 4;
+
     private const uint WaterBall = 2373;
     private const uint MultiWaterBall = 2375;
 

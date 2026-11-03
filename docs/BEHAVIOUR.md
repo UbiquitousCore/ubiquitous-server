@@ -361,6 +361,11 @@ comes from is in `PROVENANCE.md`.
   (`dungeon.chooseMode`), refused while anyone is inside or for a non-leader.
   Legend replaces each creature with its Legend counterpart, which counts as
   the original for barriers, summons and completion.
+- Inside a Legend copy a player's exhaustion rises by 1 every 45 s and by a
+  boss's amount when it falls while they are inside (Executioner and Ariel 5,
+  Cosmo 8, Hathraad and Kermode 4, Alr-Rahjil 9), up to 100. It is sent as
+  the `exhaustion` player value, saved with the character, and empties at
+  midnight UTC. Nothing yet refuses entry at 100.
 - A barrier refuses entering its rectangle until its milestone, and never
   refuses leaving, so nobody is trapped inside one. The server sends the
   rectangle and any model names in it (`dungeon.barrierOpened`); the client

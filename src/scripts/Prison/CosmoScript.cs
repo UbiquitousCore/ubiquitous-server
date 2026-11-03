@@ -8,6 +8,8 @@ public sealed class CosmoScript : CreatureScript
 
     public override string Name => "boss.cosmo";
 
+    public override int ExhaustsOnDeath => 8;
+
     // His "Remove All" row: the demon shape and the shield end together.
     public override IReadOnlyList<uint> ClearedOnReset => [Metamorphosis, ShadowShield];
 
