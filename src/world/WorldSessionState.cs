@@ -15,7 +15,8 @@ public sealed record MovementDecision(
     Position Position,
     float Yaw,
     bool Corrected,
-    float DistanceSquared);
+    float DistanceSquared,
+    bool LeftMap = false);
 
 public sealed class WorldSessionState
 {
@@ -46,7 +47,8 @@ public sealed class WorldSessionState
         var cap = MaxStepDistanceSquared * speedMultiplier * speedMultiplier;
         if (!bypassValidation && (distanceSquared > cap || !IsValidPosition(requested)))
         {
-            return new MovementDecision(false, _playerPosition, _playerYaw, true, distanceSquared);
+            return new MovementDecision(false, _playerPosition, _playerYaw, true, distanceSquared,
+                LeftMap: distanceSquared <= cap && IsFinite(requested) && !IsInsideMap(requested));
         }
 
         _playerPosition = requested;
@@ -54,11 +56,12 @@ public sealed class WorldSessionState
         return new MovementDecision(true, requested, yaw, false, distanceSquared);
     }
 
-    private bool IsValidPosition(Position position)
-    {
-        if (!float.IsFinite(position.X) || !float.IsFinite(position.Z)) return false;
-        if (_bounds is not { } bounds) return true;
-        return position.X >= bounds.MinX && position.X <= bounds.MaxX
-            && position.Z >= bounds.MinZ && position.Z <= bounds.MaxZ;
-    }
+    private bool IsValidPosition(Position position) => IsFinite(position) && IsInsideMap(position);
+
+    private static bool IsFinite(Position position) => float.IsFinite(position.X) && float.IsFinite(position.Z);
+
+    private bool IsInsideMap(Position position) =>
+        _bounds is not { } bounds
+        || (position.X >= bounds.MinX && position.X <= bounds.MaxX
+            && position.Z >= bounds.MinZ && position.Z <= bounds.MaxZ);
 }

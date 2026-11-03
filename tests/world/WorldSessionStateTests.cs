@@ -83,7 +83,20 @@ public class WorldSessionStateTests
 
         Assert.False(decision.Accepted);
         Assert.True(decision.Corrected);
+        Assert.True(decision.LeftMap);
         Assert.Equal(0, decision.Position.X);
+    }
+
+    [Fact]
+    public void ApplyPlayerMovement_AnOverlongStepPastTheEdgeIsTooFastNotOffTheMap()
+    {
+        var map = new MapDefinition(13, "test-city", "world/city.wld", MinX: -704, MaxX: 320, MinZ: -448, MaxZ: 576);
+        var world = new WorldSessionState(13, new Position(0, 0, 0), 0, map);
+
+        var decision = world.ApplyPlayerMovement(new Position(400, 0, 0), 0);
+
+        Assert.False(decision.Accepted);
+        Assert.False(decision.LeftMap);
     }
 
     [Fact]
