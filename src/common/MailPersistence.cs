@@ -13,7 +13,8 @@ public sealed record PersistedMailMessage(
     bool Read,
     bool GoldClaimed,
     IReadOnlyList<PersistedMailAttachment>? Attachments = null,
-    bool ItemsClaimed = false);
+    bool ItemsClaimed = false,
+    string? SenderGuid = null);
 
 public interface IMailStore
 {

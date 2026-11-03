@@ -99,11 +99,16 @@ carries on), `outOfRange`, `inCombat` (a mount summoned in a fight) and
 
 ## Mail results
 
-`code` on `mail.sent` and `mail.claimed`: `ok`, `selfMail`,
+`code` on `mail.sent`, `mail.claimed` and `mail.returned`: `ok`, `selfMail`,
 `unknownRecipient`, `emptyBody`, `negativeGold`, `notEnoughMoney`,
-`itemNotInBag` (an attachment left the bag before sending), `mailNotFound`,
-`alreadyClaimed`, `nothingToClaim`, `inventoryFull`, `notInMail` (the slot
-asked for holds nothing), `refused` (no character chosen).
+`itemNotInBag` (an attachment left the bag before sending),
+`tooManyAttachments` (more than 5), `mailNotFound`, `alreadyClaimed`,
+`nothingToClaim`, `inventoryFull`, `notInMail` (the slot asked for holds
+nothing), `notReturnable` (a letter from no player), `refused` (no character
+chosen).
+
+`mail.return` sends a letter back to the player who wrote it, with whatever
+is still in it; it leaves this mailbox. `mail.inbox` lists the newest 20.
 
 `mail.claim` takes everything unless it names `slot` (one attachment, by its
 index in the letter) or sets `moneyOnly`. After a partial take the server

@@ -139,6 +139,27 @@ internal sealed class MailHandler(ISessionPlayer player, SessionOutbox outbox, P
         ];
     }
 
+    public async Task<IReadOnlyList<string>> Return(JsonElement payload)
+    {
+        var request = WebMessageJson.DeserializePayload<MailIdPayload>(payload);
+        if (player.Character is null)
+            return [outbox.Reply(WebMessageTypes.MailReturned, new MailReturnedPayload(false, request.Id,
+                "Character selection is required before returning mail.", WireCodes.MailResult.Refused))];
+
+        var result = await mail.ReturnAsync(player.Character.Guid, player.Character.Name, request.Id);
+        if (result.Code != MailResultCode.Ok)
+            return [outbox.Reply(WebMessageTypes.MailReturned, new MailReturnedPayload(false, request.Id,
+                MailRefusalReason(result.Code), CodeFor(result.Code)))];
+
+        if (await characters.GetByGuidAsync(result.SenderGuid!) is { } sender
+            && player.Hub?.FindByCharacterName(sender.Name) is { } online)
+        {
+            var waiting = await mail.UnreadCountAsync(result.SenderGuid!);
+            await player.Hub.DeliverAsync(online, SessionOutbox.Unsequenced(WebMessageTypes.MailUnread, new MailUnreadPayload(waiting)));
+        }
+        return [outbox.Reply(WebMessageTypes.MailReturned, new MailReturnedPayload(true, request.Id, null)), await Unread()];
+    }
+
     private static MailInboxEntryPayload ToInboxEntry(MailSummary summary) =>
         new(summary.Id, summary.SenderName, summary.Subject, summary.Gold, summary.SentAtUnixSeconds, summary.Read, summary.GoldClaimed,
             summary.ItemCount, summary.ItemsClaimed);
@@ -159,6 +180,8 @@ internal sealed class MailHandler(ISessionPlayer player, SessionOutbox outbox, P
         MailResultCode.NothingToClaim => WireCodes.MailResult.NothingToClaim,
         MailResultCode.BagFull => WireCodes.MailResult.InventoryFull,
         MailResultCode.NotInMail => WireCodes.MailResult.NotInMail,
+        MailResultCode.TooManyAttachments => WireCodes.MailResult.TooManyAttachments,
+        MailResultCode.NotReturnable => WireCodes.MailResult.NotReturnable,
         _ => WireCodes.MailResult.Refused,
     };
 
@@ -174,6 +197,8 @@ internal sealed class MailHandler(ISessionPlayer player, SessionOutbox outbox, P
         MailResultCode.NothingToClaim => "There is nothing to claim.",
         MailResultCode.BagFull => "Your bags are full — free a slot and claim again.",
         MailResultCode.NotInMail => "That item is not in this letter.",
+        MailResultCode.TooManyAttachments => "5 attachments are maxed out.",
+        MailResultCode.NotReturnable => "That letter cannot be sent back.",
         _ => "Mail request refused.",
     };
 }
