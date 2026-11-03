@@ -8,6 +8,8 @@ public sealed class ExecutionerScript : CreatureScript
 
     public override string Name => "boss.executioner";
 
+    public override int ExhaustsOnDeath => 5;
+
     private const uint Reaping = 2683;
 
     private const uint BladeArmor = 2674;

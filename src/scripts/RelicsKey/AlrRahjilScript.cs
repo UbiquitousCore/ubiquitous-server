@@ -8,6 +8,8 @@ public sealed class AlrRahjilScript : CreatureScript
 
     public override string Name => "boss.alrRahjil";
 
+    public override int ExhaustsOnDeath => 9;
+
     private const uint SiphonLife = 2379;
     private const uint SiphonLifeHeal = 2384;
     private const uint ShadowMire = 2382;

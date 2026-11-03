@@ -86,6 +86,10 @@ public static class PostgresSchema
         new Migration("0008_account_admin", """
             ALTER TABLE accounts ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
             """),
+        new Migration("0009_exhaustion", """
+            ALTER TABLE characters ADD COLUMN IF NOT EXISTS exhaustion INTEGER;
+            ALTER TABLE characters ADD COLUMN IF NOT EXISTS exhaustion_day INTEGER;
+            """),
     ];
 
     public static async Task EnsureCreatedAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken = default)

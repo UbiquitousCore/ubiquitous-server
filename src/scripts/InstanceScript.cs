@@ -17,6 +17,12 @@ public sealed record DungeonProgress(
 public static class DungeonMilestones
 {
     public static string BossDown(uint entryId) => $"boss.{entryId}.down";
+
+    public static uint? BossOf(string milestone) =>
+        milestone.StartsWith("boss.", StringComparison.Ordinal) && milestone.EndsWith(".down", StringComparison.Ordinal)
+        && uint.TryParse(milestone.AsSpan(5, milestone.Length - 10), out var entry)
+            ? entry
+            : null;
 }
 
 public abstract class InstanceScript

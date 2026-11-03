@@ -8,6 +8,8 @@ public sealed class ArielScript : CreatureScript
 
     public override string Name => "boss.ariel";
 
+    public override int ExhaustsOnDeath => 5;
+
     private const uint DecayedSeed = 2652;
 
     private const uint Putrefying = 2651;
