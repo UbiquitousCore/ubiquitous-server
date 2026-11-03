@@ -530,6 +530,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 WebMessageTypes.MailRead => await _mailHandler.Read(envelope.Payload),
                 WebMessageTypes.MailClaim => await _mailHandler.Claim(envelope.Payload),
                 WebMessageTypes.MailDelete => await _mailHandler.Delete(envelope.Payload),
+                WebMessageTypes.MailReturn => await _mailHandler.Return(envelope.Payload),
                 WebMessageTypes.AuctionList => await _auctionHandler.List(envelope.Payload),
                 WebMessageTypes.AuctionBrowse => await _auctionHandler.Browse(envelope.Payload),
                 WebMessageTypes.AuctionCancel => await _auctionHandler.Cancel(envelope.Payload),

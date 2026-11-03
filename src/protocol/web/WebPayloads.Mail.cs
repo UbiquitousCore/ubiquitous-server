@@ -68,3 +68,9 @@ public sealed record MailDeletedPayload(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("reason")] string? Reason);
+
+public sealed record MailReturnedPayload(
+    [property: JsonPropertyName("ok")] bool Ok,
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("reason")] string? Reason,
+    [property: JsonPropertyName("code")] string Code = WireCodes.MailResult.Ok);

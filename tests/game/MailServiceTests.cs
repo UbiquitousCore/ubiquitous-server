@@ -315,4 +315,61 @@ public sealed class MailServiceTests
         Assert.Equal(MailResultCode.AlreadyClaimed, again.Code);
         Assert.Single((await service.ReadAsync("char-b", sent.Sent.Id)).Items!);
     }
+
+    [Fact]
+    public async Task SendAsync_RefusesASixthAttachment()
+    {
+        var service = NewService(out _);
+        var five = Enumerable.Range(1, 5).Select(entry => new MailItemAttachment(entry, 1)).ToArray();
+
+        Assert.Equal(MailResultCode.Ok, (await service.SendAsync("Ayla", "char-a", "char-b", "", "Hi", 0, five)).Code);
+        Assert.Equal(MailResultCode.TooManyAttachments,
+            (await service.SendAsync("Ayla", "char-a", "char-b", "", "Hi", 0, [.. five, new MailItemAttachment(6, 1)])).Code);
+    }
+
+    [Fact]
+    public async Task ListInbox_ShowsTheNewestTwentyLetters()
+    {
+        var store = new FakeMailStore();
+        long clock = 0;
+        var service = new MailService(store, () => ++clock);
+        for (var i = 0; i < 22; i++) await service.SendAsync("Ayla", "char-a", "char-b", $"letter {i}", "Hi", 0);
+
+        var inbox = await service.ListInboxAsync("char-b");
+
+        Assert.Equal(MailService.InboxShows, inbox.Count);
+        Assert.Equal("letter 21", inbox[0].Subject);
+        Assert.Equal("letter 2", inbox[^1].Subject);
+    }
+
+    [Fact]
+    public async Task ReturnAsync_SendsTheLetterBackWithWhatIsStillInIt()
+    {
+        var service = NewService(out _);
+        var sent = await service.SendAsync("Ayla", "char-a", "char-b", "Gift", "For you", 30,
+            [new MailItemAttachment(100, 1), new MailItemAttachment(200, 2)]);
+        await service.ClaimAsync("char-b", sent.Sent!.Id, freeSlots: 5, new MailTake(Slot: 0));
+
+        var returned = await service.ReturnAsync("char-b", "Borin", sent.Sent.Id);
+
+        Assert.Equal(MailResultCode.Ok, returned.Code);
+        Assert.Equal("char-a", returned.SenderGuid);
+        Assert.Empty(await service.ListInboxAsync("char-b"));
+        var back = Assert.Single(await service.ListInboxAsync("char-a"));
+        Assert.Equal("Borin", back.SenderName);
+        Assert.Equal(30, back.Gold);
+        Assert.False(back.Read);
+        var read = await service.ReadAsync("char-a", back.Id);
+        Assert.Equal([new MailItemAttachment(200, 2)], read.Items);
+    }
+
+    [Fact]
+    public async Task ReturnAsync_RefusesALetterFromNoPlayer()
+    {
+        var service = NewService(out var store);
+        await store.SaveAsync("char-b", [new PersistedMailMessage("system-1", "char-b", "GM Team", "Welcome", "Hi", 0, 0, false, false)]);
+
+        Assert.Equal(MailResultCode.NotReturnable, (await service.ReturnAsync("char-b", "Borin", "system-1")).Code);
+        Assert.Single(await service.ListInboxAsync("char-b"));
+    }
 }

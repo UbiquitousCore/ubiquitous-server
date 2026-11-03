@@ -68,6 +68,7 @@ public sealed partial class PlaySession
             [WebMessageTypes.MailSend] = NoBody,
             [WebMessageTypes.MailClaim] = NoBody,
             [WebMessageTypes.MailDelete] = NoBody,
+            [WebMessageTypes.MailReturn] = NoBody,
             [WebMessageTypes.GuildFound] = NoBody,
             [WebMessageTypes.GuildInvite] = NoBody,
             [WebMessageTypes.GuildAccept] = NoBody,

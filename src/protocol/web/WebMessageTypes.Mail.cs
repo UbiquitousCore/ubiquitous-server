@@ -13,5 +13,7 @@ public static partial class WebMessageTypes
     public const string MailClaimed = "mail.claimed";
     public const string MailDelete = "mail.delete";
     public const string MailDeleted = "mail.deleted";
+    public const string MailReturn = "mail.return";
+    public const string MailReturned = "mail.returned";
     public const string MailUnread = "mail.unread";
 }

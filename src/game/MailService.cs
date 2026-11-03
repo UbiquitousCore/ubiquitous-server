@@ -15,6 +15,8 @@ public enum MailResultCode
     NothingToClaim,
     BagFull,
     NotInMail,
+    TooManyAttachments,
+    NotReturnable,
 }
 
 public sealed record MailSummary(string Id, string SenderName, string Subject, int Gold, long SentAtUnixSeconds, bool Read, bool GoldClaimed,
@@ -32,6 +34,8 @@ public sealed record MailClaimResult(MailResultCode Code, int GoldClaimed = 0,
 
 public sealed record MailDeleteResult(MailResultCode Code);
 
+public sealed record MailReturnResult(MailResultCode Code, string? SenderGuid = null);
+
 public sealed record MailTake(int? Slot = null, bool MoneyOnly = false)
 {
     public static readonly MailTake Everything = new();
@@ -43,6 +47,10 @@ public sealed class MailService
     private readonly IMailStore _store;
     private readonly Func<long> _clock;
     private int _nextId;
+
+    public const int MaxAttachments = 5;
+
+    public const int InboxShows = 20;
 
     public MailService(IMailStore store, Func<long>? clock = null)
     {
@@ -61,6 +69,8 @@ public sealed class MailService
             return new MailSendResult(MailResultCode.EmptyBody);
         if (gold < 0)
             return new MailSendResult(MailResultCode.NegativeGold);
+        if ((attachments?.Count ?? 0) > MaxAttachments)
+            return new MailSendResult(MailResultCode.TooManyAttachments);
 
         var existing = await _store.ListAsync(recipientGuid, cancellationToken);
         var persisted = (attachments ?? []).Where(item => item.Count > 0)
@@ -76,7 +86,8 @@ public sealed class MailService
             Read: false,
             GoldClaimed: false,
             Attachments: persisted,
-            ItemsClaimed: false);
+            ItemsClaimed: false,
+            SenderGuid: senderGuid);
 
         var updated = existing.Append(message).ToArray();
         await _store.SaveAsync(recipientGuid, updated, cancellationToken);
@@ -89,7 +100,7 @@ public sealed class MailService
     private async Task<IReadOnlyList<MailSummary>> ListInboxAsyncCore(string recipientGuid, CancellationToken cancellationToken)
     {
         var messages = await _store.ListAsync(recipientGuid, cancellationToken);
-        return [.. messages.OrderByDescending(m => m.SentAtUnixSeconds).Select(ToSummary)];
+        return [.. messages.OrderByDescending(m => m.SentAtUnixSeconds).Take(InboxShows).Select(ToSummary)];
     }
 
     public Task<int> UnreadCountAsync(string recipientGuid, CancellationToken cancellationToken = default) =>
@@ -180,6 +191,40 @@ public sealed class MailService
         list.RemoveAt(index);
         await _store.SaveAsync(recipientGuid, list, cancellationToken);
         return new MailDeleteResult(MailResultCode.Ok);
+    }
+
+    public Task<MailReturnResult> ReturnAsync(string recipientGuid, string recipientName, string mailId, CancellationToken cancellationToken = default) =>
+        _gate.RunAsync(() => ReturnAsyncCore(recipientGuid, recipientName, mailId, cancellationToken), cancellationToken);
+
+    // The letter goes back with whatever is still in it, from the player it was sent to.
+    private async Task<MailReturnResult> ReturnAsyncCore(string recipientGuid, string recipientName, string mailId, CancellationToken cancellationToken)
+    {
+        var list = (await _store.ListAsync(recipientGuid, cancellationToken)).ToList();
+        var index = list.FindIndex(m => string.Equals(m.Id, mailId, StringComparison.Ordinal));
+        if (index < 0) return new MailReturnResult(MailResultCode.MailNotFound);
+
+        var found = list[index];
+        if (found.SenderGuid is not { } senderGuid || string.Equals(senderGuid, recipientGuid, StringComparison.Ordinal))
+            return new MailReturnResult(MailResultCode.NotReturnable);
+
+        var back = found with
+        {
+            Id = NextId(),
+            RecipientGuid = senderGuid,
+            SenderName = recipientName,
+            Gold = found.GoldClaimed ? 0 : found.Gold,
+            GoldClaimed = false,
+            Attachments = found.ItemsClaimed ? [] : found.Attachments,
+            ItemsClaimed = false,
+            SentAtUnixSeconds = _clock(),
+            Read = false,
+            SenderGuid = recipientGuid,
+        };
+        list.RemoveAt(index);
+        await _store.SaveAsync(recipientGuid, list, cancellationToken);
+        var senderMail = await _store.ListAsync(senderGuid, cancellationToken);
+        await _store.SaveAsync(senderGuid, [.. senderMail, back], cancellationToken);
+        return new MailReturnResult(MailResultCode.Ok, senderGuid);
     }
 
     private string NextId() => $"mail-{Guid.NewGuid():N}-{_nextId++}";

@@ -113,6 +113,8 @@ public static class WireCodes
         public const string InventoryFull = "inventoryFull";
         public const string NotInMail = "notInMail";
         public const string ItemNotInBag = "itemNotInBag";
+        public const string TooManyAttachments = "tooManyAttachments";
+        public const string NotReturnable = "notReturnable";
         public const string Refused = "refused";
     }
 

@@ -160,6 +160,43 @@ public sealed class MailTests
         Assert.Contains("\"code\":\"unknownRecipient\"", reply);
     }
 
+    [Fact]
+    public async Task MailReturn_SendsTheLetterBackToItsWriter()
+    {
+        var mailStore = new InMemoryMailStore();
+        var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla"), Character("char-b", 2, "Borin")]);
+        var mailbox = new[] { new StaticObjectSpawnDefinition(1, 13, 9102, 2, 2, 4, 0) };
+        var ayla = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            characters, staticObjectSpawns: mailbox, mailStore: mailStore);
+        await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
+        await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+        await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.MailSend, 2, new MailSendPayload("Borin", "Hello", "Safe travels!", 40))));
+
+        var borin = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            characters, staticObjectSpawns: mailbox, mailStore: mailStore);
+        await borin.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
+        await borin.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Borin"))));
+        var opened = await borin.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.MailOpen, 2, new { networkId = "StaticObject:1" })));
+        var mailId = ExtractMailId(Assert.Single(opened, r => r.Contains("\"type\":\"mail.inbox\"")));
+
+        var returned = await borin.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.MailReturn, 3, new MailIdPayload(mailId))));
+
+        Assert.Contains(returned, r => r.Contains("\"type\":\"mail.returned\"") && r.Contains("\"ok\":true")
+            && r.Contains(mailId));
+        var reopened = await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.MailOpen, 3, new { networkId = "StaticObject:1" })));
+        var inbox = Assert.Single(reopened, r => r.Contains("\"type\":\"mail.inbox\""));
+        Assert.Contains("\"senderName\":\"Borin\"", inbox);
+        Assert.Contains("\"gold\":40", inbox);
+    }
+
     private static string ExtractMailId(string inboxJson)
     {
         const string marker = "\"id\":\"";
