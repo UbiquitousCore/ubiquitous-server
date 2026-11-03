@@ -253,7 +253,8 @@ public sealed partial class PlaySession
 
     private double? DistanceFromHome(string wireId)
     {
-        if (_shared is null || !HomeFor(wireId, out var home)) return null;
+        if (_shared is null) return null;
+        if (!_shared.TryGetPulledFrom(wireId, out var home) && !HomeFor(wireId, out home)) return null;
         if (!_shared.TryGetPosition(wireId, out var current)) return null;
         var dx = current.X - home.X;
         var dz = current.Z - home.Z;

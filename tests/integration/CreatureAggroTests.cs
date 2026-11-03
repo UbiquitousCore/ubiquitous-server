@@ -228,6 +228,32 @@ public sealed class CreatureAggroTests
     }
 
     [Fact]
+    public async Task TickCombat_MeasuresLeashRangeFromWhereTheFightBeganNotTheSpawn()
+    {
+        var maps = new SharedMapRegistry(() => 0.9);
+        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret", 1, isAdmin: true),
+            new InMemoryCharacterStore([new CharacterRecord(
+                "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
+            [new CreatureSpawnDefinition(1001, 13, 9001, 0, 2, 0, 0)],
+            content: GameContent.Development, combatRollUnit: () => 1.0, sharedMaps: maps);
+        await SendAsync(session, WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"));
+        await SendAsync(session, WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"));
+        await SendAsync(session, WebMessageTypes.PlayerMove, 2, new PlayerMovePayload(2, 2, 0, 0, true, MovementState.Walking));
+        var state = maps.For(13);
+        state.SetPosition("Creature:1", new Ubiquitous.Common.Position(25, 2, 0));
+        await SendAsync(session, WebMessageTypes.PlayerMove, 3, new PlayerMovePayload(16, 2, 0, 0, true, MovementState.Walking));
+        await SendAsync(session, WebMessageTypes.PlayerMove, 4, new PlayerMovePayload(27, 2, 0, 0, true, MovementState.Walking));
+        await SendAsync(session, WebMessageTypes.AttackEngage, 5, new { targetId = "Creature:1" });
+        state.SetPosition("Creature:1", new Ubiquitous.Common.Position(45, 2, 0));
+        await SendAsync(session, WebMessageTypes.PlayerMove, 6, new PlayerMovePayload(38, 2, 0, 0, true, MovementState.Walking));
+        await SendAsync(session, WebMessageTypes.PlayerMove, 7, new PlayerMovePayload(46, 2, 0, 0, true, MovementState.Walking));
+
+        var tick = session.TickCombat(DateTimeOffset.UtcNow);
+
+        Assert.DoesNotContain(tick, message => message.Contains("\"type\":\"attack.halted\""));
+    }
+
+    [Fact]
     public async Task TickCombat_LeashesAJoinerDrawnBeyondLeashRangeWhileTheTargetStaysHome()
     {
         var maps = new SharedMapRegistry(() => 0.9);

@@ -100,6 +100,7 @@ public sealed partial class PlaySession : ISessionPlayer
         if (_shared is null || !_engagedByMe.Add(wireId)) return;
         _shared.MarkEngaged(wireId);
         if (_shared.Settle(wireId, Now) is { } settled) _settled.Add((wireId, settled));
+        _shared.NotePulledFrom(wireId);
     }
 
     // Creatures stopped mid-walk by a fight, told to every client so each stops them in the same place.

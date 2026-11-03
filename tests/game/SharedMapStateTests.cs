@@ -35,6 +35,25 @@ public sealed class SharedMapStateTests
     }
 
     [Fact]
+    public void ACreatureRemembersWhereItWasPulledUntilItHeadsHome()
+    {
+        var state = new SharedMapState(13);
+        state.VisibleCreatures(new Position(0, 2, 0), 58f, [Spawn(7)]);
+        state.SetPosition("Creature:1", new Position(8, 2, 4));
+
+        state.MarkEngaged("Creature:1");
+        state.NotePulledFrom("Creature:1");
+        state.SetPosition("Creature:1", new Position(30, 2, 4));
+        state.NotePulledFrom("Creature:1");
+
+        Assert.True(state.TryGetPulledFrom("Creature:1", out var pulled));
+        Assert.Equal(new Position(8, 2, 4), pulled);
+
+        state.MarkReturning("Creature:1", new Position(2, 2, 4));
+        Assert.False(state.TryGetPulledFrom("Creature:1", out _));
+    }
+
+    [Fact]
     public void DeadSpawnsStayHiddenUntilTheirRespawnCollects()
     {
         var state = new SharedMapState(13);
