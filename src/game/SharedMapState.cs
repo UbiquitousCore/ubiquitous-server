@@ -90,6 +90,8 @@ public sealed class SharedMapState : IHostilityLog
     private readonly Dictionary<uint, DateTimeOffset> _corpseUntil = new();
     private readonly Dictionary<uint, DateTimeOffset> _killedAt = new();
     private readonly Dictionary<string, int> _engaged = new(StringComparer.Ordinal);
+    // Where each creature stood when its fight began; it gives up by distance from here, not its spawn.
+    private readonly Dictionary<string, Position> _pulledFrom = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Position> _routeDestinations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Dictionary<string, double>> _hostility = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _mobVictims = new(StringComparer.Ordinal);
@@ -249,6 +251,7 @@ public sealed class SharedMapState : IHostilityLog
             _positions.Remove(wireId);
             _creatureSpawnOf.Remove(wireId);
             _engaged.Remove(wireId);
+            _pulledFrom.Remove(wireId);
             _routeDestinations.Remove(wireId);
             _returning.Remove(wireId);
             _mobVictims.Remove(wireId);
@@ -422,6 +425,7 @@ public sealed class SharedMapState : IHostilityLog
             if (_creatureWireIds.TryGetValue(spawnId, out var wireId))
             {
                 _engaged.Remove(wireId);
+                _pulledFrom.Remove(wireId);
                 _returning.Remove(wireId);
                 _hostility.Remove(wireId);
                 _mobVictims.Remove(wireId);
@@ -576,6 +580,21 @@ public sealed class SharedMapState : IHostilityLog
         }
     }
 
+    // Called once the creature has stopped where the fight caught it; a later puller keeps the first spot.
+    public void NotePulledFrom(string wireId)
+    {
+        lock (_gate)
+        {
+            if (!_pulledFrom.ContainsKey(wireId) && _positions.TryGetValue(wireId, out var at))
+                _pulledFrom[wireId] = at;
+        }
+    }
+
+    public bool TryGetPulledFrom(string wireId, out Position at)
+    {
+        lock (_gate) return _pulledFrom.TryGetValue(wireId, out at);
+    }
+
     public bool IsEngaged(string wireId)
     {
         lock (_gate) return _engaged.ContainsKey(wireId);
@@ -616,6 +635,7 @@ public sealed class SharedMapState : IHostilityLog
     {
         lock (_gate)
         {
+            _pulledFrom.Remove(wireId);
             if (_returning.ContainsKey(wireId)) return;
             _returning[wireId] = new ReturnLeg(home);
         }
