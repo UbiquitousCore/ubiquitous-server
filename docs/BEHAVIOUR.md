@@ -80,6 +80,9 @@ comes from is in `PROVENANCE.md`.
   `unit.died`, then `player.death` naming the player, with the ordinary gold
   penalty.
 - `moveSpeed` tells the player's own client the speed the cap allows.
+- A step within the cap that would leave the map's bounds is not refused: a
+  living player is taken out of any fight and enters the world, alive, at the
+  nearest `map_graveyard`, as `player.unstuck` would without its cooldown.
 - Admins skip the step cap and bounds check, except after a map change until
   the first accepted move on the new map or three seconds: a client still
   reporting old-map coordinates must not place the player there on the new map.
@@ -128,7 +131,7 @@ comes from is in `PROVENANCE.md`.
   them, or at once if they attack it themselves.
 - **Chase** at 6 u/s to 3 units, following baked walkable ground.
 - **Giving up**: open world, beyond its leash (`creature_proto`, or 30) from
-  home; 15 s with no damage dealt or taken; or, 10 s into the fight, a target
+  where it stood when the fight began; 15 s with no damage dealt or taken; or, 10 s into the fight, a target
   further than 15 units (30 for ranged creatures). In a dungeon only outrunning counts (beyond leash and
   out of reach for 5 s), or a fight would switch off on entering each room.
 - **Evading**: a creature that gives up is at full health at once (sent to the

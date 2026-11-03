@@ -215,7 +215,7 @@ public sealed class AccountCharacterTests
     }
 
     [Fact]
-    public async Task PlaySession_WalkingAcrossManyZonesOnOneMap_NeverEmitsAWorldChange_OnlyTheMapEdgeCorrects()
+    public async Task PlaySession_WalkingAcrossManyZonesOnOneMap_NeverEmitsAWorldChange_TillTheMapEdgeSendsToAGraveyard()
     {
         var content = GameContent.Development with
         {
@@ -248,10 +248,9 @@ public sealed class AccountCharacterTests
         var atTheEdge = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.PlayerMove, seq, new PlayerMovePayload(321, 2, 3, 0, true, MovementState.Walking))));
 
-        Assert.Contains("move.accepted", atTheEdge.Single());
-        Assert.DoesNotContain("entity.moved", atTheEdge.Single());
-        Assert.DoesNotContain("world.loading", atTheEdge.Single());
-        Assert.DoesNotContain("world.entered", atTheEdge.Single());
+        var entered = Assert.Single(atTheEdge, message => message.Contains("\"type\":\"world.entered\""));
+        Assert.Contains("\"x\":-130", entered);
+        Assert.DoesNotContain(atTheEdge, message => message.Contains("player.revived"));
     }
 
     [Fact]

@@ -797,17 +797,8 @@ public sealed partial class PlaySession : ISessionPlayer
             maxPower = _spells.EffectiveMaxPower(wisdomBonus);
         }
 
-        UnmarkEngaged();
-        var stopped = _combat.Disengage(playerId);
-        if (stopped is not null)
-        {
-            responses.Add(Reply(WebMessageTypes.AttackHalted, new AttackHaltedPayload(WebNetworkId.FromString(stopped))));
-            responses.Add(Reply(WebMessageTypes.AttackExitCombat, new AttackExitCombatPayload(WebNetworkId.FromString(playerId))));
-        }
-
-        var destination = GraveyardLookup.Resolve(_content, _world.MapId, _world.PlayerPosition);
+        var destination = MoveToNearestGraveyard(responses);
         var mapId = destination.MapId;
-        responses.AddRange(EnterWorld(mapId, destination.Position, destination.Yaw));
 
         if (wasDead)
         {
@@ -818,6 +809,22 @@ public sealed partial class PlaySession : ISessionPlayer
         }
 
         return responses;
+    }
+
+    private GraveyardLookup.GraveyardDestination MoveToNearestGraveyard(List<string> responses)
+    {
+        var playerId = PlayerUnitId;
+        UnmarkEngaged();
+        var stopped = _combat.Disengage(playerId);
+        if (stopped is not null)
+        {
+            responses.Add(Reply(WebMessageTypes.AttackHalted, new AttackHaltedPayload(WebNetworkId.FromString(stopped))));
+            responses.Add(Reply(WebMessageTypes.AttackExitCombat, new AttackExitCombatPayload(WebNetworkId.FromString(playerId))));
+        }
+
+        var destination = GraveyardLookup.Resolve(_content, _world!.MapId, _world.PlayerPosition);
+        responses.AddRange(EnterWorld(destination.MapId, destination.Position, destination.Yaw));
+        return destination;
     }
 
     private static double CastRangeOf(SpellDefinition spell) => Math.Max(spell.MaxRange, MeleeRange);
@@ -1417,6 +1424,13 @@ public sealed partial class PlaySession : ISessionPlayer
         _playerMoving = request.Moving;
         var decision = _world.ApplyPlayerMovement(requested, (float)request.Yaw, speedMultiplier, bypassValidation: isAdmin);
         if (decision.Accepted) _awaitingArrivalMove = false;
+        // Stepping off the edge of the map is not refused: the player arrives, alive, at the nearest graveyard.
+        if (decision.LeftMap && _character is not null && !_combat.IsPlayerDead)
+        {
+            var rescued = new List<string>();
+            MoveToNearestGraveyard(rescued);
+            return Task.FromResult<IReadOnlyList<string>>(rescued);
+        }
         if (!decision.Accepted || decision.Corrected)
         {
             return Task.FromResult<IReadOnlyList<string>>([Reply(WebMessageTypes.MoveAccepted,
