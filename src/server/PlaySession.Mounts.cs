@@ -10,6 +10,17 @@ public sealed partial class PlaySession
 
     private (uint SpellId, SpellDefinition Spell)? _riding;
 
+    private bool _swimming;
+
+    // No one rides in water: starting to swim puts the rider back on their feet.
+    private void FollowSwimming(MovementState state, DateTimeOffset now, List<string> responses)
+    {
+        _swimming = state == MovementState.Swimming;
+        if (!_swimming || _riding is null) return;
+        Dismount(now, responses);
+        FlushUnitValues(now, responses);
+    }
+
     public uint? RiddenMountId => _riding?.Spell.AuraMountId;
 
     private float AllowedSpeedMultiplier(DateTimeOffset now) =>

@@ -231,12 +231,40 @@ public sealed class MountTests
     }
 
     [Theory]
-    [InlineData(false, false, null)]
-    [InlineData(true, false, MountRefusal.InCombat)]
-    [InlineData(false, true, MountRefusal.NotHere)]
-    [InlineData(true, true, MountRefusal.InCombat)]
-    public void MountingIsRefusedInAFightAndInsideADungeon(bool inCombat, bool inDungeon, MountRefusal? expected) =>
-        Assert.Equal(expected, MountRules.WhyNotMount(inCombat, inDungeon));
+    [InlineData(false, false, false, null)]
+    [InlineData(true, false, false, MountRefusal.InCombat)]
+    [InlineData(false, true, false, MountRefusal.NotHere)]
+    [InlineData(true, true, false, MountRefusal.InCombat)]
+    [InlineData(false, false, true, MountRefusal.NotHere)]
+    public void MountingIsRefusedInAFightInsideADungeonAndInWater(
+        bool inCombat, bool inDungeon, bool swimming, MountRefusal? expected) =>
+        Assert.Equal(expected, MountRules.WhyNotMount(inCombat, inDungeon, swimming));
+
+    [Fact]
+    public async Task StartingToSwim_PutsTheRiderBackOnTheirFeet()
+    {
+        var (hub, ayla, borin) = await PairAsync("m9");
+        await MountAsync(hub, ayla);
+        borin.Inbox.Clear();
+
+        await SendAsync(hub, ayla, WebMessageTypes.PlayerMove, new PlayerMovePayload(2, 2, 3, 0, true, MovementState.Swimming));
+        await TickAsync(hub, DateTimeOffset.UtcNow.AddSeconds(1));
+
+        Assert.Null(ayla.Session.RiddenMountId);
+        Assert.Equal(0, MountShown(borin.Inbox, ayla.Id));
+    }
+
+    [Fact]
+    public async Task AMountCannotBeSummonedWhileSwimming()
+    {
+        var (hub, ayla, _) = await PairAsync("m10");
+        await SendAsync(hub, ayla, WebMessageTypes.PlayerMove, new PlayerMovePayload(2, 2, 3, 0, true, MovementState.Swimming));
+
+        var refused = await SendAsync(hub, ayla, WebMessageTypes.SpellRequest, new { spellId = Horse, targetId = ayla.Id });
+
+        var failed = Assert.Single(PayloadsOf(refused, WebMessageTypes.SpellFailed));
+        Assert.Equal(WireCodes.SpellRefusal.MountNotHere, failed.GetProperty("reason").GetString());
+    }
 
     [Fact]
     public async Task ADevelopmentLogin_EntersWithEnoughGoldForEveryMount()

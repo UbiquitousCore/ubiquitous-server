@@ -10,9 +10,9 @@ public static class MountRules
 
     public static bool IsMount(SpellDefinition? spell) => spell?.AuraMountId is not null;
 
-    public static MountRefusal? WhyNotMount(bool inCombat, bool inDungeon) =>
+    public static MountRefusal? WhyNotMount(bool inCombat, bool inDungeon, bool swimming = false) =>
         inCombat ? MountRefusal.InCombat
-        : inDungeon ? MountRefusal.NotHere
+        : inDungeon || swimming ? MountRefusal.NotHere
         : null;
 }
 

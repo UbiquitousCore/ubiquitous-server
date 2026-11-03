@@ -41,7 +41,7 @@ public sealed partial class PlaySession
         if (_riding is not null && MountRules.IsMount(peekedSpell) && _spells.Known.Contains(spellId))
             return MountDismount(now);
         if (MountRules.IsMount(peekedSpell)
-            && MountRules.WhyNotMount(_combat.PlayerInCombat, InDungeon) is { } cannotRide)
+            && MountRules.WhyNotMount(_combat.PlayerInCombat, InDungeon, _swimming) is { } cannotRide)
             return [Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(casterId, spellId, cannotRide switch
             {
                 MountRefusal.InCombat => WireCodes.SpellRefusal.InCombat,

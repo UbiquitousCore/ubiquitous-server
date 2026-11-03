@@ -1491,6 +1491,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 request.Speed,
                 Velocity: request.Velocity)) };
         FollowFall(request.State, decision.Position.Y, Now, responses);
+        FollowSwimming(request.State, Now, responses);
         if (_instanceWorld is null)
         {
             RefreshView(responses);
