@@ -194,6 +194,9 @@ comes from is in `PROVENANCE.md`.
 
 ## Spells and auras
 
+- A heal or damage over time cast by a player ticks every 3 s for its spell's
+  own duration, rounded to whole ticks (Test Heal Aura: 60 ticks over 3
+  minutes); a spell that gives no duration runs 3 ticks.
 - A shape-changing aura (`aura.applied` for a spell that turns its wearer into a
   creature) lasts the spell's duration, ends the shape it replaces, and a second
   cast of a timed one refreshes it. One with no duration toggles off when cast

@@ -13,10 +13,19 @@ public sealed class AuraService
 
     private readonly List<ActiveAura> _active = new();
 
-    public void Apply(string targetId, uint spellId, int perTick, bool isHeal, DateTimeOffset now, string? casterId = null)
+    // How long a periodic effect runs: its spell's own duration where it gives one, a whole number of ticks.
+    public static TimeSpan LastsFor(int durationMs) =>
+        durationMs > 0 ? TickInterval * TicksIn(durationMs) : Duration;
+
+    private static int TicksIn(int durationMs) =>
+        Math.Max(1, (int)Math.Round(durationMs / TickInterval.TotalMilliseconds));
+
+    public void Apply(string targetId, uint spellId, int perTick, bool isHeal, DateTimeOffset now, string? casterId = null,
+        int durationMs = 0)
     {
         _active.RemoveAll(a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId);
-        _active.Add(new ActiveAura(targetId, spellId, isHeal, perTick, TickCount, now + TickInterval, casterId));
+        var ticks = durationMs > 0 ? TicksIn(durationMs) : TickCount;
+        _active.Add(new ActiveAura(targetId, spellId, isHeal, perTick, ticks, now + TickInterval, casterId));
     }
 
     public IReadOnlyList<uint> Clear(string targetId)

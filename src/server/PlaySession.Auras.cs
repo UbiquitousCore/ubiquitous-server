@@ -30,10 +30,10 @@ public sealed partial class PlaySession
     {
         bool isHeal = spell.AuraPeriodicHeal is not null;
         int perTick = isHeal ? spell.AuraPeriodicHeal!.Value : spell.AuraPeriodicDamage!.Value;
-        _auras.Apply(targetId, spellId, perTick, isHeal, now, casterId.Text);
+        _auras.Apply(targetId, spellId, perTick, isHeal, now, casterId.Text, spell.DurationMs);
 
         var target = WebNetworkId.FromString(targetId);
-        int durationMs = checked((int)AuraService.Duration.TotalMilliseconds);
+        int durationMs = checked((int)AuraService.LastsFor(spell.DurationMs).TotalMilliseconds);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [target], [], spell.Speed, Aimed: false)),

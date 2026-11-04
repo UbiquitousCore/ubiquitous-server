@@ -93,4 +93,12 @@ public sealed class AuraServiceTests
         Assert.Equal(61u, ended.SpellId);
         Assert.Equal(62u, Assert.Single(auras.Tick(Now + AuraService.TickInterval)).SpellId);
     }
+
+    [Theory]
+    [InlineData(0, 9_000)]
+    [InlineData(180_000, 180_000)]
+    [InlineData(10_000, 9_000)]
+    [InlineData(1_000, 3_000)]
+    public void APeriodicEffectRunsForItsSpellsDuration_InWholeTicks(int durationMs, int expectedMs) =>
+        Assert.Equal(TimeSpan.FromMilliseconds(expectedMs), AuraService.LastsFor(durationMs));
 }

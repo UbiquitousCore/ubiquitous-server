@@ -97,6 +97,32 @@ public sealed class GameMasterTests
     }
 
     [Fact]
+    public async Task AGmsTestHealAura_RunsForItsSpellsOwnThreeMinutes()
+    {
+        var content = GameContent.Development with
+        {
+            Spells = new Dictionary<uint, SpellDefinition>(GameContent.Development.Spells)
+            {
+                [4019] = new(4019, "Test Heal Aura", 0, 0, 0f, AuraPeriodicHeal: 1500, DurationMs: 180_000,
+                    EffectTarget: 6),
+            },
+        };
+        var gm = await SessionAsync(admin: true, [], content);
+        await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AdminLearnSpells, 2, new { })));
+
+        var cast = await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.SpellRequest, 3, new { spellId = 4019, targetId = 0 })));
+        var log = new List<string>(cast);
+        var now = DateTimeOffset.UtcNow;
+        for (var i = 0; i < 60; i++) log.AddRange(gm.TickCombat(now += TimeSpan.FromSeconds(1)));
+
+        Assert.Contains(cast, m => m.Contains("\"type\":\"aura.applied\"") && m.Contains("\"maxDuration\":180000"));
+        Assert.Equal(20, log.Count(m => m.Contains("\"result\":\"periodicHeal\"")));
+        Assert.DoesNotContain(log, m => m.Contains("\"type\":\"aura.ended\""));
+    }
+
+    [Fact]
     public void RealGearNamedForAGodIsNotAToolSpell() =>
         Assert.False(GmOnlySpells.Covers(2549, new SpellDefinition(2549, "Robe of Healer of God", 0, 0, 0f)));
 
