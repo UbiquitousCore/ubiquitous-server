@@ -102,13 +102,19 @@ public sealed partial class PlaySession
                 .SelectMany(PlaytestSpellbook.TalentAbilityRanksAtMaxLevel)
                 .Select(id => (id, SpellLearning.LevelOf(levels, id, LevelingService.MaxLevel))));
 
-    // Every rank of the class's spells that the level has reached.
+    // Every rank of the class's spells that the level has reached, and every GM-only spell.
     private IReadOnlyList<string> AdminLearnSpells()
     {
         if (RefuseNonAdmin("learn spells") is { } refused) return refused;
-        var fresh = LevelledSpells(SpellLevels())
-            .Where(spell => spell.Level <= _level && _content.Spells.ContainsKey(spell.Id) && !_spells.Known.Contains(spell.Id))
+        var gmOnly = _content.Spells.Values
+            .Where(spell => GmOnlySpells.Covers(spell.Id, spell))
             .Select(spell => spell.Id)
+            .Order();
+        var fresh = LevelledSpells(SpellLevels())
+            .Where(spell => spell.Level <= _level && _content.Spells.ContainsKey(spell.Id))
+            .Select(spell => spell.Id)
+            .Concat(gmOnly)
+            .Where(id => !_spells.Known.Contains(id))
             .Distinct()
             .ToArray();
         if (fresh.Length == 0)

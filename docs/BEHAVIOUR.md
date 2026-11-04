@@ -46,7 +46,8 @@ comes from is in `PROVENANCE.md`.
   `talent.state`, plus `player.expGained` with `levelUp` when the level went up, so the
   banner, sound and glow play as for an earned level. Learning teaches every rank of
   the character's class and of the talent abilities it holds that the current level
-  has reached (the level of the lesson that teaches it), as `spell.learned` and
+  has reached (the level of the lesson that teaches it), and every GM-only spell (the
+  operator spells and the build's test and GM rows), as `spell.learned` and
   `spell.book`; with nothing new it answers `invalid_state`. A level change also sends a
   fresh `spell.book`: ranks above the new level are forgotten, and an action button
   that held one takes the highest rank still known, or empties.
