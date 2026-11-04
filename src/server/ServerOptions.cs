@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Text.Json;
 using Npgsql;
+using Ubiquitous.Game;
 
 namespace Ubiquitous.Server;
 
@@ -24,7 +26,8 @@ public sealed record ServerOptions(
     IReadOnlyList<string>? AllowedOrigins = null,
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? Modules = null,
     string? PostgresPasswordFile = null,
-    bool RequireDataPackage = false)
+    bool RequireDataPackage = false,
+    GameRates? Rates = null)
 {
     private const string ModuleEnvironmentPrefix = "UBIQUITOUS_MODULE_";
 
@@ -37,6 +40,8 @@ public sealed record ServerOptions(
         LogLevel: "Information");
 
     public string ResolvedStateDirectory => StateDirectory ?? DataDirectory;
+
+    public GameRates ResolvedRates => Rates ?? GameRates.Normal;
 
 
     private sealed record Setting(
@@ -83,6 +88,28 @@ public sealed record ServerOptions(
             (options, value, name) => options with { FestivalStaticEntries = ParseEntryList(value, name) }),
         new("festivalCreatureEntries", "UBIQUITOUS_FESTIVAL_CREATURE_ENTRIES", ["--festival-creature-entries"],
             (options, value, name) => options with { FestivalCreatureEntries = ParseEntryList(value, name) }),
+        new("xpRate", "UBIQUITOUS_XP_RATE", ["--xp-rate"],
+            (options, value, name) => options with { Rates = options.ResolvedRates with { Xp = ParseRate(value, name) } }),
+        new("exhaustionLimit", "UBIQUITOUS_EXHAUSTION_LIMIT", ["--exhaustion-limit"],
+            (options, value, name) => options with
+            {
+                Rates = options.ResolvedRates with { ExhaustionLimit = ParsePositive(value, name) },
+            }),
+        new("playerDamageRate", "UBIQUITOUS_PLAYER_DAMAGE_RATE", ["--player-damage-rate"],
+            (options, value, name) => options with
+            {
+                Rates = options.ResolvedRates with { PlayerDamage = ParseRate(value, name) },
+            }),
+        new("creatureDamageRate", "UBIQUITOUS_CREATURE_DAMAGE_RATE", ["--creature-damage-rate"],
+            (options, value, name) => options with
+            {
+                Rates = options.ResolvedRates with { CreatureDamage = ParseRate(value, name) },
+            }),
+        new("creatureHealthRate", "UBIQUITOUS_CREATURE_HEALTH_RATE", ["--creature-health-rate"],
+            (options, value, name) => options with
+            {
+                Rates = options.ResolvedRates with { CreatureHealth = ParseRate(value, name, allowZero: false) },
+            }),
         new("requireDataPackage", "UBIQUITOUS_REQUIRE_DATA_PACKAGE", ["--require-data-package"],
             (options, value, name) => options with { RequireDataPackage = ParseBool(value, name) }),
         new("disabledRaces", "UBIQUITOUS_DISABLED_RACES", ["--disabled-races"],
@@ -238,6 +265,16 @@ public sealed record ServerOptions(
         if (!int.TryParse(value, out var parsed) || parsed < 1)
             throw new InvalidDataException($"{name} must be a positive integer.");
         return parsed;
+    }
+
+    private static double ParseRate(string value, string name, bool allowZero = true)
+    {
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var rate)
+            || !double.IsFinite(rate) || rate < 0 || (!allowZero && rate == 0))
+            throw new InvalidDataException(allowZero
+                ? $"{name} must be a number of 0 or more, such as 1.5."
+                : $"{name} must be a number above 0, such as 1.5.");
+        return rate;
     }
 
     private static bool ParseBool(string value, string name)

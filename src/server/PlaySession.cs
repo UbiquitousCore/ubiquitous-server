@@ -259,6 +259,7 @@ public sealed partial class PlaySession : ISessionPlayer
         _combat.InActiveDuel = () =>
             _character is not null && _duels.OpponentOf(PlayerUnitId) is not null;
         _combat.UseTargetStats(CombatStatsFor);
+        _combat.Rates = _content.Rates;
         _chase = new CreatureChaseService(ChaseRoute);
 
         _chatHandler = new ChatHandler(this, _outbox, world.Guilds);

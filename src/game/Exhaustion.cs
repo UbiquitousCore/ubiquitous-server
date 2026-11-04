@@ -1,8 +1,8 @@
 namespace Ubiquitous.Game;
 
 // Legend copies wear a player down: each boss killed adds its amount, never
-// past 100, and none is left after the daily reset. At 100 a player cannot
-// enter a Legend copy until then.
+// past the limit (100 unless the operator raises it), and none is left after
+// the daily reset. At the limit a player cannot enter a Legend copy until then.
 public static class Exhaustion
 {
     public const int Max = 100;
@@ -15,11 +15,11 @@ public static class Exhaustion
     public static int Today(int amount, int? raisedOn, DateTimeOffset now) =>
         raisedOn == DayOf(now) ? amount : 0;
 
-    public static int Raise(int amount, int by) => Math.Clamp(amount + by, 0, Max);
+    public static int Raise(int amount, int by, int limit = Max) => Math.Clamp(amount + by, 0, limit);
 
-    public static LegendRefusal? WhyNotLegend(int level, int exhaustion) =>
+    public static LegendRefusal? WhyNotLegend(int level, int exhaustion, int limit = Max) =>
         level < LegendLevel ? LegendRefusal.TooLow
-        : exhaustion >= Max ? LegendRefusal.Exhausted
+        : exhaustion >= limit ? LegendRefusal.Exhausted
         : null;
 }
 

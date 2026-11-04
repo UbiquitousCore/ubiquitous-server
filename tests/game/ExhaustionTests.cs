@@ -29,4 +29,13 @@ public sealed class ExhaustionTests
     {
         Assert.Equal(Exhaustion.Max, Exhaustion.Raise(95, 9));
     }
+
+    [Fact]
+    public void ARaisedLimitLetsAPlayerTireFurtherBeforeBeingTurnedAway()
+    {
+        Assert.Equal(104, Exhaustion.Raise(95, 9, limit: 150));
+        Assert.Equal(150, Exhaustion.Raise(145, 9, limit: 150));
+        Assert.Null(Exhaustion.WhyNotLegend(60, 120, limit: 150));
+        Assert.Equal(LegendRefusal.Exhausted, Exhaustion.WhyNotLegend(60, 150, limit: 150));
+    }
 }

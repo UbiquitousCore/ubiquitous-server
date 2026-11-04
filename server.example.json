@@ -25,6 +25,16 @@
   // "festivalStaticEntries": [288, 145],
   // "festivalCreatureEntries": [3012, 2781],
 
+  // Rates. 1 is the game as it plays; each is a multiplier, so 1.5 is half
+  // as much again and 0.5 is half. playerDamageRate is what players deal,
+  // creatureDamageRate what creatures deal. exhaustionLimit is how much Legend
+  // exhaustion a player can build up in a day (100 as the game plays).
+  "xpRate": 1,
+  "exhaustionLimit": 100,
+  "playerDamageRate": 1,
+  "creatureDamageRate": 1,
+  "creatureHealthRate": 1,
+
   // Playerbots: characters the server plays itself. Off by default;
   // randomBotCount is how many play on their own (0-500).
   // Every setting in modules/playerbots/README.md can go here.

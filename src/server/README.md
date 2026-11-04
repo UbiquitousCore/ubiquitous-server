@@ -44,7 +44,7 @@ docker compose up -d                    # the server plus Postgres in Docker
 dotnet run --project src/server -- [--config server.json] [--data-dir data/generated] [--port 8781]
 ```
 
-`server.example.json` documents the file (bots, festival content, ports);
+`server.example.json` documents the file (bots, festival content, rates, ports);
 the server reads `server.json` and `.env` from the folder it starts in, and
 `UBIQUITOUS_CONFIG` or `--config` names another file. Settings apply in order:
 defaults, JSON config, `.env`, `UBIQUITOUS_*` environment variables,

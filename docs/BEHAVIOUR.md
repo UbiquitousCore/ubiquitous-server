@@ -154,6 +154,12 @@ comes from is in `PROVENANCE.md`.
   between the creature's own minimum and maximum, or 30 s.
 - With festival content off, seasonal creatures and props are left out and the
   hidden props listed in `world.hiddenObjects`.
+- The operator's rates multiply, from 1: `xpRate` every experience grant (kills,
+  party shares, quests), `creatureHealthRate` every creature's health once at
+  load (never below 1), `playerDamageRate` and `creatureDamageRate` damage by
+  who deals it, scaled in the session where the health is lost so a blow
+  between players is scaled once. Falls are not scaled. Amounts round to the
+  nearest point.
 
 ## Combat
 
@@ -364,11 +370,13 @@ comes from is in `PROVENANCE.md`.
   the original for barriers, summons and completion.
 - Inside a Legend copy a player's exhaustion rises by a boss's amount when it
   falls while they are inside, whether or not they hit it (Executioner and
-  Ariel 5, Cosmo 8, Hathraad and Kermode 4, Alr-Rahjil 9), up to 100. Time
-  inside adds nothing. It is sent as the `exhaustion` player value, saved with
-  the character, and empties at midnight UTC.
-- A Legend copy refuses entry below level 60 (`legend_too_low`) and at 100
-  exhaustion (`exhausted`), through the gate or `instance.enter`; the player
+  Ariel 5, Cosmo 8, Hathraad and Kermode 4, Alr-Rahjil 9), up to the limit
+  (100 unless the operator's `exhaustionLimit` raises it). Time inside adds
+  nothing. It is sent as the `exhaustion` player value, and the limit as
+  `maxExhaustion` on entering the world; it is saved with the character, and
+  empties at midnight UTC.
+- A Legend copy refuses entry below level 60 (`legend_too_low`) and at the
+  exhaustion limit (`exhausted`), through the gate or `instance.enter`; the player
   stays where they were.
 - A barrier refuses entering its rectangle until its milestone, and never
   refuses leaving, so nobody is trapped inside one. The server sends the

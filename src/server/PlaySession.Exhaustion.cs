@@ -41,7 +41,7 @@ public sealed partial class PlaySession
         if (gained == 0) return;
 
         var before = ExhaustionNow(now);
-        _exhaustion = Exhaustion.Raise(before, gained);
+        _exhaustion = Exhaustion.Raise(before, gained, _content.Rates.ExhaustionLimit);
         _exhaustionDay = Exhaustion.DayOf(now);
         if (_exhaustion == before) return;
         responses.Add(Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(
@@ -52,7 +52,7 @@ public sealed partial class PlaySession
     private string? LegendEntryRefused(ushort mapId)
     {
         if (_instances.ModeOfNext(mapId, InstanceOwnerId) != DungeonMode.Legend) return null;
-        return Exhaustion.WhyNotLegend(_level, ExhaustionNow(Now)) switch
+        return Exhaustion.WhyNotLegend(_level, ExhaustionNow(Now), _content.Rates.ExhaustionLimit) switch
         {
             LegendRefusal.TooLow => Error(WireCodes.ProtocolError.LegendTooLow,
                 $"Legend dungeons are open from level {Exhaustion.LegendLevel}."),

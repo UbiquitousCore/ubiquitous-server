@@ -8,6 +8,7 @@ public sealed partial class PlaySession
 {
     private IReadOnlyList<string> GrantXp(int gained, DateTimeOffset now)
     {
+        gained = _content.Rates.ScaleXp(gained);
         if (_character is null || gained <= 0 || _level >= LevelingService.MaxLevel) return [];
 
         var result = LevelingService.ApplyXp(_level, _xp, gained);

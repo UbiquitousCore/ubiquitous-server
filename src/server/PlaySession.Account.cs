@@ -362,6 +362,7 @@ public sealed partial class PlaySession
             [WireCodes.UnitValue.Xp] = _xp,
             [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level),
             [WireCodes.UnitValue.Exhaustion] = ExhaustionNow(enterNow),
+            [WireCodes.UnitValue.MaxExhaustion] = _content.Rates.ExhaustionLimit,
         };
         AddAttributesTo(enterValues, enterNow);
         responses.Add(Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(enterValues)));

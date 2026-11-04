@@ -23,9 +23,22 @@ public sealed class ServerContentLoader(
                 .ToHashSet(),
             WaypointRoutes = patrols.All,
         };
+        game = WithRates(game, options.ResolvedRates);
 
         return new ServerContent(game, creatureSpawns, staticObjectSpawns, LoadWalkableGround()) { Patrols = patrols };
     }
+
+    // Creature health is scaled once here, so combat, the spawn message and
+    // every other reader of a creature's health agree on it.
+    public static GameContent WithRates(GameContent game, GameRates rates) => game with
+    {
+        Rates = rates,
+        Creatures = rates.CreatureHealth == 1.0
+            ? game.Creatures
+            : game.Creatures.ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value with { MaxHealth = rates.ScaleCreatureHealth(pair.Value.MaxHealth) }),
+    };
 
     public static IReadOnlyList<CreatureSpawnDefinition> FilterFestiveCreatures(
         IReadOnlyList<CreatureSpawnDefinition> spawns, bool enabled, IReadOnlyList<uint>? festive)
