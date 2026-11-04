@@ -197,6 +197,8 @@ comes from is in `PROVENANCE.md`.
 - A heal or damage over time cast by a player ticks every 3 s for its spell's
   own duration, rounded to whole ticks (Test Heal Aura: 60 ticks over 3
   minutes); a spell that gives no duration runs 3 ticks.
+- A player's spell that sets another off on a clock does so every 3 s for its
+  spell's duration, or until something ends it when the spell gives none.
 - Stealth, a shield, a speed-up or a stat buff whose spell gives no duration
   lasts until something ends it: an attack or a hit for stealth, being used up
   for a shield, a cleanse, dispel, evade or death for the rest. `aura.applied`

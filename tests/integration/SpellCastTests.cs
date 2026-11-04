@@ -852,6 +852,41 @@ public sealed class SpellCastTests
     }
 
     [Fact]
+    public async Task Cast_APeriodicTriggerWithNoDurationKeepsRollingPastThreeTicks()
+    {
+        var content = GameContent.Development with
+        {
+            Spells = new Dictionary<uint, SpellDefinition>(GameContent.Development.Spells)
+            {
+                [202] = new(202, "spell-202", CastTimeMs: 0, CooldownMs: 0, MaxRange: 30f, PowerCost: 5,
+                    AuraPeriodicTriggerSpellId: 201, AuraPeriodicTriggerChancePercent: 100),
+                [201] = new(201, "spell-201", CastTimeMs: 0, CooldownMs: 0, MaxRange: 30f, PowerCost: 0,
+                    EffectDamage: 1),
+            },
+            Creatures = new Dictionary<uint, CreatureDefinition>(GameContent.Development.Creatures)
+            {
+                [9001] = new(9001, "creature-9001", 3, 100000, MinDamage: 0, MaxDamage: 0),
+            },
+            StartingSpells = [.. GameContent.Development.StartingSpells, 202, 201],
+        };
+        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([Character]),
+            new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
+            content: content, spellRollUnit: () => 0.5, developmentEntry: true);
+        await session.HandleTextAsync(WebMessageJson.Serialize(
+            WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
+        var now = DateTimeOffset.UtcNow;
+
+        var cast = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.SpellRequest, 1, new { spellId = 202, targetId = "Creature:1" })));
+        var log = new List<string>();
+        for (var i = 1; i <= 6; i++) log.AddRange(session.TickCombat(now + AuraService.TickInterval * i + TimeSpan.FromMilliseconds(100)));
+
+        Assert.Contains(cast, m => m.Contains("\"type\":\"aura.applied\"") && m.Contains("\"maxDuration\":0"));
+        Assert.Equal(6, log.Count(m => m.Contains("\"type\":\"spell.outcome\"") && m.Contains("\"spellId\":201")));
+    }
+
+    [Fact]
     public async Task Cast_ASpellWithBothADirectEffectAndATriggerAppliesBothWhenTheChanceLands()
     {
         var triggerContent = GameContent.Development with

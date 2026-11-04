@@ -548,11 +548,14 @@ public sealed partial class PlaySession
     private IReadOnlyList<string> ResolvePeriodicTriggerApply(
         WebNetworkId casterId, string targetId, uint spellId, SpellDefinition spell, DateTimeOffset now)
     {
+        var ticks = PeriodicTriggerService.TicksFor(spell.DurationMs);
         _periodicTrigger.Apply(
-            targetId, spellId, spell.AuraPeriodicTriggerSpellId!.Value, spell.AuraPeriodicTriggerChancePercent ?? 0, now);
+            targetId, spellId, spell.AuraPeriodicTriggerSpellId!.Value, spell.AuraPeriodicTriggerChancePercent ?? 0, now, ticks);
 
         var target = WebNetworkId.FromString(targetId);
-        int durationMs = checked((int)AuraService.Duration.TotalMilliseconds);
+        int durationMs = spell.DurationMs > 0
+            ? checked((int)(AuraService.TickInterval * ticks).TotalMilliseconds)
+            : 0;
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [target], [], spell.Speed, Aimed: false)),
