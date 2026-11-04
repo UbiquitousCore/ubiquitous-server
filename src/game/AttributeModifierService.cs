@@ -1,32 +1,24 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveAttributeModifier(
-    string TargetId, uint SpellId, int AttributeId, int Amount, bool IsPercent, DateTimeOffset ExpiresAt, string? CasterId = null);
+    string TargetId, uint SpellId, int AttributeId, int Amount, bool IsPercent, DateTimeOffset ExpiresAt, string? CasterId = null)
+    : UnitEffect(TargetId, SpellId, CasterId);
 
-public sealed class AttributeModifierService
+public sealed class AttributeModifierService(UnitEffects effects)
 {
-    private readonly List<ActiveAttributeModifier> _active = new();
+    private const EffectKind Kind = EffectKind.AttributeModifier;
 
     public void Apply(string targetId, uint spellId, int attributeId, int amount, bool isPercent, int durationMs, DateTimeOffset now, string? casterId = null)
     {
-        _active.RemoveAll(m => string.Equals(m.TargetId, targetId, StringComparison.Ordinal));
-                _active.Add(new ActiveAttributeModifier(targetId, spellId, attributeId, amount, isPercent, EffectLength.ExpiresAt(now, durationMs), casterId));
+        effects.RemoveOn<ActiveAttributeModifier>(Kind, targetId);
+        effects.Add(new ActiveAttributeModifier(targetId, spellId, attributeId, amount, isPercent, EffectLength.ExpiresAt(now, durationMs), casterId) { Kind = Kind });
     }
 
-    public IReadOnlyList<uint> Clear(string targetId)
-    {
-        var removed = _active.Where(m => string.Equals(m.TargetId, targetId, StringComparison.Ordinal))
-            .Select(m => m.SpellId).ToArray();
-        _active.RemoveAll(m => string.Equals(m.TargetId, targetId, StringComparison.Ordinal));
-        return removed;
-    }
+    public IReadOnlyList<uint> Clear(string targetId) =>
+        [.. effects.RemoveOn<ActiveAttributeModifier>(Kind, targetId).Select(m => m.SpellId)];
 
-    public IReadOnlyList<ActiveAttributeModifier> ClearWhere(Predicate<ActiveAttributeModifier> match)
-    {
-        var removed = _active.FindAll(match);
-        if (removed.Count > 0) _active.RemoveAll(match);
-        return removed;
-    }
+    public IReadOnlyList<ActiveAttributeModifier> ClearWhere(Predicate<ActiveAttributeModifier> match) =>
+        effects.RemoveWhere(Kind, match);
 
     private readonly Dictionary<string, IReadOnlyDictionary<int, int>> _worn =
         new(StringComparer.Ordinal);
@@ -57,17 +49,13 @@ public sealed class AttributeModifierService
 
     public int GetFlatAmount(string targetId, int attributeId, DateTimeOffset now)
     {
-        var active = _active.Find(m =>
+        var active = effects.Find<ActiveAttributeModifier>(Kind, m =>
             string.Equals(m.TargetId, targetId, StringComparison.Ordinal)
             && m.AttributeId == attributeId && !m.IsPercent && now < m.ExpiresAt);
         var passive = _passive.TryGetValue(targetId, out var totals) ? totals.GetValueOrDefault(attributeId) : 0;
         return WornAmount(targetId, attributeId) + passive + (active?.Amount ?? 0);
     }
 
-    public IReadOnlyList<ActiveAttributeModifier> TickExpired(DateTimeOffset now)
-    {
-        var expired = _active.FindAll(m => now >= m.ExpiresAt);
-        if (expired.Count > 0) _active.RemoveAll(m => now >= m.ExpiresAt);
-        return expired;
-    }
+    public IReadOnlyList<ActiveAttributeModifier> TickExpired(DateTimeOffset now) =>
+        effects.RemoveWhere<ActiveAttributeModifier>(Kind, m => now >= m.ExpiresAt);
 }

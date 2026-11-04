@@ -7,7 +7,7 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void CurrentPercent_HoldsForTheGivenDurationThenExpires()
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
         slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 2000, Now);
 
         Assert.Equal(50, slow.CurrentPercent("player:1", Now + TimeSpan.FromMilliseconds(1999)));
@@ -17,7 +17,7 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void Apply_FallsBackToTheDefaultDurationWhenNoneIsGiven()
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
         slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 0, Now);
 
         Assert.Equal(50, slow.CurrentPercent("player:1", Now + SlowEffectService.DefaultDuration - TimeSpan.FromMilliseconds(1)));
@@ -27,7 +27,7 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void Apply_ReplacesRatherThanStackingASecondSlowOnTheSameTarget()
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
         slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 5000, Now);
         slow.Apply("player:1", spellId: 42, percent: 30, durationMs: 1000, Now + TimeSpan.FromSeconds(1));
 
@@ -37,7 +37,7 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void CurrentPercent_IsZeroWithNothingActive()
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
 
         Assert.Equal(0, slow.CurrentPercent("player:1", Now));
     }
@@ -45,7 +45,7 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void Clear_DropsTheSlowWithNoFurtherEffect()
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
         slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 5000, Now);
 
         slow.Clear("player:1");
@@ -56,7 +56,7 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void TickExpired_ReturnsAndRemovesOnlyWhatHasActuallyExpired()
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
         slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 1000, Now);
         slow.Apply("player:2", spellId: 41, percent: 50, durationMs: 5000, Now);
 
@@ -75,7 +75,7 @@ public sealed class SlowEffectServiceTests
     [InlineData(-10, 0)]
     public void CurrentPercent_ClampsToTheValidRange(int applied, int expected)
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
         slow.Apply("player:1", spellId: 41, percent: applied, durationMs: 5000, Now);
 
         Assert.Equal(expected, slow.CurrentPercent("player:1", Now));
@@ -84,7 +84,7 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void ClearWhere_EndsASlowByItsCasterAndReportsIt()
     {
-        var slow = new SlowEffectService();
+        var slow = new SlowEffectService(new UnitEffects());
         slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 2000, Now, casterId: "player:2");
 
         var ended = Assert.Single(slow.ClearWhere(e => e.CasterId == "player:2"));

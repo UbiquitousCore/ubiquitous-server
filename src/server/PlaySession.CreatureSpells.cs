@@ -15,7 +15,7 @@ public sealed partial class PlaySession
     private const double CreatureAreaAroundTarget = 6.0;
 
     private readonly Dictionary<string, PendingCreatureCast> _creatureCasts = new(StringComparer.Ordinal);
-    private readonly PeriodicTriggerService _creaturePulses = new();
+    private readonly PeriodicTriggerService _creaturePulses;
     private readonly Dictionary<string, DateTimeOffset> _summonCrumblesAt = new(StringComparer.Ordinal);
     private readonly List<(uint Entry, DomainPosition At)> _deathSplits = [];
 

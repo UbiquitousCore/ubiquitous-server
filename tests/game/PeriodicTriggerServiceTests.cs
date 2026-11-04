@@ -7,7 +7,7 @@ public sealed class PeriodicTriggerServiceTests
     [Fact]
     public void Tick_ReportsNothingBeforeTheFirstIntervalElapses()
     {
-        var triggers = new PeriodicTriggerService();
+        var triggers = new PeriodicTriggerService(new UnitEffects(), EffectKind.PeriodicTrigger);
         triggers.Apply("Creature:1", spellId: 3736, triggerSpellId: 2679, chancePercent: 100, Now);
 
         Assert.Empty(triggers.Tick(Now + TimeSpan.FromSeconds(1)));
@@ -16,7 +16,7 @@ public sealed class PeriodicTriggerServiceTests
     [Fact]
     public void Tick_AppliesEveryTickThenExpiresOnTheLastOne()
     {
-        var triggers = new PeriodicTriggerService();
+        var triggers = new PeriodicTriggerService(new UnitEffects(), EffectKind.PeriodicTrigger);
         triggers.Apply("Creature:1", spellId: 3736, triggerSpellId: 2679, chancePercent: 100, Now);
         var at = Now;
 
@@ -40,7 +40,7 @@ public sealed class PeriodicTriggerServiceTests
     [Fact]
     public void Apply_RefreshesRatherThanStackingTheSameSpellOnTheSameTarget()
     {
-        var triggers = new PeriodicTriggerService();
+        var triggers = new PeriodicTriggerService(new UnitEffects(), EffectKind.PeriodicTrigger);
         triggers.Apply("Creature:1", spellId: 3736, triggerSpellId: 2679, chancePercent: 100, Now);
         triggers.Apply("Creature:1", spellId: 3736, triggerSpellId: 2679, chancePercent: 100, Now + AuraService.TickInterval);
 
@@ -51,7 +51,7 @@ public sealed class PeriodicTriggerServiceTests
     [Fact]
     public void Clear_DropsEveryPeriodicTriggerOnATargetWithNoFurtherTicks()
     {
-        var triggers = new PeriodicTriggerService();
+        var triggers = new PeriodicTriggerService(new UnitEffects(), EffectKind.PeriodicTrigger);
         triggers.Apply("Creature:1", spellId: 3736, triggerSpellId: 2679, chancePercent: 100, Now);
         triggers.Apply("Creature:2", spellId: 3736, triggerSpellId: 2679, chancePercent: 100, Now);
 
@@ -65,7 +65,7 @@ public sealed class PeriodicTriggerServiceTests
     [Fact]
     public void ASpellWithNoDuration_KeepsPulsingUntilItIsEnded()
     {
-        var triggers = new PeriodicTriggerService();
+        var triggers = new PeriodicTriggerService(new UnitEffects(), EffectKind.PeriodicTrigger);
         triggers.Apply("Creature:1", spellId: 2651, triggerSpellId: 2679, chancePercent: 100, Now,
             PeriodicTriggerService.TicksFor(durationMs: 0));
         var at = Now;
@@ -90,7 +90,7 @@ public sealed class PeriodicTriggerServiceTests
     [Fact]
     public void Tick_ReportsTheOriginalSpellIdSeparatelyFromTheTriggeredOne()
     {
-        var triggers = new PeriodicTriggerService();
+        var triggers = new PeriodicTriggerService(new UnitEffects(), EffectKind.PeriodicTrigger);
         triggers.Apply("Creature:1", spellId: 3736, triggerSpellId: 2679, chancePercent: 100, Now);
 
         var tick = Assert.Single(triggers.Tick(Now + AuraService.TickInterval));

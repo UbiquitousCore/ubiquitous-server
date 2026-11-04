@@ -7,7 +7,7 @@ public sealed class ControlEffectServiceTests
     [Fact]
     public void IsControlled_HoldsForTheGivenDurationThenExpires()
     {
-        var control = new ControlEffectService();
+        var control = new ControlEffectService(new UnitEffects(), EffectKind.Control);
         control.Apply("Creature:1", spellId: 61, durationMs: 2000, Now);
 
         Assert.True(control.IsControlled("Creature:1", Now + TimeSpan.FromMilliseconds(1999)));
@@ -17,7 +17,7 @@ public sealed class ControlEffectServiceTests
     [Fact]
     public void Apply_FallsBackToTheDefaultDurationWhenNoneIsGiven()
     {
-        var control = new ControlEffectService();
+        var control = new ControlEffectService(new UnitEffects(), EffectKind.Control);
         control.Apply("Creature:1", spellId: 61, durationMs: 0, Now);
 
         Assert.True(control.IsControlled("Creature:1", Now + ControlEffectService.DefaultDuration - TimeSpan.FromMilliseconds(1)));
@@ -27,7 +27,7 @@ public sealed class ControlEffectServiceTests
     [Fact]
     public void Apply_ReplacesRatherThanStackingASecondLockOnTheSameTarget()
     {
-        var control = new ControlEffectService();
+        var control = new ControlEffectService(new UnitEffects(), EffectKind.Control);
         control.Apply("Creature:1", spellId: 61, durationMs: 5000, Now);
         control.Apply("Creature:1", spellId: 62, durationMs: 1000, Now + TimeSpan.FromSeconds(1));
 
@@ -37,7 +37,7 @@ public sealed class ControlEffectServiceTests
     [Fact]
     public void Clear_DropsTheLockWithNoFurtherEffect()
     {
-        var control = new ControlEffectService();
+        var control = new ControlEffectService(new UnitEffects(), EffectKind.Control);
         control.Apply("Creature:1", spellId: 61, durationMs: 5000, Now);
 
         control.Clear("Creature:1");
@@ -48,7 +48,7 @@ public sealed class ControlEffectServiceTests
     [Fact]
     public void TickExpired_ReturnsAndRemovesOnlyWhatHasActuallyExpired()
     {
-        var control = new ControlEffectService();
+        var control = new ControlEffectService(new UnitEffects(), EffectKind.Control);
         control.Apply("Creature:1", spellId: 61, durationMs: 1000, Now);
         control.Apply("Creature:2", spellId: 61, durationMs: 5000, Now);
 

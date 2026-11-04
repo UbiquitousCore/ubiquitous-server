@@ -7,7 +7,7 @@ public sealed class StealthEffectServiceTests
     [Fact]
     public void IsStealthed_HoldsForSneaksFourteenSecondsThenExpires()
     {
-        var stealth = new StealthEffectService();
+        var stealth = new StealthEffectService(new UnitEffects());
         stealth.Apply("player:1", spellId: 5813, durationMs: 14000, Now);
 
         Assert.True(stealth.IsStealthed("player:1", Now + TimeSpan.FromMilliseconds(13999)));
@@ -17,7 +17,7 @@ public sealed class StealthEffectServiceTests
     [Fact]
     public void Apply_WithNoDurationLastsUntilSomethingEndsIt()
     {
-        var stealth = new StealthEffectService();
+        var stealth = new StealthEffectService(new UnitEffects());
         stealth.Apply("player:1", spellId: 5813, durationMs: 0, Now);
 
         Assert.True(stealth.IsStealthed("player:1", Now + TimeSpan.FromDays(1)));
@@ -26,7 +26,7 @@ public sealed class StealthEffectServiceTests
     [Fact]
     public void Apply_ReplacesRatherThanStackingASecondStealthOnTheSameUnit()
     {
-        var stealth = new StealthEffectService();
+        var stealth = new StealthEffectService(new UnitEffects());
         stealth.Apply("player:1", spellId: 5813, durationMs: 14000, Now);
         stealth.Apply("player:1", spellId: 5824, durationMs: 1000, Now + TimeSpan.FromSeconds(1));
 
@@ -36,13 +36,13 @@ public sealed class StealthEffectServiceTests
     [Fact]
     public void IsStealthed_IsFalseWithNothingActive()
     {
-        Assert.False(new StealthEffectService().IsStealthed("player:1", Now));
+        Assert.False(new StealthEffectService(new UnitEffects()).IsStealthed("player:1", Now));
     }
 
     [Fact]
     public void Clear_DropsTheStateWithNoFurtherEffect()
     {
-        var stealth = new StealthEffectService();
+        var stealth = new StealthEffectService(new UnitEffects());
         stealth.Apply("player:1", spellId: 5813, durationMs: 14000, Now);
 
         stealth.Clear("player:1");
@@ -53,7 +53,7 @@ public sealed class StealthEffectServiceTests
     [Fact]
     public void TickExpired_ReturnsAndRemovesOnlyWhatHasActuallyExpired()
     {
-        var stealth = new StealthEffectService();
+        var stealth = new StealthEffectService(new UnitEffects());
         stealth.Apply("player:1", spellId: 5813, durationMs: 1000, Now);
         stealth.Apply("player:2", spellId: 5813, durationMs: 14000, Now);
 

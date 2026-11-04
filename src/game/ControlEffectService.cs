@@ -1,42 +1,28 @@
 namespace Ubiquitous.Game;
 
-public sealed record ActiveControlEffect(string TargetId, uint SpellId, DateTimeOffset ExpiresAt, string? CasterId = null);
+public sealed record ActiveControlEffect(string TargetId, uint SpellId, DateTimeOffset ExpiresAt, string? CasterId = null)
+    : UnitEffect(TargetId, SpellId, CasterId);
 
-public sealed class ControlEffectService
+public sealed class ControlEffectService(UnitEffects effects, EffectKind kind)
 {
     public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
 
-    private readonly List<ActiveControlEffect> _active = new();
-
     public void Apply(string targetId, uint spellId, int durationMs, DateTimeOffset now, string? casterId = null)
     {
-        _active.RemoveAll(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal));
+        effects.RemoveOn<ActiveControlEffect>(kind, targetId);
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        _active.Add(new ActiveControlEffect(targetId, spellId, now + duration, casterId));
+        effects.Add(new ActiveControlEffect(targetId, spellId, now + duration, casterId) { Kind = kind });
     }
 
-    public IReadOnlyList<uint> Clear(string targetId)
-    {
-        var removed = _active.Where(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal))
-            .Select(e => e.SpellId).ToArray();
-        _active.RemoveAll(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal));
-        return removed;
-    }
+    public IReadOnlyList<uint> Clear(string targetId) =>
+        [.. effects.RemoveOn<ActiveControlEffect>(kind, targetId).Select(e => e.SpellId)];
 
-    public IReadOnlyList<ActiveControlEffect> ClearWhere(Predicate<ActiveControlEffect> match)
-    {
-        var removed = _active.FindAll(match);
-        if (removed.Count > 0) _active.RemoveAll(match);
-        return removed;
-    }
+    public IReadOnlyList<ActiveControlEffect> ClearWhere(Predicate<ActiveControlEffect> match) =>
+        effects.RemoveWhere(kind, match);
 
     public bool IsControlled(string targetId, DateTimeOffset now) =>
-        _active.Exists(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal) && now < e.ExpiresAt);
+        effects.Exists<ActiveControlEffect>(kind, e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal) && now < e.ExpiresAt);
 
-    public IReadOnlyList<ActiveControlEffect> TickExpired(DateTimeOffset now)
-    {
-        var expired = _active.FindAll(e => now >= e.ExpiresAt);
-        if (expired.Count > 0) _active.RemoveAll(e => now >= e.ExpiresAt);
-        return expired;
-    }
+    public IReadOnlyList<ActiveControlEffect> TickExpired(DateTimeOffset now) =>
+        effects.RemoveWhere<ActiveControlEffect>(kind, e => now >= e.ExpiresAt);
 }
