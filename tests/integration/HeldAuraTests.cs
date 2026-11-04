@@ -12,6 +12,9 @@ public sealed class HeldAuraTests
     private const uint Slow = 7401;
     private const uint Shield = 7402;
     private const uint Hide = 7403;
+    private const uint Haste = 7404;
+    private const uint Might = 7405;
+    private const uint Pony = 7406;
     private const int SlowMs = 10_000;
     private const int ShieldMs = 300_000;
     private const int HideMs = 60_000;
@@ -26,8 +29,14 @@ public sealed class HeldAuraTests
             [Shield] = new(Shield, "spell-7402", 0, 0, 0f, PowerCost: 0, DurationMs: ShieldMs,
                 AuraAbsorbAmount: 15, AuraAbsorbPercent: 100),
             [Hide] = new(Hide, "spell-7403", 0, 0, 0f, PowerCost: 0, AuraStealth: true, DurationMs: HideMs),
+            [Haste] = new(Haste, "spell-7404", 0, 0, 0f, PowerCost: 0, AuraSpeedupPercent: 30, DurationMs: ShieldMs,
+                EffectTarget: SpellEffectTargets.Self),
+            [Might] = new(Might, "spell-7405", 0, 0, 0f, PowerCost: 0, AuraAttributeId: AttributeIds.Strength,
+                AuraAttributeAmount: 7, DurationMs: ShieldMs, EffectTarget: SpellEffectTargets.Self),
+            [Pony] = new(Pony, "spell-7406", 0, 0, 0f, PowerCost: 0, EffectTarget: SpellEffectTargets.Self,
+                AuraMountId: 3060, AuraMountKeepSeatPercent: 100, AuraMountSpeedupPercent: 20),
         },
-        StartingSpells = [.. GameContent.Development.StartingSpells, Slow, Shield, Hide],
+        StartingSpells = [.. GameContent.Development.StartingSpells, Slow, Shield, Hide, Haste, Might, Pony],
     };
 
     [Fact]
@@ -122,6 +131,56 @@ public sealed class HeldAuraTests
 
         Assert.Empty(maps.For(13).Auras.On(ayla.Id, DateTimeOffset.UtcNow));
         Assert.Single(PayloadsOf(borin.Inbox, WebMessageTypes.EntityRemoved), p => p.GetProperty("networkId").GetString() == ayla.Id);
+    }
+
+    [Fact]
+    public async Task ACrossingTakesAlongEveryKindOfEffectTheHeroWears()
+    {
+        var (hub, maps) = (new PlaySessionHub(), new SharedMapRegistry());
+        var ayla = await JoinAsync(hub, maps, "h6", "Ayla");
+        foreach (var spell in new[] { Shield, Haste, Might }) await CastAsync(hub, ayla, spell, ayla.Id);
+        Assert.Empty(PayloadsOf(ayla.Inbox, WebMessageTypes.SpellFailed));
+        ayla.Inbox.Clear();
+
+        await SendAsync(hub, ayla, WebMessageTypes.BusConfirm, new { from = 1, to = 3 });
+
+        var entered = Assert.Single(PayloadsOf(ayla.Inbox, WebMessageTypes.WorldEntered));
+        var worn = entered.GetProperty("auras").EnumerateArray().Select(aura => aura.GetProperty("spellId").GetUInt32());
+        Assert.Equal([Shield, Haste, Might], worn.Order());
+        Assert.Empty(maps.For(13).Auras.On(ayla.Id, DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task SomeoneArrivingBesideARider_IsToldTheMountIsWorn_UntilItIsTakenOff()
+    {
+        var (hub, maps) = (new PlaySessionHub(), new SharedMapRegistry());
+        var ayla = await JoinAsync(hub, maps, "h7", "Ayla");
+        await CastAsync(hub, ayla, Pony, ayla.Id);
+        Assert.Empty(PayloadsOf(ayla.Inbox, WebMessageTypes.SpellFailed));
+
+        var borin = await JoinAsync(hub, maps, "h7", "Borin");
+        var pony = Assert.Single(Assert.Single(Spawns(borin.Inbox, ayla.Id)).GetProperty("auras").EnumerateArray());
+        Assert.Equal(Pony, pony.GetProperty("spellId").GetUInt32());
+        Assert.Equal(0, pony.GetProperty("maxDuration").GetInt32());
+
+        await SendAsync(hub, ayla, WebMessageTypes.MountDismount, new { });
+        Assert.Empty(maps.For(13).Auras.On(ayla.Id, DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task ACreatureTheCasterWalkedAwayFrom_IsNoLongerShownWithTheirSlow()
+    {
+        var (hub, maps) = (new PlaySessionHub(), new SharedMapRegistry());
+        var ayla = await JoinAsync(hub, maps, "h8", "Ayla");
+        var borin = await JoinAsync(hub, maps, "h8", "Borin", x: 100);
+        await CastAsync(hub, ayla, Slow, "Creature:1");
+        Assert.NotEmpty(maps.For(13).Auras.On("Creature:1", DateTimeOffset.UtcNow));
+
+        for (var x = 13; x <= 200; x += 12) await MoveAsync(hub, ayla, x);
+        Assert.Empty(maps.For(13).Auras.On("Creature:1", DateTimeOffset.UtcNow));
+
+        for (var x = 85; x >= 1; x -= 12) await MoveAsync(hub, borin, x);
+        Assert.False(Assert.Single(Spawns(borin.Inbox, "Creature:1")).TryGetProperty("auras", out _));
     }
 
     private static async Task<Side> JoinAsync(PlaySessionHub hub, SharedMapRegistry maps, string tag, string name, float x = 1)
