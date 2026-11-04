@@ -1,8 +1,9 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActivePeriodicTrigger(
-    string TargetId, uint SpellId, uint TriggerSpellId, int ChancePercent, int TicksRemaining, DateTimeOffset NextTickAt)
-    : UnitEffect(TargetId, SpellId, null)
+    string TargetId, uint SpellId, uint TriggerSpellId, int ChancePercent, int TicksRemaining, DateTimeOffset NextTickAt,
+    string? CasterId = null)
+    : UnitEffect(TargetId, SpellId, CasterId)
 {
     public override bool Harmful => true;
 }
@@ -13,11 +14,16 @@ public sealed class PeriodicTriggerService(UnitEffects effects, EffectKind kind)
 {
     public void Apply(
         string targetId, uint spellId, uint triggerSpellId, int chancePercent, DateTimeOffset now,
-        int ticks = AuraService.TickCount)
+        int ticks = AuraService.TickCount, string? casterId = null)
     {
         effects.RemoveWhere<ActivePeriodicTrigger>(kind, a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId);
         effects.Add(new ActivePeriodicTrigger(
-            targetId, spellId, triggerSpellId, chancePercent, ticks, now + AuraService.TickInterval) { Kind = kind });
+            targetId, spellId, triggerSpellId, chancePercent, ticks, now + AuraService.TickInterval, casterId)
+        {
+            Kind = kind,
+            AppliedAt = now,
+            Lasts = ticks == int.MaxValue ? null : AuraService.TickInterval * ticks,
+        });
     }
 
     // A spell with no duration pulses until something ends it.

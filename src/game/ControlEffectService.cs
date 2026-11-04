@@ -14,7 +14,7 @@ public sealed class ControlEffectService(UnitEffects effects, EffectKind kind)
     {
         effects.RemoveOn<ActiveControlEffect>(kind, targetId);
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        effects.Add(new ActiveControlEffect(targetId, spellId, now + duration, casterId) { Kind = kind });
+        effects.Add(new ActiveControlEffect(targetId, spellId, now + duration, casterId) { Kind = kind, AppliedAt = now, Lasts = duration });
     }
 
     public bool IsControlled(string targetId, DateTimeOffset now) =>

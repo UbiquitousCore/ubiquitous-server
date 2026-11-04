@@ -16,19 +16,42 @@ public enum EffectKind
     PeriodicTrigger,
     RangeAttackSpeed,
     CreaturePulse,
+    Mount,
+    CreatureAura,
 }
 
 public abstract record UnitEffect(string TargetId, uint SpellId, string? CasterId)
 {
     public EffectKind Kind { get; init; }
 
+    public DateTimeOffset AppliedAt { get; init; }
+
+    // How long the client was told it lasts; none for what stays until taken off.
+    public TimeSpan? Lasts { get; init; }
+
     public abstract bool Harmful { get; }
+
+    public HeldAura Held(DateTimeOffset now)
+    {
+        var lasts = Lasts is { } span ? (int)span.TotalMilliseconds : 0;
+        var left = lasts <= 0 ? 0 : (int)Math.Max(0, Math.Min(lasts, Math.Ceiling(lasts - (now - AppliedAt).TotalMilliseconds)));
+        return new HeldAura(TargetId, CasterId ?? TargetId, SpellId, left, lasts, Harmful);
+    }
+}
+
+// Shown among a unit's auras while something else holds what it does: the saddle, or a creature's script.
+public sealed record ShownAura(string TargetId, uint SpellId, string? CasterId) : UnitEffect(TargetId, SpellId, CasterId)
+{
+    public override bool Harmful => false;
 }
 
 public static class EffectKinds
 {
-    // A creature's own pulse is its script's to end.
-    public static bool EndsWithUnit(EffectKind kind) => kind is not EffectKind.CreaturePulse;
+    // A mount comes off when the rider gets down, and a creature's own aura is its script's to end.
+    public static bool EndsWithUnit(EffectKind kind) =>
+        kind is not (EffectKind.CreaturePulse or EffectKind.Mount or EffectKind.CreatureAura);
+
+    public static bool Shown(EffectKind kind) => kind is not EffectKind.CreaturePulse;
 
     public static bool Cleansable(EffectKind kind) => kind is EffectKind.Periodic or EffectKind.Control
         or EffectKind.Silence or EffectKind.Slow or EffectKind.Speedup or EffectKind.MeleeAttackSpeed
@@ -41,7 +64,8 @@ public static class EffectKinds
 
 // Everything on every unit a session tracks, in the order it was put there. Each kind's rules live in
 // their own service; this is the one place their state is kept, so a rule about a whole unit is one call.
-public sealed class UnitEffects
+// Whoever watches is told each effect put on or taken off, but not a tick or a soak.
+public sealed class UnitEffects(Action<UnitEffect, bool>? changed = null)
 {
     // Another session asks whether this one's hero is hidden.
     private readonly Lock _gate = new();
@@ -67,6 +91,15 @@ public sealed class UnitEffects
     public void Add(UnitEffect effect)
     {
         lock (_gate) _held.Add(effect);
+        changed?.Invoke(effect, true);
+    }
+
+    // Put on again in the same place: what watches sees the old one end and the new one begin.
+    public void Reapply(UnitEffect held, UnitEffect again)
+    {
+        Replace(held, again);
+        changed?.Invoke(held, false);
+        changed?.Invoke(again, true);
     }
 
     public void Replace(UnitEffect held, UnitEffect updated)
@@ -85,36 +118,51 @@ public sealed class UnitEffects
             var at = _held.FindIndex(effect => ReferenceEquals(effect, held));
             if (at < 0) return false;
             _held.RemoveAt(at);
-            return true;
         }
+        changed?.Invoke(held, false);
+        return true;
     }
 
     public IReadOnlyList<T> RemoveWhere<T>(EffectKind kind, Predicate<T> match) where T : UnitEffect
     {
+        List<UnitEffect> removed;
         lock (_gate)
         {
             bool Matches(UnitEffect effect) => effect.Kind == kind && match((T)effect);
-            var removed = _held.FindAll(Matches);
+            removed = _held.FindAll(Matches);
             if (removed.Count > 0) _held.RemoveAll(Matches);
-            return [.. removed.Cast<T>()];
         }
+        Ended(removed);
+        return [.. removed.Cast<T>()];
     }
 
     public IReadOnlyList<UnitEffect> RemoveWhere(Predicate<UnitEffect> match)
     {
+        List<UnitEffect> removed;
         lock (_gate)
         {
-            var removed = _held.FindAll(match);
+            removed = _held.FindAll(match);
             if (removed.Count > 0) _held.RemoveAll(match);
-            return removed;
         }
+        Ended(removed);
+        return removed;
     }
 
     public IReadOnlyList<UnitEffect> Clear(string unitId) =>
         RemoveWhere(effect => IsOn(effect, unitId) && EffectKinds.EndsWithUnit(effect.Kind));
 
+    // Out of sight: nothing is shown on it any more. A creature's pulse runs on, as its script says.
+    public IReadOnlyList<UnitEffect> Forget(string unitId) =>
+        RemoveWhere(effect => IsOn(effect, unitId) && effect.Kind != EffectKind.CreaturePulse);
+
     public IReadOnlyList<T> RemoveOn<T>(EffectKind kind, string unitId) where T : UnitEffect =>
         RemoveWhere<T>(kind, effect => IsOn(effect, unitId));
+
+    private void Ended(List<UnitEffect> removed)
+    {
+        if (changed is null) return;
+        foreach (var effect in removed) changed(effect, false);
+    }
 
     private static bool IsOn(UnitEffect effect, string unitId) =>
         string.Equals(effect.TargetId, unitId, StringComparison.Ordinal);

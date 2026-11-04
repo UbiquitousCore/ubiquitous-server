@@ -15,6 +15,7 @@ public sealed class HeldAuraTests
     private const uint Haste = 7404;
     private const uint Might = 7405;
     private const uint Pony = 7406;
+    private const uint Snare = 7407;
     private const int SlowMs = 10_000;
     private const int ShieldMs = 300_000;
     private const int HideMs = 60_000;
@@ -35,8 +36,9 @@ public sealed class HeldAuraTests
                 AuraAttributeAmount: 7, DurationMs: ShieldMs, EffectTarget: SpellEffectTargets.Self),
             [Pony] = new(Pony, "spell-7406", 0, 0, 0f, PowerCost: 0, EffectTarget: SpellEffectTargets.Self,
                 AuraMountId: 3060, AuraMountKeepSeatPercent: 100, AuraMountSpeedupPercent: 20),
+            [Snare] = new(Snare, "spell-7407", 0, 0, 30f, PowerCost: 0, AuraSlowPercent: 30, DurationMs: SlowMs),
         },
-        StartingSpells = [.. GameContent.Development.StartingSpells, Slow, Shield, Hide, Haste, Might, Pony],
+        StartingSpells = [.. GameContent.Development.StartingSpells, Slow, Shield, Hide, Haste, Might, Pony, Snare],
     };
 
     [Fact]
@@ -181,6 +183,38 @@ public sealed class HeldAuraTests
 
         for (var x = 85; x >= 1; x -= 12) await MoveAsync(hub, borin, x);
         Assert.False(Assert.Single(Spawns(borin.Inbox, "Creature:1")).TryGetProperty("auras", out _));
+    }
+
+    [Fact]
+    public async Task ASlowReplacedByAnother_IsNoLongerShownToANewcomer()
+    {
+        var (hub, maps) = (new PlaySessionHub(), new SharedMapRegistry());
+        var ayla = await JoinAsync(hub, maps, "h9", "Ayla");
+        var borin = await JoinAsync(hub, maps, "h9", "Borin", x: 100);
+        await CastAsync(hub, ayla, Slow, "Creature:1");
+        await CastAsync(hub, ayla, Snare, "Creature:1");
+        Assert.Empty(PayloadsOf(ayla.Inbox, WebMessageTypes.SpellFailed));
+
+        for (var x = 85; x >= 1; x -= 12) await MoveAsync(hub, borin, x);
+
+        var worn = Assert.Single(Spawns(borin.Inbox, "Creature:1")).GetProperty("auras").EnumerateArray();
+        Assert.Equal([Snare], worn.Select(aura => aura.GetProperty("spellId").GetUInt32()));
+    }
+
+    [Fact]
+    public async Task ACrossingOnHorseback_LeavesTheMountBehind()
+    {
+        var (hub, maps) = (new PlaySessionHub(), new SharedMapRegistry());
+        var ayla = await JoinAsync(hub, maps, "h10", "Ayla");
+        await CastAsync(hub, ayla, Shield, ayla.Id);
+        await CastAsync(hub, ayla, Pony, ayla.Id);
+        Assert.Contains(maps.For(13).Auras.On(ayla.Id, DateTimeOffset.UtcNow), aura => aura.SpellId == Pony);
+        ayla.Inbox.Clear();
+
+        await SendAsync(hub, ayla, WebMessageTypes.BusConfirm, new { from = 1, to = 3 });
+
+        var entered = Assert.Single(PayloadsOf(ayla.Inbox, WebMessageTypes.WorldEntered));
+        Assert.Equal([Shield], entered.GetProperty("auras").EnumerateArray().Select(aura => aura.GetProperty("spellId").GetUInt32()));
     }
 
     private static async Task<Side> JoinAsync(PlaySessionHub hub, SharedMapRegistry maps, string tag, string name, float x = 1)

@@ -282,6 +282,13 @@ public sealed partial class PlaySession
             _combat.ShieldUnit(targetId, effect.AuraAbsorbPercent ?? 100, shield);
 
         var lasts = effect.DurationMs > 0 ? effect.DurationMs : 0;
+        StopShowingCreatureAura(targetId, spellId);
+        _effects.Add(new ShownAura(targetId, spellId, casterId)
+        {
+            Kind = EffectKind.CreatureAura,
+            AppliedAt = now,
+            Lasts = lasts > 0 ? TimeSpan.FromMilliseconds(lasts) : null,
+        });
         responses.Add(Reply(WebMessageTypes.AuraApplied, new AuraAppliedPayload(
             spellId, target, caster, Harmful: 0, MaxDuration: lasts, Remaining: lasts)));
     }
@@ -289,6 +296,7 @@ public sealed partial class PlaySession
     private void EndCreatureAura(string wireId, uint spellId, List<string> responses)
     {
         _creaturePulses.End(wireId, spellId);
+        StopShowingCreatureAura(wireId, spellId);
         if (_content.Spells.TryGetValue(spellId, out var spell) && spell.AuraAbsorbAmount is not null)
             _combat.UnshieldUnit(wireId);
         responses.Add(AuraEnded(wireId, wireId, spellId));
@@ -312,9 +320,15 @@ public sealed partial class PlaySession
                 LandCreatureSpell(wearer, victim, tick.TriggerSpellId, triggered, now, responses);
             }
 
-            if (tick.Expired) responses.Add(AuraEnded(wearer, wearer, tick.SpellId));
+            if (!tick.Expired) continue;
+            StopShowingCreatureAura(wearer, tick.SpellId);
+            responses.Add(AuraEnded(wearer, wearer, tick.SpellId));
         }
     }
+
+    private void StopShowingCreatureAura(string wearerId, uint spellId) =>
+        _effects.RemoveWhere<ShownAura>(EffectKind.CreatureAura,
+            aura => string.Equals(aura.TargetId, wearerId, StringComparison.Ordinal) && aura.SpellId == spellId);
 
     private void CreatureFalls(string fallenId, string killerId, DateTimeOffset now, List<string> responses)
     {

@@ -14,7 +14,8 @@ public sealed class AttributeModifierService(UnitEffects effects)
     public void Apply(string targetId, uint spellId, int attributeId, int amount, bool isPercent, int durationMs, DateTimeOffset now, string? casterId = null)
     {
         effects.RemoveOn<ActiveAttributeModifier>(Kind, targetId);
-        effects.Add(new ActiveAttributeModifier(targetId, spellId, attributeId, amount, isPercent, EffectLength.ExpiresAt(now, durationMs), casterId) { Kind = Kind });
+        effects.Add(new ActiveAttributeModifier(targetId, spellId, attributeId, amount, isPercent, EffectLength.ExpiresAt(now, durationMs), casterId)
+            { Kind = Kind, AppliedAt = now, Lasts = EffectLength.Lasts(durationMs) });
     }
 
     private readonly Dictionary<string, IReadOnlyDictionary<int, int>> _worn =

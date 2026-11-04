@@ -57,6 +57,9 @@ public sealed partial class PlaySession
     private IReadOnlyList<string> ResolveMount(WebNetworkId casterId, uint spellId, SpellDefinition spell, DateTimeOffset now)
     {
         _riding = (spellId, spell);
+        var self = casterId.Text!;
+        _effects.RemoveOn<ShownAura>(EffectKind.Mount, self);
+        _effects.Add(new ShownAura(self, spellId, self) { Kind = EffectKind.Mount, AppliedAt = now });
         MarkUnitValues(PlayerUnitId, new Dictionary<string, int>
         {
             [WireCodes.UnitValue.Mount] = checked((int)spell.AuraMountId!.Value),
@@ -73,10 +76,16 @@ public sealed partial class PlaySession
     private void Dismount(DateTimeOffset now, List<string> responses)
     {
         if (_riding is not { } riding || _character is null) return;
-        _riding = null;
+        LeaveMountBehind();
         MarkUnitValues(PlayerUnitId, new Dictionary<string, int> { [WireCodes.UnitValue.Mount] = 0 }, now);
         var unit = WebNetworkId.FromString(PlayerUnitId);
         responses.Add(Reply(WebMessageTypes.AuraEnded, new AuraEndedPayload(riding.SpellId, unit, unit)));
+    }
+
+    private void LeaveMountBehind()
+    {
+        _riding = null;
+        if (_character is not null) _effects.RemoveOn<ShownAura>(EffectKind.Mount, PlayerUnitId);
     }
 
     private void ShakeRider(DateTimeOffset now, List<string> responses)

@@ -16,7 +16,7 @@ public sealed class ChillEffectService(UnitEffects effects)
     {
         effects.RemoveOn<ActiveChillEffect>(Kind, targetId);
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        effects.Add(new ActiveChillEffect(targetId, spellId, now + duration, casterId) { Kind = Kind });
+        effects.Add(new ActiveChillEffect(targetId, spellId, now + duration, casterId) { Kind = Kind, AppliedAt = now, Lasts = duration });
     }
 
     public bool IsChilled(string targetId, DateTimeOffset now) =>

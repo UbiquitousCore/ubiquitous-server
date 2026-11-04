@@ -16,7 +16,7 @@ public sealed class SlowEffectService(UnitEffects effects)
     {
         effects.RemoveOn<ActiveSlowEffect>(Kind, targetId);
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        effects.Add(new ActiveSlowEffect(targetId, spellId, percent, now + duration, casterId) { Kind = Kind });
+        effects.Add(new ActiveSlowEffect(targetId, spellId, percent, now + duration, casterId) { Kind = Kind, AppliedAt = now, Lasts = duration });
     }
 
     public int CurrentPercent(string targetId, DateTimeOffset now)

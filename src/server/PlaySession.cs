@@ -37,7 +37,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly VendorService _vendors = new();
     private readonly CombatService _combat;
     private readonly SpellService _spells;
-    private readonly UnitEffects _effects = new();
+    private readonly UnitEffects _effects;
     private readonly AuraService _auras;
     private readonly PeriodicTriggerService _periodicTrigger;
     private readonly ControlEffectService _control;
@@ -220,7 +220,8 @@ public sealed partial class PlaySession : ISessionPlayer
         options ??= new PlaySessionOptions();
         _lootService = new LootService(
             qualityOf: entry => content.Game.Items.TryGetValue(entry, out var item) ? (int)(item.Quality ?? 0) : 0);
-        _outbox = new SessionOutbox(ReportToAuraBoard);
+        _outbox = new SessionOutbox(ReportDeathToAuraBoard);
+        _effects = new UnitEffects(ReportToAuraBoard);
         _auras = new AuraService(_effects);
         _periodicTrigger = new PeriodicTriggerService(_effects, EffectKind.PeriodicTrigger);
         _creaturePulses = new PeriodicTriggerService(_effects, EffectKind.CreaturePulse);
@@ -1294,7 +1295,7 @@ public sealed partial class PlaySession : ISessionPlayer
         SharedMapState? instanceShared = null, DungeonMode instanceMode = DungeonMode.Normal)
     {
         Arrivals++;
-        _riding = null;
+        LeaveMountBehind();
         _fall.Cancel();
         if (instanceKey is null && _character is not null && IsDungeonMap(mapId))
         {
@@ -1314,10 +1315,6 @@ public sealed partial class PlaySession : ISessionPlayer
             responses.Add(Reply(WebMessageTypes.AttackExitCombat,
                 new AttackExitCombatPayload(WebNetworkId.FromString(PlayerUnitId))));
         RemoveView(responses);
-        // What the hero wears goes with them; only the old map's board forgets it.
-        IReadOnlyList<HeldAura> carried = _character is not null && _shared is not null
-            ? _shared.Auras.On(PlayerUnitId, Now)
-            : [];
         ResetVisibility();
         _awaitingArrivalMove = _world is not null;
         _arrivedAt = Now;
@@ -1341,11 +1338,11 @@ public sealed partial class PlaySession : ISessionPlayer
                 || _walkableGround.CanStepStraight(sharedMapId, from, to));
         _combat.UseHostilityLog(_shared);
         _movementCursor = _shared.MovementCursor;
-        if (instanceState is null) CarryAuras(carried);
+        if (instanceState is null) CarryAuras();
         var wire = new Position(position.X, position.Y, position.Z);
         responses.Add(Reply(WebMessageTypes.WorldLoading, new WorldLocation(mapId, wire)));
         responses.Add(Reply(WebMessageTypes.WorldEntered, new WorldEnteredPayload(mapId, wire,
-            WebNetworkId.FromString(PlayerUnitId), HeldAuraPayloads(carried))));
+            WebNetworkId.FromString(PlayerUnitId), HeldAuraPayloads(WornByHero()))));
         responses.Add(AmbientReply(mapId));
 
         if (_instanceWorld is not null)
@@ -1357,7 +1354,7 @@ public sealed partial class PlaySession : ISessionPlayer
             _shared = instanceShared ?? SharedForInstance(mapId);
             _combat.UseHostilityLog(_shared);
             _movementCursor = _shared.MovementCursor;
-            CarryAuras(carried);
+            CarryAuras();
             var entering = Now;
             foreach (var entity in population.Creatures)
             {

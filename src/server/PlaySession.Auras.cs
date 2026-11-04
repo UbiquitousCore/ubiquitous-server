@@ -180,7 +180,7 @@ public sealed partial class PlaySession
         WebNetworkId casterId, string targetId, uint spellId, SpellDefinition spell, DateTimeOffset now)
     {
         int percent = spell.AuraRangeAttackSpeedPercent!.Value;
-        _rangeAttackSpeed.Apply(targetId, spellId, percent, spell.DurationMs, now);
+        _rangeAttackSpeed.Apply(targetId, spellId, percent, spell.DurationMs, now, casterId.Text);
 
         var target = WebNetworkId.FromString(targetId);
         int durationMs = EffectLength.ShownMs(spell.DurationMs);
@@ -253,24 +253,27 @@ public sealed partial class PlaySession
         responses.Add(Reply(WebMessageTypes.AuraApplied, new AuraAppliedPayload(spellId, WebNetworkId.FromString(targetId), casterId, Harmful: 1, MaxDuration: durationMs, Remaining: durationMs)));
     }
 
-    private void ReportToAuraBoard(object payload)
+    // Deaths are decided in many places; the board hears of them from the message that says so.
+    private void ReportDeathToAuraBoard(object payload)
     {
-        if (_shared is null) return;
-        switch (payload)
-        {
-            case AuraAppliedPayload applied:
-                _shared.Auras.Applied(this, new HeldAura(IdText(applied.UnitId), IdText(applied.CasterId), applied.SpellId,
-                    applied.Remaining, applied.MaxDuration, applied.Harmful != 0),
-                    Now);
-                break;
-            case AuraEndedPayload ended:
-                _shared.Auras.Ended(this, IdText(ended.UnitId), ended.SpellId);
-                break;
-            case UnitDiedPayload died:
-                _shared.Auras.Died(IdText(died.NetworkId));
-                break;
-        }
+        if (payload is UnitDiedPayload died) _shared?.Auras.Died(IdText(died.NetworkId));
     }
+
+    private void ReportToAuraBoard(UnitEffect effect, bool applied)
+    {
+        if (_shared is null || !EffectKinds.Shown(effect.Kind)) return;
+        if (applied) Show(effect);
+        // A spell that both slows and chills is one aura on the board until both are gone.
+        else if (!_effects.On(effect.TargetId).Any(other => other.SpellId == effect.SpellId && EffectKinds.Shown(other.Kind)))
+            _shared.Auras.Ended(this, effect.TargetId, effect.SpellId);
+    }
+
+    private void Show(UnitEffect effect) => _shared?.Auras.Applied(this, effect.Held(effect.AppliedAt), effect.AppliedAt);
+
+    private IReadOnlyList<HeldAura> WornByHero() =>
+        _character is null
+            ? []
+            : [.. _effects.On(PlayerUnitId).Where(effect => EffectKinds.Shown(effect.Kind)).Select(effect => effect.Held(Now))];
 
     private static string IdText(WebNetworkId id) => id.Text ?? id.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
@@ -285,10 +288,10 @@ public sealed partial class PlaySession
                 aura.MaxDurationMs, aura.RemainingMs))];
 
     // Onto the new map's board, so whoever is there sees what the hero brought.
-    private void CarryAuras(IReadOnlyList<HeldAura> carried)
+    private void CarryAuras()
     {
-        if (_shared is null) return;
-        foreach (var aura in carried) _shared.Auras.Applied(this, aura, Now);
+        if (_character is null) return;
+        foreach (var effect in _effects.On(PlayerUnitId).Where(effect => EffectKinds.Shown(effect.Kind))) Show(effect);
     }
 
     public void ForgetReportedAuras() => _shared?.Auras.Forget(this);
@@ -535,7 +538,8 @@ public sealed partial class PlaySession
     {
         var ticks = PeriodicTriggerService.TicksFor(spell.DurationMs);
         _periodicTrigger.Apply(
-            targetId, spellId, spell.AuraPeriodicTriggerSpellId!.Value, spell.AuraPeriodicTriggerChancePercent ?? 0, now, ticks);
+            targetId, spellId, spell.AuraPeriodicTriggerSpellId!.Value, spell.AuraPeriodicTriggerChancePercent ?? 0, now, ticks,
+            casterId.Text);
 
         var target = WebNetworkId.FromString(targetId);
         int durationMs = spell.DurationMs > 0

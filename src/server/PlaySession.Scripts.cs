@@ -87,8 +87,11 @@ public sealed partial class PlaySession
         _holdingStill.Remove(wireId);
         _creaturePulses.Clear(wireId);
         _combat.UnshieldUnit(wireId);
-        foreach (var spellId in ScriptFor(wireId).ClearedOnReset)
-            responses.Add(AuraEnded(wireId, wireId, _copy.Spell(spellId)));
+        foreach (var spellId in ScriptFor(wireId).ClearedOnReset.Select(_copy.Spell))
+        {
+            StopShowingCreatureAura(wireId, spellId);
+            responses.Add(AuraEnded(wireId, wireId, spellId));
+        }
     }
 
     private void TickShouts(DateTimeOffset now, List<string> responses)
