@@ -19,9 +19,9 @@ public sealed class AvatarEffectService(UnitEffects effects)
     {
         var held = Worn(targetId);
         uint? replaced = held is not null && held.SpellId != spellId ? held.SpellId : null;
-        var shape = new ActiveAvatar(
-            targetId, spellId, durationMs > 0 ? now + TimeSpan.FromMilliseconds(durationMs) : null) { Kind = Kind };
-        if (held is not null) effects.Replace(held, shape);
+        TimeSpan? lasts = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : null;
+        var shape = new ActiveAvatar(targetId, spellId, now + lasts) { Kind = Kind, AppliedAt = now, Lasts = lasts };
+        if (held is not null) effects.Reapply(held, shape);
         else effects.Add(shape);
         return replaced;
     }

@@ -8,6 +8,8 @@ public static class EffectLength
     public static DateTimeOffset ExpiresAt(DateTimeOffset now, int durationMs) =>
         durationMs > 0 ? now + TimeSpan.FromMilliseconds(durationMs) : DateTimeOffset.MaxValue;
 
+    public static TimeSpan? Lasts(int durationMs) => durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : null;
+
     // What `aura.applied` says it lasts; 0 is a client's sign for one with no end of its own.
     public static int ShownMs(int durationMs) => Math.Max(0, durationMs);
 }

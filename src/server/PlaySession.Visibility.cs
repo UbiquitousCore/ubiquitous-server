@@ -241,8 +241,7 @@ public sealed partial class PlaySession
         _chase.Clear(wireId);
         _loot.Remove(wireId);
         _despawnDue.Remove(wireId);
-        ClearEffectsOn(wireId);
-        _shared?.Auras.Forget(this, wireId);
+        _effects.Forget(wireId);
         _auraStateSent.Remove(wireId);
     }
 
