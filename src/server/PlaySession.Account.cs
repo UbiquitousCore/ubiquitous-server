@@ -308,6 +308,7 @@ public sealed partial class PlaySession
         _xp = LevelingService.HeldXp(character.Level, character.Xp);
         _exhaustion = character.Exhaustion ?? 0;
         _exhaustionDay = character.ExhaustionDay;
+        if (character.LegendDungeons == true) _instances.RecallMode($"player:{character.Guid}", DungeonMode.Legend);
         _belongings.Currency = character.Currency ?? _content.StartingCurrency;
         if (_account is not null && _developmentUserIds.Contains(_account.UserId))
             _belongings.Currency = Math.Max(_belongings.Currency, DevelopmentFixtures.Purse);

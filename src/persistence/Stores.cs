@@ -37,7 +37,8 @@ public sealed record CharacterRecord(
     IReadOnlyList<uint>? LearnedSpells = null,
     IReadOnlyList<PersistedActionButton>? ActionBar = null,
     int? Exhaustion = null,
-    int? ExhaustionDay = null);
+    int? ExhaustionDay = null,
+    bool? LegendDungeons = null);
 
 public sealed record PersistedActionButton(int Slot, uint Id, int Type);
 

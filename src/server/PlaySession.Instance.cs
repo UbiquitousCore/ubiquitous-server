@@ -59,7 +59,9 @@ public sealed partial class PlaySession
             return [Error(WireCodes.ProtocolError.DungeonModeRefused, "Only the team leader can change the dungeon mode.")];
 
         var ending = _instances.KeysOwnedBy(PlayerUnitId);
-        return _instances.ChooseMode(PlayerUnitId, mode) switch
+        var change = _instances.ChooseMode(PlayerUnitId, mode);
+        if (change == DungeonModeChange.Changed) SaveSoon();
+        return change switch
         {
             DungeonModeChange.Refused =>
                 [Error(WireCodes.ProtocolError.DungeonModeRefused, "You cannot change the dungeon mode while anyone is still inside a dungeon.")],

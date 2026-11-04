@@ -375,6 +375,8 @@ comes from is in `PROVENANCE.md`.
   nothing. It is sent as the `exhaustion` player value, and the limit as
   `maxExhaustion` on entering the world; it is saved with the character, and
   empties at midnight UTC.
+- A leader's choice of Legend is saved with their character (Postgres
+  migration 0010) and put back as they sign in, so a server restart keeps it.
 - The mode in force is sent as `dungeon.modeChosen` with `changed: false` on
   entering the world (the leader's choice) and on entering a copy (the copy's
   own), so the client shows it without announcing a change.

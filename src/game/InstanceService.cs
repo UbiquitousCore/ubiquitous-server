@@ -100,6 +100,12 @@ public sealed class InstanceService
             return _instances.TryGetValue($"{mapId}:{ownerId}", out var open) ? open.Mode : ChosenModeLocked(ownerId);
     }
 
+    // A choice saved with the character, put back as they sign in; one made since stands.
+    public void RecallMode(string ownerId, DungeonMode mode)
+    {
+        lock (_gate) _chosenModes.TryAdd(ownerId, mode);
+    }
+
     public DungeonMode ChosenMode(string ownerId)
     {
         lock (_gate) return ChosenModeLocked(ownerId);

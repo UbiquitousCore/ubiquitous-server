@@ -264,6 +264,103 @@ public sealed partial class DungeonTests
     }
 
     [Fact]
+    public async Task AfterARelogAResetAndLegend_TheExecutionerFights_AndTheModeHoldsThroughTheNextRelog()
+    {
+        var legend = LegendContent();
+        var content = legend with
+        {
+            Creatures = new Dictionary<uint, CreatureDefinition>(legend.Creatures)
+            {
+                [2666] = new(2666, "Executioner", 21, 10, MinDamage: 1, MaxDamage: 2, NoticeDistance: 1),
+                [2669] = new(2669, "Executioner", 60, 10, MinDamage: 1, MaxDamage: 2, NoticeDistance: 1,
+                    FactionType: UnitFactionTypes.Hostile),
+            },
+        };
+        var instances = new InstanceService();
+        var characters = new InMemoryCharacterStore([new CharacterRecord(
+            "char-mode14", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, GateApproachX, 2, GateApproachZ, 60, [100, 200])]);
+        var spawns = new[] { new CreatureSpawnDefinition(3114, 14, 2666, -681, InsideFloorY, -2097, 0) };
+        async Task<(PlaySession Session, IReadOnlyList<string> Entered)> SignInAsync()
+        {
+            var session = TestSessions.Create(new DevelopmentAccountStore("mode14", "p"), characters, spawns,
+                content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9, instances: instances);
+            await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.AccountLogin, 0, new LoginRequest("mode14", "p"))));
+            var entered = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+            return (session, entered);
+        }
+        async Task SignOutAsync(PlaySession session)
+        {
+            await session.SaveProgressAsync();
+            session.LeaveWorld();
+        }
+
+        // Into Normal, and the Executioner dies.
+        var (first, _) = await SignInAsync();
+        await MoveAsync(first, 2, GateInsideX, 2, GateApproachZ);
+        await MoveAsync(first, 3, InsideArrivalX, InsideFloorY, -2096);
+        var normalKey = first.CurrentInstanceKey!;
+        await first.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AttackEngage, 4, new { targetId = "Creature:1" })));
+        var now = DateTimeOffset.UtcNow;
+        for (var i = 0; i < 12 && !instances.HasReached(normalKey, "boss.2666.down"); i++)
+            first.TickCombat(now += TimeSpan.FromSeconds(2));
+        Assert.True(instances.HasReached(normalKey, "boss.2666.down"));
+        await SignOutAsync(first);
+
+        // Back in, inside the copy; out through the exit, reset, Legend, and in again.
+        var (second, _) = await SignInAsync();
+        second.TickCombat(now += TimeSpan.FromSeconds(1));
+        await MoveAsync(second, 2, -684, InsideFloorY, -2090);
+        Assert.Null(second.CurrentInstanceKey);
+        await second.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.DungeonRestart, 3, new { })));
+        await ChooseModeAsync(second, 4, WireCodes.DungeonMode.Legend);
+        await MoveAsync(second, 5, GateApproachX, 39, GateApproachZ);
+        await MoveAsync(second, 6, GateInsideX, 39, GateApproachZ);
+        Assert.NotNull(second.CurrentInstanceKey);
+        await MoveAsync(second, 7, InsideArrivalX, InsideFloorY, -2096);
+
+        var engaged = await second.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AttackEngage, 8, new { targetId = "Creature:1" })));
+        Assert.DoesNotContain(engaged, m => m.Contains(WireCodes.ProtocolError.InvalidTarget));
+        Assert.Contains(engaged, m => m.Contains("\"type\":\"attack.meleeStart\""));
+        await SignOutAsync(second);
+
+        var (third, entered) = await SignInAsync();
+        Assert.Contains(entered, m => m.Contains("\"type\":\"dungeon.modeChosen\"") && m.Contains("\"mode\":\"legend\""));
+    }
+
+    [Fact]
+    public async Task TheChosenModeOutlastsAServerRestart()
+    {
+        var characters = new InMemoryCharacterStore([new CharacterRecord(
+            "char-mode15", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, GateApproachX, 2, GateApproachZ, 60, [100, 200])]);
+        async Task<(PlaySession Session, IReadOnlyList<string> Entered)> SignInAsync(InstanceService instances)
+        {
+            var session = TestSessions.Create(new DevelopmentAccountStore("mode15", "p"), characters, [],
+                content: LegendContent(), instances: instances);
+            await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.AccountLogin, 0, new LoginRequest("mode15", "p"))));
+            var entered = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+            return (session, entered);
+        }
+
+        var (before, _) = await SignInAsync(new InstanceService());
+        await ChooseModeAsync(before, 2, WireCodes.DungeonMode.Legend);
+        await before.SaveProgressAsync();
+        before.LeaveWorld();
+
+        var restarted = new InstanceService();
+        var (after, entered) = await SignInAsync(restarted);
+
+        Assert.Contains(entered, m => m.Contains("\"type\":\"dungeon.modeChosen\"") && m.Contains("\"mode\":\"legend\""));
+        Assert.Equal(DungeonMode.Legend, restarted.ChosenMode("player:char-mode15"));
+    }
+
+    [Fact]
     public async Task ChangingTheModeWhileInside_IsRefused()
     {
         var instances = new InstanceService();

@@ -354,6 +354,7 @@ public sealed partial class PlaySession : ISessionPlayer
             ActionBar = [.. _actionBar.Select(button => new PersistedActionButton(button.Key, button.Value.Id, button.Value.Type))],
             Exhaustion = _exhaustionDay is null ? null : _exhaustion,
             ExhaustionDay = _exhaustionDay,
+            LegendDungeons = _instances.ChosenMode(PlayerUnitId) == DungeonMode.Legend ? true : null,
         };
     }
 

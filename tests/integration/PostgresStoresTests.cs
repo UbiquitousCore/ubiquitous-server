@@ -139,6 +139,7 @@ public sealed class PostgresStoresTests : IAsyncLifetime
             ActionBar = [new PersistedActionButton(0, 108, 0), new PersistedActionButton(7, 5006, 0)],
             Exhaustion = 12,
             ExhaustionDay = 20_395,
+            LegendDungeons = true,
         };
 
         await store.UpdateAsync(saved);
@@ -153,6 +154,7 @@ public sealed class PostgresStoresTests : IAsyncLifetime
         Assert.Equal(saved.ActionBar, loaded.ActionBar);
         Assert.Equal(12, loaded.Exhaustion);
         Assert.Equal(20_395, loaded.ExhaustionDay);
+        Assert.True(loaded.LegendDungeons);
     }
 
     [Fact]

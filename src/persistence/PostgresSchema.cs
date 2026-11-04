@@ -90,6 +90,9 @@ public static class PostgresSchema
             ALTER TABLE characters ADD COLUMN IF NOT EXISTS exhaustion INTEGER;
             ALTER TABLE characters ADD COLUMN IF NOT EXISTS exhaustion_day INTEGER;
             """),
+        new Migration("0010_legend_dungeons", """
+            ALTER TABLE characters ADD COLUMN IF NOT EXISTS legend_dungeons BOOLEAN;
+            """),
     ];
 
     public static async Task EnsureCreatedAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken = default)
