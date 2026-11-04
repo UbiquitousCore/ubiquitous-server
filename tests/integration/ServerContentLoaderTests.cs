@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Ubiquitous.Data;
+using Ubiquitous.Game;
 using Ubiquitous.Server;
 
 namespace Ubiquitous.Integration.Tests;
@@ -13,6 +14,21 @@ public sealed class ServerContentLoaderTests
 
         Assert.Equal(DevelopmentFixtures.CreatureSpawns, content.CreatureSpawns);
         Assert.Equal(DevelopmentFixtures.StaticObjectSpawns, content.StaticObjectSpawns);
+    }
+
+    [Fact]
+    public void TheCreatureHealthRate_ScalesEveryCreatureOnceAtLoad()
+    {
+        var rates = new GameRates(Xp: 1.5, CreatureHealth: 2.0);
+        var options = ServerOptions.Defaults with { Rates = rates };
+
+        var normal = new ServerContentLoader(null, ServerOptions.Defaults, NullLogger.Instance, ContentDirectory.Find()).Load();
+        var scaled = new ServerContentLoader(null, options, NullLogger.Instance, ContentDirectory.Find()).Load();
+
+        Assert.Equal(rates, scaled.Game.Rates);
+        Assert.NotEmpty(normal.Game.Creatures);
+        foreach (var (entry, creature) in normal.Game.Creatures)
+            Assert.Equal(creature.MaxHealth * 2, scaled.Game.Creatures[entry].MaxHealth);
     }
 
     [Fact]

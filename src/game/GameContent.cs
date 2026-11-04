@@ -39,6 +39,8 @@ public sealed partial record GameContent(
 {
     public IReadOnlyList<TalentTreeDefinition> TalentTrees { get; init; } = TalentTrees ?? [];
 
+    public GameRates Rates { get; init; } = GameRates.Normal;
+
     public IReadOnlyDictionary<uint, GossipMenuDefinition> GossipMenus { get; init; } =
         GossipMenus ?? new Dictionary<uint, GossipMenuDefinition>();
 

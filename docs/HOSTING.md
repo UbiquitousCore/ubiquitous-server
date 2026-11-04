@@ -51,6 +51,11 @@ UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=10
 | Setting | Default | Does |
 |---|---|---|
 | `UBIQUITOUS_FESTIVAL_CONTENT_ENABLED` | `false` | winter solstice and anniversary scenery, creatures and items |
+| `UBIQUITOUS_XP_RATE` | `1` | multiplies all experience gained (`1.5` is 1.5x) |
+| `UBIQUITOUS_EXHAUSTION_LIMIT` | `100` | Legend exhaustion a player can build up before the daily reset |
+| `UBIQUITOUS_PLAYER_DAMAGE_RATE` | `1` | multiplies the damage players deal |
+| `UBIQUITOUS_CREATURE_DAMAGE_RATE` | `1` | multiplies the damage creatures deal |
+| `UBIQUITOUS_CREATURE_HEALTH_RATE` | `1` | multiplies every creature's health |
 | `UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED` | `false` | start bots |
 | `UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT` | `5` | how many bots play on their own (0-500) |
 | `UBIQUITOUS_MAX_CONNECTIONS` | `500` | players connected at once |
@@ -147,6 +152,7 @@ Game settings live in `server.json` (git-ignored; copy it from
 ```json
 {
   "festivalContentEnabled": true,
+  "xpRate": 1.5,
   "modules": { "playerbots": { "enabled": true, "randomBotCount": 5 } }
 }
 ```

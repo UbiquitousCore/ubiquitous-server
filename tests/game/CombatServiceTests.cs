@@ -321,6 +321,37 @@ public sealed class CombatServiceTests
     }
 
     [Fact]
+    public void Tick_DamageRatesScaleWhatPlayersAndCreaturesDeal()
+    {
+        var combat = new CombatService(rollUnit: () => 1.0)
+        {
+            Rates = new GameRates(PlayerDamage: 2.0, CreatureDamage: 3.0),
+        };
+        combat.EnterAsCharacter(classId: 1, level: 1, playerId: "player:char-a");
+        combat.Start("player:char-a", "Creature:1", Visible, Now);
+
+        var swings = combat.Tick(Now + CombatService.SwingInterval);
+
+        var blow = swings.Single(swing => swing.AttackerId == "player:char-a");
+        var retaliation = swings.Single(swing => swing.AttackerId == "Creature:1");
+        Assert.Equal(CombatService.SwingDamage * 2, blow.Damage);
+        Assert.Equal(CombatService.RetaliationDamage * 3, retaliation.Damage);
+    }
+
+    [Fact]
+    public void DamageTarget_ABlowOnAnotherPlayerIsLeftForTheirSessionToScale()
+    {
+        var combat = new CombatService { Rates = new GameRates(PlayerDamage: 2.0) };
+        combat.EnterAsCharacter(classId: 1, level: 1, playerId: "player:char-a");
+
+        var relayed = combat.DamageTarget("player:char-a", "player:char-b", 10, Now);
+        var landed = combat.DamageTarget("player:char-b", "player:char-a", 10, Now);
+
+        Assert.Equal(10, relayed.Damage);
+        Assert.Equal(20, landed.Damage);
+    }
+
+    [Fact]
     public void Tick_AStunnedCreatureHoldsItsBlowUntilItCanActAgain()
     {
         var stunnedUntil = Now + CombatService.SwingInterval * 3;

@@ -384,7 +384,7 @@ public sealed partial class CombatService
             bool dodged = _rollUnit() < DodgeChance(playerAgility, playerDodgeRating);
             bool parried = !dodged && _rollUnit() < ParryChance(playerParryRating);
             bool blocked = !dodged && !parried && _rollUnit() < BlockChance(playerBlockRating);
-            var rawRetaliation = DamageFor(creatureId);
+            var rawRetaliation = Rates.ScaleDamage(DamageFor(creatureId), dealtByPlayer: false);
 
             StrikeResult result;
             int damage;
@@ -452,6 +452,8 @@ public sealed partial class CombatService
     public bool GodMode { get; set; }
 
     public bool OverwhelmingBlows { get; set; }
+
+    public GameRates Rates { get; set; } = GameRates.Normal;
     private (int MinDamage, int MaxDamage)? _playerWeapon;
 
     public void SetPlayerWeapon(int? minDamage, int? maxDamage) =>
@@ -530,6 +532,9 @@ public sealed partial class CombatService
             : _health.TryGetValue(targetId, out var current) ? current : maxHealth;
 
         if (BlowFindsNothing(sourceId, targetId, health, maxHealth) is { } nothing) return nothing;
+        // Scaled only where the health is lost: a blow on another player is
+        // scaled by that player's own session when it lands, so never twice.
+        damage = Rates.ScaleDamage(damage, dealtByPlayer: LooksLikePlayerId(sourceId));
         if (isSelf) OpenFire(targetId, now);
         EnterCombatOnDamage(sourceId, targetId, now);
         (damage, var absorbed) = DamageThatLands(sourceId, targetId, isSelf, damage, now);

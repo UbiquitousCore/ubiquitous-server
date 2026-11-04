@@ -184,6 +184,63 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
+    public void Rates_LoadFromFileEnvironmentAndArguments()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ubiquitous-config-{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, """
+            {
+              "xpRate": 1.5,
+              "exhaustionLimit": 150,
+              "playerDamageRate": 2,
+              "creatureDamageRate": "0.5",
+              "creatureHealthRate": 3
+            }
+            """);
+
+        try
+        {
+            var environment = new Dictionary<string, string?>
+            {
+                ["UBIQUITOUS_CREATURE_DAMAGE_RATE"] = "0.75",
+                ["UBIQUITOUS_CREATURE_HEALTH_RATE"] = "4",
+            };
+
+            var options = ServerOptions.Load(["--config", path, "--creature-health-rate", "1.25"], environment);
+
+            Assert.Equal(new GameRates(
+                Xp: 1.5, ExhaustionLimit: 150, PlayerDamage: 2, CreatureDamage: 0.75, CreatureHealth: 1.25),
+                options.ResolvedRates);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Rates_DefaultToTheGameAsItPlays()
+    {
+        var options = ServerOptions.Load([], new Dictionary<string, string?>());
+
+        Assert.Equal(GameRates.Normal, options.ResolvedRates);
+        Assert.Equal(new GameRates(1.0, 100, 1.0, 1.0, 1.0), options.ResolvedRates);
+    }
+
+    [Theory]
+    [InlineData("UBIQUITOUS_XP_RATE", "-1")]
+    [InlineData("UBIQUITOUS_XP_RATE", "lots")]
+    [InlineData("UBIQUITOUS_PLAYER_DAMAGE_RATE", "NaN")]
+    [InlineData("UBIQUITOUS_CREATURE_HEALTH_RATE", "0")]
+    [InlineData("UBIQUITOUS_EXHAUSTION_LIMIT", "0")]
+    [InlineData("UBIQUITOUS_EXHAUSTION_LIMIT", "1.5")]
+    public void InvalidRates_AreRejected(string variable, string value)
+    {
+        var environment = new Dictionary<string, string?> { [variable] = value };
+
+        Assert.Throws<InvalidDataException>(() => ServerOptions.Load([], environment));
+    }
+
+    [Fact]
     public void FestivalOptions_DefaultToDisabledWithNoEntries()
     {
         var options = ServerOptions.Load([], new Dictionary<string, string?>());

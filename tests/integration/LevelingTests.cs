@@ -37,6 +37,50 @@ public sealed class LevelingTests
     }
 
     [Fact]
+    public async Task TheXpRate_MultipliesWhatAKillGrants()
+    {
+        var content = GameContent.Development with
+        {
+            Creatures = new Dictionary<uint, CreatureDefinition>
+            {
+                [9001] = new(9001, "creature-9001", Level: 1, MaxHealth: 1, MinDamage: 0, MaxDamage: 0),
+            },
+            Rates = new GameRates(Xp: 2.0),
+        };
+        var session = await SessionAsync(content, level: 1);
+
+        await AttackAsync(session, "Creature:1");
+        var now = DateTimeOffset.UtcNow;
+        var responses = new List<string>();
+        for (var swing = 0; swing < 20; swing++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            responses.AddRange(session.TickCombat(now));
+            if (responses.Any(m => m.Contains("\"type\":\"unit.died\""))) break;
+        }
+
+        var updated = Assert.Single(responses, m => m.Contains("\"type\":\"player.updated\"") && m.Contains("\"xp\""));
+        Assert.Contains("\"xp\":110", updated);
+        var gained = Assert.Single(responses, m => m.Contains("\"type\":\"player.expGained\""));
+        Assert.Contains("\"amount\":110", gained);
+    }
+
+    [Fact]
+    public async Task EnteringTheWorld_TellsTheClientTheExhaustionLimit()
+    {
+        var content = GameContent.Development with { Rates = new GameRates(ExhaustionLimit: 150) };
+        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([Character(60)]), [], null, content);
+        await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
+
+        var entered = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+
+        Assert.Contains(entered, m => m.Contains("\"type\":\"player.updated\"") && m.Contains("\"maxExhaustion\":150"));
+    }
+
+    [Fact]
     public async Task EnoughKills_LevelsUpAndSendsTheLevelFieldsFullyHealed()
     {
         var content = GameContent.Development with

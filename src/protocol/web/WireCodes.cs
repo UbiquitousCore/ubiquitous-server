@@ -179,8 +179,9 @@ public static class WireCodes
         public const string Xp = "xp";
         public const string XpToNextLevel = "xpToNextLevel";
         public const string Gold = "gold";
-        // Out of 100; it rises inside Legend copies and empties at the daily reset.
+        // Out of MaxExhaustion; it rises inside Legend copies and empties at the daily reset.
         public const string Exhaustion = "exhaustion";
+        public const string MaxExhaustion = "maxExhaustion";
         public const string Strength = "strength";
         public const string Agility = "agility";
         public const string Stamina = "stamina";
