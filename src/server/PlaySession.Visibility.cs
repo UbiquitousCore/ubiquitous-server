@@ -175,6 +175,7 @@ public sealed partial class PlaySession
         _announcedMobVictims.Clear();
         _pendingLeaveTarget = null;
         _sight.Clear();
+        _combat.ForgetCreatures();
         ClearStressBots(null);
         _visibleStaticObjectEntries.Clear();
         _staticObjectPositions.Clear();

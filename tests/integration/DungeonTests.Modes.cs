@@ -168,6 +168,49 @@ public sealed partial class DungeonTests
     }
 
     [Fact]
+    public async Task ABossKilledInNormal_StandsAndFightsInTheLegendCopyEnteredAfter()
+    {
+        var legend = LegendContent();
+        var content = legend with
+        {
+            Creatures = new Dictionary<uint, CreatureDefinition>(legend.Creatures)
+            {
+                [2666] = new(2666, "Executioner", 21, 10, MinDamage: 1, MaxDamage: 2, NoticeDistance: 1),
+            },
+        };
+        var instances = new InstanceService();
+        var (session, _) = await JoinAsync("mode12", "Ayla",
+            [new CreatureSpawnDefinition(3112, 14, 2666, -681, InsideFloorY, -2097, 0)],
+            content, instances, level: 60);
+        await MoveAsync(session, 2, GateInsideX, 2, GateApproachZ);
+        await MoveAsync(session, 20, InsideArrivalX, InsideFloorY, -2096);
+        var normalKey = session.CurrentInstanceKey!;
+        await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AttackEngage, 3, new { targetId = "Creature:1" })));
+        var now = DateTimeOffset.UtcNow;
+        for (var i = 0; i < 12 && !instances.HasReached(normalKey, "boss.2666.down"); i++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            session.TickCombat(now);
+        }
+        Assert.True(instances.HasReached(normalKey, "boss.2666.down"));
+
+        await MoveAsync(session, 4, -684, InsideFloorY, -2090);
+        await ChooseModeAsync(session, 5, WireCodes.DungeonMode.Legend);
+        // Back in from where the exit leaves the player, at the height it leaves them at.
+        await MoveAsync(session, 6, GateApproachX, 39, GateApproachZ);
+        await MoveAsync(session, 7, GateInsideX, 39, GateApproachZ);
+        // A fresh copy: changing the mode ended the one the boss died in.
+        Assert.False(instances.HasReached(session.CurrentInstanceKey!, "boss.2666.down"));
+
+        var engaged = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AttackEngage, 8, new { targetId = "Creature:1" })));
+
+        Assert.DoesNotContain(engaged, m => m.Contains(WireCodes.ProtocolError.InvalidTarget));
+        Assert.Contains(engaged, m => m.Contains("\"type\":\"attack.meleeStart\""));
+    }
+
+    [Fact]
     public async Task ChangingTheModeWhileInside_IsRefused()
     {
         var instances = new InstanceService();

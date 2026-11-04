@@ -29,6 +29,17 @@ public sealed partial class CombatService
 
     public void ClearHostility(string mobId) => _hostility.Clear(mobId);
 
+    // Creature ids count from 1 again on every map and in every dungeon copy, so
+    // nothing a creature left here may outlive the world it was in.
+    public void ForgetCreatures()
+    {
+        _dead.RemoveWhere(id => !LooksLikePlayerId(id));
+        foreach (var id in _health.Keys.Where(id => !LooksLikePlayerId(id)).ToArray()) _health.Remove(id);
+        foreach (var id in _lastDamage.Keys.Where(id => !LooksLikePlayerId(id)).ToArray()) _lastDamage.Remove(id);
+        foreach (var id in _retaliation.Keys.Where(id => !LooksLikePlayerId(id)).ToArray()) _retaliation.Remove(id);
+        foreach (var id in _unitShields.Keys.Where(id => !LooksLikePlayerId(id)).ToArray()) _unitShields.Remove(id);
+    }
+
     public int? ResetHealth(string unitId)
     {
         if (_dead.Contains(unitId)) return null;
