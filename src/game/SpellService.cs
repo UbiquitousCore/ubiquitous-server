@@ -126,8 +126,10 @@ public sealed class SpellService
             return null;
         }
 
+        // A row with no cost, cooldown or cast time is unfinished, except a GM's test spells, which are all like that.
         if (!HasResolvableEffect(spell)
-            || (spell.PowerCost is null && spell.CooldownMs <= 0 && spell.CastTimeMs <= 0))
+            || (spell.PowerCost is null && spell.CooldownMs <= 0 && spell.CastTimeMs <= 0
+                && !GmOnlySpells.Covers(spellId, spell)))
         {
             refusal = new SpellCastRefusal(SpellRefusalReason.NoEffectData);
             return null;

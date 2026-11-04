@@ -76,6 +76,27 @@ public sealed class GameMasterTests
     }
 
     [Fact]
+    public async Task AGm_CastsATestSpellThoughItHasNoCostCooldownOrCastTime()
+    {
+        var content = GameContent.Development with
+        {
+            Spells = new Dictionary<uint, SpellDefinition>(GameContent.Development.Spells)
+            {
+                [2045] = new(2045, "Test Single Damage", 0, 0, 100f, EffectDamage: 1000),
+            },
+        };
+        var gm = await SessionAsync(admin: true, [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], content);
+        await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AdminLearnSpells, 2, new { })));
+
+        var cast = await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.SpellRequest, 3, new { spellId = 2045, targetId = "Creature:1" })));
+
+        Assert.DoesNotContain(cast, m => m.Contains(WireCodes.SpellRefusal.NoEffectData));
+        Assert.Contains(cast, m => m.Contains("\"type\":\"spell.released\"") || m.Contains("\"type\":\"spell.outcome\""));
+    }
+
+    [Fact]
     public void RealGearNamedForAGodIsNotAToolSpell() =>
         Assert.False(GmOnlySpells.Covers(2549, new SpellDefinition(2549, "Robe of Healer of God", 0, 0, 0f)));
 
