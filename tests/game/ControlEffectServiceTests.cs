@@ -37,10 +37,11 @@ public sealed class ControlEffectServiceTests
     [Fact]
     public void Clear_DropsTheLockWithNoFurtherEffect()
     {
-        var control = new ControlEffectService(new UnitEffects(), EffectKind.Control);
+        var effects = new UnitEffects();
+        var control = new ControlEffectService(effects, EffectKind.Control);
         control.Apply("Creature:1", spellId: 61, durationMs: 5000, Now);
 
-        control.Clear("Creature:1");
+        effects.Clear("Creature:1");
 
         Assert.False(control.IsControlled("Creature:1", Now));
     }

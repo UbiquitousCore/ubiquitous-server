@@ -8,22 +8,7 @@ namespace Ubiquitous.Server;
 
 public sealed partial class PlaySession
 {
-    private HashSet<uint> ClearEffectsOn(string unitId) =>
-    [
-        .. _auras.Clear(unitId),
-        .. _periodicTrigger.Clear(unitId),
-        .. _control.Clear(unitId),
-        .. _silence.Clear(unitId),
-        .. _attributeModifiers.Clear(unitId),
-        .. _slow.Clear(unitId),
-        .. _speedup.Clear(unitId),
-        .. _meleeAttackSpeed.Clear(unitId),
-        .. _rangeAttackSpeed.Clear(unitId),
-        .. _chill.Clear(unitId),
-        .. _stealth.Clear(unitId),
-        .. _absorb.Clear(unitId),
-        .. _avatar.Clear(unitId),
-    ];
+    private HashSet<uint> ClearEffectsOn(string unitId) => [.. _effects.Clear(unitId).Select(effect => effect.SpellId)];
 
     private IReadOnlyList<string> ResolveAuraApply(
         WebNetworkId casterId, string targetId, uint spellId, SpellDefinition spell, DateTimeOffset now)

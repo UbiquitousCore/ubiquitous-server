@@ -1,7 +1,10 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveAbsorbEffect(string TargetId, uint SpellId, int Remaining, int Percent, DateTimeOffset ExpiresAt)
-    : UnitEffect(TargetId, SpellId, null);
+    : UnitEffect(TargetId, SpellId, null)
+{
+    public override bool Harmful => false;
+}
 
 public sealed record AbsorbEnded(ActiveAbsorbEffect Shield, bool Broken);
 
@@ -33,9 +36,6 @@ public sealed class AbsorbEffectService(UnitEffects effects)
         else effects.Replace(shield, shield with { Remaining = left });
         return damage - taken;
     }
-
-    public IReadOnlyList<uint> Clear(string targetId) =>
-        [.. effects.RemoveOn<ActiveAbsorbEffect>(Kind, targetId).Select(shield => shield.SpellId)];
 
     public IReadOnlyList<AbsorbEnded> TickExpired(DateTimeOffset now)
     {

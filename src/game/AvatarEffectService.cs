@@ -1,7 +1,10 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveAvatar(string TargetId, uint SpellId, DateTimeOffset? ExpiresAt)
-    : UnitEffect(TargetId, SpellId, null);
+    : UnitEffect(TargetId, SpellId, null)
+{
+    public override bool Harmful => false;
+}
 
 // The shape a body has been turned into by an aura (a cookie, a wand, a spirit). One at a time per body;
 // a spell with no duration lasts until it is cast again or the body is cleared.

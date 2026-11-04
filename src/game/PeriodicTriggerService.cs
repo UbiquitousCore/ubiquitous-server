@@ -2,7 +2,10 @@ namespace Ubiquitous.Game;
 
 public sealed record ActivePeriodicTrigger(
     string TargetId, uint SpellId, uint TriggerSpellId, int ChancePercent, int TicksRemaining, DateTimeOffset NextTickAt)
-    : UnitEffect(TargetId, SpellId, null);
+    : UnitEffect(TargetId, SpellId, null)
+{
+    public override bool Harmful => true;
+}
 
 public sealed record PeriodicTriggerTick(string TargetId, uint SpellId, uint TriggerSpellId, int ChancePercent, bool Expired);
 
