@@ -1298,6 +1298,10 @@ public sealed partial class PlaySession : ISessionPlayer
             responses.Add(Reply(WebMessageTypes.AttackExitCombat,
                 new AttackExitCombatPayload(WebNetworkId.FromString(PlayerUnitId))));
         RemoveView(responses);
+        // What the hero wears goes with them; only the old map's board forgets it.
+        IReadOnlyList<HeldAura> carried = _character is not null && _shared is not null
+            ? _shared.Auras.On(PlayerUnitId, Now)
+            : [];
         ResetVisibility();
         _awaitingArrivalMove = _world is not null;
         _arrivedAt = Now;
@@ -1321,10 +1325,11 @@ public sealed partial class PlaySession : ISessionPlayer
                 || _walkableGround.CanStepStraight(sharedMapId, from, to));
         _combat.UseHostilityLog(_shared);
         _movementCursor = _shared.MovementCursor;
+        if (instanceState is null) CarryAuras(carried);
         var wire = new Position(position.X, position.Y, position.Z);
         responses.Add(Reply(WebMessageTypes.WorldLoading, new WorldLocation(mapId, wire)));
         responses.Add(Reply(WebMessageTypes.WorldEntered, new WorldEnteredPayload(mapId, wire,
-            WebNetworkId.FromString(PlayerUnitId), AurasWornBy(PlayerUnitId))));
+            WebNetworkId.FromString(PlayerUnitId), HeldAuraPayloads(carried))));
         responses.Add(AmbientReply(mapId));
 
         if (_instanceWorld is not null)
@@ -1336,6 +1341,7 @@ public sealed partial class PlaySession : ISessionPlayer
             _shared = instanceShared ?? SharedForInstance(mapId);
             _combat.UseHostilityLog(_shared);
             _movementCursor = _shared.MovementCursor;
+            CarryAuras(carried);
             var entering = Now;
             foreach (var entity in population.Creatures)
             {
@@ -1370,6 +1376,7 @@ public sealed partial class PlaySession : ISessionPlayer
 
             responses.Add(HiddenObjectsReply(mapId));
             responses.AddRange(OpenBarrierReplies(mapId));
+            responses.Add(DungeonModeInForce());
             responses.AddRange(QuestGuideRefreshReplies());
             return responses;
         }

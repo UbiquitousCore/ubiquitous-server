@@ -1,5 +1,6 @@
 using Ubiquitous.Data;
 using Ubiquitous.Game;
+using Ubiquitous.Persistence;
 using Ubiquitous.Protocol.Web;
 using Ubiquitous.Server;
 
@@ -208,6 +209,58 @@ public sealed partial class DungeonTests
 
         Assert.DoesNotContain(engaged, m => m.Contains(WireCodes.ProtocolError.InvalidTarget));
         Assert.Contains(engaged, m => m.Contains("\"type\":\"attack.meleeStart\""));
+    }
+
+    [Fact]
+    public async Task ReloggingInsideALegendCopy_KeepsItLegend_SaysSo_AndBossesStillTire()
+    {
+        var legend = LegendContent();
+        var content = legend with
+        {
+            Creatures = new Dictionary<uint, CreatureDefinition>(legend.Creatures)
+            {
+                [2669] = new(2669, "Executioner", 60, 10, MinDamage: 1, MaxDamage: 2, NoticeDistance: 1,
+                    FactionType: UnitFactionTypes.Hostile),
+            },
+        };
+        var instances = new InstanceService();
+        var characters = new InMemoryCharacterStore([new CharacterRecord(
+            "char-mode13", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, GateApproachX, 2, GateApproachZ, 60, [100, 200])]);
+        var spawns = new[] { new CreatureSpawnDefinition(3113, 14, 2666, -681, InsideFloorY, -2097, 0) };
+        async Task<(PlaySession Session, IReadOnlyList<string> Entered)> SignInAsync()
+        {
+            var session = TestSessions.Create(new DevelopmentAccountStore("mode13", "p"), characters, spawns,
+                content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9, instances: instances);
+            await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.AccountLogin, 0, new LoginRequest("mode13", "p"))));
+            var entered = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+                WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+            return (session, entered);
+        }
+
+        var (first, _) = await SignInAsync();
+        await ChooseModeAsync(first, 2, WireCodes.DungeonMode.Legend);
+        await MoveAsync(first, 3, GateInsideX, 2, GateApproachZ);
+        await first.SaveProgressAsync();
+        first.LeaveWorld();
+
+        var (again, entered) = await SignInAsync();
+        Assert.Contains(entered, m => m.Contains("\"type\":\"dungeon.modeChosen\"") && m.Contains("\"mode\":\"legend\""));
+        var key = again.CurrentInstanceKey!;
+        var now = DateTimeOffset.UtcNow;
+        again.TickCombat(now);
+        await again.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AttackEngage, 4, new { targetId = "Creature:1" })));
+        var log = new List<string>();
+        for (var i = 0; i < 12 && !instances.HasReached(key, "boss.2666.down"); i++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            log.AddRange(again.TickCombat(now));
+        }
+        log.AddRange(again.TickCombat(now + TimeSpan.FromSeconds(1)));
+
+        Assert.True(instances.HasReached(key, "boss.2666.down"));
+        Assert.Contains(log, m => m.Contains("\"exhaustion\":5"));
     }
 
     [Fact]

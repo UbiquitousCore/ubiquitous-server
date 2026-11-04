@@ -103,7 +103,7 @@ public sealed class HeldAuraTests
     }
 
     [Fact]
-    public async Task EnteringTheWorld_TellsTheHeroWhatItWears_WhichAfterACrossingIsNothing()
+    public async Task EnteringTheWorld_TellsTheHeroWhatItWears_AndACrossingTakesItAlong()
     {
         var (hub, maps) = (new PlaySessionHub(), new SharedMapRegistry());
         var ayla = await JoinAsync(hub, maps, "h5", "Ayla");
@@ -116,7 +116,9 @@ public sealed class HeldAuraTests
 
         var entered = Assert.Single(PayloadsOf(ayla.Inbox, WebMessageTypes.WorldEntered));
         Assert.Equal(14, entered.GetProperty("map").GetInt32());
-        Assert.False(entered.TryGetProperty("auras", out _));
+        var worn = Assert.Single(entered.GetProperty("auras").EnumerateArray());
+        Assert.Equal(Shield, worn.GetProperty("spellId").GetUInt32());
+        Assert.Empty(PayloadsOf(ayla.Inbox, WebMessageTypes.AuraEnded));
 
         Assert.Empty(maps.For(13).Auras.On(ayla.Id, DateTimeOffset.UtcNow));
         Assert.Single(PayloadsOf(borin.Inbox, WebMessageTypes.EntityRemoved), p => p.GetProperty("networkId").GetString() == ayla.Id);

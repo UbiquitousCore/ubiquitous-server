@@ -68,6 +68,14 @@ public sealed partial class PlaySession
         };
     }
 
+    // The mode the player's dungeons run in: the open copy's own inside one, else the leader's choice.
+    private string DungeonModeInForce()
+    {
+        var mode = _instanceKey is not null ? _copy.Mode : _instances.ChosenMode(InstanceOwnerId);
+        return Reply(WebMessageTypes.DungeonModeChosen, new DungeonModeChosenPayload(
+            mode == DungeonMode.Legend ? WireCodes.DungeonMode.Legend : WireCodes.DungeonMode.Normal, 0, Changed: false));
+    }
+
     private static DungeonMode? ModeFromWire(string? mode) => mode switch
     {
         WireCodes.DungeonMode.Normal => DungeonMode.Normal,

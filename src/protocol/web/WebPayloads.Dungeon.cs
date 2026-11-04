@@ -17,7 +17,9 @@ public sealed record DungeonChooseModePayload(
 
 public sealed record DungeonModeChosenPayload(
     [property: JsonPropertyName("mode")] string Mode,
-    [property: JsonPropertyName("count")] int Count);
+    [property: JsonPropertyName("count")] int Count,
+    // False when it only says which mode is in force: on entering the world or a dungeon copy.
+    [property: JsonPropertyName("changed")] bool Changed = true);
 
 public sealed record DungeonBarrierOpenedPayload(
     [property: JsonPropertyName("barrierId")] string BarrierId,

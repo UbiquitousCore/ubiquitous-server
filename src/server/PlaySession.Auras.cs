@@ -295,13 +295,21 @@ public sealed partial class PlaySession
 
     private static string IdText(WebNetworkId id) => id.Text ?? id.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-    private IReadOnlyList<HeldAuraPayload>? AurasWornBy(string unitId)
+    private IReadOnlyList<HeldAuraPayload>? AurasWornBy(string unitId) =>
+        HeldAuraPayloads(_shared?.Auras.On(unitId, Now) ?? []);
+
+    private static IReadOnlyList<HeldAuraPayload>? HeldAuraPayloads(IReadOnlyList<HeldAura> worn) =>
+        worn.Count == 0
+            ? null
+            : [.. worn.Select(aura => new HeldAuraPayload(
+                aura.SpellId, WebNetworkId.FromString(aura.CasterId), aura.Harmful ? 1 : 0,
+                aura.MaxDurationMs, aura.RemainingMs))];
+
+    // Onto the new map's board, so whoever is there sees what the hero brought.
+    private void CarryAuras(IReadOnlyList<HeldAura> carried)
     {
-        var worn = _shared?.Auras.On(unitId, Now);
-        if (worn is not { Count: > 0 }) return null;
-        return [.. worn.Select(aura => new HeldAuraPayload(
-            aura.SpellId, WebNetworkId.FromString(aura.CasterId), aura.Harmful ? 1 : 0,
-            aura.MaxDurationMs, aura.RemainingMs))];
+        if (_shared is null) return;
+        foreach (var aura in carried) _shared.Auras.Applied(this, aura, Now);
     }
 
     public void ForgetReportedAuras() => _shared?.Auras.Forget(this);

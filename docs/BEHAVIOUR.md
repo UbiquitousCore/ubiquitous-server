@@ -375,6 +375,12 @@ comes from is in `PROVENANCE.md`.
   nothing. It is sent as the `exhaustion` player value, and the limit as
   `maxExhaustion` on entering the world; it is saved with the character, and
   empties at midnight UTC.
+- The mode in force is sent as `dungeon.modeChosen` with `changed: false` on
+  entering the world (the leader's choice) and on entering a copy (the copy's
+  own), so the client shows it without announcing a change.
+- What the hero wears goes with them through a gate, a bus or a teleport: the
+  old map's board forgets it and the new one is told, and `world.entered`
+  lists it.
 - A Legend copy refuses entry below level 60 (`legend_too_low`) and at the
   exhaustion limit (`exhausted`), through the gate or `instance.enter`; the player
   stays where they were.

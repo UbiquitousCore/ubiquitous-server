@@ -186,7 +186,6 @@ public sealed partial class PlaySession
         _playerMoving = false;
         _loot.Clear();
         _despawnDue.Clear();
-        ClearEffectsOn(PlayerUnitId);
         ForgetReportedAuras();
         _auraStateSent.Clear();
         _dirty.Clear();

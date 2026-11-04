@@ -365,6 +365,7 @@ public sealed partial class PlaySession
             [WireCodes.UnitValue.MaxExhaustion] = _content.Rates.ExhaustionLimit,
         };
         AddAttributesTo(enterValues, enterNow);
+        responses.Add(DungeonModeInForce());
         responses.Add(Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(enterValues)));
         responses.AddRange(await _partyHandler.RejoinAsync());
 
