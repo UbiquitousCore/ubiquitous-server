@@ -12,7 +12,7 @@ public sealed class SpeedupEffectService(UnitEffects effects, EffectKind kind)
     {
         effects.RemoveOn<ActiveSpeedupEffect>(kind, targetId);
         effects.Add(new ActiveSpeedupEffect(targetId, spellId, percent, EffectLength.ExpiresAt(now, durationMs), casterId)
-            { Kind = kind, AppliedAt = now, Lasts = EffectLength.Lasts(durationMs) });
+        { Kind = kind, AppliedAt = now, Lasts = EffectLength.Lasts(durationMs) });
     }
 
     public int CurrentPercent(string targetId, DateTimeOffset now) =>
