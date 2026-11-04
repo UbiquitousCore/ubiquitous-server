@@ -161,6 +161,27 @@ public sealed class AdminGiftTests
     }
 
     [Fact]
+    public async Task AnAdministrator_AlsoLearnsTheBuildsTestAndGmSpells_IntoTheirBook()
+    {
+        var content = Content with
+        {
+            Spells = new Dictionary<uint, SpellDefinition>(Content.Spells)
+            {
+                [40] = new(40, "Test Stun", 0, 0, 30f),
+                [462] = new(462, "GM:Offhand Expert", 0, 0, 0f),
+                [2549] = new(2549, "Robe of Healer of God", 0, 0, 0f),
+            },
+        };
+        var session = await EnterAsync(admin: true, content);
+
+        var book = BookOf(await SendAsync(session, WebMessageTypes.AdminLearnSpells, new { }));
+
+        Assert.Contains(40u, book);
+        Assert.Contains(462u, book);
+        Assert.DoesNotContain(2549u, book);
+    }
+
+    [Fact]
     public async Task AnyoneElse_IsRefusedSpells()
     {
         var session = await EnterAsync(admin: false);
