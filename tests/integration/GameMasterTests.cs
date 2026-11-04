@@ -49,6 +49,36 @@ public sealed class GameMasterTests
         Assert.DoesNotContain(cast, m => m.Contains("\"type\":\"unit.died\""));
     }
 
+    [Theory]
+    [InlineData("Test Stun")]
+    [InlineData("GM:Offhand Expert")]
+    [InlineData("God Attribute1")]
+    [InlineData("teleprot test")]
+    public async Task AnOrdinarySession_IsRefusedTheBuildsTestAndGmSpells(string name)
+    {
+        var content = GameContent.Development with
+        {
+            Spells = new Dictionary<uint, SpellDefinition>(GameContent.Development.Spells)
+            {
+                [40] = new(40, name, 0, 0, 30f, EffectTarget: SpellEffectTargets.Self),
+            },
+        };
+        var ordinary = await SessionAsync(admin: false, [], content);
+        var gm = await SessionAsync(admin: true, [], content);
+
+        var refused = await ordinary.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.SpellRequest, 2, new { spellId = 40, targetId = 0 })));
+        var allowed = await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.SpellRequest, 2, new { spellId = 40, targetId = 0 })));
+
+        Assert.Contains(refused, m => m.Contains("\"type\":\"spell.failed\"") && m.Contains("\"reason\":\"invalidTarget\""));
+        Assert.DoesNotContain(allowed, m => m.Contains("\"reason\":\"invalidTarget\""));
+    }
+
+    [Fact]
+    public void RealGearNamedForAGodIsNotAToolSpell() =>
+        Assert.False(GmOnlySpells.Covers(2549, new SpellDefinition(2549, "Robe of Healer of God", 0, 0, 0f)));
+
     [Fact]
     public async Task AdminSession_TakesDamageLikeAnybodyElse()
     {

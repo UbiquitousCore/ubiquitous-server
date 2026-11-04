@@ -34,8 +34,9 @@ Notes marked **◆ Legendary** describe how Legendary mode differs; **Tip** and 
 
 ### ◆ Legendary: Exhaustion
 
-- Legendary copies wear you down. Every 45 seconds you spend inside, your **Exhaustion** rises by 1, and each boss kill adds more on top. In Knahswahs Jail the Executioner and Ariel add 5 each and Cosmo adds 8. In Relic's Key, Hathraad and Kermode add 4 each and Alr-Rahjil adds 9. It caps at 100.
-- Exhaustion is shown on your character sheet as "Exhaustion: 12 / 100". It **empties once a day** at the daily reset.
+- Legendary copies wear you down. Each boss killed adds to your **Exhaustion**, whether or not you hit it yourself; Normal mode adds nothing. In Knahswahs Jail the Executioner and Ariel add 5 each and Cosmo adds 8 (18 for a full run). In Relic's Key, Hathraad and Kermode add 4 each and Alr-Rahjil adds 9. It caps at 100.
+- Legendary mode needs level 60. **At 100 / 100 you cannot enter a Legendary dungeon** until the daily reset, not even to go back for loot after dying inside. Using a teleport inside a dungeon while at 100 puts you out of it.
+- Exhaustion is shown as "Exhaustion: 12 / 100" on the Dungeon page of the team screen. It **empties once a day** at the daily reset.
 
 ## The world
 

@@ -22,6 +22,21 @@ public sealed class IgnoreTests
     }
 
     [Fact]
+    public async Task Ignoring_AFriendFromTheirRow_ByTheIdTheListGaveThem_MovesThemToIgnored()
+    {
+        var hub = new PlaySessionHub();
+        var characters = new InMemoryCharacterStore([Character("ia9", "Ayla"), Character("ib9", "Borin")]);
+        var (ayla, _) = await JoinAsync(hub, characters, "ia9", "Ayla");
+
+        var befriended = await SendAsync(hub, ayla, WebMessageTypes.SocialFriendAdd, 5, new SocialTargetPayload(Name: "Borin"));
+        Assert.Contains(befriended, m => m.Contains("\"networkId\":\"player:char-ib9\""));
+        var ignored = await SendAsync(hub, ayla, WebMessageTypes.SocialIgnoreAdd, 6,
+            new SocialTargetPayload(TargetId: "player:char-ib9"));
+
+        Assert.Contains(ignored, m => m.Contains("\"friends\":[]") && m.Contains("\"name\":\"Borin\""));
+    }
+
+    [Fact]
     public async Task Ignored_WhispersNeverArriveButTheSenderStillSeesThemSent()
     {
         var hub = new PlaySessionHub();

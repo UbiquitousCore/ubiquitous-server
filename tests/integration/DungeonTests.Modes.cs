@@ -12,7 +12,7 @@ public sealed partial class DungeonTests
     {
         var (session, _) = await JoinAsync("mode1", "Ayla",
             [new CreatureSpawnDefinition(3101, 14, 2666, -681, InsideFloorY, -2097, 0)],
-            LegendContent());
+            LegendContent(), level: 60);
 
         var chosen = await ChooseModeAsync(session, 2, WireCodes.DungeonMode.Legend);
         var entered = await MoveAsync(session, 3, GateInsideX, 2, GateApproachZ);
@@ -39,7 +39,7 @@ public sealed partial class DungeonTests
     {
         var (session, _) = await JoinAsync("mode3", "Ayla",
             [new CreatureSpawnDefinition(3103, 14, 2666, -681, InsideFloorY, -2097, 0)],
-            LegendContent());
+            LegendContent(), level: 60);
         await ChooseModeAsync(session, 2, WireCodes.DungeonMode.Legend);
         await MoveAsync(session, 3, GateInsideX, 2, GateApproachZ);
         await MoveAsync(session, 4, InsideArrivalX, InsideFloorY, -2096);
@@ -77,7 +77,7 @@ public sealed partial class DungeonTests
                 new CreatureSpawnDefinition(3104, 14, 2668, -681, InsideFloorY, -2097, 0),
                 new CreatureSpawnDefinition(3105, 14, 2666, -683, InsideFloorY, -2097, 0),
             ],
-            content, instances);
+            content, instances, level: 60);
         await ChooseModeAsync(session, 2, WireCodes.DungeonMode.Legend);
         await MoveAsync(session, 3, GateInsideX, 2, GateApproachZ);
         var key = session.CurrentInstanceKey!;
@@ -108,10 +108,10 @@ public sealed partial class DungeonTests
     }
 
     [Fact]
-    public async Task ALegendCopy_WearsThePlayerDownOverTimeAndMoreForEachBoss()
+    public async Task ALegendCopy_WearsThePlayerDownForEachBossKilled_NotForTimeSpent()
     {
         var instances = new InstanceService();
-        var (session, _) = await JoinAsync("mode7", "Ayla", [], LegendContent(), instances);
+        var (session, _) = await JoinAsync("mode7", "Ayla", [], LegendContent(), instances, level: 60);
         await ChooseModeAsync(session, 2, WireCodes.DungeonMode.Legend);
         await MoveAsync(session, 3, GateInsideX, 2, GateApproachZ);
         var key = session.CurrentInstanceKey!;
@@ -119,15 +119,39 @@ public sealed partial class DungeonTests
         var now = DateTimeOffset.UtcNow;
         var log = new List<string>();
         log.AddRange(session.TickCombat(now));
-        log.AddRange(session.TickCombat(now + TimeSpan.FromSeconds(44)));
+        log.AddRange(session.TickCombat(now + TimeSpan.FromMinutes(10)));
         Assert.DoesNotContain(log, m => m.Contains("\"exhaustion\""));
 
-        log.AddRange(session.TickCombat(now + TimeSpan.FromSeconds(91)));
-        Assert.Contains(log, m => m.Contains("\"type\":\"player.updated\"") && m.Contains("\"exhaustion\":2"));
-
         instances.Reach(key, "boss.2667.down");
-        var afterCosmo = session.TickCombat(now + TimeSpan.FromSeconds(92));
-        Assert.Contains(afterCosmo, m => m.Contains("\"exhaustion\":10"));
+        var afterCosmo = session.TickCombat(now + TimeSpan.FromMinutes(10.1));
+        Assert.Contains(afterCosmo, m => m.Contains("\"type\":\"player.updated\"") && m.Contains("\"exhaustion\":8"));
+    }
+
+    [Fact]
+    public async Task ALegendCopy_TurnsAwayAHeroBelowLevelSixty()
+    {
+        var (session, _) = await JoinAsync("mode9", "Ayla", [], LegendContent(), level: 59);
+        await ChooseModeAsync(session, 2, WireCodes.DungeonMode.Legend);
+
+        var refused = await MoveAsync(session, 3, GateInsideX, 2, GateApproachZ);
+
+        Assert.Contains(refused, m => m.Contains(WireCodes.ProtocolError.LegendTooLow));
+        Assert.Null(session.CurrentInstanceKey);
+    }
+
+    [Fact]
+    public async Task ALegendCopy_TurnsAwayAHeroWornDownToOneHundred_ButANormalOneDoesNot()
+    {
+        var (legend, _) = await JoinAsync("mode10", "Ayla", [], LegendContent(), level: 60, exhaustion: 100);
+        await ChooseModeAsync(legend, 2, WireCodes.DungeonMode.Legend);
+        var refused = await MoveAsync(legend, 3, GateInsideX, 2, GateApproachZ);
+
+        Assert.Contains(refused, m => m.Contains(WireCodes.ProtocolError.Exhausted));
+        Assert.Null(legend.CurrentInstanceKey);
+
+        var (normal, _) = await JoinAsync("mode11", "Ayla", [], LegendContent(), level: 60, exhaustion: 100);
+        await MoveAsync(normal, 2, GateInsideX, 2, GateApproachZ);
+        Assert.NotNull(normal.CurrentInstanceKey);
     }
 
     [Fact]

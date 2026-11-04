@@ -93,6 +93,13 @@ public sealed class InstanceService
         lock (_gate) return ResetOwnedByLocked(ownerId);
     }
 
+    // The mode a copy entered now would have: an open copy keeps its own.
+    public DungeonMode ModeOfNext(ushort mapId, string ownerId)
+    {
+        lock (_gate)
+            return _instances.TryGetValue($"{mapId}:{ownerId}", out var open) ? open.Mode : ChosenModeLocked(ownerId);
+    }
+
     public DungeonMode ChosenMode(string ownerId)
     {
         lock (_gate) return ChosenModeLocked(ownerId);

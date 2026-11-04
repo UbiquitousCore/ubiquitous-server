@@ -102,6 +102,31 @@ public sealed class MountTests
     }
 
     [Fact]
+    public async Task LearningAMount_IsSavedOnTheNextTick_NotAfterTheUsualFiveMinutes()
+    {
+        var ayla = await EnterAsync(Rider());
+        Assert.False(ayla.IsAutosaveDue(DateTimeOffset.UtcNow));
+
+        await UseBondAsync(ayla);
+
+        Assert.True(ayla.IsAutosaveDue(DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task StoppingTheServer_SavesWhatEveryoneOnlineHasLearned()
+    {
+        var characters = new InMemoryCharacterStore([Rider()]);
+        var ayla = await EnterAsync(Rider(), characters);
+        var hub = new PlaySessionHub();
+        hub.Register(ayla, _ => Task.CompletedTask);
+        await UseBondAsync(ayla);
+
+        await hub.SaveEveryoneAsync();
+
+        Assert.Equal([Horse], (await characters.GetByGuidAsync("char-rider"))!.LearnedSpells);
+    }
+
+    [Fact]
     public async Task ALearnedMount_IsSavedAndKnownAgainOnTheNextVisit()
     {
         var characters = new InMemoryCharacterStore([Rider()]);

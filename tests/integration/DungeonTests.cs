@@ -944,20 +944,22 @@ public sealed partial class DungeonTests
 
     private static async Task<(PlaySession Session, Inbox Inbox)> JoinAsync(
         string guid, string name, CreatureSpawnDefinition[] spawns,
-        GameContent? content = null, InstanceService? instances = null)
+        GameContent? content = null, InstanceService? instances = null, int level = 4, int? exhaustion = null)
     {
         var hub = new PlaySessionHub();
         return await JoinAsync(hub, instances ?? new InstanceService(), guid, name,
-            spawns, GateApproachX, GateApproachZ, content);
+            spawns, GateApproachX, GateApproachZ, content, level, exhaustion);
     }
 
     private static async Task<(PlaySession Session, Inbox Inbox)> JoinAsync(
         PlaySessionHub hub, InstanceService instances, string guid, string name,
-        CreatureSpawnDefinition[] spawns, float x, float z, GameContent? content = null)
+        CreatureSpawnDefinition[] spawns, float x, float z, GameContent? content = null, int level = 4,
+        int? exhaustion = null)
     {
         var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
-                $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 1, x, 2, z, 4, [100, 200])]),
+                $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 1, x, 2, z, level, [100, 200],
+                Exhaustion: exhaustion, ExhaustionDay: exhaustion is null ? null : Exhaustion.DayOf(DateTimeOffset.UtcNow))]),
             spawns, content: content ?? GameContent.Development,
             combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9, instances: instances, parties: TestSessions.PartiesOf(hub));
         var inbox = new Inbox([], []);

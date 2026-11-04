@@ -213,6 +213,8 @@ public sealed partial class PlaySession
 
         var spellId = proto.OnUseSpellId!.Value;
         var spell = _content.Spells[spellId];
+        if (GmOnlySpells.Covers(spellId, spell) && _account?.IsAdmin != true)
+            return [Error(WireCodes.ProtocolError.CannotUse, "Only a GM can use this.")];
 
         if (_itemCooldownUntil.TryGetValue(item.Entry, out var readyAt) && now < readyAt)
             return [Error(WireCodes.ProtocolError.CannotUse, "This item is not ready yet.")];
