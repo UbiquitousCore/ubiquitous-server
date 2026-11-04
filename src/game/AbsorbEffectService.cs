@@ -18,7 +18,7 @@ public sealed class AbsorbEffectService(UnitEffects effects)
     {
         var shield = new ActiveAbsorbEffect(
             targetId, spellId, Math.Max(0, amount), Math.Clamp(percent, 0, 100), EffectLength.ExpiresAt(now, durationMs))
-            { Kind = Kind, AppliedAt = now, Lasts = EffectLength.Lasts(durationMs) };
+        { Kind = Kind, AppliedAt = now, Lasts = EffectLength.Lasts(durationMs) };
         if (ShieldOn(targetId) is { } held) effects.Reapply(held, shield);
         else effects.Add(shield);
     }

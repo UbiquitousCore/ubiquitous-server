@@ -14,7 +14,7 @@ public sealed class StealthEffectService(UnitEffects effects)
     {
         effects.RemoveOn<ActiveStealthEffect>(Kind, targetId);
         effects.Add(new ActiveStealthEffect(targetId, spellId, EffectLength.ExpiresAt(now, durationMs))
-            { Kind = Kind, AppliedAt = now, Lasts = EffectLength.Lasts(durationMs) });
+        { Kind = Kind, AppliedAt = now, Lasts = EffectLength.Lasts(durationMs) });
     }
 
     public IReadOnlyList<uint> Clear(string targetId) =>

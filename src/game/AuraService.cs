@@ -30,7 +30,7 @@ public sealed class AuraService(UnitEffects effects)
         effects.RemoveWhere<ActiveAura>(Kind, a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId);
         var ticks = durationMs > 0 ? TicksIn(durationMs) : TickCount;
         effects.Add(new ActiveAura(targetId, spellId, isHeal, perTick, ticks, now + TickInterval, casterId)
-            { Kind = Kind, AppliedAt = now, Lasts = TickInterval * ticks });
+        { Kind = Kind, AppliedAt = now, Lasts = TickInterval * ticks });
     }
 
     public IReadOnlyList<uint> Clear(string targetId) =>
