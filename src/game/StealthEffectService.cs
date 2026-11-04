@@ -4,8 +4,6 @@ public sealed record ActiveStealthEffect(string TargetId, uint SpellId, DateTime
 
 public sealed class StealthEffectService
 {
-    public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
-
     private readonly List<ActiveStealthEffect> _active = new();
     private readonly Lock _gate = new();
 
@@ -14,8 +12,7 @@ public sealed class StealthEffectService
         lock (_gate)
         {
             _active.RemoveAll(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal));
-            var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-            _active.Add(new ActiveStealthEffect(targetId, spellId, now + duration));
+                        _active.Add(new ActiveStealthEffect(targetId, spellId, EffectLength.ExpiresAt(now, durationMs)));
         }
     }
 

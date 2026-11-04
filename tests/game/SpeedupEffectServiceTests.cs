@@ -15,13 +15,12 @@ public sealed class SpeedupEffectServiceTests
     }
 
     [Fact]
-    public void Apply_FallsBackToTheDefaultDurationWhenNoneIsGiven()
+    public void Apply_WithNoDurationLastsUntilSomethingEndsIt()
     {
         var speedup = new SpeedupEffectService();
         speedup.Apply("player:1", spellId: 170, percent: 20, durationMs: 0, Now);
 
-        Assert.Equal(20, speedup.CurrentPercent("player:1", Now + SpeedupEffectService.DefaultDuration - TimeSpan.FromMilliseconds(1)));
-        Assert.Equal(0, speedup.CurrentPercent("player:1", Now + SpeedupEffectService.DefaultDuration));
+        Assert.Equal(20, speedup.CurrentPercent("player:1", Now + TimeSpan.FromDays(1)));
     }
 
     [Fact]

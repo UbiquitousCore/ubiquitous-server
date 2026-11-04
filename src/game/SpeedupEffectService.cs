@@ -4,15 +4,12 @@ public sealed record ActiveSpeedupEffect(string TargetId, uint SpellId, int Perc
 
 public sealed class SpeedupEffectService
 {
-    public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
-
     private readonly List<ActiveSpeedupEffect> _active = new();
 
     public void Apply(string targetId, uint spellId, int percent, int durationMs, DateTimeOffset now, string? casterId = null)
     {
         _active.RemoveAll(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal));
-        var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        _active.Add(new ActiveSpeedupEffect(targetId, spellId, percent, now + duration, casterId));
+                _active.Add(new ActiveSpeedupEffect(targetId, spellId, percent, EffectLength.ExpiresAt(now, durationMs), casterId));
     }
 
     public IReadOnlyList<uint> Clear(string targetId)

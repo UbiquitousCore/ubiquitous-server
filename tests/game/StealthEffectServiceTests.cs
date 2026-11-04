@@ -15,14 +15,12 @@ public sealed class StealthEffectServiceTests
     }
 
     [Fact]
-    public void Apply_FallsBackToTheDefaultDurationWhenNoneIsGiven()
+    public void Apply_WithNoDurationLastsUntilSomethingEndsIt()
     {
         var stealth = new StealthEffectService();
         stealth.Apply("player:1", spellId: 5813, durationMs: 0, Now);
 
-        Assert.True(stealth.IsStealthed(
-            "player:1", Now + StealthEffectService.DefaultDuration - TimeSpan.FromMilliseconds(1)));
-        Assert.False(stealth.IsStealthed("player:1", Now + StealthEffectService.DefaultDuration));
+        Assert.True(stealth.IsStealthed("player:1", Now + TimeSpan.FromDays(1)));
     }
 
     [Fact]

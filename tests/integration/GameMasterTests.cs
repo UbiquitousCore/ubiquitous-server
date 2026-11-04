@@ -123,6 +123,34 @@ public sealed class GameMasterTests
     }
 
     [Fact]
+    public async Task AGmsTestStealth_WithNoDuration_HoldsUntilTheyAttack()
+    {
+        var content = GameContent.Development with
+        {
+            Spells = new Dictionary<uint, SpellDefinition>(GameContent.Development.Spells)
+            {
+                [458] = new(458, "Test Stealth", 0, 0, 0f, AuraStealth: true, EffectTarget: SpellEffectTargets.Self),
+            },
+        };
+        var gm = await SessionAsync(admin: true, [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], content);
+        await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AdminLearnSpells, 2, new { })));
+
+        var cast = await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.SpellRequest, 3, new { spellId = 458, targetId = 0 })));
+        var log = new List<string>();
+        var now = DateTimeOffset.UtcNow;
+        for (var i = 0; i < 60; i++) log.AddRange(gm.TickCombat(now += TimeSpan.FromSeconds(1)));
+
+        Assert.Contains(cast, m => m.Contains("\"type\":\"aura.applied\"") && m.Contains("\"maxDuration\":0"));
+        Assert.DoesNotContain(log, m => m.Contains("\"type\":\"aura.ended\"") && m.Contains("\"spellId\":458"));
+
+        var attacked = await gm.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AttackEngage, 4, new { targetId = "Creature:1" })));
+        Assert.Contains(attacked, m => m.Contains("\"type\":\"aura.ended\"") && m.Contains("\"spellId\":458"));
+    }
+
+    [Fact]
     public void RealGearNamedForAGodIsNotAToolSpell() =>
         Assert.False(GmOnlySpells.Covers(2549, new SpellDefinition(2549, "Robe of Healer of God", 0, 0, 0f)));
 

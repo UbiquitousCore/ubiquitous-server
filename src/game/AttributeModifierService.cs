@@ -5,15 +5,12 @@ public sealed record ActiveAttributeModifier(
 
 public sealed class AttributeModifierService
 {
-    public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
-
     private readonly List<ActiveAttributeModifier> _active = new();
 
     public void Apply(string targetId, uint spellId, int attributeId, int amount, bool isPercent, int durationMs, DateTimeOffset now, string? casterId = null)
     {
         _active.RemoveAll(m => string.Equals(m.TargetId, targetId, StringComparison.Ordinal));
-        var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        _active.Add(new ActiveAttributeModifier(targetId, spellId, attributeId, amount, isPercent, now + duration, casterId));
+                _active.Add(new ActiveAttributeModifier(targetId, spellId, attributeId, amount, isPercent, EffectLength.ExpiresAt(now, durationMs), casterId));
     }
 
     public IReadOnlyList<uint> Clear(string targetId)

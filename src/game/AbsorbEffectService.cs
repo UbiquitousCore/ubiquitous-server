@@ -6,16 +6,13 @@ public sealed record AbsorbEnded(ActiveAbsorbEffect Shield, bool Broken);
 
 public sealed class AbsorbEffectService
 {
-    public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
-
     private readonly Dictionary<string, ActiveAbsorbEffect> _active = new(StringComparer.Ordinal);
     private readonly List<ActiveAbsorbEffect> _usedUp = new();
 
     public void Apply(string targetId, uint spellId, int amount, int percent, int durationMs, DateTimeOffset now)
     {
-        var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        _active[targetId] = new ActiveAbsorbEffect(
-            targetId, spellId, Math.Max(0, amount), Math.Clamp(percent, 0, 100), now + duration);
+                _active[targetId] = new ActiveAbsorbEffect(
+            targetId, spellId, Math.Max(0, amount), Math.Clamp(percent, 0, 100), EffectLength.ExpiresAt(now, durationMs));
     }
 
     public int Absorb(string targetId, int damage, DateTimeOffset now)

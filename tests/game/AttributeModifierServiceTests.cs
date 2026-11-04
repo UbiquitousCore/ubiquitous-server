@@ -45,13 +45,12 @@ public sealed class AttributeModifierServiceTests
     }
 
     [Fact]
-    public void Apply_FallsBackToTheDefaultDurationWhenNoneIsGiven()
+    public void Apply_WithNoDurationLastsUntilSomethingEndsIt()
     {
         var mods = new AttributeModifierService();
         mods.Apply("player:char-a", spellId: 61, attributeId: 25, amount: 10, isPercent: false, durationMs: 0, Now);
 
-        Assert.Empty(mods.TickExpired(Now + AttributeModifierService.DefaultDuration - TimeSpan.FromMilliseconds(1)));
-        Assert.Single(mods.TickExpired(Now + AttributeModifierService.DefaultDuration));
+        Assert.Empty(mods.TickExpired(Now + TimeSpan.FromDays(1)));
     }
 
     [Fact]

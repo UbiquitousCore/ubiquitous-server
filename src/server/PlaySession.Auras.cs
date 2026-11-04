@@ -140,9 +140,7 @@ public sealed partial class PlaySession
         _speedup.Apply(targetId, spellId, percent, spell.DurationMs, now, casterId.Text);
 
         var target = WebNetworkId.FromString(targetId);
-        int durationMs = spell.DurationMs > 0
-            ? spell.DurationMs
-            : checked((int)SpeedupEffectService.DefaultDuration.TotalMilliseconds);
+        int durationMs = EffectLength.ShownMs(spell.DurationMs);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [target], [], spell.Speed, Aimed: false)),
@@ -171,9 +169,7 @@ public sealed partial class PlaySession
         _meleeAttackSpeed.Apply(targetId, spellId, percent, spell.DurationMs, now, casterId.Text);
 
         var target = WebNetworkId.FromString(targetId);
-        int durationMs = spell.DurationMs > 0
-            ? spell.DurationMs
-            : checked((int)SpeedupEffectService.DefaultDuration.TotalMilliseconds);
+        int durationMs = EffectLength.ShownMs(spell.DurationMs);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [target], [], spell.Speed, Aimed: false)),
@@ -202,9 +198,7 @@ public sealed partial class PlaySession
         _rangeAttackSpeed.Apply(targetId, spellId, percent, spell.DurationMs, now);
 
         var target = WebNetworkId.FromString(targetId);
-        int durationMs = spell.DurationMs > 0
-            ? spell.DurationMs
-            : checked((int)SpeedupEffectService.DefaultDuration.TotalMilliseconds);
+        int durationMs = EffectLength.ShownMs(spell.DurationMs);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [target], [], spell.Speed, Aimed: false)),
@@ -340,9 +334,7 @@ public sealed partial class PlaySession
     {
         _absorb.Apply(casterId.Text!, spellId, spell.AuraAbsorbAmount!.Value, spell.AuraAbsorbPercent ?? 100,
             spell.DurationMs, now);
-        int durationMs = spell.DurationMs > 0
-            ? spell.DurationMs
-            : checked((int)AbsorbEffectService.DefaultDuration.TotalMilliseconds);
+        int durationMs = EffectLength.ShownMs(spell.DurationMs);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [casterId], [], spell.Speed, Aimed: false)),
@@ -416,9 +408,7 @@ public sealed partial class PlaySession
         var casterText = casterId.Text!;
         _stealth.Apply(casterText, spellId, spell.DurationMs, now);
 
-        int durationMs = spell.DurationMs > 0
-            ? spell.DurationMs
-            : checked((int)StealthEffectService.DefaultDuration.TotalMilliseconds);
+        int durationMs = EffectLength.ShownMs(spell.DurationMs);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [casterId], [], spell.Speed, Aimed: false)),
@@ -461,9 +451,7 @@ public sealed partial class PlaySession
         _attributeModifiers.Apply(targetId, spellId, attributeId, amount, spell.AuraAttributeIsPercent, spell.DurationMs, now, casterId.Text);
 
         var target = WebNetworkId.FromString(targetId);
-        int durationMs = spell.DurationMs > 0
-            ? spell.DurationMs
-            : checked((int)AttributeModifierService.DefaultDuration.TotalMilliseconds);
+        int durationMs = EffectLength.ShownMs(spell.DurationMs);
         var responses = new List<string>
         {
             Reply(WebMessageTypes.SpellReleased, new SpellReleasedPayload(spellId, casterId, [target], [], spell.Speed, Aimed: false)),
