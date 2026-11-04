@@ -177,6 +177,26 @@ public sealed class PlaySessionHub(ILogger? logger = null)
         }
     }
 
+    // On the way down, before anything closes: a stop must not cost what was done since the last autosave.
+    public async Task SaveEveryoneAsync()
+    {
+        foreach (var session in _sessions.Keys)
+        {
+            try
+            {
+                await SendInOrderAsync(session, async () =>
+                {
+                    await session.SaveProgressAsync(CancellationToken.None);
+                    return [];
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Shutdown save failed");
+            }
+        }
+    }
+
     public async Task AutosaveAsync(DateTimeOffset now, CancellationToken cancellationToken = default)
     {
         foreach (var pair in _sessions)

@@ -42,6 +42,7 @@ public sealed partial class PlaySession
 
         _learnedSpells.AddRange(fresh);
         _baseSpells = [.. _baseSpells, .. fresh];
+        SaveSoon();
         var book = SpellBookWithTalents();
         _spells.ReplaceKnown(book);
         RaiseBarToHighestRanks(book);

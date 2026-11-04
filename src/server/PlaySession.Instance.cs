@@ -87,6 +87,7 @@ public sealed partial class PlaySession
         if (_content.Maps.Count > 0 && !_content.Maps.ContainsKey(mapId))
             return [Error(WireCodes.ProtocolError.InvalidInstance, $"Unknown map {mapId}.")];
 
+        if (LegendEntryRefused(mapId) is { } refused) return [refused];
         var result = ResolveInstance(mapId);
 
         var pos = request.Position is { } wire

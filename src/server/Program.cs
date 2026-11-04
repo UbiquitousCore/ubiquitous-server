@@ -123,6 +123,7 @@ public static class Program
 
         logger.LogInformation("Server started on port {Port} ({Address}). Press Ctrl+C to stop", options.WebSocketPort, options.BindAddress);
         await WaitForShutdownAsync();
+        await hub.SaveEveryoneAsync();
         await modules.ShutdownAsync(CancellationToken.None);
         return 0;
     }

@@ -180,9 +180,11 @@ read in the live game between 2026-10-03 and 2026-10-06; the readings are in
 - Leaving the map's edge moves a living player to the nearest graveyard
   (`WorldSessionState`, `PlaySession.MoveToNearestGraveyard`), from the
   gameplay field guide (Moving around).
-- Legend exhaustion: 1 per 45 s inside, each boss's amount on its death, a
-  cap of 100 and a daily reset (`Exhaustion`, `CreatureScript.ExhaustsOnDeath`),
-  from the gameplay field guide (Legendary: Exhaustion). The reset hour,
+- Legend exhaustion: each boss's amount on its death, a cap of 100, a daily
+  reset, and no Legend entry at 100 or below level 60 (`Exhaustion`,
+  `CreatureScript.ExhaustsOnDeath`), from players' accounts of play passed on
+  by the owner; the per-boss amounts agree with a table players compiled.
+  Whether time inside adds any is open in the issue tracker. The reset hour,
   midnight UTC, is this project's own choice.
 - Mail holds at most 5 attachments, lists the newest 20 letters, and can be
   sent back to its writer (`MailService`), from the gameplay field guide

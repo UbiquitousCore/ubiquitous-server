@@ -17,6 +17,13 @@ public sealed class ExhaustionTests
         Assert.Equal(0, Exhaustion.Today(12, raisedOn: null, Evening));
     }
 
+    [Theory]
+    [InlineData(59, 0, LegendRefusal.TooLow)]
+    [InlineData(60, 99, null)]
+    [InlineData(60, 100, LegendRefusal.Exhausted)]
+    public void LegendCopiesWantLevelSixtyAndRoomToTire(int level, int exhaustion, LegendRefusal? expected) =>
+        Assert.Equal(expected, Exhaustion.WhyNotLegend(level, exhaustion));
+
     [Fact]
     public void ItNeverPassesOneHundred()
     {

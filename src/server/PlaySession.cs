@@ -358,6 +358,12 @@ public sealed partial class PlaySession : ISessionPlayer
 
     public static readonly TimeSpan AutosaveInterval = TimeSpan.FromMinutes(5);
 
+    // Something that cannot be had again, such as a spent bond, is saved on the next world tick.
+    private void SaveSoon()
+    {
+        if (_character is not null) Volatile.Write(ref _nextAutosaveTicks, 0);
+    }
+
     public bool IsAutosaveDue(DateTimeOffset now) => now.UtcTicks >= Volatile.Read(ref _nextAutosaveTicks);
 
     public async Task AutosaveAsync(DateTimeOffset now, CancellationToken cancellationToken = default)
@@ -1457,6 +1463,14 @@ public sealed partial class PlaySession : ISessionPlayer
             (_instanceWorld is null ? !g.IsDungeonExit : g.IsDungeonExit));
         if (gate is not null)
         {
+            if (gate.IsDungeonEntrance && _instanceWorld is null && _character is not null
+                && LegendEntryRefused(gate.DestinationMapId) is { } refused)
+            {
+                _world.ApplyPlayerMovement(previousPosition, _world.PlayerYaw, bypassValidation: true);
+                return Task.FromResult<IReadOnlyList<string>>([Reply(WebMessageTypes.MoveAccepted,
+                    new MoveAcceptedPayload(new Position(previousPosition.X, previousPosition.Y, previousPosition.Z))),
+                    refused]);
+            }
             var leavingId = PlayerUnitId;
             UnmarkEngaged();
             var gateStopped = _combat.Disengage(leavingId);

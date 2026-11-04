@@ -5,6 +5,8 @@ public static class WireCodes
     public static class ProtocolError
     {
         public const string BarrierClosed = "barrier_closed";
+        public const string Exhausted = "exhausted";
+        public const string LegendTooLow = "legend_too_low";
         public const string CannotUse = "cannot_use";
         public const string ChatTooFrequent = "chat_too_frequent";
         public const string DuelRefused = "duel_refused";

@@ -34,10 +34,10 @@ public sealed partial class PlaySession
         if (_silence.IsControlled(PlayerUnitId, now))
             return [Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(casterId, spellId, WireCodes.SpellRefusal.Silenced))];
 
-        if (OperatorSpells.All.Contains(spellId) && _account?.IsAdmin != true)
+        _content.Spells.TryGetValue(spellId, out var peekedSpell);
+        if (GmOnlySpells.Covers(spellId, peekedSpell) && _account?.IsAdmin != true)
             return [Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(casterId, spellId, WireCodes.SpellRefusal.InvalidTarget))];
 
-        _content.Spells.TryGetValue(spellId, out var peekedSpell);
         if (_riding is not null && MountRules.IsMount(peekedSpell) && _spells.Known.Contains(spellId))
             return MountDismount(now);
         if (MountRules.IsMount(peekedSpell)
