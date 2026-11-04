@@ -82,18 +82,6 @@ public sealed class AuraServiceTests
         Assert.Equal("player:a", Assert.Single(auras.Tick(Now + AuraService.TickInterval)).CasterId);
     }
 
-    [Fact]
-    public void ClearWhere_EndsOnlyTheAurasItPicks()
-    {
-        var auras = new AuraService(new UnitEffects());
-        auras.Apply("player:b", spellId: 61, perTick: 10, isHeal: false, Now, casterId: "player:a");
-        auras.Apply("player:b", spellId: 62, perTick: 10, isHeal: true, Now, casterId: "player:c");
-
-        var ended = Assert.Single(auras.ClearWhere(a => a.CasterId == "player:a"));
-        Assert.Equal(61u, ended.SpellId);
-        Assert.Equal(62u, Assert.Single(auras.Tick(Now + AuraService.TickInterval)).SpellId);
-    }
-
     [Theory]
     [InlineData(0, 9_000)]
     [InlineData(180_000, 180_000)]

@@ -1,7 +1,10 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveStealthEffect(string TargetId, uint SpellId, DateTimeOffset ExpiresAt)
-    : UnitEffect(TargetId, SpellId, null);
+    : UnitEffect(TargetId, SpellId, null)
+{
+    public override bool Harmful => false;
+}
 
 public sealed class StealthEffectService(UnitEffects effects)
 {

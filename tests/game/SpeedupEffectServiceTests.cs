@@ -44,10 +44,11 @@ public sealed class SpeedupEffectServiceTests
     [Fact]
     public void Clear_DropsTheSpeedupWithNoFurtherEffect()
     {
-        var speedup = new SpeedupEffectService(new UnitEffects(), EffectKind.Speedup);
+        var effects = new UnitEffects();
+        var speedup = new SpeedupEffectService(effects, EffectKind.Speedup);
         speedup.Apply("player:1", spellId: 170, percent: 20, durationMs: 5000, Now);
 
-        speedup.Clear("player:1");
+        effects.Clear("player:1");
 
         Assert.Equal(0, speedup.CurrentPercent("player:1", Now));
     }

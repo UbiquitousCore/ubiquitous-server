@@ -2,7 +2,10 @@ namespace Ubiquitous.Game;
 
 public sealed record ActiveAura(
     string TargetId, uint SpellId, bool IsHeal, int PerTick, int TicksRemaining, DateTimeOffset NextTickAt, string? CasterId = null)
-    : UnitEffect(TargetId, SpellId, CasterId);
+    : UnitEffect(TargetId, SpellId, CasterId)
+{
+    public override bool Harmful => !IsHeal;
+}
 
 public sealed record AuraTick(string TargetId, uint SpellId, bool IsHeal, int PerTick, bool Expired, string? CasterId = null);
 
@@ -31,8 +34,6 @@ public sealed class AuraService(UnitEffects effects)
 
     public IReadOnlyList<uint> Clear(string targetId) =>
         [.. effects.RemoveOn<ActiveAura>(Kind, targetId).Select(a => a.SpellId)];
-
-    public IReadOnlyList<ActiveAura> ClearWhere(Predicate<ActiveAura> match) => effects.RemoveWhere(Kind, match);
 
     public IReadOnlyList<AuraTick> Tick(DateTimeOffset now)
     {

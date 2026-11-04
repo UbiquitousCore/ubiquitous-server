@@ -69,10 +69,11 @@ public sealed class AttributeModifierServiceTests
     [Fact]
     public void Clear_DropsTheModifierWithNoFurtherEffect()
     {
-        var mods = new AttributeModifierService(new UnitEffects());
+        var effects = new UnitEffects();
+        var mods = new AttributeModifierService(effects);
         mods.Apply("player:char-a", spellId: 61, attributeId: 25, amount: 10, isPercent: false, durationMs: 5000, Now);
 
-        mods.Clear("player:char-a");
+        effects.Clear("player:char-a");
 
         Assert.Empty(mods.TickExpired(Now + TimeSpan.FromSeconds(5)));
     }

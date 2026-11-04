@@ -45,10 +45,11 @@ public sealed class ChillEffectServiceTests
     [Fact]
     public void Clear_DropsTheTagWithNoFurtherEffect()
     {
-        var chill = new ChillEffectService(new UnitEffects());
+        var effects = new UnitEffects();
+        var chill = new ChillEffectService(effects);
         chill.Apply("player:1", spellId: 117, durationMs: 5000, Now);
 
-        chill.Clear("player:1");
+        effects.Clear("player:1");
 
         Assert.False(chill.IsChilled("player:1", Now));
     }

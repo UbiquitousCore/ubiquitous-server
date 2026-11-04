@@ -1,7 +1,10 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveSpeedupEffect(string TargetId, uint SpellId, int Percent, DateTimeOffset ExpiresAt, string? CasterId = null)
-    : UnitEffect(TargetId, SpellId, CasterId);
+    : UnitEffect(TargetId, SpellId, CasterId)
+{
+    public override bool Harmful => Percent < 0;
+}
 
 public sealed class SpeedupEffectService(UnitEffects effects, EffectKind kind)
 {
@@ -10,12 +13,6 @@ public sealed class SpeedupEffectService(UnitEffects effects, EffectKind kind)
         effects.RemoveOn<ActiveSpeedupEffect>(kind, targetId);
         effects.Add(new ActiveSpeedupEffect(targetId, spellId, percent, EffectLength.ExpiresAt(now, durationMs), casterId) { Kind = kind });
     }
-
-    public IReadOnlyList<uint> Clear(string targetId) =>
-        [.. effects.RemoveOn<ActiveSpeedupEffect>(kind, targetId).Select(e => e.SpellId)];
-
-    public IReadOnlyList<ActiveSpeedupEffect> ClearWhere(Predicate<ActiveSpeedupEffect> match) =>
-        effects.RemoveWhere(kind, match);
 
     public int CurrentPercent(string targetId, DateTimeOffset now) =>
         effects.Find<ActiveSpeedupEffect>(kind, e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal) && now < e.ExpiresAt)

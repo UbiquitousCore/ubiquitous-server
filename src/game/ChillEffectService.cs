@@ -1,7 +1,10 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveChillEffect(string TargetId, uint SpellId, DateTimeOffset ExpiresAt, string? CasterId = null)
-    : UnitEffect(TargetId, SpellId, CasterId);
+    : UnitEffect(TargetId, SpellId, CasterId)
+{
+    public override bool Harmful => true;
+}
 
 public sealed class ChillEffectService(UnitEffects effects)
 {
@@ -15,12 +18,6 @@ public sealed class ChillEffectService(UnitEffects effects)
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
         effects.Add(new ActiveChillEffect(targetId, spellId, now + duration, casterId) { Kind = Kind });
     }
-
-    public IReadOnlyList<uint> Clear(string targetId) =>
-        [.. effects.RemoveOn<ActiveChillEffect>(Kind, targetId).Select(e => e.SpellId)];
-
-    public IReadOnlyList<ActiveChillEffect> ClearWhere(Predicate<ActiveChillEffect> match) =>
-        effects.RemoveWhere(Kind, match);
 
     public bool IsChilled(string targetId, DateTimeOffset now) =>
         effects.Exists<ActiveChillEffect>(Kind, e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal) && now < e.ExpiresAt);

@@ -2,7 +2,10 @@ namespace Ubiquitous.Game;
 
 public sealed record ActiveAttributeModifier(
     string TargetId, uint SpellId, int AttributeId, int Amount, bool IsPercent, DateTimeOffset ExpiresAt, string? CasterId = null)
-    : UnitEffect(TargetId, SpellId, CasterId);
+    : UnitEffect(TargetId, SpellId, CasterId)
+{
+    public override bool Harmful => Amount < 0;
+}
 
 public sealed class AttributeModifierService(UnitEffects effects)
 {
@@ -13,12 +16,6 @@ public sealed class AttributeModifierService(UnitEffects effects)
         effects.RemoveOn<ActiveAttributeModifier>(Kind, targetId);
         effects.Add(new ActiveAttributeModifier(targetId, spellId, attributeId, amount, isPercent, EffectLength.ExpiresAt(now, durationMs), casterId) { Kind = Kind });
     }
-
-    public IReadOnlyList<uint> Clear(string targetId) =>
-        [.. effects.RemoveOn<ActiveAttributeModifier>(Kind, targetId).Select(m => m.SpellId)];
-
-    public IReadOnlyList<ActiveAttributeModifier> ClearWhere(Predicate<ActiveAttributeModifier> match) =>
-        effects.RemoveWhere(Kind, match);
 
     private readonly Dictionary<string, IReadOnlyDictionary<int, int>> _worn =
         new(StringComparer.Ordinal);

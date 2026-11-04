@@ -1,7 +1,10 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveControlEffect(string TargetId, uint SpellId, DateTimeOffset ExpiresAt, string? CasterId = null)
-    : UnitEffect(TargetId, SpellId, CasterId);
+    : UnitEffect(TargetId, SpellId, CasterId)
+{
+    public override bool Harmful => true;
+}
 
 public sealed class ControlEffectService(UnitEffects effects, EffectKind kind)
 {
@@ -13,12 +16,6 @@ public sealed class ControlEffectService(UnitEffects effects, EffectKind kind)
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
         effects.Add(new ActiveControlEffect(targetId, spellId, now + duration, casterId) { Kind = kind });
     }
-
-    public IReadOnlyList<uint> Clear(string targetId) =>
-        [.. effects.RemoveOn<ActiveControlEffect>(kind, targetId).Select(e => e.SpellId)];
-
-    public IReadOnlyList<ActiveControlEffect> ClearWhere(Predicate<ActiveControlEffect> match) =>
-        effects.RemoveWhere(kind, match);
 
     public bool IsControlled(string targetId, DateTimeOffset now) =>
         effects.Exists<ActiveControlEffect>(kind, e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal) && now < e.ExpiresAt);

@@ -45,10 +45,11 @@ public sealed class SlowEffectServiceTests
     [Fact]
     public void Clear_DropsTheSlowWithNoFurtherEffect()
     {
-        var slow = new SlowEffectService(new UnitEffects());
+        var effects = new UnitEffects();
+        var slow = new SlowEffectService(effects);
         slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 5000, Now);
 
-        slow.Clear("player:1");
+        effects.Clear("player:1");
 
         Assert.Equal(0, slow.CurrentPercent("player:1", Now));
     }
@@ -79,17 +80,5 @@ public sealed class SlowEffectServiceTests
         slow.Apply("player:1", spellId: 41, percent: applied, durationMs: 5000, Now);
 
         Assert.Equal(expected, slow.CurrentPercent("player:1", Now));
-    }
-
-    [Fact]
-    public void ClearWhere_EndsASlowByItsCasterAndReportsIt()
-    {
-        var slow = new SlowEffectService(new UnitEffects());
-        slow.Apply("player:1", spellId: 41, percent: 50, durationMs: 2000, Now, casterId: "player:2");
-
-        var ended = Assert.Single(slow.ClearWhere(e => e.CasterId == "player:2"));
-        Assert.Equal(41u, ended.SpellId);
-        Assert.Equal(0, slow.CurrentPercent("player:1", Now));
-        Assert.Empty(slow.TickExpired(Now + TimeSpan.FromSeconds(5)));
     }
 }

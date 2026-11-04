@@ -153,27 +153,16 @@ public sealed partial class PlaySession
     {
         if (_character is null) return;
         var self = PlayerUnitId;
-        bool On(string target) => string.Equals(target, self, StringComparison.Ordinal);
         bool everything = match is null;
-        match ??= static (_, _) => true;
-        var ended = new List<(string? Caster, uint SpellId)>();
-        ended.AddRange(_auras.ClearWhere(a => On(a.TargetId) && match(a.CasterId, !a.IsHeal)).Select(a => (a.CasterId, a.SpellId)));
-        ended.AddRange(_control.ClearWhere(e => On(e.TargetId) && match(e.CasterId, true)).Select(e => (e.CasterId, e.SpellId)));
-        ended.AddRange(_silence.ClearWhere(e => On(e.TargetId) && match(e.CasterId, true)).Select(e => (e.CasterId, e.SpellId)));
-        ended.AddRange(_slow.ClearWhere(e => On(e.TargetId) && match(e.CasterId, true)).Select(e => (e.CasterId, e.SpellId)));
-        ended.AddRange(_speedup.ClearWhere(e => On(e.TargetId) && match(e.CasterId, e.Percent < 0)).Select(e => (e.CasterId, e.SpellId)));
-        ended.AddRange(_meleeAttackSpeed.ClearWhere(e => On(e.TargetId) && match(e.CasterId, e.Percent < 0)).Select(e => (e.CasterId, e.SpellId)));
-        ended.AddRange(_chill.ClearWhere(e => On(e.TargetId) && match(e.CasterId, true)).Select(e => (e.CasterId, e.SpellId)));
-        ended.AddRange(_attributeModifiers.ClearWhere(m => On(m.TargetId) && match(m.CasterId, m.Amount < 0)).Select(m => (m.CasterId, m.SpellId)));
-        if (everything)
-        {
-            Dismount(now, responses);
-            ended.AddRange(_absorb.Clear(self).Select(spellId => ((string?)null, spellId)));
-            ended.AddRange(_avatar.Clear(self).Select(spellId => ((string?)null, spellId)));
-            ended.AddRange(_stealth.Clear(self).Select(spellId => ((string?)null, spellId)));
-            ended.AddRange(_periodicTrigger.Clear(self).Select(spellId => ((string?)null, spellId)));
-        }
-        foreach (var (caster, spellId) in ended.Distinct()) responses.Add(AuraEnded(caster, self, spellId));
+        var ended = _effects.RemoveWhere(effect => string.Equals(effect.TargetId, self, StringComparison.Ordinal)
+            && (everything
+                ? EffectKinds.EndsWithDeath(effect.Kind)
+                : EffectKinds.Cleansable(effect.Kind) && match!(effect.CasterId, effect.Harmful)));
+        if (everything) Dismount(now, responses);
+        // What no cleanse reaches ends in the hero's own name, as its own expiry does.
+        var told = ended.OrderBy(effect => effect.Kind)
+            .Select(effect => (EffectKinds.Cleansable(effect.Kind) ? effect.CasterId : null, effect.SpellId));
+        foreach (var (caster, spellId) in told.Distinct()) responses.Add(AuraEnded(caster, self, spellId));
         MarkAuraStateUpdates(now);
     }
 

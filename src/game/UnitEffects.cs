@@ -21,6 +21,22 @@ public enum EffectKind
 public abstract record UnitEffect(string TargetId, uint SpellId, string? CasterId)
 {
     public EffectKind Kind { get; init; }
+
+    public abstract bool Harmful { get; }
+}
+
+public static class EffectKinds
+{
+    // A creature's own pulse is its script's to end.
+    public static bool EndsWithUnit(EffectKind kind) => kind is not EffectKind.CreaturePulse;
+
+    public static bool Cleansable(EffectKind kind) => kind is EffectKind.Periodic or EffectKind.Control
+        or EffectKind.Silence or EffectKind.Slow or EffectKind.Speedup or EffectKind.MeleeAttackSpeed
+        or EffectKind.Chill or EffectKind.AttributeModifier;
+
+    // TODO: Verify a ranged attack speed change should outlive death; nothing but its own time ends it.
+    public static bool EndsWithDeath(EffectKind kind) => Cleansable(kind) || kind is EffectKind.Absorb
+        or EffectKind.Avatar or EffectKind.Stealth or EffectKind.PeriodicTrigger;
 }
 
 // Everything on every unit a session tracks, in the order it was put there. Each kind's rules live in
@@ -30,6 +46,11 @@ public sealed class UnitEffects
     // Another session asks whether this one's hero is hidden.
     private readonly Lock _gate = new();
     private readonly List<UnitEffect> _held = [];
+
+    public IReadOnlyList<UnitEffect> On(string unitId)
+    {
+        lock (_gate) return _held.FindAll(effect => IsOn(effect, unitId));
+    }
 
     public IReadOnlyList<T> Of<T>(EffectKind kind) where T : UnitEffect
     {
@@ -78,6 +99,19 @@ public sealed class UnitEffects
             return [.. removed.Cast<T>()];
         }
     }
+
+    public IReadOnlyList<UnitEffect> RemoveWhere(Predicate<UnitEffect> match)
+    {
+        lock (_gate)
+        {
+            var removed = _held.FindAll(match);
+            if (removed.Count > 0) _held.RemoveAll(match);
+            return removed;
+        }
+    }
+
+    public IReadOnlyList<UnitEffect> Clear(string unitId) =>
+        RemoveWhere(effect => IsOn(effect, unitId) && EffectKinds.EndsWithUnit(effect.Kind));
 
     public IReadOnlyList<T> RemoveOn<T>(EffectKind kind, string unitId) where T : UnitEffect =>
         RemoveWhere<T>(kind, effect => IsOn(effect, unitId));

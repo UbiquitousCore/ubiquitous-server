@@ -1,7 +1,10 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActiveSlowEffect(string TargetId, uint SpellId, int Percent, DateTimeOffset ExpiresAt, string? CasterId = null)
-    : UnitEffect(TargetId, SpellId, CasterId);
+    : UnitEffect(TargetId, SpellId, CasterId)
+{
+    public override bool Harmful => true;
+}
 
 public sealed class SlowEffectService(UnitEffects effects)
 {
@@ -15,12 +18,6 @@ public sealed class SlowEffectService(UnitEffects effects)
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
         effects.Add(new ActiveSlowEffect(targetId, spellId, percent, now + duration, casterId) { Kind = Kind });
     }
-
-    public IReadOnlyList<uint> Clear(string targetId) =>
-        [.. effects.RemoveOn<ActiveSlowEffect>(Kind, targetId).Select(e => e.SpellId)];
-
-    public IReadOnlyList<ActiveSlowEffect> ClearWhere(Predicate<ActiveSlowEffect> match) =>
-        effects.RemoveWhere(Kind, match);
 
     public int CurrentPercent(string targetId, DateTimeOffset now)
     {
