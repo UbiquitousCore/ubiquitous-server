@@ -1,42 +1,30 @@
 namespace Ubiquitous.Game;
 
-public sealed record ActiveChillEffect(string TargetId, uint SpellId, DateTimeOffset ExpiresAt, string? CasterId = null);
+public sealed record ActiveChillEffect(string TargetId, uint SpellId, DateTimeOffset ExpiresAt, string? CasterId = null)
+    : UnitEffect(TargetId, SpellId, CasterId);
 
-public sealed class ChillEffectService
+public sealed class ChillEffectService(UnitEffects effects)
 {
     public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(3);
 
-    private readonly List<ActiveChillEffect> _active = new();
+    private const EffectKind Kind = EffectKind.Chill;
 
     public void Apply(string targetId, uint spellId, int durationMs, DateTimeOffset now, string? casterId = null)
     {
-        _active.RemoveAll(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal));
+        effects.RemoveOn<ActiveChillEffect>(Kind, targetId);
         var duration = durationMs > 0 ? TimeSpan.FromMilliseconds(durationMs) : DefaultDuration;
-        _active.Add(new ActiveChillEffect(targetId, spellId, now + duration, casterId));
+        effects.Add(new ActiveChillEffect(targetId, spellId, now + duration, casterId) { Kind = Kind });
     }
 
-    public IReadOnlyList<uint> Clear(string targetId)
-    {
-        var removed = _active.Where(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal))
-            .Select(e => e.SpellId).ToArray();
-        _active.RemoveAll(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal));
-        return removed;
-    }
+    public IReadOnlyList<uint> Clear(string targetId) =>
+        [.. effects.RemoveOn<ActiveChillEffect>(Kind, targetId).Select(e => e.SpellId)];
 
-    public IReadOnlyList<ActiveChillEffect> ClearWhere(Predicate<ActiveChillEffect> match)
-    {
-        var removed = _active.FindAll(match);
-        if (removed.Count > 0) _active.RemoveAll(match);
-        return removed;
-    }
+    public IReadOnlyList<ActiveChillEffect> ClearWhere(Predicate<ActiveChillEffect> match) =>
+        effects.RemoveWhere(Kind, match);
 
     public bool IsChilled(string targetId, DateTimeOffset now) =>
-        _active.Exists(e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal) && now < e.ExpiresAt);
+        effects.Exists<ActiveChillEffect>(Kind, e => string.Equals(e.TargetId, targetId, StringComparison.Ordinal) && now < e.ExpiresAt);
 
-    public IReadOnlyList<ActiveChillEffect> TickExpired(DateTimeOffset now)
-    {
-        var expired = _active.FindAll(e => now >= e.ExpiresAt);
-        if (expired.Count > 0) _active.RemoveAll(e => now >= e.ExpiresAt);
-        return expired;
-    }
+    public IReadOnlyList<ActiveChillEffect> TickExpired(DateTimeOffset now) =>
+        effects.RemoveWhere<ActiveChillEffect>(Kind, e => now >= e.ExpiresAt);
 }

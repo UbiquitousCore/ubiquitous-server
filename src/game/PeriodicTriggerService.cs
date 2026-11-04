@@ -1,21 +1,20 @@
 namespace Ubiquitous.Game;
 
 public sealed record ActivePeriodicTrigger(
-    string TargetId, uint SpellId, uint TriggerSpellId, int ChancePercent, int TicksRemaining, DateTimeOffset NextTickAt);
+    string TargetId, uint SpellId, uint TriggerSpellId, int ChancePercent, int TicksRemaining, DateTimeOffset NextTickAt)
+    : UnitEffect(TargetId, SpellId, null);
 
 public sealed record PeriodicTriggerTick(string TargetId, uint SpellId, uint TriggerSpellId, int ChancePercent, bool Expired);
 
-public sealed class PeriodicTriggerService
+public sealed class PeriodicTriggerService(UnitEffects effects, EffectKind kind)
 {
-    private readonly List<ActivePeriodicTrigger> _active = new();
-
     public void Apply(
         string targetId, uint spellId, uint triggerSpellId, int chancePercent, DateTimeOffset now,
         int ticks = AuraService.TickCount)
     {
-        _active.RemoveAll(a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId);
-        _active.Add(new ActivePeriodicTrigger(
-            targetId, spellId, triggerSpellId, chancePercent, ticks, now + AuraService.TickInterval));
+        effects.RemoveWhere<ActivePeriodicTrigger>(kind, a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId);
+        effects.Add(new ActivePeriodicTrigger(
+            targetId, spellId, triggerSpellId, chancePercent, ticks, now + AuraService.TickInterval) { Kind = kind });
     }
 
     // A spell with no duration pulses until something ends it.
@@ -24,22 +23,18 @@ public sealed class PeriodicTriggerService
         : Math.Max(1, (int)(TimeSpan.FromMilliseconds(durationMs) / AuraService.TickInterval));
 
     public bool End(string targetId, uint spellId) =>
-        _active.RemoveAll(a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId) > 0;
+        effects.RemoveWhere<ActivePeriodicTrigger>(kind, a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal) && a.SpellId == spellId).Count > 0;
 
-    public IReadOnlyList<uint> Clear(string targetId)
-    {
-        var removed = _active.Where(a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal))
-            .Select(a => a.SpellId).ToArray();
-        _active.RemoveAll(a => string.Equals(a.TargetId, targetId, StringComparison.Ordinal));
-        return removed;
-    }
+    public IReadOnlyList<uint> Clear(string targetId) =>
+        [.. effects.RemoveOn<ActivePeriodicTrigger>(kind, targetId).Select(a => a.SpellId)];
 
     public IReadOnlyList<PeriodicTriggerTick> Tick(DateTimeOffset now)
     {
+        var held = effects.Of<ActivePeriodicTrigger>(kind);
         var ticks = new List<PeriodicTriggerTick>();
-        for (int i = _active.Count - 1; i >= 0; i--)
+        for (int i = held.Count - 1; i >= 0; i--)
         {
-            var trigger = _active[i];
+            var trigger = held[i];
             if (now < trigger.NextTickAt) continue;
 
             bool expiring = trigger.TicksRemaining <= 1;
@@ -47,15 +42,15 @@ public sealed class PeriodicTriggerService
                 trigger.TargetId, trigger.SpellId, trigger.TriggerSpellId, trigger.ChancePercent, expiring));
             if (expiring)
             {
-                _active.RemoveAt(i);
+                effects.Remove(trigger);
             }
             else
             {
-                _active[i] = trigger with
+                effects.Replace(trigger, trigger with
                 {
                     TicksRemaining = trigger.TicksRemaining - 1,
                     NextTickAt = now + AuraService.TickInterval,
-                };
+                });
             }
         }
 

@@ -7,7 +7,7 @@ public sealed class AuraServiceTests
     [Fact]
     public void Tick_ReportsNothingBeforeTheFirstIntervalElapses()
     {
-        var auras = new AuraService();
+        var auras = new AuraService(new UnitEffects());
         auras.Apply("Creature:1", spellId: 61, perTick: 10, isHeal: false, Now);
 
         Assert.Empty(auras.Tick(Now + TimeSpan.FromSeconds(1)));
@@ -16,7 +16,7 @@ public sealed class AuraServiceTests
     [Fact]
     public void Tick_AppliesEveryTickThenExpiresOnTheLastOne()
     {
-        var auras = new AuraService();
+        var auras = new AuraService(new UnitEffects());
         auras.Apply("Creature:1", spellId: 61, perTick: 10, isHeal: false, Now);
         var at = Now;
 
@@ -39,7 +39,7 @@ public sealed class AuraServiceTests
     [Fact]
     public void Apply_RefreshesRatherThanStackingTheSameSpellOnTheSameTarget()
     {
-        var auras = new AuraService();
+        var auras = new AuraService(new UnitEffects());
         auras.Apply("Creature:1", spellId: 61, perTick: 10, isHeal: false, Now);
         auras.Apply("Creature:1", spellId: 61, perTick: 10, isHeal: false, Now + AuraService.TickInterval);
 
@@ -50,7 +50,7 @@ public sealed class AuraServiceTests
     [Fact]
     public void Clear_DropsEveryAuraOnATargetWithNoFurtherTicks()
     {
-        var auras = new AuraService();
+        var auras = new AuraService(new UnitEffects());
         auras.Apply("Creature:1", spellId: 61, perTick: 10, isHeal: false, Now);
         auras.Apply("Creature:1", spellId: 62, perTick: 5, isHeal: false, Now);
         auras.Apply("Creature:2", spellId: 61, perTick: 10, isHeal: false, Now);
@@ -65,7 +65,7 @@ public sealed class AuraServiceTests
     [Fact]
     public void Tick_DistinguishesHealFromDamageAuras()
     {
-        var auras = new AuraService();
+        var auras = new AuraService(new UnitEffects());
         auras.Apply("player:char-a", spellId: 9, perTick: 20, isHeal: true, Now);
 
         var tick = Assert.Single(auras.Tick(Now + AuraService.TickInterval));
@@ -76,7 +76,7 @@ public sealed class AuraServiceTests
     [Fact]
     public void Tick_NamesWhoeverCastTheAura()
     {
-        var auras = new AuraService();
+        var auras = new AuraService(new UnitEffects());
         auras.Apply("player:b", spellId: 61, perTick: 10, isHeal: false, Now, casterId: "player:a");
 
         Assert.Equal("player:a", Assert.Single(auras.Tick(Now + AuraService.TickInterval)).CasterId);
@@ -85,7 +85,7 @@ public sealed class AuraServiceTests
     [Fact]
     public void ClearWhere_EndsOnlyTheAurasItPicks()
     {
-        var auras = new AuraService();
+        var auras = new AuraService(new UnitEffects());
         auras.Apply("player:b", spellId: 61, perTick: 10, isHeal: false, Now, casterId: "player:a");
         auras.Apply("player:b", spellId: 62, perTick: 10, isHeal: true, Now, casterId: "player:c");
 

@@ -7,7 +7,7 @@ public sealed class AbsorbEffectServiceTests
     [Fact]
     public void AFullShieldTakesWholeBlowsUntilItsAmountIsSpent()
     {
-        var shields = new AbsorbEffectService();
+        var shields = new AbsorbEffectService(new UnitEffects());
         shields.Apply("player:1", spellId: 5118, amount: 50, percent: 100, durationMs: 300000, Now);
 
         Assert.Equal(0, shields.Absorb("player:1", 30, Now));
@@ -18,7 +18,7 @@ public sealed class AbsorbEffectServiceTests
     [Fact]
     public void APartialShieldTakesItsShareOfEachBlow()
     {
-        var shields = new AbsorbEffectService();
+        var shields = new AbsorbEffectService(new UnitEffects());
         shields.Apply("player:1", spellId: 5, amount: 50, percent: 40, durationMs: 300000, Now);
 
         Assert.Equal(6, shields.Absorb("player:1", 10, Now));
@@ -27,7 +27,7 @@ public sealed class AbsorbEffectServiceTests
     [Fact]
     public void AShieldUsedUpEndsBrokenOnTheNextTick_AndOnePastItsDurationEndsUnbroken()
     {
-        var shields = new AbsorbEffectService();
+        var shields = new AbsorbEffectService(new UnitEffects());
         shields.Apply("player:1", spellId: 5118, amount: 10, percent: 100, durationMs: 300000, Now);
         shields.Apply("player:2", spellId: 5118, amount: 10, percent: 100, durationMs: 2000, Now);
         shields.Absorb("player:1", 45, Now);
@@ -47,7 +47,7 @@ public sealed class AbsorbEffectServiceTests
     [Fact]
     public void ASecondShieldReplacesTheFirst()
     {
-        var shields = new AbsorbEffectService();
+        var shields = new AbsorbEffectService(new UnitEffects());
         shields.Apply("player:1", spellId: 5118, amount: 100, percent: 100, durationMs: 300000, Now);
         shields.Apply("player:1", spellId: 5130, amount: 5, percent: 100, durationMs: 300000, Now);
 
@@ -57,6 +57,6 @@ public sealed class AbsorbEffectServiceTests
     [Fact]
     public void NoShieldLetsTheWholeBlowThrough()
     {
-        Assert.Equal(20, new AbsorbEffectService().Absorb("player:1", 20, Now));
+        Assert.Equal(20, new AbsorbEffectService(new UnitEffects()).Absorb("player:1", 20, Now));
     }
 }
