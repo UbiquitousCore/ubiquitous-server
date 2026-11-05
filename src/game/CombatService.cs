@@ -193,6 +193,26 @@ public sealed partial class CombatService
 
     public void UseTargetStats(Func<string, CreatureCombatStats?> resolve) => _resolveStats = resolve;
 
+    // A creature the player strikes while fighting another turns on the player too.
+    private bool DrawsInBystander(string sourceId, string targetId) =>
+        LooksLikePlayerId(sourceId) && IsSelf(sourceId) && !_playerDead
+        && _targets.TryGetValue(sourceId, out var fighting)
+        && !string.Equals(fighting, targetId, StringComparison.Ordinal)
+        && SwingsBack(targetId, IsTrainingDummyTarget(targetId))
+        && !_retaliation.ContainsKey(targetId)
+        && !_dead.Contains(targetId)
+        && !IsEvading(targetId);
+
+    private readonly List<string> _pendingDrawnIn = [];
+
+    public IReadOnlyList<string> DrainDrawnIn()
+    {
+        if (_pendingDrawnIn.Count == 0) return [];
+        var drained = _pendingDrawnIn.Distinct(StringComparer.Ordinal).ToArray();
+        _pendingDrawnIn.Clear();
+        return drained;
+    }
+
     public IReadOnlyList<AttackStartResult> DrainCombatEntries()
     {
         if (_pendingCombatEntries.Count == 0) return [];
@@ -635,6 +655,7 @@ public sealed partial class CombatService
 
     private void EnterCombatOnDamage(string sourceId, string targetId, DateTimeOffset now)
     {
+        if (DrawsInBystander(sourceId, targetId)) _pendingDrawnIn.Add(targetId);
         if (!OpensAFight(sourceId, targetId)) return;
         _targets[sourceId] = targetId;
         if (!LooksLikePlayerId(targetId)) _hostility.AddFighter(targetId, sourceId);

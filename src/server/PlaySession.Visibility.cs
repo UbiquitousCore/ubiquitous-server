@@ -206,6 +206,13 @@ public sealed partial class PlaySession
                 && string.Equals(entry.AttackerId, PlayerUnitId, StringComparison.Ordinal))
                 PullPackOf(entry.TargetId, Now, responses);
         }
+        if (_character is null || _shared is null) return;
+        foreach (var struckId in _combat.DrainDrawnIn())
+        {
+            if (!_sight.Contains(struckId) || BodyGone(struckId) || IsReturningHome(struckId)) continue;
+            if (!ScriptFor(struckId).FightsBack) continue;
+            JoinFight(struckId, PlayerUnitId, responses, Now);
+        }
     }
 
     private CreatureCombatStats? CombatStatsFor(string targetId)
