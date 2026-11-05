@@ -97,7 +97,8 @@ public sealed class SpellService
         || spell.AuraStealth || spell.AuraAbsorbAmount is not null
         || spell.EffectPowerRestore is not null
         || spell.AuraTriggerSpellId is not null || spell.AuraPeriodicTriggerSpellId is not null
-        || spell.EffectTriggerSpellId is not null || spell.EffectLeapToTarget
+        || spell.EffectTriggerSpellId is not null || spell.EffectFromHidingTriggerSpellId is not null
+        || spell.EffectLeapToTarget
         || spell.AuraMountId is not null || spell.AuraAvatarDisplayId is not null
         || (spell.ExtraEffects?.Any(HasResolvableEffect) ?? false);
 

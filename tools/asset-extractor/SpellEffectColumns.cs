@@ -71,6 +71,9 @@ public static class SpellEffectColumns
     // The aura that turns its wearer into another creature's display (a boss shape, a cookie, a spirit).
     public const int AvatarSubType = 17;
 
+    // The effect applies only while the caster is in sneak mode.
+    public static bool NeedsCasterHidden(uint casterCondition) => casterCondition is 8 or 9;
+
     public const int MountSubType = 50;
     public const int MountSpeedupSubType = 52;
 }

@@ -63,7 +63,10 @@ public sealed record SpellDefinition(
     int? AuraMountSpeedupPercent = null,
     int Rank = 0,
     // A `creaturedisplayinfo` row the aura turns its wearer into, for as long as it lasts.
-    uint? AuraAvatarDisplayId = null);
+    uint? AuraAvatarDisplayId = null,
+    // Fires only when the caster was hidden (sneaking) as the cast began: the opener's stun.
+    uint? EffectFromHidingTriggerSpellId = null,
+    int? EffectFromHidingTriggerChancePercent = null);
 
 public static class SpellEffectTargets
 {

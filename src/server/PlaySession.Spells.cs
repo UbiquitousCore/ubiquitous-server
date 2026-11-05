@@ -90,6 +90,9 @@ public sealed partial class PlaySession
 
         var responses = new List<string>();
         Dismount(now, responses);
+        if (started.Spell.EffectFromHidingTriggerSpellId is not null && _stealth.IsStealthed(casterId.Text!, now))
+            _castFromHiding.Add(spellId);
+        else _castFromHiding.Remove(spellId);
         if (!isSelfTargeted && !atFriend) BreakStealth(now, responses);
         if (started.IsInstant)
         {
@@ -183,6 +186,9 @@ public sealed partial class PlaySession
             .Select(update => Reply(WebMessageTypes.QuestUpdated, QuestUpdatePayloadFor(update)))
             .ToList();
 
+    // Sneaking ends as the cast begins, so whether it opened from hiding is decided then and kept until it lands.
+    private readonly HashSet<uint> _castFromHiding = [];
+
     private const int MaxEffectDepth = 4;
     private int _effectDepth;
 
@@ -205,6 +211,9 @@ public sealed partial class PlaySession
                 ResolveTargetExtras(casterId, targetId, spellId, spell, now, landed: true, responses);
             ResolveTrigger(casterId, targetId, spell.AuraTriggerSpellId, spell.AuraTriggerChancePercent, now, responses);
             ResolveTrigger(casterId, targetId, spell.EffectTriggerSpellId, spell.EffectTriggerChancePercent, now, responses);
+            if (_castFromHiding.Remove(spellId))
+                ResolveTrigger(casterId, targetId, spell.EffectFromHidingTriggerSpellId,
+                    spell.EffectFromHidingTriggerChancePercent, now, responses);
         }
         finally
         {

@@ -150,6 +150,21 @@ public sealed class SpellEffectClassifierTests
     }
 
     [Fact]
+    public void ATriggerThatNeedsTheCasterHiddenIsKeptApartAsTheFromHidingTrigger()
+    {
+        var spell = Classify(
+            (33, Effect(1, 0, SpellEffectColumns.MainHandWeaponHitSubType, argument: 100)),
+            (34, Effect(2, 0, SpellEffectColumns.InstantTriggerSpellSubType, baseValue: 100, argument: 900, casterCondition: 8)),
+            (37, Effect(3, 0, SpellEffectColumns.InstantTriggerSpellSubType, baseValue: 100, argument: 900, casterCondition: 9)));
+
+        Assert.True(spell.EffectMeleeWeaponHit);
+        Assert.Null(spell.EffectTriggerSpellId);
+        Assert.Equal(900u, spell.EffectFromHidingTriggerSpellId);
+        Assert.Equal(100, spell.EffectFromHidingTriggerChancePercent);
+        Assert.Null(spell.ExtraEffects);
+    }
+
+    [Fact]
     public void AnUnconditionedInstantTriggerIsKept()
     {
         var spell = Classify(

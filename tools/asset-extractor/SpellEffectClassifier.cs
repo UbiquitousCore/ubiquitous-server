@@ -172,6 +172,20 @@ public static class SpellEffectClassifier
             used.Add(column);
         }
 
+        foreach (var (_, effect) in slots)
+        {
+            if (spell.EffectFromHidingTriggerSpellId is not null) break;
+            if (effect is null || effect.TargetCondition != 0
+                || !SpellEffectColumns.NeedsCasterHidden(effect.CasterCondition)) continue;
+            var withTrigger = Apply(Blank(spell, effect), effect);
+            if (withTrigger.EffectTriggerSpellId is null) continue;
+            spell = spell with
+            {
+                EffectFromHidingTriggerSpellId = withTrigger.EffectTriggerSpellId,
+                EffectFromHidingTriggerChancePercent = withTrigger.EffectTriggerChancePercent,
+            };
+        }
+
         var extras = new List<SpellDefinition>();
         foreach (var (column, effect) in slots)
         {
