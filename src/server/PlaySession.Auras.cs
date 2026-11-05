@@ -404,6 +404,9 @@ public sealed partial class PlaySession
         };
         if (spell.CooldownMs > 0)
             responses.Add(Reply(WebMessageTypes.SpellCooldownStarted, new SpellCooldownStartedPayload(spellId, spell.CooldownMs)));
+        // A swing of one's own would end the sneak at once.
+        if (_combat.HoldFire(casterText))
+            responses.Add(Reply(WebMessageTypes.AttackHalted, new AttackHaltedPayload(casterId)));
         return responses;
     }
 

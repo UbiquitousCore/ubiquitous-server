@@ -64,4 +64,50 @@ public sealed class PlayerbotPartyTests
         Assert.Contains(player.Received, message => message.Contains(WebMessageTypes.AttackMeleeStart, StringComparison.Ordinal)
             && message.Contains($"\"attackerId\":\"{bot.View.SelfId}\"", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task ABotDuellingAPlayerWhoSneaksBeforeTheFight_NeverFindsThemToFightOrFollow()
+    {
+        const uint sneak = 980;
+        var content = PlayerbotWorldTests.QuestContent() with
+        {
+            Spells = new Dictionary<uint, Ubiquitous.Data.SpellDefinition>(Ubiquitous.Game.GameContent.Development.Spells)
+            {
+                [sneak] = new(sneak, "spell-980", 0, 0, 0f, PowerCost: 0, AuraStealth: true, DurationMs: 600_000),
+            },
+            StartingSpells = [.. Ubiquitous.Game.GameContent.Development.StartingSpells, sneak],
+        };
+        var world = new BotTestWorld(content, [], PlayerbotWorldTests.OneBot(), new DevelopmentAccountStore("hero", "secret"));
+        await world.RunUntilAsync(() => world.Bots is [{ Playing: true }], mostTicks: 50);
+        var bot = world.Bots[0];
+        var player = await TestPlayer.EnterAsync(world, "hero", "secret", "Hero");
+        var heroId = player.Received.Select(m => System.Text.Json.JsonDocument.Parse(m).RootElement)
+            .First(r => r.GetProperty("type").GetString() == WebMessageTypes.WorldEntered)
+            .GetProperty("payload").GetProperty("self").GetString()!;
+        await player.SendAsync(WebMessageTypes.DuelChallenge, new { targetId = bot.View.SelfId });
+        await world.RunUntilAsync(() =>
+        {
+            player.Collect();
+            return player.Received.Any(message => message.Contains(WebMessageTypes.DuelStarted, StringComparison.Ordinal));
+        }, mostTicks: 20);
+
+        await player.SendAsync(WebMessageTypes.SpellRequest, new { spellId = sneak, targetId = heroId });
+        await world.RunUntilAsync(() => false, mostTicks: 5);
+        player.Collect();
+        player.Received.Clear();
+        var heroAt = new Ubiquitous.Common.Position(2, 7, 55);
+        var gapBefore = Gap(bot.View.Position, heroAt);
+        await world.RunUntilAsync(() => false, mostTicks: 30);
+        player.Collect();
+
+        Assert.False(bot.View.Units.ContainsKey(heroId), "the bot still sees the sneaking player");
+        Assert.DoesNotContain(player.Received, m => m.Contains(WebMessageTypes.AttackSwingResult, StringComparison.Ordinal)
+            && m.Contains($"\"attackerId\":\"{bot.View.SelfId}\"", StringComparison.Ordinal));
+        Assert.DoesNotContain(player.Received, m => m.Contains(WebMessageTypes.SpellOutcome, StringComparison.Ordinal)
+            && m.Contains($"\"casterId\":\"{bot.View.SelfId}\"", StringComparison.Ordinal));
+        Assert.True(Gap(bot.View.Position, heroAt) >= gapBefore - 3f, $"the bot closed in to {bot.View.Position}");
+    }
+
+    private static float Gap(Ubiquitous.Common.Position a, Ubiquitous.Common.Position b) =>
+        MathF.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Z - b.Z) * (a.Z - b.Z));
 }

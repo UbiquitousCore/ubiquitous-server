@@ -285,6 +285,9 @@ public sealed partial class CombatService
     // A creature that notices a player opens the fight; the player only swings back once struck.
     private readonly HashSet<string> _holdingFire = new(StringComparer.Ordinal);
 
+    public bool HoldFire(string attackerId) =>
+        _targets.ContainsKey(attackerId) && _holdingFire.Add(attackerId);
+
     private void OpenFire(string playerId, DateTimeOffset now)
     {
         if (!_holdingFire.Remove(playerId) || !_targets.TryGetValue(playerId, out var targetId)) return;

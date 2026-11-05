@@ -171,10 +171,11 @@ public sealed partial class PlaySession
         refusal = WireCodes.SpellRefusal.InvalidTarget;
         if (finished.TargetId == PlayerUnitId) return PlayerUnitId;
         if (finished.TargetId is not { } targetId || _combat.IsDead(targetId)) return null;
+        if (HiddenFromMe(targetId)) return null;
         if (WouldHarmCreature(finished.Spell) && IsFriendlyCreature(targetId)) return null;
         bool atFriend = LandsOnFriend(finished.Spell) && IsFriendlyPlayer(targetId);
         bool atFoe = _sight.Contains(targetId)
-            || (IsPlayerOpponent(targetId) && !HiddenFromMe(targetId) && HarmsPlayer(finished.Spell));
+            || (IsPlayerOpponent(targetId) && HarmsPlayer(finished.Spell));
         if (!atFriend && !atFoe) return null;
         if (InRangeOf(targetId, CastRangeOf(finished.Spell))) return targetId;
         refusal = WireCodes.SpellRefusal.OutOfRange;

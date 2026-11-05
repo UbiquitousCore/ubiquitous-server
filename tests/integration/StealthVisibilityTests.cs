@@ -11,6 +11,7 @@ public sealed class StealthVisibilityTests
 {
     private const uint Hide = 980;
     private const uint Bolt = 985;
+    private const uint SlowBolt = 986;
     private const int HideMs = 60_000;
 
     private sealed record Side(PlaySession Session, List<string> Inbox, string Id);
@@ -21,8 +22,9 @@ public sealed class StealthVisibilityTests
         {
             [Hide] = new(Hide, "spell-980", 0, 0, 0f, PowerCost: 0, AuraStealth: true, DurationMs: HideMs),
             [Bolt] = new(Bolt, "spell-985", 0, 0, 30f, PowerCost: 0, EffectDamage: 5),
+            [SlowBolt] = new(SlowBolt, "spell-986", 1500, 0, 30f, PowerCost: 0, EffectDamage: 5),
         },
-        StartingSpells = [.. GameContent.Development.StartingSpells, Hide, Bolt],
+        StartingSpells = [.. GameContent.Development.StartingSpells, Hide, Bolt, SlowBolt],
     };
 
     [Fact]
@@ -78,6 +80,81 @@ public sealed class StealthVisibilityTests
         Assert.Contains(PayloadsOf(borin.Inbox, WebMessageTypes.AttackHalted),
             halted => halted.GetProperty("networkId").GetString() == borin.Id);
         Assert.Empty(AurasEnded(ayla.Inbox, ayla.Id, Hide));
+    }
+
+    [Fact]
+    public async Task ADuelOpponent_LosesAPlayerWhoGoesIntoStealth_AndCannotFindThemAgain()
+    {
+        var (hub, sides) = await WorldAsync("s10", "Ayla", "Borin");
+        var (ayla, borin) = (sides[0], sides[1]);
+        await SendAsync(hub, borin, WebMessageTypes.DuelChallenge, new { targetId = ayla.Id });
+        await TickAsync(hub, DateTimeOffset.UtcNow);
+        await SendAsync(hub, ayla, WebMessageTypes.DuelAccept, new { });
+        await TickAsync(hub, DateTimeOffset.UtcNow);
+        Assert.DoesNotContain(await SendAsync(hub, borin, WebMessageTypes.AttackEngage, new { targetId = ayla.Id }), IsRefusal);
+        borin.Inbox.Clear();
+
+        await CastAsync(hub, ayla, Hide, ayla.Id);
+        await TickAsync(hub, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1));
+
+        Assert.Single(Removals(borin.Inbox, ayla.Id));
+        Assert.Contains(PayloadsOf(borin.Inbox, WebMessageTypes.AttackHalted),
+            halted => halted.GetProperty("networkId").GetString() == borin.Id);
+        Assert.Contains(await SendAsync(hub, borin, WebMessageTypes.TargetChange, new { networkId = ayla.Id }), IsRefusal);
+        Assert.Contains(await SendAsync(hub, borin, WebMessageTypes.AttackEngage, new { targetId = ayla.Id }), IsRefusal);
+        Assert.Contains(await CastAsync(hub, borin, Bolt, ayla.Id), m => m.Contains("\"type\":\"spell.failed\""));
+        borin.Inbox.Clear();
+
+        await SendAsync(hub, ayla, WebMessageTypes.PlayerMove, new PlayerMovePayload(5, 2, 3, 0, true, MovementState.Walking));
+        await TickAsync(hub, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2));
+
+        Assert.DoesNotContain(borin.Inbox, message => message.Contains($"\"{ayla.Id}\""));
+    }
+
+    [Fact]
+    public async Task ACastAtAPlayerWhoSneaksBeforeItFinishes_Fails_AndTheyStayHidden()
+    {
+        var (hub, sides) = await DuellingAsync("s11");
+        var (ayla, borin) = (sides[0], sides[1]);
+        Assert.Contains(await CastAsync(hub, borin, SlowBolt, ayla.Id), m => m.Contains("\"type\":\"spell.casting\""));
+
+        await CastAsync(hub, ayla, Hide, ayla.Id);
+        await TickAsync(hub, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2));
+
+        Assert.Contains(PayloadsOf(borin.Inbox, WebMessageTypes.SpellFailed),
+            failed => failed.GetProperty("spellId").GetUInt32() == SlowBolt);
+        Assert.DoesNotContain(PayloadsOf(ayla.Inbox, WebMessageTypes.SpellOutcome),
+            outcome => outcome.GetProperty("spellId").GetUInt32() == SlowBolt);
+        Assert.Empty(AurasEnded(ayla.Inbox, ayla.Id, Hide));
+    }
+
+    [Fact]
+    public async Task SneakingWhileSwinging_StopsTheSwings_SoTheSneakHolds()
+    {
+        var (hub, sides) = await DuellingAsync("s12");
+        var (ayla, borin) = (sides[0], sides[1]);
+        Assert.DoesNotContain(await SendAsync(hub, ayla, WebMessageTypes.AttackEngage, new { targetId = borin.Id }), IsRefusal);
+
+        var hidden = await CastAsync(hub, ayla, Hide, ayla.Id);
+        ayla.Inbox.Clear();
+        await TickAsync(hub, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(3));
+        await TickAsync(hub, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(6));
+
+        Assert.Contains(hidden, m => m.Contains("\"type\":\"attack.halted\"") && m.Contains($"\"networkId\":\"{ayla.Id}\""));
+        Assert.DoesNotContain(PayloadsOf(ayla.Inbox, WebMessageTypes.AttackSwingResult),
+            swing => swing.GetProperty("attackerId").GetString() == ayla.Id);
+        Assert.Empty(AurasEnded(ayla.Inbox, ayla.Id, Hide));
+    }
+
+    private static async Task<(PlaySessionHub Hub, Side[] Sides)> DuellingAsync(string tag)
+    {
+        var (hub, sides) = await WorldAsync(tag, "Ayla", "Borin");
+        await SendAsync(hub, sides[1], WebMessageTypes.DuelChallenge, new { targetId = sides[0].Id });
+        await TickAsync(hub, DateTimeOffset.UtcNow);
+        await SendAsync(hub, sides[0], WebMessageTypes.DuelAccept, new { });
+        await TickAsync(hub, DateTimeOffset.UtcNow);
+        foreach (var side in sides) side.Inbox.Clear();
+        return (hub, sides);
     }
 
     [Fact]
