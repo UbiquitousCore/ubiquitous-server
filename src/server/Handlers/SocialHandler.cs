@@ -40,15 +40,18 @@ internal sealed class SocialHandler(ISessionPlayer player, SessionOutbox outbox,
             : !string.IsNullOrWhiteSpace(request.Name)
                 ? await characters.FindByNameAsync(request.Name.Trim())
                 : null;
-        if (target is null)
+        // Someone already on one of the player's lists can be moved to the other even when no
+        // character answers to their id or name any more.
+        var listed = target is null ? await AlreadyListed(request) : null;
+        if (target is null && listed is null)
             return outbox.Error(WireCodes.ProtocolError.InvalidTarget,
                 request.TargetId is null && request.Name is null ? "A target is required." : "That player does not exist.");
-        var targetGuid = target.Guid;
+        var (targetGuid, targetName) = target is not null ? (target.Guid, target.Name) : (listed!.CharacterGuid, listed.Name);
 
         if (string.Equals(targetGuid, player.Character.Guid, StringComparison.Ordinal))
             return outbox.Error(WireCodes.ProtocolError.InvalidTarget, selfTargetReason);
 
-        var result = await _friends.AddAsync(player.Character.Guid, kind, targetGuid, target.Name);
+        var result = await _friends.AddAsync(player.Character.Guid, kind, targetGuid, targetName);
         return result.Outcome == SocialAddOutcome.SelfTarget
             ? outbox.Error(WireCodes.ProtocolError.InvalidTarget, selfTargetReason)
             : outbox.Reply(WebMessageTypes.SocialListUpdated, ToPayload(result.List!));
@@ -74,6 +77,16 @@ internal sealed class SocialHandler(ISessionPlayer player, SessionOutbox outbox,
 
         var list = await _friends.RemoveAsync(player.Character.Guid, kind, targetGuid);
         return outbox.Reply(WebMessageTypes.SocialListUpdated, ToPayload(list));
+    }
+
+    private async Task<SocialEntry?> AlreadyListed(SocialTargetPayload request)
+    {
+        var lists = await _friends.ListAsync(player.Character!.Guid);
+        var guid = PlayerWireIds.GuidOf(request.TargetId);
+        var name = request.Name?.Trim();
+        return lists.Friends.Concat(lists.Ignored).FirstOrDefault(entry => guid is not null
+            ? string.Equals(entry.CharacterGuid, guid, StringComparison.Ordinal)
+            : !string.IsNullOrEmpty(name) && string.Equals(entry.Name, name, StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task<string?> TargetGuid(JsonElement payload)
