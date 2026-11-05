@@ -29,7 +29,6 @@ WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/ src/
 COPY tools/ tools/
-COPY env.example ./
 RUN dotnet publish tools/asset-extractor -c Release -a $TARGETARCH -o /app/extractor
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0 AS ingest
@@ -38,6 +37,30 @@ WORKDIR /work
 COPY --from=ingest-build /app/extractor /opt/extractor
 ENTRYPOINT ["dotnet", "/opt/extractor/asset-extractor.dll"]
 CMD ["--ingest", "incoming"]
+
+# The admin page that `docker compose up` starts beside the server.
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS admin-build
+ARG TARGETARCH
+WORKDIR /src
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
+COPY src/common/ src/common/
+COPY src/data/ src/data/
+COPY src/persistence/ src/persistence/
+COPY src/world/ src/world/
+COPY src/game/ src/game/
+COPY tools/admin/ tools/admin/
+RUN dotnet publish tools/admin/web/admin-web.csproj -c Release -a $TARGETARCH -o /app/admin
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS admin
+WORKDIR /app
+# Npgsql loads Kerberos support at start and logs an error without it.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=admin-build /app/admin .
+ENV UBIQUITOUS_ADMIN_URLS=http://0.0.0.0:8790
+EXPOSE 8790
+ENTRYPOINT ["dotnet", "admin.dll"]
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

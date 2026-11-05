@@ -270,6 +270,75 @@ public sealed class WebSocketGatewayLoopbackTests
     }
 
     [Fact]
+    public async Task Restart_IsAskedOnlyWithTheToken()
+    {
+        var port = FreeLoopbackPort();
+        var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
+        var restart = new AdminGate("the-token");
+        await using var gateway = new WebSocketGateway(options, Sessions(
+            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([])), admin: restart);
+        gateway.Start();
+        using var http = new HttpClient();
+
+        async Task<System.Net.HttpStatusCode> Post(string? token)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/restart");
+            if (token is not null) request.Headers.Add(AdminGate.TokenHeader, token);
+            using var response = await http.SendAsync(request);
+            return response.StatusCode;
+        }
+
+        Assert.Equal(System.Net.HttpStatusCode.Forbidden, await Post(null));
+        Assert.Equal(System.Net.HttpStatusCode.Forbidden, await Post("a-guess"));
+        Assert.False(restart.RestartRequested.IsCompleted);
+
+        Assert.Equal(System.Net.HttpStatusCode.Accepted, await Post("the-token"));
+        Assert.True(restart.RestartRequested.IsCompleted);
+    }
+
+    [Fact]
+    public async Task Online_ListsCharactersInTheWorldOnlyForTheToken()
+    {
+        var port = FreeLoopbackPort();
+        var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
+        await using var gateway = new WebSocketGateway(options, Sessions(
+            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([])), admin: new AdminGate("the-token"));
+        gateway.Start();
+        using var http = new HttpClient();
+
+        using var refused = await http.GetAsync($"http://127.0.0.1:{port}/online");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"http://127.0.0.1:{port}/online");
+        request.Headers.Add(AdminGate.TokenHeader, "the-token");
+        using var answered = await http.SendAsync(request);
+
+        Assert.Equal(System.Net.HttpStatusCode.Forbidden, refused.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, answered.StatusCode);
+        Assert.Equal("[]", await answered.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Restart_IsNotOfferedWithoutAToken()
+    {
+        var port = FreeLoopbackPort();
+        var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
+        var restart = AdminGate.FromFile(null);
+        await using var gateway = new WebSocketGateway(options, Sessions(
+            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([])), admin: restart);
+        gateway.Start();
+        using var http = new HttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/restart");
+        request.Headers.Add(AdminGate.TokenHeader, "");
+
+        using var response = await http.SendAsync(request);
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False(restart.RestartRequested.IsCompleted);
+    }
+
+    [Fact]
     public async Task LoopbackSocket_RefusesAConnectionOverTheCap()
     {
         var port = FreeLoopbackPort();

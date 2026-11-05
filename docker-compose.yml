@@ -1,7 +1,7 @@
 services:
-  # Writes the database password once into a volume, so nothing on the host has
-  # to generate it. A POSTGRES_PASSWORD already in .env is kept, because an
-  # existing database was created with it.
+  # Writes the database password and the admin page's token once into
+  # a volume, so nothing on the host has to generate them. A POSTGRES_PASSWORD
+  # already in .env is kept, because an existing database was created with it.
   secrets:
     image: alpine:3.20
     environment:
@@ -11,13 +11,18 @@ services:
       - -c
       - |
         set -eu
-        f=/secrets/postgres_password
-        [ -s "$$f" ] && exit 0
         umask 022
-        if [ -n "$$POSTGRES_PASSWORD" ]; then
+        f=/secrets/postgres_password
+        if [ -s "$$f" ]; then
+          :
+        elif [ -n "$$POSTGRES_PASSWORD" ]; then
           printf '%s' "$$POSTGRES_PASSWORD" > "$$f"; echo "kept the database password from .env"
         else
           tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32 > "$$f"; echo "generated the database password"
+        fi
+        t=/secrets/admin_token
+        if [ ! -s "$$t" ]; then
+          tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 48 > "$$t"; echo "generated the admin token"
         fi
     volumes:
       - ubiquitous-secrets:/secrets
@@ -48,29 +53,17 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runtime
-    # Every UBIQUITOUS_* setting in .env reaches the server; the entries under
-    # environment below win over it, so .env cannot move the container's own
-    # paths, address or database.
-    env_file:
-      - path: .env
-        required: false
+    # The server reads the UBIQUITOUS_* settings in .env itself each time it
+    # starts, so a restart from the admin page applies what was saved there.
+    # The entries under environment below win over .env, so it cannot move
+    # the container's own paths, address or database.
     environment:
+      UBIQUITOUS_ENV_FILE: /host/.env
       UBIQUITOUS_BIND_ADDRESS: 0.0.0.0
-      # No `:-default` fallbacks here on purpose: an unset variable arrives
-      # empty, which the server reads as "not said", so server.json (when
-      # mounted) or the built-in default applies. Anything set here or in
-      # .env still wins over server.json.
       UBIQUITOUS_WEBSOCKET_PORT: ${UBIQUITOUS_WEBSOCKET_PORT:-}
       UBIQUITOUS_DATA_DIRECTORY: /data/generated
       UBIQUITOUS_STATE_DIRECTORY: /data/state
-      UBIQUITOUS_FESTIVAL_CONTENT_ENABLED: ${UBIQUITOUS_FESTIVAL_CONTENT_ENABLED:-}
-      UBIQUITOUS_XP_RATE: ${UBIQUITOUS_XP_RATE:-}
-      UBIQUITOUS_EXHAUSTION_LIMIT: ${UBIQUITOUS_EXHAUSTION_LIMIT:-}
-      UBIQUITOUS_PLAYER_DAMAGE_RATE: ${UBIQUITOUS_PLAYER_DAMAGE_RATE:-}
-      UBIQUITOUS_CREATURE_DAMAGE_RATE: ${UBIQUITOUS_CREATURE_DAMAGE_RATE:-}
-      UBIQUITOUS_CREATURE_HEALTH_RATE: ${UBIQUITOUS_CREATURE_HEALTH_RATE:-}
-      UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED: ${UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED:-}
-      UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT: ${UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT:-}
+      UBIQUITOUS_ADMIN_TOKEN_FILE: /run/ubiquitous/admin_token
       UBIQUITOUS_POSTGRES_CONNECTION_STRING: "Host=db;Username=ubiquitous;Database=ubiquitous"
       UBIQUITOUS_POSTGRES_PASSWORD_FILE: /run/ubiquitous/postgres_password
       # Without `ingest` the server would run on development content; this
@@ -88,6 +81,9 @@ services:
       timeout: 3s
       retries: 3
     volumes:
+      # The folder, not the file: .env may not exist yet, and an editor that
+      # replaces it would leave a file mount pointing at the old copy.
+      - .:/host:ro
       - ./data/generated:/data/generated:ro
       - ubiquitous-state:/data/state
       - ubiquitous-secrets:/run/ubiquitous:ro
@@ -140,6 +136,9 @@ services:
     ports:
       - "${UBIQUITOUS_HTTPS_PORT:-443}:443"
       - "${UBIQUITOUS_HTTP_PORT:-80}:80"
+      # The admin page over https, for a phone. Loopback only unless
+      # UBIQUITOUS_ADMIN_PUBLISH_ADDRESS=0.0.0.0 opens it to the LAN.
+      - "${UBIQUITOUS_ADMIN_PUBLISH_ADDRESS:-127.0.0.1}:${UBIQUITOUS_ADMIN_HTTPS_PORT:-8443}:8443"
     volumes:
       # Holds the certificate authority a phone is told to trust; losing it
       # means installing a new one on every device.
@@ -147,6 +146,40 @@ services:
     depends_on:
       - client
       - server
+      - admin
+    restart: unless-stopped
+
+  # The admin page, for accounts, characters and .env. Sign in with a GM
+  # account. This machine opens http://localhost:8790; other devices go
+  # through the proxy's https port instead (see the proxy above).
+  admin:
+    image: ghcr.io/ubiquitouscore/ubiquitous-server-admin:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: admin
+    user: "${UBIQUITOUS_UID:-0}:${UBIQUITOUS_GID:-0}"
+    environment:
+      UBIQUITOUS_POSTGRES_CONNECTION_STRING: "Host=db;Username=ubiquitous;Database=ubiquitous"
+      UBIQUITOUS_POSTGRES_PASSWORD_FILE: /run/ubiquitous/postgres_password
+      UBIQUITOUS_ADMIN_SETTINGS_FILE: /work/.env
+      UBIQUITOUS_DATA_DIRECTORY: /data/generated
+      UBIQUITOUS_ADMIN_SERVER_URL: http://server:${UBIQUITOUS_WEBSOCKET_PORT:-8781}/
+      UBIQUITOUS_ADMIN_TOKEN_FILE: /run/ubiquitous/admin_token
+    depends_on:
+      db:
+        condition: service_healthy
+      secrets:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:${UBIQUITOUS_ADMIN_PORT:-8790}:8790"
+    volumes:
+      # The folder, not the file: an editor that replaces .env would leave a
+      # file mount pointing at the old copy.
+      - .:/work
+      # Item names and stack sizes, for giving items.
+      - ./data/generated:/data/generated:ro
+      - ubiquitous-secrets:/run/ubiquitous:ro
     restart: unless-stopped
 
   # `docker compose run --rm ingest`: turns incoming/*.ipa into data/generated/.
@@ -171,6 +204,12 @@ configs:
       {
       	# A browser sends no server name when it is given an IP address.
       	default_sni {$$UBIQUITOUS_SITE}
+      	# HTTP/3 runs over UDP, which these ports do not publish. Offered
+      	# anyway, Safari moves to it after the first few requests and the
+      	# rest hang.
+      	servers {
+      		protocols h1 h2
+      	}
       }
 
       (app) {
@@ -198,6 +237,11 @@ configs:
 
       localhost, {$$UBIQUITOUS_SITE} {
       	import app
+      }
+
+      # The admin page, with the same certificate a phone already trusts.
+      localhost:8443, {$$UBIQUITOUS_SITE}:8443 {
+      	reverse_proxy admin:8790
       }
 
 volumes:

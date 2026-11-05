@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- The admin page's host: HTTP, sign-in and the static page. It wires the
+       core to the stores and holds no rule of its own. -->
+  <PropertyGroup>
+    <RootNamespace>Ubiquitous.Admin.Web</RootNamespace>
+    <AssemblyName>admin</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\core\admin-core.csproj" />
+    <ProjectReference Include="..\stores\admin-stores.csproj" />
+  </ItemGroup>
+</Project>

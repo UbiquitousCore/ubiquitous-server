@@ -5,7 +5,7 @@ namespace Ubiquitous.Server;
 
 public sealed class PlayerBelongings(GameContent content)
 {
-    public const int DefaultBagCapacity = 12;
+    public const int DefaultBagCapacity = InventoryService.DefaultBagCapacity;
     public const int DefaultBankCapacity = 24;
 
     public InventoryService Items { get; } = new();

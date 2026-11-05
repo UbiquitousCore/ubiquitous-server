@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The one place the admin tool knows this server: its persistence, game rules and
+       .env. Pulling the tool out means replacing this project, nothing else. -->
+  <PropertyGroup>
+    <RootNamespace>Ubiquitous.Admin.Stores</RootNamespace>
+    <AssemblyName>Ubiquitous.Admin.Stores</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\core\admin-core.csproj" />
+    <ProjectReference Include="..\..\..\src\persistence\persistence.csproj" />
+    <!-- For the game's own rules on names, levels, money and bag space. -->
+    <ProjectReference Include="..\..\..\src\game\game.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+</Project>

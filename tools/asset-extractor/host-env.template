@@ -1,0 +1,36 @@
+# Your server's settings. Change a line, remove the # in front of it, and run
+# `docker compose restart server` to apply (the address and ports need
+# `docker compose up -d`). Every other setting is listed in
+# https://github.com/UbiquitousCore/ubiquitous-server/blob/main/env.example
+
+# The address other devices open: this machine's LAN address, or a domain
+# with ports 80 and 443 forwarded here. localhost always works too.
+# UBIQUITOUS_SITE=192.168.1.20
+# UBIQUITOUS_HTTP_PORT=80
+# UBIQUITOUS_HTTPS_PORT=443
+
+# Open the admin page to other devices on this network, at
+# https://<the address above>:8443. Off: only this machine can open it.
+# UBIQUITOUS_ADMIN_PUBLISH_ADDRESS=0.0.0.0
+
+# Seasonal festival scenery, creatures and items.
+# UBIQUITOUS_FESTIVAL_CONTENT_ENABLED=false
+
+# Bots that play on their own, and how many (0-500).
+# UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED=false
+# UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=5
+
+# Rates. 1 is the game as it plays; 1.5 is half as much again, 0.5 is half.
+# UBIQUITOUS_XP_RATE=1
+# UBIQUITOUS_PLAYER_DAMAGE_RATE=1
+# UBIQUITOUS_CREATURE_DAMAGE_RATE=1
+# UBIQUITOUS_CREATURE_HEALTH_RATE=1
+# Legend exhaustion a player can build up in a day.
+# UBIQUITOUS_EXHAUSTION_LIMIT=100
+
+# Race ids that cannot be picked, comma-separated; none opens every race.
+# Mendel (7) is closed unless this says otherwise: 1.1.4 cannot play it.
+# UBIQUITOUS_DISABLED_RACES=7
+
+# Players connected at once.
+# UBIQUITOUS_MAX_CONNECTIONS=500

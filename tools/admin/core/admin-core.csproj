@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The admin tool's rules and the ports it needs. No server, database or
+       web references, so the tool can move to its own repository whole. -->
+  <PropertyGroup>
+    <RootNamespace>Ubiquitous.Admin</RootNamespace>
+    <AssemblyName>Ubiquitous.Admin.Core</AssemblyName>
+  </PropertyGroup>
+</Project>

@@ -32,6 +32,9 @@ public sealed record InventoryConsumeResult(
 
 public sealed class InventoryService
 {
+    // The bag a character has before buying more room.
+    public const int DefaultBagCapacity = 12;
+
     private readonly List<InventoryItemState> _items = new();
 
     public IReadOnlyList<InventoryItemState> Items => _items;

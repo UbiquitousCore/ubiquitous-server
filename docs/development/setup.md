@@ -41,7 +41,12 @@ over the same name in `.env`.
 
 ## Accounts
 
-Accounts are made from the command line, never over the wire:
+The admin page manages accounts, characters and settings in a browser:
+<http://localhost:8790> with the Docker stack, or
+`dotnet run --project tools/admin/web` from a clone (file saves; see
+[tools/admin/README.md](../../tools/admin/README.md)).
+
+Accounts are also made from the command line, never over the game socket:
 `dotnet run --project src/server -- account create <name>` (file saves), or
 `docker compose exec server dotnet server.dll account create <name>` (the
 Docker stack, running). `password <name>` changes one, `gm <name> on|off`
@@ -109,11 +114,14 @@ generates the database password into a volume (or keeps the
 made with it), Postgres, the server with `data/generated/` mounted read-only
 and runtime state in the `ubiquitous-state` volume
 (`UBIQUITOUS_STATE_DIRECTORY`), the published client, and Caddy in front of
-both. The server gets every `UBIQUITOUS_*` line of `.env` beside the compose
-file, except the paths, bind address and database the compose file sets
-itself. Images come from GHCR; `up --build` builds the server from the
-checkout instead. CI publishes `ubiquitous-server`, `ubiquitous-server-ingest`
-and `ubiquitous-client` for amd64 and arm64 on pushes to `main`.
+both, and the admin page (`tools/admin`). The server reads every
+`UBIQUITOUS_*` line of `.env` itself as it starts (`UBIQUITOUS_ENV_FILE`
+names the host folder's copy), except the paths, bind address and database
+the compose file sets itself, so `docker compose restart server` applies a
+change. Images come from GHCR; `up --build` builds them from the checkout
+instead. CI publishes `ubiquitous-server`, `ubiquitous-server-ingest`,
+`ubiquitous-server-admin` and `ubiquitous-client` for amd64 and arm64 on
+pushes to `main`.
 
 The server's own port is published on loopback only, for a client run with
 `npm run dev`; set `UBIQUITOUS_PUBLISH_ADDRESS=0.0.0.0` to serve it to a LAN

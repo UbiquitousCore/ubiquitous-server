@@ -1,17 +1,11 @@
-using System.Text.RegularExpressions;
 using Ubiquitous.Persistence;
 
 namespace Ubiquitous.Server;
 
-public static partial class AccountCommands
+public static class AccountCommands
 {
-    public const int MinimumPasswordLength = 8;
-
     private const int ExitUsage = 2;
     private const int ExitRefused = 1;
-
-    [GeneratedRegex("^[A-Za-z0-9_.@-]{3,32}$")]
-    private static partial Regex UserIdPattern();
 
     // The words before the first option: `create alice --config server.json` is `create alice`.
     public static string[] Words(string[] args) => [.. args.TakeWhile(arg => !arg.StartsWith('-'))];
@@ -41,9 +35,9 @@ public static partial class AccountCommands
     private static async Task<int> CreateAsync(
         string userId, IAccountAdmin accounts, Func<string, string?> readPassword, TextWriter output, TextWriter error, int iterations)
     {
-        if (!UserIdPattern().IsMatch(userId))
+        if (!AccountRules.IsValidUserId(userId))
         {
-            error.WriteLine("The user id must be 3-32 letters, digits or _ . @ -");
+            error.WriteLine(AccountRules.UserIdHint);
             return ExitRefused;
         }
 
@@ -98,9 +92,9 @@ public static partial class AccountCommands
     private static string? AskForPassword(Func<string, string?> readPassword, TextWriter error)
     {
         var password = readPassword("Password: ");
-        if (string.IsNullOrEmpty(password) || password.Length < MinimumPasswordLength)
+        if (!AccountRules.IsStrongEnough(password))
         {
-            error.WriteLine($"The password must be at least {MinimumPasswordLength} characters");
+            error.WriteLine(AccountRules.PasswordHint);
             return null;
         }
 

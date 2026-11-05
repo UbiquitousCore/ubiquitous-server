@@ -33,6 +33,8 @@ public sealed class WebSocketGateway : IAsyncDisposable
     private Task? _acceptLoop;
     private Task? _tickLoop;
 
+    private readonly AdminGate? _admin;
+
     public WebSocketGateway(
         ServerOptions options,
         PlaySessionFactory sessionFactory,
@@ -40,8 +42,10 @@ public sealed class WebSocketGateway : IAsyncDisposable
         TimeSpan? idleTimeout = null,
         ILogger? logger = null,
         PlaySessionHub? hub = null,
-        Func<DateTimeOffset, CancellationToken, Task>? afterTick = null)
+        Func<DateTimeOffset, CancellationToken, Task>? afterTick = null,
+        AdminGate? admin = null)
     {
+        _admin = admin;
         _listener.Prefixes.Add(ListenerPrefix(options.BindAddress, options.WebSocketPort));
         _sessionFactory = sessionFactory;
         _readiness = readiness ?? new ServerReadinessState();
@@ -143,6 +147,10 @@ public sealed class WebSocketGateway : IAsyncDisposable
             {
                 await WriteHealthAsync(context.Response, cancellationToken);
             }
+            else if (_admin is { Enabled: true } && AdminPath(context.Request) is { } adminPath)
+            {
+                await AnswerAdminAsync(context, adminPath, cancellationToken);
+            }
             else
             {
                 Reject(context.Response);
@@ -165,6 +173,40 @@ public sealed class WebSocketGateway : IAsyncDisposable
         response.ContentType = "application/json";
         await response.OutputStream.WriteAsync(bytes, cancellationToken);
         response.Close();
+    }
+
+    private static string? AdminPath(HttpListenerRequest request) =>
+        request.Url?.AbsolutePath.ToLowerInvariant() switch
+        {
+            "/restart" when request.HttpMethod == "POST" => "restart",
+            "/online" when request.HttpMethod == "GET" => "online",
+            _ => null,
+        };
+
+    private async Task AnswerAdminAsync(HttpListenerContext context, string path, CancellationToken cancellationToken)
+    {
+        var token = context.Request.Headers[AdminGate.TokenHeader];
+        if (!_admin!.Allows(token))
+        {
+            Reject(context.Response, HttpStatusCode.Forbidden);
+            return;
+        }
+
+        if (path == "restart")
+        {
+            _admin.TryRequestRestart(token);
+            _logger.LogWarning("Restart requested from the admin page");
+            Reject(context.Response, HttpStatusCode.Accepted);
+            return;
+        }
+
+        // Character names, which are unique: the admin page leaves these characters alone until they leave.
+        var names = _sessions.OnlinePlayers().Select(player => player.Name).ToArray();
+        var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(names));
+        context.Response.StatusCode = (int)HttpStatusCode.OK;
+        context.Response.ContentType = "application/json";
+        await context.Response.OutputStream.WriteAsync(bytes, cancellationToken);
+        context.Response.Close();
     }
 
     private static void Reject(HttpListenerResponse response, HttpStatusCode status = HttpStatusCode.BadRequest)

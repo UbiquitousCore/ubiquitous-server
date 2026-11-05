@@ -52,13 +52,24 @@ public sealed class SettingsFileTests : IDisposable
     }
 
     [Fact]
-    public void WithNobodyToAskTheExampleIsWrittenAsItStands()
+    public void WithNobodyToAskTheTemplateIsWrittenAsItStands()
     {
         Assert.True(SettingsFile.EnsureExists(_folder.FullName, TextReader.Null, TextWriter.Null, interactive: false));
 
         var written = File.ReadAllText(EnvPath);
         Assert.Contains("# UBIQUITOUS_FESTIVAL_CONTENT_ENABLED=false", written);
         Assert.Contains("# UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED=false", written);
+    }
+
+    [Fact]
+    public void AHostsFileLeavesOutDevelopmentLoginsAndFileOwnership()
+    {
+        SettingsFile.EnsureExists(_folder.FullName, TextReader.Null, TextWriter.Null, interactive: false);
+
+        var written = File.ReadAllText(EnvPath);
+        Assert.DoesNotContain("UBIQUITOUS_DEVELOPMENT_", written);
+        Assert.DoesNotContain("UBIQUITOUS_UID", written);
+        Assert.DoesNotContain(Lines(written), line => !line.StartsWith('#') && line.Contains('='));
     }
 
     [Fact]

@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <!-- Written out as `.env` by the first import; see SettingsFile. -->
-    <EmbeddedResource Include="..\..\env.example" LogicalName="env.example" />
+    <EmbeddedResource Include="host-env.template" LogicalName="host-env.template" />
   </ItemGroup>
 
   <PropertyGroup>

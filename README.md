@@ -31,12 +31,24 @@ This server speaks its own protocol, so it works with
 [`docker-compose.yml`](https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml)
 next to it:
 
+**macOS / Linux** (Terminal):
+
 ```bash
-mkdir -p ubiquitous/incoming && cd ubiquitous
+mkdir -p ubiquitous/incoming
+cd ubiquitous
 curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
 ```
 
-On Windows PowerShell type `curl.exe` instead of `curl`.
+**Windows** (PowerShell):
+
+```powershell
+mkdir ubiquitous\incoming
+cd ubiquitous
+Invoke-WebRequest https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml -OutFile docker-compose.yml
+```
+
+Every command from here on is the same on every system, typed in that
+`ubiquitous` folder.
 
 **2. Import the game data and start.** The import takes a few minutes and asks
 three questions; pressing Enter for each is fine.
@@ -56,6 +68,18 @@ docker compose exec server dotnet server.dll account create alice
 unpacks it in your browser, once; it is not uploaded anywhere), and sign in as
 `alice`.
 
+**Manage it from the admin page** (optional). Make `alice` a GM, then open
+<http://localhost:8790> on this machine and sign in as `alice` to manage
+accounts, characters and settings:
+
+```bash
+docker compose exec server dotnet server.dll account gm alice on
+```
+
+> **Admin page:** <http://localhost:8790> on this machine; from a phone or
+> another computer, `https://<your address>:8443` once
+> [turned on](docs/HOSTING.md#the-admin-page).
+
 The server restarts by itself after a crash or reboot, as long as Docker
 starts with your machine.
 
@@ -66,11 +90,39 @@ docker compose stop
 docker compose start
 ```
 
+## Updating to a new release
+
+Your accounts, characters and `.env` are kept. In the `ubiquitous` folder,
+first fetch the latest compose file:
+
+**macOS / Linux:**
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
+```
+
+**Windows** (PowerShell):
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml -OutFile docker-compose.yml
+```
+
+Then, on any system, pull the new images and restart on them:
+
+```bash
+docker compose pull
+docker compose up -d --force-recreate
+```
+
+[docs/HOSTING.md](docs/HOSTING.md#updating) says when the import needs running
+again.
+
 ## Next
 
 | I want to... | Read |
 |---|---|
 | let friends or my phone connect, make more accounts, make someone an admin, turn on bots or festival content, update, or fix a problem | [docs/HOSTING.md](docs/HOSTING.md) |
+| manage accounts, characters and settings from a web page | [docs/HOSTING.md#the-admin-page](docs/HOSTING.md#the-admin-page) |
 | run the server from source, change code, run the tests | [docs/development/setup.md](docs/development/setup.md) and [CONTRIBUTING.md](CONTRIBUTING.md) |
 | understand how it works | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the table below |
 

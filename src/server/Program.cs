@@ -108,8 +108,9 @@ public static class Program
             return ExitInvalidConfiguration;
         }
 
+        var admin = AdminGate.FromFile(options.AdminTokenFile);
         await using var gateway = new WebSocketGateway(
-            options, sessions, readiness, logger: gatewayLogger, hub: hub, afterTick: modules.TickAsync);
+            options, sessions, readiness, logger: gatewayLogger, hub: hub, afterTick: modules.TickAsync, admin: admin);
         try
         {
             gateway.Start();
@@ -122,7 +123,8 @@ public static class Program
         }
 
         logger.LogInformation("Server started on port {Port} ({Address}). Press Ctrl+C to stop", options.WebSocketPort, options.BindAddress);
-        await WaitForShutdownAsync();
+        // A restart is a clean stop: Docker's restart policy starts the server again.
+        await Task.WhenAny(WaitForShutdownAsync(), admin.RestartRequested);
         await hub.SaveEveryoneAsync();
         await modules.ShutdownAsync(CancellationToken.None);
         return 0;

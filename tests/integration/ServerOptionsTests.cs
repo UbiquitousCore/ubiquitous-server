@@ -541,4 +541,48 @@ public sealed class ServerOptionsTests
             File.Delete(path);
         }
     }
+
+    [Fact]
+    public void MendelIsClosedUnlessTheHostOpensIt()
+    {
+        var empty = Directory.CreateTempSubdirectory("ubiquitous-options-");
+        try
+        {
+            var unset = ServerOptions.Load([], new Dictionary<string, string?>(), empty.FullName);
+            var leftBlank = ServerOptions.Load([], new Dictionary<string, string?> { ["UBIQUITOUS_DISABLED_RACES"] = "" }, empty.FullName);
+            var opened = ServerOptions.Load([], new Dictionary<string, string?> { ["UBIQUITOUS_DISABLED_RACES"] = "none" }, empty.FullName);
+
+            Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRaces);
+            Assert.Equal([PlayerRaceIds.Mendel], leftBlank.DisabledRaces);
+            Assert.Empty(opened.DisabledRaces!);
+        }
+        finally
+        {
+            empty.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TheEnvFileCanLiveElsewhereAndRealVariablesStillWinOverIt()
+    {
+        var folder = Directory.CreateTempSubdirectory("ubiquitous-options-");
+        try
+        {
+            var envFile = Path.Combine(folder.FullName, "host.env");
+            File.WriteAllText(envFile, "UBIQUITOUS_XP_RATE=2\nUBIQUITOUS_DATA_DIRECTORY=/somewhere-else\n");
+
+            var options = ServerOptions.Load([], new Dictionary<string, string?>
+            {
+                ["UBIQUITOUS_ENV_FILE"] = envFile,
+                ["UBIQUITOUS_DATA_DIRECTORY"] = "/data/generated",
+            }, folder.FullName);
+
+            Assert.Equal(2.0, options.ResolvedRates.Xp);
+            Assert.Equal("/data/generated", options.DataDirectory);
+        }
+        finally
+        {
+            folder.Delete(recursive: true);
+        }
+    }
 }

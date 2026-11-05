@@ -36,10 +36,37 @@ spell and a full heal, and can type `/stress <count>` in chat to spawn a crowd
 at the nearest training dummy for load testing. Give it only to people you
 trust with the whole server.
 
+## The admin page
+
+A small web page on this machine for the same jobs: make accounts, set
+passwords, give or take GM, and change the settings in `.env`. For each
+character it can also rename it, set its level and gold, show its bag, give
+it items (searched by name or id), and delete it. A character in the world is
+left alone until its player leaves, since the server would save over the
+change. It starts with the rest of the stack.
+
+Open <http://localhost:8790> and sign in with a GM account (make the first one
+with the commands above). Only this machine can open it, until `.env` says
+
+```
+UBIQUITOUS_ADMIN_PUBLISH_ADDRESS=0.0.0.0
+```
+
+and you run `docker compose up -d`: then a phone or another computer opens it
+at `https://<UBIQUITOUS_SITE>:8443`, with the certificate it installed for the
+game (see [Play from a phone](#play-from-a-phone-or-another-computer)). Settings saved there
+take effect when you press **Restart server**, which saves and disconnects
+everyone signed in and starts the server again. Delete a character only while
+its player is signed out. `docker compose stop
+admin` turns the page off until the next `docker compose up -d`.
+
 ## Changing settings
 
 Settings go in the `.env` beside the compose file, which the first `ingest`
-wrote, one `NAME=value` per line, and take effect with `docker compose up -d`. For
+wrote, one `NAME=value` per line, and take effect when the server restarts:
+`docker compose restart server`, or **Restart server** on the admin page. The
+address and ports (`UBIQUITOUS_SITE`, `UBIQUITOUS_HTTP_PORT`,
+`UBIQUITOUS_HTTPS_PORT`) need `docker compose up -d` instead. For
 example, to turn the seasonal festival items on and run ten bots:
 
 ```
@@ -59,13 +86,13 @@ UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=10
 | `UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED` | `false` | start bots |
 | `UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT` | `5` | how many bots play on their own (0-500) |
 | `UBIQUITOUS_MAX_CONNECTIONS` | `500` | players connected at once |
-| `UBIQUITOUS_DISABLED_RACES` | none | race ids that cannot be picked, comma-separated |
+| `UBIQUITOUS_DISABLED_RACES` | `7` (Mendel, which 1.1.4 cannot play) | race ids that cannot be picked, comma-separated; `none` opens every race |
 | `UBIQUITOUS_LOG_LEVEL` | `Information` | `Trace` to `Critical` |
 | `UBIQUITOUS_SITE` | `localhost` | the address other devices open (below) |
 | `UBIQUITOUS_HTTP_PORT`, `UBIQUITOUS_HTTPS_PORT` | `80`, `443` | the proxy's ports (then open `http://localhost:<port>`) |
 
 Every other server setting works the same way, by its `UBIQUITOUS_*` name;
-[env.example](env.example) lists them.
+[env.example](../env.example) lists them.
 
 ## Play from a phone or another computer
 
@@ -124,25 +151,65 @@ reach it from your own devices without opening ports.
 
 ## Updating
 
+First download the latest compose file over the old one (in a clone,
+`git pull` instead). Your `.env` is not touched.
+
+**macOS / Linux:**
+
 ```bash
-# Download the latest compose file over the old one (.env is not touched).
 curl -fsSLO https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml
+```
+
+**Windows** (PowerShell):
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/UbiquitousCore/ubiquitous-server/main/docker-compose.yml -OutFile docker-compose.yml
+```
+
+Then, on any system:
+
+```bash
 # Fetch the newest version of every image the stack uses.
 docker compose pull
 # Restart every container on the new images and compose file.
 docker compose up -d --force-recreate
 ```
 
-The first line refreshes the compose file itself (`curl.exe` on Windows; in
-a clone, `git pull` instead); your `.env` is kept. `--force-recreate` is
-needed because Docker does not notice a change to the proxy's settings,
-which live inside the compose file.
+`--force-recreate` is needed because Docker does not notice a change to the
+proxy's settings, which live inside the compose file.
 
 Saves are kept: accounts, characters, inventory and quests are in the
 Postgres volume; mail, guilds, friends and the auction house in the server's
-state volume. Only `docker compose down -v` removes them. Run
-`docker compose run --rm ingest` again only when a change touches the
-importer, then `docker compose restart server`.
+state volume. Only `docker compose down -v` removes them.
+
+Run the import again only when an update changes the importer. `pull` above
+skips the import's image, so fetch it by name first:
+
+```bash
+docker compose pull ingest
+docker compose run --rm ingest
+docker compose restart server
+```
+
+## Common problems
+
+**I ran `ingest` before putting the `.ipa` in `incoming`.** Nothing is
+harmed. The import stops with `copy your 1.1.4 .ipa into incoming/ and run
+again`, imports nothing, and ends with `The import did not finish`. The three
+questions are still asked and their answers saved in `.env`, so the next run
+skips them. Copy your 1.1.4 `.ipa` into `incoming` and run it again:
+
+```bash
+docker compose run --rm ingest
+```
+
+A finished import ends with `Done!`, the game version it read, and the
+commands to type next. A server started before any import stops at start and
+keeps retrying; once the import is done, restart it so it loads the data:
+
+```bash
+docker compose restart server
+```
 
 ## Settings file (`server.json`)
 

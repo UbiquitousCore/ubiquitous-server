@@ -3,8 +3,10 @@ using System.Reflection;
 namespace Ubiquitous.AssetExtractor;
 
 // The `.env` beside docker-compose.yml, written on the first import when
-// there is none: env.example with the answers to a few questions, or as it
-// stands when nobody is at a terminal to ask. An existing file is never
+// there is none: host-env.template with the answers to a few questions, or as
+// it stands when nobody is at a terminal to ask. It holds only what a host
+// changes; development logins and Linux file ownership stay in env.example,
+// for clones. An existing file is never
 // touched. The import writes it because it is the one step every operator
 // runs from that folder; the server's container cannot see it.
 public static class SettingsFile
@@ -19,7 +21,7 @@ public static class SettingsFile
 
         var answers = interactive ? Ask(input, output) : [];
         File.WriteAllText(path, Fill(Template(), answers));
-        output.WriteLine($"Wrote {FileName} beside docker-compose.yml. Every setting is in it; change one and run `docker compose up -d`.");
+        output.WriteLine($"Wrote {FileName} beside docker-compose.yml. Change a setting in it and run `docker compose restart server`.");
         return true;
     }
 
@@ -66,8 +68,8 @@ public static class SettingsFile
 
     private static string Template()
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("env.example")
-            ?? throw new InvalidOperationException("env.example is not built into the extractor");
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("host-env.template")
+            ?? throw new InvalidOperationException("host-env.template is not built into the extractor");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }

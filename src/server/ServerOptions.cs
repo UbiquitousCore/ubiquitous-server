@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using Npgsql;
+using Ubiquitous.Data;
 using Ubiquitous.Game;
 
 namespace Ubiquitous.Server;
@@ -27,7 +28,8 @@ public sealed record ServerOptions(
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? Modules = null,
     string? PostgresPasswordFile = null,
     bool RequireDataPackage = false,
-    GameRates? Rates = null)
+    GameRates? Rates = null,
+    string? AdminTokenFile = null)
 {
     private const string ModuleEnvironmentPrefix = "UBIQUITOUS_MODULE_";
 
@@ -37,7 +39,10 @@ public sealed record ServerOptions(
         DataDirectory: Path.Combine("data", "generated"),
         DevelopmentUserId: "developer",
         DevelopmentPassHash: "",
-        LogLevel: "Information");
+        LogLevel: "Information",
+        // 1.1.4 has no Mendel to play: the race button is unnamed and its
+        // starting land has no zones.
+        DisabledRaces: [PlayerRaceIds.Mendel]);
 
     public string ResolvedStateDirectory => StateDirectory ?? DataDirectory;
 
@@ -82,6 +87,8 @@ public sealed record ServerOptions(
             (options, value, _) => options with { PostgresConnectionString = value }),
         new("postgresPasswordFile", "UBIQUITOUS_POSTGRES_PASSWORD_FILE", ["--postgres-password-file"],
             (options, value, _) => options with { PostgresPasswordFile = value }),
+        new(null, "UBIQUITOUS_ADMIN_TOKEN_FILE", ["--admin-token-file"],
+            (options, value, _) => options with { AdminTokenFile = value }),
         new("festivalContentEnabled", "UBIQUITOUS_FESTIVAL_CONTENT_ENABLED", ["--festival-content"],
             (options, value, name) => options with { FestivalContentEnabled = ParseBool(value, name) }),
         new("festivalStaticEntries", "UBIQUITOUS_FESTIVAL_STATIC_ENTRIES", ["--festival-static-entries"],
@@ -123,7 +130,12 @@ public sealed record ServerOptions(
     {
         var options = Defaults;
         var directory = workingDirectory ?? Directory.GetCurrentDirectory();
-        var variables = WithDotEnv(environment ?? ReadEnvironment(), Path.Combine(directory, ".env"));
+        var environmentVariables = environment ?? ReadEnvironment();
+        // Docker points this at the host's .env, so a restart reads what was saved since the container was made.
+        var envFile = environmentVariables.TryGetValue("UBIQUITOUS_ENV_FILE", out var named) && !string.IsNullOrWhiteSpace(named)
+            ? named
+            : Path.Combine(directory, ".env");
+        var variables = WithDotEnv(environmentVariables, envFile);
         var configPath = FindArgument(args, "--config", "-c");
         if (configPath is null
             && variables.TryGetValue("UBIQUITOUS_CONFIG", out var configFromEnvironment)
@@ -302,6 +314,8 @@ public sealed record ServerOptions(
 
     private static IReadOnlyList<int> ParseRaceList(string value, string name)
     {
+        // An empty variable means "not said", so opening every race needs a word.
+        if (value.Trim().Equals("none", StringComparison.OrdinalIgnoreCase)) return [];
         var races = new List<int>();
         foreach (var part in SplitList(value))
         {

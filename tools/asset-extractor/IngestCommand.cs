@@ -1,3 +1,5 @@
+using Ubiquitous.Data;
+
 namespace Ubiquitous.AssetExtractor;
 
 // The whole import in one command, so Docker and a native run do exactly the
@@ -6,9 +8,21 @@ public static class IngestCommand
 {
     public static int Run(string source, string dataDirectory, TextWriter log)
     {
+        var code = Import(source, dataDirectory, log);
+        var generated = Path.Combine(dataDirectory, "generated");
+        log.WriteLine();
+        foreach (var line in code == 0
+                     ? IngestReport.Done(ReadManifest(generated), IngestReport.InContainer)
+                     : IngestReport.Failed(source, IngestReport.InContainer))
+            log.WriteLine(line);
+        return code;
+    }
+
+    private static int Import(string source, string dataDirectory, TextWriter log)
+    {
         if (IngestSource.Resolve(source) is not { } found)
         {
-            log.WriteLine($"nothing at {source} — drop the client .ipa into {source}/ and run again");
+            log.WriteLine($"nothing at {source} — copy your 1.1.4 .ipa into {source}/ and run again");
             return 2;
         }
 
@@ -23,10 +37,11 @@ public static class IngestCommand
         {
             if (!found.FullBuild)
             {
-                log.WriteLine($"no tables.bin under {source}");
+                log.WriteLine($"no game file in {source} — copy your 1.1.4 .ipa into {source}/ and run again");
                 return 2;
             }
 
+            log.WriteLine(IngestReport.Step(1, "Reading the game file"));
             log.WriteLine($"pulling tables.bin out of {found.Build}");
             if (BuildPacks.CopyPack(found.Build, "tables.bin", found.DropDirectory, log) != 0) return 1;
             tables = IngestSource.FindFirst(found.DropDirectory, "tables.bin");
@@ -39,6 +54,7 @@ public static class IngestCommand
 
         if (found.FullBuild)
         {
+            log.WriteLine(IngestReport.Step(2, "Unpacking maps and collision models"));
             if (Program.ExtractWorld(found.Build, rawRoot) != 0) return 1;
             if (CollisionPacks.Extract(found.Build, rawRoot, log) != 0) return 1;
         }
@@ -47,12 +63,15 @@ public static class IngestCommand
             log.WriteLine("tables only — skipping world archives and collision models");
         }
 
+        log.WriteLine(IngestReport.Step(3, "Importing the game tables"));
         if (Program.Extract(tables, rawRoot) != 0) return 1;
         if (Directory.Exists(staging)) Directory.Delete(staging, recursive: true);
         if (Program.ImportFromDir(tablesDirectory, staging, WorldArchives(worldDirectory)) != 0) return 1;
+        log.WriteLine(IngestReport.Step(4, "Checking and installing the data"));
         if (Program.Check(staging) != 0) return 1;
         PackageInstall.Install(generated, staging, log);
 
+        log.WriteLine(IngestReport.Step(5, "Adding character looks"));
         if (found.FullBuild && !AddLooks(found.Build, tablesDirectory, generated, log))
             log.WriteLine($"warning: no looks in {found.Build} — bots fall back to plain bodies");
 
@@ -62,6 +81,7 @@ public static class IngestCommand
             return 2;
         }
 
+        log.WriteLine(IngestReport.Step(6, "Baking walkable ground (the longest step)"));
         try
         {
             NavigationBakeCommand.Run(
@@ -80,6 +100,19 @@ public static class IngestCommand
 
         log.WriteLine($"ingested from {found.Build}: package in {generated}, saves kept");
         return 0;
+    }
+
+    private static DataManifest? ReadManifest(string generated)
+    {
+        var path = Path.Combine(generated, DataManifest.FileName);
+        try
+        {
+            return File.Exists(path) ? DataManifestJson.Load(path) : null;
+        }
+        catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or InvalidDataException)
+        {
+            return null;
+        }
     }
 
     private static bool AddLooks(string build, string tablesDirectory, string generated, TextWriter log)

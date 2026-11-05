@@ -1,6 +1,6 @@
 name: images
 
-# Publishes the server and ingest images, so running a server is a pull, not
+# Publishes the server, ingest and admin images, so running a server is a pull, not
 # a build. Only on main, and only when something that goes into an image
 # changed.
 on:
@@ -36,6 +36,8 @@ jobs:
             image: ghcr.io/ubiquitouscore/ubiquitous-server
           - target: ingest
             image: ghcr.io/ubiquitouscore/ubiquitous-server-ingest
+          - target: admin
+            image: ghcr.io/ubiquitouscore/ubiquitous-server-admin
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
