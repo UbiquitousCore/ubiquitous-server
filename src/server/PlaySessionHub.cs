@@ -481,6 +481,12 @@ public sealed class PlaySessionHub(ILogger? logger = null)
         if (subject.RiddenMountId is uint mount)
             yield return OutboundEvent.Of(WebMessageTypes.EntityValuesChanged,
                 new EntityValuesChangedPayload(presence.NetworkId, new Dictionary<string, int> { [WireCodes.UnitValue.Mount] = (int)mount }));
+        if (subject.PetEntry is uint pet)
+            yield return OutboundEvent.Of(WebMessageTypes.EntityValuesChanged,
+                new EntityValuesChangedPayload(presence.NetworkId, new Dictionary<string, int> { [WireCodes.UnitValue.Pet] = (int)pet }));
+        if (subject.IsEating)
+            yield return OutboundEvent.Of(WebMessageTypes.EntityValuesChanged,
+                new EntityValuesChangedPayload(presence.NetworkId, new Dictionary<string, int> { [WireCodes.UnitValue.Eating] = 1 }));
         if (subject.IsStealthed)
             yield return OutboundEvent.Of(WebMessageTypes.EntityValuesChanged,
                 new EntityValuesChangedPayload(presence.NetworkId, new Dictionary<string, int> { [WireCodes.UnitValue.Stealthed] = 1 }));

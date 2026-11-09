@@ -38,6 +38,8 @@ public sealed partial class PlaySession
         if (GmOnlySpells.Covers(spellId, peekedSpell) && _account?.IsAdmin != true)
             return [Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(casterId, spellId, WireCodes.SpellRefusal.InvalidTarget))];
 
+        if (_pet is { } outNow && outNow.SpellId == spellId && _spells.Known.Contains(spellId))
+            return DismissPet(now);
         if (_riding is not null && MountRules.IsMount(peekedSpell) && _spells.Known.Contains(spellId))
             return MountDismount(now);
         if (MountRules.IsMount(peekedSpell)
@@ -406,6 +408,9 @@ public sealed partial class PlaySession
         WebNetworkId casterId, string targetId, uint spellId, SpellDefinition spell, DateTimeOffset now)
     {
         if (MountRules.IsMount(spell) && targetId == casterId.Text) return ResolveMount(casterId, spellId, spell, now);
+        if (spell.AuraEatPerTick is not null || spell.AuraDrinkPerTick is not null)
+            return ResolveMeal(casterId, spellId, spell, now);
+        if (spell.EffectSummonCreatureId is uint petEntry) return ResolvePet(casterId, spellId, spell, petEntry, now);
         if (spell.EffectHeal is not null) return ResolveSpellHeal(casterId, targetId, spellId, spell, now);
         if (spell.EffectPowerRestore is not null) return ResolvePowerRestore(casterId, spellId, spell, now);
         if (targetId != casterId.Text && LandsOnFriend(spell) && IsFriendlyPlayer(targetId))

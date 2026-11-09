@@ -99,6 +99,8 @@ public sealed class SpellService
         || spell.AuraTriggerSpellId is not null || spell.AuraPeriodicTriggerSpellId is not null
         || spell.EffectTriggerSpellId is not null || spell.EffectFromHidingTriggerSpellId is not null
         || spell.EffectLeapToTarget
+        || spell.EffectSummonCreatureId is not null
+        || spell.AuraEatPerTick is not null || spell.AuraDrinkPerTick is not null
         || spell.AuraMountId is not null || spell.AuraAvatarDisplayId is not null
         || (spell.ExtraEffects?.Any(HasResolvableEffect) ?? false);
 
@@ -130,6 +132,7 @@ public sealed class SpellService
         // A row with no cost, cooldown or cast time is unfinished, except a GM's test spells, which are all like that.
         if (!HasResolvableEffect(spell)
             || (spell.PowerCost is null && spell.CooldownMs <= 0 && spell.CastTimeMs <= 0
+                && spell.EffectSummonCreatureId is null
                 && !GmOnlySpells.Covers(spellId, spell)))
         {
             refusal = new SpellCastRefusal(SpellRefusalReason.NoEffectData);

@@ -40,6 +40,9 @@ public static class SpellEffectColumns
 
     public const int PeriodicTriggerSpellSubType = 37;
 
+    public const int EatSubType = 5;
+    public const int DrinkSubType = 6;
+
     public const int AttributeModifierFlatSubType = 4;
     public const int AttributeModifierPercentSubType = 14;
 
@@ -67,6 +70,9 @@ public static class SpellEffectColumns
     public const int LeapToTargetSubType = 14;
 
     public const int LearnSpellSubType = 10;
+
+    // Names the creature a pet spell calls to its owner's side.
+    public const int SummonSubType = 8;
 
     // The aura that turns its wearer into another creature's display (a boss shape, a cookie, a spirit).
     public const int AvatarSubType = 17;

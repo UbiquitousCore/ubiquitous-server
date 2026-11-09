@@ -38,6 +38,8 @@ public static class SpellEffectClassifier
                 SpellEffectColumns.LeapToTargetSubType => spell with { EffectLeapToTarget = true },
                 SpellEffectColumns.LearnSpellSubType when effect.EffectArgument != 0 =>
                     spell with { EffectLearnSpellId = effect.EffectArgument },
+                SpellEffectColumns.SummonSubType when effect.EffectArgument != 0 =>
+                    spell with { EffectSummonCreatureId = effect.EffectArgument },
                 SpellEffectColumns.PowerRestoreSubType => spell with
                 {
                     EffectPowerRestore = effect.BaseValue,
@@ -53,6 +55,8 @@ public static class SpellEffectClassifier
         {
             SpellEffectColumns.PeriodicDamageSubType => spell with { AuraPeriodicDamage = effect.BaseValue },
             SpellEffectColumns.PeriodicHealSubType => spell with { AuraPeriodicHeal = effect.BaseValue },
+            SpellEffectColumns.EatSubType => spell with { AuraEatPerTick = effect.BaseValue },
+            SpellEffectColumns.DrinkSubType => spell with { AuraDrinkPerTick = effect.BaseValue },
             SpellEffectColumns.StunSubType => spell with { AuraStun = true },
             SpellEffectColumns.SleepSubType => spell with { AuraSleep = true },
             SpellEffectColumns.SilenceSubType => spell with { AuraSilence = true },
@@ -132,6 +136,19 @@ public static class SpellEffectClassifier
                 var withSlow = Apply(Blank(spell, candidate), candidate);
                 if (withSlow.AuraSlowPercent is null) continue;
                 spell = spell with { AuraSlowPercent = withSlow.AuraSlowPercent };
+                used.Add(column);
+                break;
+            }
+        }
+
+        if (spell.AuraEatPerTick is not null)
+        {
+            foreach (var column in new[] { 34, 35 })
+            {
+                if (used.Contains(column) || At(column) is not { } candidate || !Unconditioned(candidate)) continue;
+                var withDrink = Apply(Blank(spell, candidate), candidate);
+                if (withDrink.AuraDrinkPerTick is null) continue;
+                spell = spell with { AuraDrinkPerTick = withDrink.AuraDrinkPerTick };
                 used.Add(column);
                 break;
             }

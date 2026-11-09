@@ -4,11 +4,14 @@ namespace Ubiquitous.Game;
 
 public static class SpellLessons
 {
+    // A pet's item names the summon itself and no lesson: using the item puts the summon in the book.
     public static IReadOnlyList<uint> Taught(SpellDefinition spell) =>
-        [.. new[] { spell }.Concat(spell.ExtraEffects ?? [])
-            .Select(effect => effect.EffectLearnSpellId)
-            .OfType<uint>()
-            .Distinct()];
+        spell.EffectSummonCreatureId is not null
+            ? [spell.Id]
+            : [.. new[] { spell }.Concat(spell.ExtraEffects ?? [])
+                .Select(effect => effect.EffectLearnSpellId)
+                .OfType<uint>()
+                .Distinct()];
 
     // No vendor in 1.1.4 sells the riding skills a Bond asks for, so a skill
     // counts as known by whoever could use the item that teaches it.

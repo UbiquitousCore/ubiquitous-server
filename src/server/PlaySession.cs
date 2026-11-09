@@ -973,6 +973,7 @@ public sealed partial class PlaySession : ISessionPlayer
         responses.AddRange(TickAuras(now));
         responses.AddRange(TickPeriodicTriggers(now));
         responses.AddRange(TickControlEffects(now));
+        TickMeal(now, responses);
         responses.AddRange(TickSilenceEffects(now));
         responses.AddRange(TickAttributeModifiers(now));
         responses.AddRange(OnceEach(TickSlowEffects(now).Concat(TickChillEffects(now))));
@@ -1296,6 +1297,8 @@ public sealed partial class PlaySession : ISessionPlayer
     {
         Arrivals++;
         LeaveMountBehind();
+        _pet = null;
+        _meal = null;
         _fall.Cancel();
         if (instanceKey is null && _character is not null && IsDungeonMap(mapId))
         {
@@ -1531,6 +1534,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 Velocity: request.Velocity)) };
         FollowFall(request.State, decision.Position.Y, Now, responses);
         FollowSwimming(request.State, Now, responses);
+        if (request.Moving || request.State == MovementState.Jumping) EndMeal(responses);
         if (_instanceWorld is null)
         {
             RefreshView(responses);

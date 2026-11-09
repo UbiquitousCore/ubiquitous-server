@@ -215,6 +215,12 @@ public static class WireCodes
         // A `mountprototype` row id; 0 is on foot.
         public const string Mount = "mount";
 
+        // The `creature_proto` entry of the pet at this body's heel; 0 is none.
+        public const string Pet = "pet";
+
+        // 1 while the body sits at a meal, 0 once it does not.
+        public const string Eating = "eating";
+
         public const string MoveSpeed = "moveSpeed";
     }
 }

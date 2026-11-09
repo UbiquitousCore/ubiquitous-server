@@ -62,6 +62,18 @@ public sealed class SpellEffectClassifierTests
     }
 
     [Fact]
+    public void FoodKeepsItsEatAndDrinkOnTheOneSpell()
+    {
+        var spell = Classify(
+            (33, Effect(1, 1, SpellEffectColumns.EatSubType, baseValue: 30, target: 1)),
+            (34, Effect(2, 1, SpellEffectColumns.DrinkSubType, baseValue: 60, target: 1)));
+
+        Assert.Equal(30, spell.AuraEatPerTick);
+        Assert.Equal(60, spell.AuraDrinkPerTick);
+        Assert.Null(spell.ExtraEffects);
+    }
+
+    [Fact]
     public void ALessonTeachesEachOfItsSpells()
     {
         var spell = Classify(
