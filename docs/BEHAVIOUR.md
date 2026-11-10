@@ -15,7 +15,12 @@ comes from is in `PROVENANCE.md`.
   connection, up to five times; after five refusals, or once signed in, a
   further login gets `invalid_state`. `account.loginResult` carries `isAdmin`,
   true only for a GM account that signed in; the client shows its admin panel
-  from it. The client sends
+  from it. A login may also carry `tables`, the name, row count and type string
+  of each table the client read from the player's own game file; the result
+  then carries `gameVersion`, the build this server's data came from, and
+  `differingTables`, those of the client's tables the server's package holds
+  with another shape or length. A difference never refuses the login: the
+  client warns the player and the server logs it. The client sends
   the typed password as `passHash`; the server stores it as
   `pbkdf2-sha256$<iterations>$<salt>$<hash>` and compares in constant time. A
   stored value without that prefix is accepted once and rehashed. Five failures

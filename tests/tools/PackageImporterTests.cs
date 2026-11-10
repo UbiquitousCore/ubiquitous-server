@@ -9,14 +9,14 @@ namespace Ubiquitous.Integration.Tests;
 public class PackageImporterTests
 {
     [Fact]
-    public void ImportBuild114_WritesAValidPackageFromAPackedArchive()
+    public void Import_WritesAValidPackageFromAPackedArchive()
     {
         var archive = BuildArchive();
         var tempDir = Path.Combine(Path.GetTempPath(), "ubiquitous-package-importer-tests-" + Guid.NewGuid());
 
         try
         {
-            var result = PackageImporter.ImportBuild114(
+            var result = PackageImporter.Import(
                 TableArchiveReader.ReadEntries(archive), tempDir, sourceHash: "test-hash");
 
             Assert.Equal(1, result.MapCount);
@@ -256,20 +256,23 @@ public class PackageImporterTests
     }
 
     [Fact]
-    public void ImportBuild114_FailsLoudlyWhenARequiredTableIsMissing()
+    public void Import_FailsLoudlyWhenARequiredTableIsMissing()
     {
         var archive = BuildArchive(omit: "tables/spell_new.tbl");
 
-        Assert.Throws<FTableFormatException>(() => PackageImporter.ImportBuild114(
+        Assert.Throws<FTableFormatException>(() => PackageImporter.Import(
             TableArchiveReader.ReadEntries(archive), Path.GetTempPath(), sourceHash: "test-hash"));
     }
 
     private static byte[] BuildArchive(string? omit = null)
     {
-        var mapInfo = BuildTable(new string('u', 9) + "s",
+        // Synthetic rows in real 1.1.4 shapes (see fingerprints/1.1.4.json): the
+        // import resolves these through the same fast paths as real data, so
+        // this test pins that resolving changed nothing about the output.
+        var mapInfo = BuildTable("uuuuufffussuuufuuu",
             new Dictionary<int, object> { [0] = 13u, [9] = "Starter Map" });
 
-        var creatureProto = BuildTable(new string('u', 55) + "su",
+        var creatureProto = BuildTable("uuuuuuuuuufuuuuuuuuuuuuuuuuuuuuuuuffsuuuuuuuuuuuuuuuuuusuuuuufuuuuufuuuuuu",
         [
             new Dictionary<int, object>
             {
@@ -296,7 +299,7 @@ public class PackageImporterTests
             new Dictionary<int, object> { [0] = 2u, [1] = 2u, [2] = 200u, [3] = 2u, [4] = 10u },
         ]);
 
-        var creatureAppearance = BuildTable("uu",
+        var creatureAppearance = BuildTable("ukkkuuu",
             [
                 new Dictionary<int, object> { [0] = 12u, [1] = 900u },
                 new Dictionary<int, object> { [0] = 13u, [1] = 901u },
@@ -322,10 +325,7 @@ public class PackageImporterTests
                 [27] = 4f,
             });
 
-        var spellFormat = new string('u', 47).ToCharArray();
-        spellFormat[21] = 'f';
-        spellFormat[39] = 'f';
-        var spellNew = BuildTable(new string(spellFormat),
+        var spellNew = BuildTable("uuusuuuuuusuiuuuuuffffuuuuuuuuuuuuuuuuufuuuuuuuuuuuuu",
         [
             new Dictionary<int, object>
             {
@@ -387,15 +387,15 @@ public class PackageImporterTests
             new Dictionary<int, object> { [0] = 550u, [4] = 1u, [6] = 1u, [7] = 4u, [9] = 5, [11] = 3u },
         ]);
 
-        var items = BuildTable(new string('u', 62),
+        var items = BuildTable("uuukuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuffuffuuuufuuuuuuuuuuuuukuuuuuuuufuuuuuuuuuuuuuuuusuuuusuuuuuuuuuu",
             new Dictionary<int, object> { [0] = 200u, [1] = 4u, [2] = 5u, [3] = 950u, [4] = 200u, [5] = 3u, [8] = 75u });
         var stringItem = BuildTable("us", new Dictionary<int, object> { [0] = 950u, [1] = "Shield" });
 
-        var zones = BuildTable("iiiufffffff",
+        var zones = BuildTable("iiiuffffffffuuffuuuussssssfffffusiii",
             new Dictionary<int, object> { [0] = 900u, [3] = 13u, [4] = 0f, [6] = 0f, [8] = 100f, [10] = 100f });
         var stringZone = BuildTable("us", new Dictionary<int, object> { [0] = 900u, [1] = "Starter Zone" });
 
-        var quests = BuildTable(new string('u', 126),
+        var quests = BuildTable("uuuuuuuuuuuuuuuuuuuuuuuukkkkkkkkkkkuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuiiiiiiuiuuuuuuuuuuuusuuuusuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusuuuuuu",
         [
             new Dictionary<int, object>
             {

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Ubiquitous.Data;
 using Ubiquitous.Game;
 using Ubiquitous.Persistence;
@@ -53,8 +54,29 @@ public sealed partial class PlaySession
             _failedLogins++;
         }
 
+        var differing = result.Ok ? DifferingTables(request) : [];
+        if (differing.Count > 0)
+        {
+            _logger.LogWarning(
+                "Account {UserId} plays a build whose tables differ from this server's {GameVersion}: {Tables}",
+                request.UserId, _build.GameVersion, string.Join(", ", differing));
+        }
+
         return Reply(WebMessageTypes.AccountLoginResult, new LoginResultPayload(
-            result.Ok, (int)result.Code, result.Reason, result.Ok && _account?.IsAdmin == true));
+            result.Ok, (int)result.Code, result.Reason, result.Ok && _account?.IsAdmin == true,
+            result.Ok && _build.GameVersion.Length > 0 ? _build.GameVersion : null,
+            differing.Count > 0 ? differing : null));
+    }
+
+    // More tables than any build ships are not a build's; they are not compared.
+    private const int MostClientTables = 1024;
+
+    private IReadOnlyList<string> DifferingTables(LoginRequest request)
+    {
+        if (request.Tables is not { Count: > 0 and <= MostClientTables } tables) return [];
+        return _build.Differences(tables
+            .Where(table => table.Name is not null && table.Format is not null)
+            .Select(table => new TableShape(DataBuild.ShortName(table.Name), table.Rows, table.Format)));
     }
 
     // Back to the sign-in screen on the same connection; a character in the world must leave first.

@@ -14,7 +14,7 @@ public class QuestColumnsTests
         var data = BuildRow(new Dictionary<int, uint> { [0] = 5010, [4] = 1, [24] = 12010, [25] = 12011 });
 
         var quest = Assert.Single(QuestTableMapper.MapQuests(
-            FTableDocument.Load(data), QuestColumns.Build114,
+            FTableDocument.Load(data), QuestColumns.Reference,
             npcEntries: new HashSet<uint> { 9010 }, resolveGiverEntry: id => id == 5010 ? 9010u : null));
 
         Assert.Equal(5010u, quest.Id);
@@ -30,7 +30,7 @@ public class QuestColumnsTests
         var data = BuildRow(new Dictionary<int, uint> { [0] = 5010, [4] = 1, [24] = 12010, [25] = 12011 });
 
         Assert.Throws<FTableFormatException>(() => QuestTableMapper.MapQuests(
-            FTableDocument.Load(data), QuestColumns.Build114,
+            FTableDocument.Load(data), QuestColumns.Reference,
             npcEntries: new HashSet<uint> { 9010 }, resolveGiverEntry: _ => null));
     }
 
@@ -49,7 +49,7 @@ public class QuestColumnsTests
         });
 
         var quest = Assert.Single(QuestTableMapper.MapQuests(
-            FTableDocument.Load(data), QuestColumns.Build114,
+            FTableDocument.Load(data), QuestColumns.Reference,
             npcEntries: new HashSet<uint> { 9013 }, resolveGiverEntry: id => id == 5014 ? 9013u : null));
 
         var objective = Assert.Single(quest.Objectives);
@@ -77,7 +77,7 @@ public class QuestColumnsTests
         });
 
         var quest = Assert.Single(QuestTableMapper.MapQuests(
-            FTableDocument.Load(data), QuestColumns.Build114,
+            FTableDocument.Load(data), QuestColumns.Reference,
             npcEntries: new HashSet<uint> { 9013 }, resolveGiverEntry: _ => 9013u));
 
         var objective = Assert.Single(quest.Objectives);

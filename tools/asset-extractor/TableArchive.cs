@@ -22,6 +22,11 @@ public static class TableArchiveReader
 
     private static ReadOnlySpan<byte> LocalHeaderMagic => "GBMP"u8;
 
+
+    // Some builds keep the ordinary signature.
+
+    private static ReadOnlySpan<byte> StandardLocalHeaderMagic => "PK\u0003\u0004"u8;
+
     public static IReadOnlyDictionary<string, byte[]> ReadEntries(ReadOnlySpan<byte> archive)
     {
         int eocd = FindEndOfCentralDirectory(archive);
@@ -76,9 +81,10 @@ public static class TableArchiveReader
             throw new TableArchiveFormatException($"Entry '{name}' has a local header outside the file.");
         }
 
-        if (!archive.Slice(localHeaderOffset, 4).SequenceEqual(LocalHeaderMagic))
+        var magic = archive.Slice(localHeaderOffset, 4);
+        if (!magic.SequenceEqual(LocalHeaderMagic) && !magic.SequenceEqual(StandardLocalHeaderMagic))
         {
-            throw new TableArchiveFormatException($"Entry '{name}' is missing the packed local header signature.");
+            throw new TableArchiveFormatException($"Entry '{name}' has neither local header signature this reader knows.");
         }
 
         ushort localNameLength = BinaryPrimitives.ReadUInt16LittleEndian(archive.Slice(localHeaderOffset + 26, 2));
@@ -95,6 +101,8 @@ public static class TableArchiveReader
         {
             0 => compressed.ToArray(),
             8 => Inflate(compressed, uncompressedSize, name),
+            14 => LzmaMethod.Decode(name, compressed, uncompressedSize,
+                message => new TableArchiveFormatException(message)),
             _ => throw new TableArchiveFormatException($"Entry '{name}' uses unsupported compression method {method}."),
         };
     }

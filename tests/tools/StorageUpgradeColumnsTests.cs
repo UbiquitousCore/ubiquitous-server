@@ -15,7 +15,7 @@ public class StorageUpgradeColumnsTests
             new Dictionary<int, uint> { [0] = 4u, [1] = 0u, [2] = 18u, [3] = 0u, [4] = 10000u, [5] = 0u, [6] = 12u },
         });
 
-        var upgrade = Assert.Single(StorageUpgradeTableMapper.MapUpgrades(FTableDocument.Load(data), StorageUpgradeColumns.Build114));
+        var upgrade = Assert.Single(StorageUpgradeTableMapper.MapUpgrades(FTableDocument.Load(data), StorageUpgradeColumns.Reference));
 
         Assert.Equal(4u, upgrade.Id);
         Assert.Equal("bag", upgrade.Area);
@@ -33,7 +33,7 @@ public class StorageUpgradeColumnsTests
             new Dictionary<int, uint> { [0] = 1u, [1] = 1u, [2] = 36u, [3] = 0u, [4] = 100000u, [5] = 0u, [6] = 24u },
         });
 
-        var upgrade = Assert.Single(StorageUpgradeTableMapper.MapUpgrades(FTableDocument.Load(data), StorageUpgradeColumns.Build114));
+        var upgrade = Assert.Single(StorageUpgradeTableMapper.MapUpgrades(FTableDocument.Load(data), StorageUpgradeColumns.Reference));
 
         Assert.Equal("bank", upgrade.Area);
         Assert.Equal(36u, upgrade.SlotCount);
@@ -49,7 +49,7 @@ public class StorageUpgradeColumnsTests
         });
 
         Assert.Throws<FTableFormatException>(() =>
-            StorageUpgradeTableMapper.MapUpgrades(FTableDocument.Load(data), StorageUpgradeColumns.Build114));
+            StorageUpgradeTableMapper.MapUpgrades(FTableDocument.Load(data), StorageUpgradeColumns.Reference));
     }
 
     private static byte[] BuildTable(IReadOnlyList<Dictionary<int, uint>> rows)

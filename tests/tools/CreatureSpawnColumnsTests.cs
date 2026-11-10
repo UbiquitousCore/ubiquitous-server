@@ -14,7 +14,7 @@ public class CreatureSpawnColumnsTests
             floats: new Dictionary<int, float> { [3] = 100f, [4] = 2f, [5] = 3f, [6] = 1.5f });
 
         var spawns = CreatureSpawnTableMapper.MapSpawns(
-            FTableDocument.Load(data), CreatureSpawnColumns.Build114,
+            FTableDocument.Load(data), CreatureSpawnColumns.Reference,
             mapIds: new HashSet<ushort> { 13 }, creatureEntries: new HashSet<uint> { 9001 });
 
         var spawn = Assert.Single(spawns);
@@ -45,7 +45,7 @@ public class CreatureSpawnColumnsTests
         var data = BuildRows((follower, noFloats), (leader, noFloats));
 
         var spawns = CreatureSpawnTableMapper.MapSpawns(
-            FTableDocument.Load(data), CreatureSpawnColumns.Build114,
+            FTableDocument.Load(data), CreatureSpawnColumns.Reference,
             mapIds: new HashSet<ushort> { 13 }, creatureEntries: new HashSet<uint> { 2458, 2456 });
 
         Assert.Equal(18097u, spawns[0].LeaderSpawnId);
@@ -53,7 +53,7 @@ public class CreatureSpawnColumnsTests
         follower[34] = 0;
         var cleared = CreatureSpawnTableMapper.MapSpawns(
             FTableDocument.Load(BuildRows((follower, noFloats), (leader, noFloats))),
-            CreatureSpawnColumns.Build114,
+            CreatureSpawnColumns.Reference,
             mapIds: new HashSet<ushort> { 13 }, creatureEntries: new HashSet<uint> { 2458, 2456 });
 
         Assert.Equal(0u, cleared[0].LeaderSpawnId);
@@ -74,7 +74,7 @@ public class CreatureSpawnColumnsTests
             floats: new Dictionary<int, float>());
 
         var spawn = Assert.Single(CreatureSpawnTableMapper.MapSpawns(
-            FTableDocument.Load(data), CreatureSpawnColumns.Build114,
+            FTableDocument.Load(data), CreatureSpawnColumns.Reference,
             mapIds: new HashSet<ushort> { 13 }, creatureEntries: new HashSet<uint> { 9001 }));
 
         Assert.Equal(4321u, spawn.AnimationId);

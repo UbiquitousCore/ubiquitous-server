@@ -18,7 +18,7 @@ public class TeleportStopColumnsTests
             strings: new Dictionary<int, string> { [1] = "test-stop" });
 
         var stop = Assert.Single(TeleportStopTableMapper.MapTeleportStops(
-            FTableDocument.Load(data), TeleportStopColumns.Build114, mapIds: new HashSet<ushort> { 1 }));
+            FTableDocument.Load(data), TeleportStopColumns.Reference, mapIds: new HashSet<ushort> { 1 }));
 
         Assert.Equal(1u, stop.Id);
         Assert.Equal((ushort)1, stop.MapId);
@@ -38,7 +38,7 @@ public class TeleportStopColumnsTests
             strings: new Dictionary<int, string> { [1] = "sand box" });
 
         var stop = Assert.Single(TeleportStopTableMapper.MapTeleportStops(
-            FTableDocument.Load(data), TeleportStopColumns.Build114, mapIds: new HashSet<ushort> { 9 }));
+            FTableDocument.Load(data), TeleportStopColumns.Reference, mapIds: new HashSet<ushort> { 9 }));
 
         Assert.Equal(TeleportStopKind.DungeonGate, stop.Kind);
     }

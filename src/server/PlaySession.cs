@@ -136,6 +136,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly Dictionary<string, CorpseLoot> _loot = new(StringComparer.Ordinal);
     private readonly LootService _lootService;
     private readonly GameContent _content;
+    private readonly DataBuild _build;
     private readonly Dictionary<uint, List<VendorTab>> _vendorTabs;
     private int _level;
     private int _xp;
@@ -246,6 +247,7 @@ public sealed partial class PlaySession : ISessionPlayer
         _questLogStore = stores.QuestLog;
 
         _content = content.Game;
+        _build = content.Build;
         _belongings = new PlayerBelongings(_content);
         _creatureSpawns = content.CreatureSpawns;
         _staticObjectSpawns = content.StaticObjectSpawns;

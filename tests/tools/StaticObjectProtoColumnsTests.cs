@@ -13,7 +13,7 @@ public class StaticObjectProtoColumnsTests
     {
         var data = BuildRow(new Dictionary<int, uint> { [0] = 145, [1] = 9 });
 
-        var type = Assert.Single(StaticObjectProtoTableMapper.MapTypes(FTableDocument.Load(data), StaticObjectProtoColumns.Build114));
+        var type = Assert.Single(StaticObjectProtoTableMapper.MapTypes(FTableDocument.Load(data), StaticObjectProtoColumns.Reference));
 
         Assert.Equal(145u, type.Entry);
         Assert.Equal(StaticObjectTypes.StorageBox, type.Type);
@@ -26,9 +26,9 @@ public class StaticObjectProtoColumnsTests
         var anniversary = BuildRow(new Dictionary<int, uint> { [0] = 288, [19] = FestivalIds.Anniversary });
 
         var first = Assert.Single(StaticObjectProtoTableMapper.MapTypes(
-            FTableDocument.Load(winter), StaticObjectProtoColumns.Build114));
+            FTableDocument.Load(winter), StaticObjectProtoColumns.Reference));
         var second = Assert.Single(StaticObjectProtoTableMapper.MapTypes(
-            FTableDocument.Load(anniversary), StaticObjectProtoColumns.Build114));
+            FTableDocument.Load(anniversary), StaticObjectProtoColumns.Reference));
 
         Assert.Equal(FestivalIds.WinterSolstice, first.Festival);
         Assert.Equal(FestivalIds.Anniversary, second.Festival);

@@ -8,14 +8,10 @@ public sealed record DataManifest(
     string GameVersion,
     string SourceHash,
     DateTimeOffset GeneratedAt,
-    Dictionary<string, string> Datasets)
+    Dictionary<string, string> Datasets,
+    IReadOnlyList<string>? ImportNotes = null)
 {
     public const string FileName = "manifest.json";
-
-    public const string TargetGameVersion = "1.1.4";
-
-    public static bool IsTargetGameVersion(string? gameVersion) =>
-        string.Equals(gameVersion, TargetGameVersion, StringComparison.Ordinal);
 
     public static readonly IReadOnlyList<string> RequiredDatasets = new[]
     {

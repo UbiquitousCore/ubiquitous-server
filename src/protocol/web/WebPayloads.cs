@@ -6,7 +6,14 @@ namespace Ubiquitous.Protocol.Web;
 
 public sealed record LoginRequest(
     [property: JsonPropertyName("userId")] string UserId,
-    [property: JsonPropertyName("passHash")] string PassHash);
+    [property: JsonPropertyName("passHash")] string PassHash,
+    [property: JsonPropertyName("tables")] IReadOnlyList<ClientTableShape>? Tables = null);
+
+// One table the client read from the player's own game file.
+public sealed record ClientTableShape(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("rows")] int Rows,
+    [property: JsonPropertyName("format")] string Format);
 
 public sealed record ChatPayload(
     [property: JsonPropertyName("channel")] string Channel,
@@ -364,7 +371,9 @@ public sealed record LoginResultPayload(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("code")] int Code,
     [property: JsonPropertyName("reason")] string? Reason,
-    [property: JsonPropertyName("isAdmin")] bool IsAdmin);
+    [property: JsonPropertyName("isAdmin")] bool IsAdmin,
+    [property: JsonPropertyName("gameVersion")] string? GameVersion = null,
+    [property: JsonPropertyName("differingTables")] IReadOnlyList<string>? DifferingTables = null);
 
 public sealed record ChooseCharacterRequest(
     [property: JsonPropertyName("name")] string Name);

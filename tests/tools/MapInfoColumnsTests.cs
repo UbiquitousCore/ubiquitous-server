@@ -16,7 +16,7 @@ public class MapInfoColumnsTests
         var data = BuildRow(id: 13, nameLength: (short)name.Length, nameOffset: 0,
             fileLength: (short)file.Length, fileOffset: name.Length, pool);
 
-        var map = Assert.Single(MapTableMapper.MapMaps(FTableDocument.Load(data), MapInfoColumns.Build114));
+        var map = Assert.Single(MapTableMapper.MapMaps(FTableDocument.Load(data), MapInfoColumns.Reference));
 
         Assert.Equal((ushort)13, map.Id);
         Assert.Equal("test-city", map.InternalName);

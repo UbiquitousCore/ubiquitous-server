@@ -6,15 +6,13 @@ namespace Ubiquitous.AssetExtractor;
 
 public static partial class GossipMenuTableMapper
 {
-    private const int StringColumn = 1;
-    private const int FirstScriptColumn = 2;
-    private const int FirstSubMenuColumn = 8;
     private const int Slots = 6;
 
     public sealed record Result(IReadOnlyList<GossipMenuDefinition> Menus, int DroppedTeleports);
 
     public static Result MapMenus(
         FTableDocument menuRows,
+        GossipMenuTableColumns columns,
         IReadOnlyDictionary<uint, string> strings,
         IReadOnlyDictionary<uint, ushort> mapByZone)
     {
@@ -24,19 +22,19 @@ public static partial class GossipMenuTableMapper
         for (int i = 0; i < menuRows.Rows.Count; i++)
         {
             var row = menuRows.Rows[i];
-            uint id = RequireUInt(row, 0, i, "id");
+            uint id = RequireUInt(row, columns.Id, i, "id");
             if (!seen.Add(id)) throw new FTableFormatException($"Duplicate chat_menu id {id}.");
 
-            var text = strings.TryGetValue(RequireUInt(row, StringColumn, i, "string"), out var found)
+            var text = strings.TryGetValue(RequireUInt(row, columns.String, i, "string"), out var found)
                 ? found
                 : string.Empty;
 
             var subMenus = new List<uint>();
             foreach (Match link in LinkTag().Matches(text))
             {
-                if (!TryLeadingInt(link.Groups[1].Value, out var column) || column < 1 || column > Slots)
+                if (!TryLeadingInt(link.Groups[1].Value, out var column) || column < 1 || column > columns.SubMenus.Count)
                     continue;
-                uint subMenu = RequireUInt(row, FirstSubMenuColumn + column - 1, i, "sub-menu");
+                uint subMenu = RequireUInt(row, columns.SubMenus[column - 1], i, "sub-menu");
                 if (subMenu != 0 && !subMenus.Contains(subMenu)) subMenus.Add(subMenu);
             }
 
@@ -53,7 +51,7 @@ public static partial class GossipMenuTableMapper
                 teleports.Add(offer);
             }
 
-            var scripts = Enumerable.Range(FirstScriptColumn, Slots)
+            var scripts = columns.Scripts
                 .Select(column => column < row.Count ? row[column] switch { uint script => script, int script when script > 0 => (uint)script, _ => 0u } : 0u)
                 .ToList();
             menus.Add(new GossipMenuDefinition(id, subMenus, teleports, scripts.Any(script => script != 0) ? scripts : null));
