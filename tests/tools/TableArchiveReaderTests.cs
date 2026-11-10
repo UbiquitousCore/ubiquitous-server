@@ -32,13 +32,23 @@ public class TableArchiveReaderTests
     }
 
     [Fact]
-    public void ReadEntries_RejectsAnEntryWhoseLocalHeaderLostTheSubstitutedMagic()
+    public void ReadEntries_RejectsAnEntryWhoseLocalHeaderHasNeitherSignature()
     {
         var archive = BuildPackedArchive(("tables/achievement.tbl", "hello"u8.ToArray()));
         int magicAt = IndexOf(archive, "GBMP"u8.ToArray());
         archive[magicAt] = (byte)'X';
 
         Assert.Throws<TableArchiveFormatException>(() => TableArchiveReader.ReadEntries(archive));
+    }
+
+    [Fact]
+    public void ReadEntries_ReadsAnArchiveThatKeptTheOrdinarySignature()
+    {
+        var archive = BuildPackedArchive(("tables/achievement.tbl", "hello"u8.ToArray()));
+        int magicAt = IndexOf(archive, "GBMP"u8.ToArray());
+        "PK\u0003\u0004"u8.CopyTo(archive.AsSpan(magicAt));
+
+        Assert.Equal("hello"u8.ToArray(), TableArchiveReader.ReadEntries(archive)["tables/achievement.tbl"]);
     }
 
     [Fact]

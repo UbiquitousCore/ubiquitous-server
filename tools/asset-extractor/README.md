@@ -37,6 +37,7 @@ does not have reads as absent, and the import notes it.
 | 1.0.3 | yes | festivals, leash and notice ranges |
 | 1.1.0, 1.1.1 | yes | notice range |
 | 1.1.4 | yes | nothing: the reference |
+| 1.1.5 | yes | creature loot |
 | 2.2.0, 2.5.0 | yes | creature loot (dungeon rewards are imported, not yet awarded) |
 | 4.2.21 | yes | creature loot; 68 items with an out-of-range subclass |
 

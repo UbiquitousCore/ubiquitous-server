@@ -16,6 +16,8 @@ public static class ZoneColumns
         ],
         // 1.0.0 to 1.0.3
         new LayoutRevision("iiiuffffffffuuffuuuusssiii", new LayoutEdit.Lacks(22, 10)),
+        // 1.1.5
+        new LayoutRevision("iiiuffffffffuuffuuuussssssfffffusiiiu", new LayoutEdit.Adds(36)),
         // 2.2.0 on
         new LayoutRevision("iiiuffffffffuuffffuuuussssssfffffusiiiu", new LayoutEdit.Adds(16, 2), new LayoutEdit.Adds(36)));
 

@@ -15,6 +15,11 @@ public static class TalentColumns
             LayoutColumn.Must(nameof(TalentTableColumns.RankCount), 8, "u"),
             LayoutColumn.MustRun(nameof(TalentTableColumns.RankSpells), "u", 9, 10, 11, 12, 13),
         ],
+        // 1.1.5: ranks spread as in 2.2.0, with a shorter tail
+        new LayoutRevision(
+            "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusuuu",
+            new LayoutEdit.Adds(10, 4), new LayoutEdit.Adds(11, 4), new LayoutEdit.Adds(12, 4),
+            new LayoutEdit.Adds(13, 4), new LayoutEdit.Adds(14, 4), new LayoutEdit.Adds(16, 2)),
         // 2.2.0 on: each rank's spell is followed by four columns of its own
         new LayoutRevision(
             "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusuuuuuuu",
