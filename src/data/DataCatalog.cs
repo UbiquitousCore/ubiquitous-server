@@ -37,6 +37,10 @@ public sealed class DataCatalog
         return new DataCatalog(DataManifestJson.Load(manifestPath), Path.GetFullPath(directory));
     }
 
+    public DataBuild LoadBuild() => Directory is null
+        ? new DataBuild(Manifest.GameVersion, DataBuild.Unknown.Tables)
+        : DataBuild.Load(Manifest.GameVersion, Directory);
+
     public DataValidationResult Validate()
     {
         var result = new DataValidationResult();

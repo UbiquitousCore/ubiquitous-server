@@ -21,7 +21,7 @@ public sealed record TableFingerprint(
     IReadOnlyList<TableFingerprintEntry> Tables,
     DateTimeOffset CapturedAt)
 {
-    public const string FileName = "fingerprint.json";
+    public const string FileName = Ubiquitous.Data.DataBuild.FileName;
 
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {

@@ -55,14 +55,18 @@ internal static class TestSessions
         SharedWorld? world = null,
         TimeProvider? time = null,
         PatrolRouteLibrary? patrols = null,
-        IReadOnlySet<string>? developmentUserIds = null)
+        IReadOnlySet<string>? developmentUserIds = null,
+        DataBuild? build = null)
     {
         var stores = new SessionStores(new AccountAuthenticator(accounts, iterations: TestPasswordIterations), characters, inventoryStore, questLogStore, mailStore, auctionStore,
             guildStore, friendStore, reportStore);
         return new PlaySession(
             stores,
             new ServerContent(content ?? WithTestPurse(GameContent.Development), creatureSpawns ?? [], staticObjectSpawns ?? [],
-                walkableGround) is var built && patrols is not null ? built with { Patrols = patrols } : built,
+                walkableGround)
+            { Build = build ?? DataBuild.Unknown } is var built && patrols is not null
+                ? built with { Patrols = patrols }
+                : built,
             world ?? new SharedWorld(stores, time: time)
             {
                 Maps = sharedMaps ?? new SharedMapRegistry(wanderRollUnit, time),

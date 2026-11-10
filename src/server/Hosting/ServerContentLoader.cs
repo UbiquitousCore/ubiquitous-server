@@ -25,7 +25,11 @@ public sealed class ServerContentLoader(
         };
         game = WithRates(game, options.ResolvedRates);
 
-        return new ServerContent(game, creatureSpawns, staticObjectSpawns, LoadWalkableGround()) { Patrols = patrols };
+        return new ServerContent(game, creatureSpawns, staticObjectSpawns, LoadWalkableGround())
+        {
+            Patrols = patrols,
+            Build = catalog?.LoadBuild() ?? DataBuild.Unknown,
+        };
     }
 
     // Creature health is scaled once here, so combat, the spawn message and
