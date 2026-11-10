@@ -2,36 +2,25 @@ namespace Ubiquitous.AssetExtractor;
 
 public static class SpellEffectColumns
 {
-    public static SpellEffectTableColumns Resolve(FTableDocument document)
-    {
-        const string Table = "tables/spell_effect.tbl";
-        string format = document.Header.ColumnTypes;
-        if (TableSchemas.Matches(Table, format, "1.1.4")) return Build114;
-        TableShape.Expect(Table, format,
-            (Build114.Id, "uk"),
-            (Build114.Target, "iu"),
-            (Build114.Type, "iu"),
-            (Build114.SubType, "iu"),
-            (Build114.School, "iu"),
-            (Build114.BaseValue, "iu"),
-            (Build114.Spread, "iu"),
-            (Build114.EffectArgument, "u"),
-            (Build114.TargetCondition, "u"),
-            (Build114.CasterCondition, "u"));
-        return Build114;
-    }
+    public static readonly ColumnLayout Layout = new(
+        "tables/spell_effect.tbl",
+        "uuuuufuuiiiuuuuuuuuuusss",
+        [
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.Id), 0, "uk"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.Target), 4, "iu"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.Type), 6, "iu"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.SubType), 7, "iu"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.School), 8, "iu"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.BaseValue), 9, "iu"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.Spread), 10, "iu"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.EffectArgument), 11, "u"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.TargetCondition), 16, "u"),
+            LayoutColumn.Must(nameof(SpellEffectTableColumns.CasterCondition), 17, "u"),
+        ],
+        // 4.2.21
+        new LayoutRevision("uuuuufuuiiiuuuuuuuuuusssuuuu", new LayoutEdit.Adds(24, 4)));
 
-    public static readonly SpellEffectTableColumns Build114 = new(
-        Id: 0,
-        Type: 6,
-        SubType: 7,
-        School: 8,
-        BaseValue: 9,
-        Spread: 10,
-        EffectArgument: 11,
-        Target: 4,
-        TargetCondition: 16,
-        CasterCondition: 17);
+    public static SpellEffectTableColumns Reference => Layout.Reference.As<SpellEffectTableColumns>();
 
     public const int PowerRestoreSubType = 6;
 

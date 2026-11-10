@@ -16,7 +16,7 @@ public class SpellNewColumnsTests
             floats: new Dictionary<int, float> { [21] = 30f });
 
         var spell = Assert.Single(SpellTableMapper.MapSpells(
-            FTableDocument.Load(data), SpellNewColumns.Build114, resolveName: _ => "test-bolt"));
+            FTableDocument.Load(data), SpellNewColumns.Reference, resolveName: _ => "test-bolt"));
 
         Assert.Equal(85u, spell.Id);
         Assert.Equal("test-bolt", spell.NameKey);
@@ -33,7 +33,7 @@ public class SpellNewColumnsTests
             floats: new Dictionary<int, float>());
 
         var spell = Assert.Single(SpellTableMapper.MapSpells(
-            FTableDocument.Load(data), SpellNewColumns.Build114, resolveName: _ => "Stun Bash"));
+            FTableDocument.Load(data), SpellNewColumns.Reference, resolveName: _ => "Stun Bash"));
 
         Assert.Equal(2000, spell.DurationMs);
     }
@@ -46,7 +46,7 @@ public class SpellNewColumnsTests
             floats: new Dictionary<int, float>());
 
         var spell = Assert.Single(SpellTableMapper.MapSpells(
-            FTableDocument.Load(data), SpellNewColumns.Build114, resolveName: _ => "Fireball"));
+            FTableDocument.Load(data), SpellNewColumns.Reference, resolveName: _ => "Fireball"));
 
         Assert.Equal(2, spell.Rank);
     }
@@ -59,7 +59,7 @@ public class SpellNewColumnsTests
             floats: new Dictionary<int, float> { [39] = 30f });
 
         var spell = Assert.Single(SpellTableMapper.MapSpells(
-            FTableDocument.Load(data), SpellNewColumns.Build114, resolveName: _ => "Rapid Shot"));
+            FTableDocument.Load(data), SpellNewColumns.Reference, resolveName: _ => "Rapid Shot"));
 
         Assert.Equal(30f, spell.Speed);
     }
@@ -67,7 +67,7 @@ public class SpellNewColumnsTests
     [Fact]
     public void Build114_LeavesDurationAtZeroWhenTheColumnIsUnmapped()
     {
-        var columns = SpellNewColumns.Build114 with { DurationMs = -1 };
+        var columns = SpellNewColumns.Reference with { DurationMs = -1 };
         var data = BuildRow(
             uints: new Dictionary<int, uint> { [0] = 61, [31] = 2000 },
             floats: new Dictionary<int, float>());
@@ -86,7 +86,7 @@ public class SpellNewColumnsTests
             floats: new Dictionary<int, float>());
 
         var spell = Assert.Single(SpellTableMapper.MapSpells(
-            FTableDocument.Load(data), SpellNewColumns.Build114, resolveName: _ => "test-ranged-attack"));
+            FTableDocument.Load(data), SpellNewColumns.Reference, resolveName: _ => "test-ranged-attack"));
 
         Assert.Equal(15, spell.WornSlotNeeded);
         Assert.Equal(2u, spell.RequiredItemClass);
@@ -101,7 +101,7 @@ public class SpellNewColumnsTests
             floats: new Dictionary<int, float>());
 
         var spell = Assert.Single(SpellTableMapper.MapSpells(
-            FTableDocument.Load(data), SpellNewColumns.Build114, resolveName: _ => "test-bolt"));
+            FTableDocument.Load(data), SpellNewColumns.Reference, resolveName: _ => "test-bolt"));
 
         Assert.Equal(-1, spell.WornSlotNeeded);
         Assert.Equal(0u, spell.RequiredItemClass);

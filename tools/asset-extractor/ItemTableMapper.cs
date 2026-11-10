@@ -147,13 +147,15 @@ public static class ItemTableMapper
         return value;
     }
 
+    public static bool FitsKind(object cell) => cell is sbyte and >= 0 or uint and <= byte.MaxValue;
+
     private static byte RequireByte(IReadOnlyList<object> row, int column, int index, string field)
     {
-        if (column < 0 || column >= row.Count) throwInvalid();
+        if (column < 0 || column >= row.Count || !FitsKind(row[column])) throwInvalid();
         return row[column] switch
         {
-            sbyte b when b >= 0 => (byte)b,
-            uint u when u <= byte.MaxValue => (byte)u,
+            sbyte b => (byte)b,
+            uint u => (byte)u,
             _ => throwInvalid(),
         };
 

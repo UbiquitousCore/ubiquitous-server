@@ -1,32 +1,19 @@
 namespace Ubiquitous.AssetExtractor;
 
+// The table arrives with 2.2.0, so its reference is that build's shape.
 public static class DungeonRewardColumns
 {
-    private const string Table = "tables/dungeon_reward.tbl";
+    public static readonly ColumnLayout Layout = new(
+        "tables/dungeon_reward.tbl",
+        "uuuuuus",
+        [
+            LayoutColumn.Must(nameof(DungeonRewardTableColumns.Id), 0, "uk"),
+            LayoutColumn.Must(nameof(DungeonRewardTableColumns.MapId), 1, "u"),
+            LayoutColumn.Must(nameof(DungeonRewardTableColumns.Difficulty), 2, "u"),
+            LayoutColumn.Must(nameof(DungeonRewardTableColumns.ItemId), 3, "u"),
+            LayoutColumn.Must(nameof(DungeonRewardTableColumns.AmountA), 4, "u"),
+            LayoutColumn.Must(nameof(DungeonRewardTableColumns.AmountB), 5, "u"),
+        ]);
 
-    // The 2.2.0 completion reward: which dungeon and difficulty grant
-    // which item, with two amounts whose meaning is not settled (a per-run
-    // money figure and a second, sometimes zero, figure). The name column
-    // points into an empty pool, so names are not read.
-    public static readonly DungeonRewardTableColumns Build220 = new(
-        Id: 0,
-        MapId: 1,
-        Difficulty: 2,
-        ItemId: 3,
-        AmountA: 4,
-        AmountB: 5);
-
-    public static DungeonRewardTableColumns Resolve(FTableDocument document)
-    {
-        string format = document.Header.ColumnTypes;
-        if (TableSchemas.Matches(Table, format, "2.2.0")) return Build220;
-        TableShape.Expect(Table, format,
-            (Build220.Id, "uk"),
-            (Build220.MapId, "u"),
-            (Build220.Difficulty, "u"),
-            (Build220.ItemId, "u"),
-            (Build220.AmountA, "u"),
-            (Build220.AmountB, "u"));
-        return Build220;
-    }
+    public static DungeonRewardTableColumns Reference => Layout.Reference.As<DungeonRewardTableColumns>();
 }

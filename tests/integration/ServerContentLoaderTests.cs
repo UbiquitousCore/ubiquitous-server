@@ -128,7 +128,7 @@ public sealed class ServerContentLoaderTests
     }
 
     private static DataManifest Manifest(Dictionary<string, string> datasets) =>
-        new("test", DataManifest.TargetGameVersion, "hash", DateTimeOffset.UnixEpoch, datasets);
+        new("test", "1.1.4", "hash", DateTimeOffset.UnixEpoch, datasets);
 
     [Fact]
     public void TheContentDirectory_IsTheRepositorysOwnWhenRunFromIt()

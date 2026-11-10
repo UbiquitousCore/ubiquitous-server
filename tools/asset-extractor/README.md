@@ -23,34 +23,36 @@ See `docs/architecture/walkable-ground.md` for the bake.
 
 ## Column layouts
 
-Each gameplay table's columns are resolved by shape (`*Columns.cs`
-`Resolve`, `TableSchemas.cs`): an exact or append-only 1.1.4 format match
-takes the pinned columns, anything else is located by shape or fails
-with the table, column and both formats named. Spell effect slots are
-discovered by value (`TableShape.DiscoverEffectSlots`); power cost and
-group mask on an unknown layout are left unknown rather than misread.
-The import log names the identified build and the slots used, and the
-package carries `fingerprint.json` beside `manifest.json`.
+Columns have no names in the files, only a type string per table. Each
+table the import reads has one `ColumnLayout` (`*Columns.cs`, listed in
+`TableLayouts.cs`): its columns by name at their place in the 1.1.4 shape,
+and one `LayoutRevision` per other known shape saying which reference
+columns it lacks and where it adds its own. A mapper takes the typed view
+(`layout.Resolve(document).As<ItemTableColumns>()`); a column the build
+does not have reads as absent, and the import notes it.
 
-Builds 1.1.0 and 1.1.1 import end to end (goldens in
-`fingerprints/`, explicit overrides in `ItemColumns.cs` and
-`SpellNewColumns.cs`). Their one gap is vendor stock: their
-`creature_proto` column 55 is not the vendor-list string, so vendor
-wiring is skipped with a log note until their seller tables are mapped.
+| Build | Imports | Left out |
+|---|---|---|
+| 1.0.0, 1.0.1 | yes | teleport stops, travel routes, festivals, leash and notice ranges |
+| 1.0.3 | yes | festivals, leash and notice ranges |
+| 1.1.0, 1.1.1 | yes | notice range |
+| 1.1.4 | yes | nothing: the reference |
+| 2.2.0, 2.5.0 | yes | creature loot (dungeon rewards are imported, not yet awarded) |
+| 4.2.21 | yes | creature loot; 68 items with an out-of-range subclass |
 
-Build 2.2.0 also imports end to end (golden in `fingerprints/`, talent
-layout in `TalentColumns.cs`, replacement loot in
-`DungeonRewardTableMapper.cs` → `dungeonRewards.json`). Its gaps:
-creatures drop nothing (dungeon rewards are imported but not yet awarded
-by game logic), and the new sticker, daily-bonus and Turkish string
-tables are not read.
+The notes are written into `manifest.json` (`ImportNotes`) and the package
+carries `fingerprint.json` beside it.
 
-Builds 1.0.3 and 4.2.21 are fingerprinted only (goldens in
-`fingerprints/`, nothing wired). A trial import shows 1.0.3 close:
-it reads as an unknown build with small drifts (five tables) and
-imports with only rows dropped (43 spawns, 11 zones, 150 quests)
-plus skipped vendor stock. 4.2.21 needs real resolver work: every
-entry in its `tables.bin` is LZMA-compressed (method 14, now
-decodable via `LzmaMethod.cs`), its load-bearing formats extend
-2.2.0's by appended columns, and the trial import stops loud on
-`items.tbl` row 11663 (no usable item subclass).
+### Adding a build
+
+1. `--fingerprint <tables.bin> --out fingerprints/<build>.json`.
+2. `--import` it. Every table whose shape no layout knows is listed.
+3. For each, line its rows up with a known build's by key, find which
+   columns moved, and add a `LayoutRevision`. `ColumnLayoutTests` checks the
+   edits account for the format, `KnownBuildsTests` that every captured
+   build is fully known.
+4. Record what moved in `docs/PROVENANCE.md`.
+
+A format no revision names still imports where it can: columns after a
+known shape are ignored, and otherwise each column is kept only if its
+type still fits, with a note for every one dropped.

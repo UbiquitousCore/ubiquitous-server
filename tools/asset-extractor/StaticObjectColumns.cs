@@ -2,35 +2,23 @@ namespace Ubiquitous.AssetExtractor;
 
 public static class StaticObjectColumns
 {
-    private const string Table = "tables/staticobject_spawns.tbl";
+    public static readonly ColumnLayout Layout = new(
+        "tables/staticobject_spawns.tbl",
+        "uuuffffffuufffuf",
+        [
+            LayoutColumn.Must(nameof(StaticObjectTableColumns.Id), 0, "uk"),
+            LayoutColumn.Must(nameof(StaticObjectTableColumns.EntryId), 1, "u"),
+            LayoutColumn.Must(nameof(StaticObjectTableColumns.MapId), 2, "u"),
+            LayoutColumn.Must(nameof(StaticObjectTableColumns.X), 3, "f"),
+            LayoutColumn.Must(nameof(StaticObjectTableColumns.Y), 4, "f"),
+            LayoutColumn.Must(nameof(StaticObjectTableColumns.Z), 5, "f"),
+            LayoutColumn.Must(nameof(StaticObjectTableColumns.Yaw), 7, "f"),
+            LayoutColumn.May(nameof(StaticObjectTableColumns.State), 9, "u"),
+            LayoutColumn.May(nameof(StaticObjectTableColumns.Flags), 10, "u"),
+            LayoutColumn.May(nameof(StaticObjectTableColumns.Scale), 11, "f"),
+        ],
+        // 1.0.0 to 1.0.3: one scale, where later builds carry one per axis
+        new LayoutRevision("uuuffffffuufuf", new LayoutEdit.Lacks(12, 2)));
 
-    public static StaticObjectTableColumns Resolve(FTableDocument document)
-    {
-        string format = document.Header.ColumnTypes;
-        if (TableSchemas.Matches(Table, format, "1.1.4")) return Build114;
-        TableShape.Expect(Table, format,
-            (Build114.Id, "uk"),
-            (Build114.MapId, "u"),
-            (Build114.EntryId, "u"),
-            (Build114.X, "f"),
-            (Build114.Y, "f"),
-            (Build114.Z, "f"),
-            (Build114.Yaw, "f"));
-        return Build114 with
-        {
-            State = TableShape.Optional(Table, format, Build114.State, "u"),
-            Flags = TableShape.Optional(Table, format, Build114.Flags, "u"),
-        };
-    }
-
-    public static readonly StaticObjectTableColumns Build114 = new(
-        Id: 0,
-        MapId: 2,
-        EntryId: 1,
-        X: 3,
-        Y: 4,
-        Z: 5,
-        Yaw: 7,
-        State: 9,
-        Flags: 10);
+    public static StaticObjectTableColumns Reference => Layout.Reference.As<StaticObjectTableColumns>();
 }

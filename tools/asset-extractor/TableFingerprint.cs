@@ -85,9 +85,12 @@ public sealed record TableFingerprint(
     public static TableFingerprint Load(string path)
     {
         using var stream = File.OpenRead(path);
-        return JsonSerializer.Deserialize<TableFingerprint>(stream, Options)
-            ?? throw new InvalidDataException($"Fingerprint at '{path}' deserialized to null.");
+        return Load(stream);
     }
+
+    public static TableFingerprint Load(Stream stream) =>
+        JsonSerializer.Deserialize<TableFingerprint>(stream, Options)
+            ?? throw new InvalidDataException("The fingerprint deserialized to null.");
 
     // Compare a fresh capture against a golden file. Formats must match
     // exactly; row counts are informational (same build, same content) and

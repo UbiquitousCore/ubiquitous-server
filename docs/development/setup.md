@@ -103,8 +103,9 @@ dotnet run --project tools/asset-extractor -- --bake data/generated \
   --tables-dir data/raw/tables --models data/raw/model --world-dir data/raw/world
 ```
 
-Never commit anything under `data/`, or any client file. The server targets
-build 1.1.4 and warns on any other.
+Never commit anything under `data/`, or any client file. Any build in
+`tools/asset-extractor/fingerprints/` imports; the server logs what a build's
+files leave out.
 
 ## Docker
 

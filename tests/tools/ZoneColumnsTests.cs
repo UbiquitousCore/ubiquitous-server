@@ -16,7 +16,7 @@ public class ZoneColumnsTests
             floats: new Dictionary<int, float> { [4] = -2944f, [6] = -1152f, [8] = -1152f, [10] = 768f });
 
         var zone = Assert.Single(ZoneTableMapper.MapZones(
-            FTableDocument.Load(data), ZoneColumns.Build114,
+            FTableDocument.Load(data), ZoneColumns.Reference,
             mapIds: new HashSet<ushort> { 1 }, resolveName: id => id == 71 ? "test-coast" : "?"));
 
         Assert.Equal(71u, zone.Id);

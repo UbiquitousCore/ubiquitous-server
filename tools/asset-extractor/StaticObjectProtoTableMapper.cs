@@ -5,7 +5,8 @@ namespace Ubiquitous.AssetExtractor;
 public sealed record StaticObjectProtoTableColumns(
     int Entry,
     int Type,
-    int Festival = -1);
+    int Festival = -1,
+    int Display = -1);
 
 public static class StaticObjectProtoTableMapper
 {

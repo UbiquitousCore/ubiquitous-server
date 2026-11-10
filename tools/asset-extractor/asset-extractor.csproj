@@ -13,6 +13,8 @@
   <ItemGroup>
     <!-- Written out as `.env` by the first import; see SettingsFile. -->
     <EmbeddedResource Include="host-env.template" LogicalName="host-env.template" />
+    <!-- One per build whose table shapes were captured; see KnownBuilds. -->
+    <EmbeddedResource Include="fingerprints\*.json" LogicalName="fingerprints/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>

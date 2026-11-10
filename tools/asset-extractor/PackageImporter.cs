@@ -20,9 +20,9 @@ public static class PackageImporter
         int TalentTreeCount,
         int DungeonRewardCount,
         string Build,
-        string SpellEffectSlotColumns);
+        IReadOnlyList<string> Notes);
 
-    public static ImportResult ImportBuild114(
+    public static ImportResult Import(
         IReadOnlyDictionary<string, byte[]> archiveEntries, string outDirectory, string sourceHash,
         IReadOnlyDictionary<string, byte[]>? worldArchives = null)
     {
@@ -36,12 +36,26 @@ public static class PackageImporter
             return FTableDocument.Load(bytes);
         }
 
-        FTableDocument? LoadOptional(string name) =>
-            archiveEntries.TryGetValue(name, out var bytes) ? FTableDocument.Load(bytes) : null;
+        var notes = new List<string>();
 
-        string build = TableSchemas.IdentifyBuild(TableFingerprint.Capture(archiveEntries, sourceHash));
+        // A table some builds do not ship: what depends on it is left out, and said.
+        FTableDocument? LoadOptional(string name, string without)
+        {
+            if (archiveEntries.TryGetValue(name, out var bytes)) return FTableDocument.Load(bytes);
+            notes.Add($"{name}: not in this build; {without}.");
+            return null;
+        }
+
+        ResolvedColumns Columns(ColumnLayout layout, FTableDocument document)
+        {
+            var resolved = layout.Resolve(document);
+            notes.AddRange(resolved.Notes);
+            return resolved;
+        }
+
+        string build = KnownBuilds.Identify(TableFingerprint.Capture(archiveEntries, sourceHash));
         var mapDocument = Load("tables/map_info.tbl");
-        var maps = MapTableMapper.MapMaps(mapDocument, MapInfoColumns.Resolve(mapDocument));
+        var maps = MapTableMapper.MapMaps(mapDocument, Columns(MapInfoColumns.Layout, mapDocument).As<MapTableColumns>());
         var archiveByMapId = new Dictionary<ushort, byte[]>();
         if (worldArchives is { Count: > 0 })
         {
@@ -64,10 +78,11 @@ public static class PackageImporter
 
         var creatureAppearanceDocument = Load("tables/creature_appearance.tbl");
         var creatureNameStringIds = CreatureAppearanceTableMapper.MapNameStringIds(
-            creatureAppearanceDocument, CreatureAppearanceTableMapper.Resolve(creatureAppearanceDocument));
+            creatureAppearanceDocument,
+            Columns(CreatureAppearanceColumns.Layout, creatureAppearanceDocument).As<CreatureAppearanceTableColumns>());
         var creatureStrings = StringTableMapper.MapStrings(Load("tables/String_Creature_en.tbl"));
         var creatureProtoDocument = Load("tables/creature_proto.tbl");
-        var creatureProtoColumns = CreatureProtoColumns.Resolve(creatureProtoDocument);
+        var creatureProtoColumns = Columns(CreatureProtoColumns.Layout, creatureProtoDocument).As<CreatureTableColumns>();
         var creatures = CreatureTableMapper.MapCreatures(creatureProtoDocument, creatureProtoColumns,
             resolveName: entry => creatureNameStringIds.TryGetValue(entry, out var stringId)
                 && creatureStrings.TryGetValue(stringId, out var text)
@@ -77,29 +92,31 @@ public static class PackageImporter
 
         var mapIds = new HashSet<ushort>(maps.Select(m => m.Id));
         var creatureEntries = new HashSet<uint>(creatures.Select(c => c.EntryId));
+        bool OnKnownMap(IReadOnlyList<object> row, int mapColumn) =>
+            row[mapColumn] is uint map && map <= ushort.MaxValue && mapIds.Contains((ushort)map);
+
         var spawnDocument = Load("tables/creature_spawns.tbl");
+        var spawnColumns = Columns(CreatureSpawnColumns.Layout, spawnDocument).As<CreatureSpawnTableColumns>();
         var knownSpawnRows = spawnDocument.Rows.Where(row =>
-            row.Count > 2 && row[1] is uint entry && creatureEntries.Contains(entry)
-            && row[2] is uint map && map <= ushort.MaxValue && mapIds.Contains((ushort)map)).ToList();
+            row[spawnColumns.CreatureEntryId] is uint entry && creatureEntries.Contains(entry)
+            && OnKnownMap(row, spawnColumns.MapId)).ToList();
         int droppedSpawns = spawnDocument.Rows.Count - knownSpawnRows.Count;
         var spawns = CreatureSpawnTableMapper.MapSpawns(
-            spawnDocument.WithRows(knownSpawnRows), CreatureSpawnColumns.Resolve(spawnDocument), mapIds, creatureEntries);
+            spawnDocument.WithRows(knownSpawnRows), spawnColumns, mapIds, creatureEntries);
 
         var spellEffectDocument = Load("tables/spell_effect.tbl");
-        var spellEffectColumns = SpellEffectColumns.Resolve(spellEffectDocument);
+        var spellEffectColumns = Columns(SpellEffectColumns.Layout, spellEffectDocument).As<SpellEffectTableColumns>();
         var spellEffectsById = SpellEffectTableMapper.MapEffects(spellEffectDocument, spellEffectColumns)
             .ToDictionary(e => e.Id);
         var spellStrings = StringTableMapper.MapStrings(Load("tables/String_Spell_en.tbl"));
         var spellNewDocument = Load("tables/spell_new.tbl");
-        var (spellNewColumns, spellNotes) = SpellNewColumns.Resolve(
-            spellNewDocument, new HashSet<uint>(spellEffectsById.Keys));
-        foreach (var note in spellNotes) Console.WriteLine($"  note: {note}");
+        var spellNewColumns = Columns(SpellNewColumns.Layout, spellNewDocument).As<SpellTableColumns>();
         var spells = SpellTableMapper.MapSpells(spellNewDocument, spellNewColumns,
             resolveName: id => spellStrings.TryGetValue(id, out var text) && !string.IsNullOrWhiteSpace(text)
                 ? text
                 : $"spell-{id}");
 
-        var spellRowsById = spellNewDocument.Rows.ToDictionary(row => (uint)row[0]);
+        var spellRowsById = spellNewDocument.Rows.ToDictionary(row => (uint)row[spellNewColumns.Id]);
         var effectSlotOrder = (spellNewColumns.EffectSlots ?? []).ToList();
         spells = spells.Select(spell =>
         {
@@ -120,7 +137,17 @@ public static class PackageImporter
 
         var itemStrings = StringTableMapper.MapStrings(Load("tables/String_Item_en.tbl"));
         var itemDocument = Load("tables/items.tbl");
-        var items = ItemTableMapper.MapItems(itemDocument, ItemColumns.Resolve(itemDocument),
+        var itemColumns = Columns(ItemColumns.Layout, itemDocument).As<ItemTableColumns>();
+        var itemRows = itemDocument.Rows.Where(row =>
+            ItemTableMapper.FitsKind(row[itemColumns.Class]) && ItemTableMapper.FitsKind(row[itemColumns.SubClass])).ToList();
+        if (itemRows.Count < itemDocument.Rows.Count)
+        {
+            notes.Add($"tables/items.tbl: {itemDocument.Rows.Count - itemRows.Count} item(s) dropped: " +
+                "a class or subclass larger than the server keeps.");
+        }
+
+        itemDocument = itemDocument.WithRows(itemRows);
+        var items = ItemTableMapper.MapItems(itemDocument, itemColumns,
             resolveName: id => itemStrings.TryGetValue(id, out var text) && !string.IsNullOrWhiteSpace(text)
                 ? text
                 : $"item-{id}");
@@ -128,9 +155,10 @@ public static class PackageImporter
         var itemMetaByEntry = new Dictionary<uint, (uint NameTextId, int Quality)>();
         foreach (var row in itemDocument.Rows)
         {
-            if (row[0] is uint entry && row[3] is uint nameId && row[5] is uint quality)
+            if (row[itemColumns.Id] is uint entry && row[itemColumns.NameTextId] is uint nameId)
             {
-                itemMetaByEntry.TryAdd(entry, (nameId, unchecked((int)quality)));
+                int quality = itemColumns.Quality >= 0 && row[itemColumns.Quality] is uint known ? unchecked((int)known) : 0;
+                itemMetaByEntry.TryAdd(entry, (nameId, quality));
             }
         }
 
@@ -140,38 +168,39 @@ public static class PackageImporter
             int sellListColumn = creatureProtoColumns.SellList;
             foreach (var row in creatureProtoDocument.Rows)
             {
-                if (row.Count > sellListColumn && row[0] is uint creatureEntry && row[sellListColumn] is string listText
-                    && SellListIds.Parse(listText) is { Count: > 0 } lists)
+                if (row[creatureProtoColumns.Entry] is not uint creatureEntry) continue;
+                IReadOnlyList<uint> lists = row[sellListColumn] switch
                 {
-                    sellListsByCreature[creatureEntry] = lists;
+                    string several => SellListIds.Parse(several),
+                    uint one when one != 0 => [one],
+                    _ => [],
+                };
+                if (lists.Count > 0) sellListsByCreature[creatureEntry] = lists;
+            }
+        }
+
+        var sellProgramCurrency = new Dictionary<uint, uint>();
+        if (LoadOptional("tables/creature_machant_sell_program.tbl", "vendors sell for coin") is { } sellProgramDocument)
+        {
+            var listColumns = Columns(VendorColumns.ListLayout, sellProgramDocument).As<VendorListTableColumns>();
+            foreach (var row in sellProgramDocument.Rows)
+            {
+                if (row[listColumns.Id] is uint vendorListId && row[listColumns.Currency] is uint currencyId)
+                {
+                    sellProgramCurrency.TryAdd(vendorListId, currencyId);
                 }
             }
         }
-        else
-        {
-            Console.WriteLine($"  note: {build} has no readable vendor-list column; vendor stock skipped.");
-        }
 
-        var sellProgramDocument = Load("tables/creature_machant_sell_program.tbl");
-        TableShape.Expect("tables/creature_machant_sell_program.tbl", sellProgramDocument.Header.ColumnTypes,
-            (0, "uk"), (2, "u"));
-        var sellProgramCurrency = new Dictionary<uint, uint>();
-        foreach (var row in sellProgramDocument.Rows)
-        {
-            if (row[0] is uint vendorListId && row[2] is uint currencyId)
-            {
-                sellProgramCurrency.TryAdd(vendorListId, currencyId);
-            }
-        }
-
-        var sellProgramItemDocument = Load("tables/creature_machant_sell_program_item.tbl");
-        TableShape.Expect("tables/creature_machant_sell_program_item.tbl", sellProgramItemDocument.Header.ColumnTypes,
-            (0, "uk"), (1, "u"), (2, "u"), (3, "u"), (4, "u"));
         var sellProgramItems = new Dictionary<uint, List<(uint ItemId, int StackCount, int MaxCount)>>();
-        foreach (var row in sellProgramItemDocument.Rows)
+        var sellProgramItemDocument = LoadOptional("tables/creature_machant_sell_program_item.tbl", "vendors stock nothing");
+        var listItemColumns = sellProgramItemDocument is null
+            ? null
+            : Columns(VendorColumns.ItemLayout, sellProgramItemDocument).As<VendorListItemTableColumns>();
+        foreach (var row in sellProgramItemDocument?.Rows ?? [])
         {
-            if (row[1] is uint vendorListId && row[2] is uint itemId
-                && row[3] is uint stackCount && row[4] is uint maxCount)
+            if (row[listItemColumns!.List] is uint vendorListId && row[listItemColumns.Item] is uint itemId
+                && row[listItemColumns.StackCount] is uint stackCount && row[listItemColumns.MaxCount] is uint maxCount)
             {
                 if (!sellProgramItems.TryGetValue(vendorListId, out var programItems))
                 {
@@ -185,175 +214,167 @@ public static class PackageImporter
         var itemsByEntry = items.ToDictionary(i => i.Id);
 
         var creaturesByEntry = creatures.ToDictionary(c => c.EntryId);
-        // A build can drop the loot tables entirely (2.2.0 moves loot to
-        // dungeon rewards): then creatures simply drop nothing, loudly noted.
-        var lootItemsDocument = LoadOptional("tables/loot_feature_items.tbl");
-        var lootFeatureDocument = lootItemsDocument is null ? null : LoadOptional("tables/loot_feature.tbl");
-        var lootDocument = lootFeatureDocument is null ? null : LoadOptional("tables/loot.tbl");
-        if (lootDocument is null)
-        {
-            Console.WriteLine($"  note: {build} has no loot tables; creatures drop nothing " +
-                "(dungeon rewards import to dungeonRewards.json but nothing awards them yet).");
-        }
-
-        if (lootItemsDocument is not null)
-        {
-            TableShape.Expect("tables/loot_feature_items.tbl", lootItemsDocument.Header.ColumnTypes,
-                (1, "u"), (2, "u"), (3, "f"), (4, "u"), (5, "u"));
-        }
-
         var lootItemsByGroup = new Dictionary<uint, List<LootTableItemDefinition>>();
-        foreach (var row in lootItemsDocument?.Rows ?? [])
-        {
-            if (row[1] is not uint groupId || row[2] is not uint itemId || row[3] is not float chance
-                || row[4] is not uint fewest || row[5] is not uint most)
-            {
-                continue;
-            }
-
-            if (!itemsByEntry.ContainsKey(itemId) || chance <= 0 || fewest == 0 || fewest > most)
-            {
-                continue;
-            }
-
-            if (!lootItemsByGroup.TryGetValue(groupId, out var candidateItems))
-            {
-                lootItemsByGroup[groupId] = candidateItems = [];
-            }
-
-            candidateItems.Add(new LootTableItemDefinition(itemId, chance, unchecked((int)fewest), unchecked((int)most)));
-        }
-
-        if (lootFeatureDocument is not null)
-        {
-            TableShape.Expect("tables/loot_feature.tbl", lootFeatureDocument.Header.ColumnTypes,
-                (0, "uk"), (2, "u"), (3, "u"), (6, "u"), (7, "u"));
-        }
-
         var lootGroupsById = new Dictionary<uint, (int MinLevel, int MaxLevel, int GuaranteedDrops, int MaxDrops)>();
-        foreach (var row in lootFeatureDocument?.Rows ?? [])
-        {
-            if (row[0] is not uint groupId || row[2] is not uint lowestLevel || row[3] is not uint highestLevel
-                || row[6] is not uint guaranteed || row[7] is not uint upTo)
-            {
-                continue;
-            }
-
-            lootGroupsById[groupId] = (
-                unchecked((int)lowestLevel), unchecked((int)highestLevel),
-                unchecked((int)guaranteed), unchecked((int)upTo));
-        }
-
-        const uint CreatureLootTargetType = 1;
-        if (lootDocument is not null)
-        {
-            TableShape.Expect("tables/loot.tbl", lootDocument.Header.ColumnTypes,
-                (1, "u"), (2, "u"), (3, "u"));
-        }
-
         var lootGroupsByCreature = new Dictionary<uint, List<LootGroupDefinition>>();
-        foreach (var row in lootDocument?.Rows ?? [])
+        const string WithoutLoot = "creatures drop nothing";
+        if (LoadOptional("tables/loot_feature_items.tbl", WithoutLoot) is { } lootItemsDocument
+            && LoadOptional("tables/loot_feature.tbl", WithoutLoot) is { } lootFeatureDocument
+            && LoadOptional("tables/loot.tbl", WithoutLoot) is { } lootDocument)
         {
-            if (row[1] is not uint targetId || row[2] is not uint targetKind || targetKind != CreatureLootTargetType
-                || row[3] is not uint groupId)
+            var lootItemColumns = Columns(LootColumns.ItemLayout, lootItemsDocument).As<LootItemTableColumns>();
+            foreach (var row in lootItemsDocument.Rows)
             {
-                continue;
+                if (row[lootItemColumns.Group] is not uint groupId || row[lootItemColumns.Item] is not uint itemId
+                    || row[lootItemColumns.Chance] is not float chance
+                    || row[lootItemColumns.Fewest] is not uint fewest || row[lootItemColumns.Most] is not uint most)
+                {
+                    continue;
+                }
+
+                if (!itemsByEntry.ContainsKey(itemId) || chance <= 0 || fewest == 0 || fewest > most)
+                {
+                    continue;
+                }
+
+                if (!lootItemsByGroup.TryGetValue(groupId, out var candidateItems))
+                {
+                    lootItemsByGroup[groupId] = candidateItems = [];
+                }
+
+                candidateItems.Add(new LootTableItemDefinition(itemId, chance, unchecked((int)fewest), unchecked((int)most)));
             }
 
-            if (!creaturesByEntry.TryGetValue(targetId, out var creature)) continue;
-            if (!lootGroupsById.TryGetValue(groupId, out var group)) continue;
-            if (creature.Level < group.MinLevel || creature.Level > group.MaxLevel) continue;
-            if (!lootItemsByGroup.TryGetValue(groupId, out var candidates) || candidates.Count == 0) continue;
-
-            if (!lootGroupsByCreature.TryGetValue(targetId, out var creatureGroups))
+            var lootGroupColumns = Columns(LootColumns.GroupLayout, lootFeatureDocument).As<LootGroupTableColumns>();
+            foreach (var row in lootFeatureDocument.Rows)
             {
-                lootGroupsByCreature[targetId] = creatureGroups = [];
+                if (row[lootGroupColumns.Id] is not uint groupId
+                    || row[lootGroupColumns.MinLevel] is not uint lowestLevel
+                    || row[lootGroupColumns.MaxLevel] is not uint highestLevel
+                    || row[lootGroupColumns.GuaranteedDrops] is not uint guaranteed
+                    || row[lootGroupColumns.MaxDrops] is not uint upTo)
+                {
+                    continue;
+                }
+
+                lootGroupsById[groupId] = (
+                    unchecked((int)lowestLevel), unchecked((int)highestLevel),
+                    unchecked((int)guaranteed), unchecked((int)upTo));
             }
 
-            creatureGroups.Add(new LootGroupDefinition(group.GuaranteedDrops, group.MaxDrops, candidates));
+            const uint CreatureLootTargetType = 1;
+            var lootColumns = Columns(LootColumns.Layout, lootDocument).As<LootTableColumns>();
+            foreach (var row in lootDocument.Rows)
+            {
+                if (row[lootColumns.Target] is not uint targetId
+                    || row[lootColumns.TargetKind] is not uint targetKind || targetKind != CreatureLootTargetType
+                    || row[lootColumns.Group] is not uint groupId)
+                {
+                    continue;
+                }
+
+                if (!creaturesByEntry.TryGetValue(targetId, out var creature)) continue;
+                if (!lootGroupsById.TryGetValue(groupId, out var group)) continue;
+                if (creature.Level < group.MinLevel || creature.Level > group.MaxLevel) continue;
+                if (!lootItemsByGroup.TryGetValue(groupId, out var candidates) || candidates.Count == 0) continue;
+
+                if (!lootGroupsByCreature.TryGetValue(targetId, out var creatureGroups))
+                {
+                    lootGroupsByCreature[targetId] = creatureGroups = [];
+                }
+
+                creatureGroups.Add(new LootGroupDefinition(group.GuaranteedDrops, group.MaxDrops, candidates));
+            }
         }
 
         var creatureLootTables = lootGroupsByCreature
             .Select(kv => new CreatureLootTableDefinition(kv.Key, kv.Value))
             .ToList();
 
-        var dungeonRewardDocument = LoadOptional("tables/dungeon_reward.tbl");
+        // Only later builds carry dungeon rewards; an older one is not missing them.
+        var dungeonRewardDocument = archiveEntries.TryGetValue("tables/dungeon_reward.tbl", out var dungeonRewardBytes)
+            ? FTableDocument.Load(dungeonRewardBytes)
+            : null;
         var dungeonRewards = new List<DungeonRewardDefinition>();
         if (dungeonRewardDocument is not null)
         {
             dungeonRewards.AddRange(DungeonRewardTableMapper.MapRewards(
-                dungeonRewardDocument, DungeonRewardColumns.Resolve(dungeonRewardDocument),
+                dungeonRewardDocument,
+                Columns(DungeonRewardColumns.Layout, dungeonRewardDocument).As<DungeonRewardTableColumns>(),
                 mapIds, new HashSet<uint>(itemsByEntry.Keys)));
         }
 
         var zoneStrings = StringTableMapper.MapStrings(Load("tables/String_Zones_en.tbl"));
         var zoneDocument = Load("tables/zones.tbl");
-        var zoneColumns = ZoneColumns.Resolve(zoneDocument);
+        var zoneColumns = Columns(ZoneColumns.Layout, zoneDocument).As<ZoneTableColumns>();
         var knownZoneRows = zoneDocument.Rows.Where(row =>
-            row.Count > 10 && row[3] is uint map && map <= ushort.MaxValue && mapIds.Contains((ushort)map)
-            && row[0] is int id && zoneStrings.ContainsKey(unchecked((uint)id))
-            && row[4] is float minX && row[8] is float maxX && minX <= maxX
-            && row[6] is float minZ && row[10] is float maxZ && minZ <= maxZ).ToList();
+            OnKnownMap(row, zoneColumns.MapId)
+            && row[zoneColumns.Id] is int id && zoneStrings.ContainsKey(unchecked((uint)id))
+            && row[zoneColumns.MinX] is float minX && row[zoneColumns.MaxX] is float maxX && minX <= maxX
+            && row[zoneColumns.MinZ] is float minZ && row[zoneColumns.MaxZ] is float maxZ && minZ <= maxZ).ToList();
         int droppedZones = zoneDocument.Rows.Count - knownZoneRows.Count;
         var zones = ZoneTableMapper.MapZones(
             zoneDocument.WithRows(knownZoneRows), zoneColumns, mapIds,
             resolveName: id => zoneStrings[id]);
 
-        var creatureQuestStarterDocument = Load("tables/creature_quest_starter.tbl");
-        TableShape.Expect("tables/creature_quest_starter.tbl", creatureQuestStarterDocument.Header.ColumnTypes,
-            (0, "uk"), (1, "u"));
-        var giversByQuest = new Dictionary<uint, uint>();
-        foreach (var row in creatureQuestStarterDocument.Rows)
+        // (entry, quest) pairs of one binding table; none when the build lacks it.
+        List<(uint Entry, uint Quest)> Bindings(ColumnLayout layout, string without)
         {
-            if (row[0] is uint creatureId && row[1] is uint questId) giversByQuest.TryAdd(questId, creatureId);
+            if (LoadOptional(layout.Table, without) is not { } document) return [];
+            var columns = Columns(layout, document).As<QuestBindingTableColumns>();
+            return document.Rows
+                .Where(row => row[columns.Entry] is uint && row[columns.Quest] is uint)
+                .Select(row => ((uint)row[columns.Entry], (uint)row[columns.Quest]))
+                .ToList();
         }
 
-        var creatureQuestFinisherDocument = Load("tables/creature_quest_finisher.tbl");
-        TableShape.Expect("tables/creature_quest_finisher.tbl", creatureQuestFinisherDocument.Header.ColumnTypes,
-            (0, "uk"), (1, "u"));
-        var creatureQuestFinishers = creatureQuestFinisherDocument.Rows
-            .Where(row => row[0] is uint entry && creatureEntries.Contains(entry) && row[1] is uint)
-            .Select(row => new CreatureQuestBindingDefinition((uint)row[0], (uint)row[1]))
+        var giversByQuest = new Dictionary<uint, uint>();
+        foreach (var (creatureId, questId) in Bindings(QuestBindingColumns.CreatureStarter, "no creature gives a quest"))
+        {
+            giversByQuest.TryAdd(questId, creatureId);
+        }
+
+        var creatureQuestFinishers = Bindings(QuestBindingColumns.CreatureFinisher, "no creature takes a quest in")
+            .Where(binding => creatureEntries.Contains(binding.Entry))
+            .Select(binding => new CreatureQuestBindingDefinition(binding.Entry, binding.Quest))
             .ToList();
 
         var itemStarterQuestIds = items.Where(i => i.QuestId is not null)
             .Select(i => i.QuestId!.Value).ToHashSet();
 
         var staticObjectProtoDocument = Load("tables/staticobject_proto.tbl");
-        var staticObjectProtoColumns = StaticObjectProtoColumns.Resolve(staticObjectProtoDocument);
+        var staticObjectProtoColumns =
+            Columns(StaticObjectProtoColumns.Layout, staticObjectProtoDocument).As<StaticObjectProtoTableColumns>();
         var staticObjectEntries = staticObjectProtoDocument.Rows
-            .Where(row => row[0] is uint)
-            .Select(row => (uint)row[0]).ToHashSet();
-        var staticObjectQuestStarterDocument = Load("tables/staticobject_quest_starter.tbl");
-        TableShape.Expect("tables/staticobject_quest_starter.tbl", staticObjectQuestStarterDocument.Header.ColumnTypes,
-            (0, "uk"), (1, "u"));
-        var staticObjectQuestStarters = staticObjectQuestStarterDocument.Rows
-            .Where(row => row[0] is uint entry && staticObjectEntries.Contains(entry) && row[1] is uint)
-            .Select(row => new StaticObjectQuestBindingDefinition((uint)row[0], (uint)row[1]))
+            .Where(row => row[staticObjectProtoColumns.Entry] is uint)
+            .Select(row => (uint)row[staticObjectProtoColumns.Entry]).ToHashSet();
+        var staticObjectQuestStarters = Bindings(QuestBindingColumns.StaticObjectStarter, "no object gives a quest")
+            .Where(binding => staticObjectEntries.Contains(binding.Entry))
+            .Select(binding => new StaticObjectQuestBindingDefinition(binding.Entry, binding.Quest))
             .ToList();
-        var staticObjectQuestFinisherDocument = Load("tables/staticobject_quest_finisher.tbl");
-        TableShape.Expect("tables/staticobject_quest_finisher.tbl", staticObjectQuestFinisherDocument.Header.ColumnTypes,
-            (0, "uk"), (1, "u"));
-        var staticObjectQuestFinishers = staticObjectQuestFinisherDocument.Rows
-            .Where(row => row[0] is uint entry && staticObjectEntries.Contains(entry) && row[1] is uint)
-            .Select(row => new StaticObjectQuestBindingDefinition((uint)row[0], (uint)row[1]))
+        var staticObjectQuestFinishers = Bindings(QuestBindingColumns.StaticObjectFinisher, "no object takes a quest in")
+            .Where(binding => staticObjectEntries.Contains(binding.Entry))
+            .Select(binding => new StaticObjectQuestBindingDefinition(binding.Entry, binding.Quest))
             .ToList();
         var staticObjectStarterQuestIds = staticObjectQuestStarters.Select(b => b.QuestId).ToHashSet();
         var staticObjectFinisherQuestIds = staticObjectQuestFinishers.Select(b => b.QuestId).ToHashSet();
 
-        var staticObjectQuestItemBindingDocument = Load("tables/staticobject_quest_item_binding.tbl");
-        TableShape.Expect("tables/staticobject_quest_item_binding.tbl", staticObjectQuestItemBindingDocument.Header.ColumnTypes,
-            (0, "uk"), (1, "u"), (2, "u"), (3, "u"));
-        var staticObjectQuestItemBindings = staticObjectQuestItemBindingDocument.Rows
-            .Where(row => row[0] is uint entry && staticObjectEntries.Contains(entry)
-                && row[1] is uint && row[2] is uint && row[3] is uint)
-            .Select(row => new StaticObjectItemBindingDefinition((uint)row[0], (uint)row[1], (uint)row[2], (uint)row[3]))
-            .ToList();
+        var staticObjectQuestItemBindings = new List<StaticObjectItemBindingDefinition>();
+        if (LoadOptional(QuestBindingColumns.StaticObjectItem.Table, "no object hands over a quest item") is { } itemBindingDocument)
+        {
+            var binding = Columns(QuestBindingColumns.StaticObjectItem, itemBindingDocument).As<QuestItemBindingTableColumns>();
+            staticObjectQuestItemBindings.AddRange(itemBindingDocument.Rows
+                .Where(row => row[binding.Entry] is uint entry && staticObjectEntries.Contains(entry)
+                    && row[binding.Quest] is uint && row[binding.Item] is uint && row[binding.Reserve] is uint)
+                .Select(row => new StaticObjectItemBindingDefinition(
+                    (uint)row[binding.Entry], (uint)row[binding.Quest], (uint)row[binding.Item], (uint)row[binding.Reserve])));
+        }
 
         var questDocument = Load("tables/quests.tbl");
-        var questColumns = QuestColumns.Resolve(questDocument);
+        var questLayout = Columns(QuestColumns.Layout, questDocument);
+        var questColumns = questLayout.As<QuestTableColumns>();
         var questsWithKnownGivers = questDocument.Rows.Where(row =>
-            row[0] is uint id
+            row[questColumns.Id] is uint id
             && ((giversByQuest.TryGetValue(id, out var giver) && creatureEntries.Contains(giver))
                 || itemStarterQuestIds.Contains(id)
                 || staticObjectStarterQuestIds.Contains(id)
@@ -368,13 +389,9 @@ public static class PackageImporter
             int greetingMenuColumn = creatureProtoColumns.GreetingMenu;
             foreach (var row in creatureProtoDocument.Rows)
             {
-                if (row.Count > greetingMenuColumn && row[0] is uint entry && row[greetingMenuColumn] is uint menu && menu != 0)
+                if (row[creatureProtoColumns.Entry] is uint entry && row[greetingMenuColumn] is uint menu && menu != 0)
                     greetingByEntry.TryAdd(entry, menu);
             }
-        }
-        else
-        {
-            Console.WriteLine($"  note: {build} has no readable greeting-menu column; gossip greetings skipped.");
         }
 
         var npcs = NpcOverlays.Build(creatures, questGivers, greetingByEntry);
@@ -424,58 +441,87 @@ public static class PackageImporter
 
         var questIds = new HashSet<uint>(quests.Select(q => q.Id));
         var questRewards = QuestRewardTableMapper.MapRewards(
-            questDocument.WithRows(questDocument.Rows.Where(row => row[0] is uint id && questIds.Contains(id))),
-            QuestRewardColumns.Resolve(questDocument), questIds,
+            questDocument.WithRows(questDocument.Rows.Where(row => row[questColumns.Id] is uint id && questIds.Contains(id))),
+            questLayout.As<QuestRewardTableColumns>(), questIds,
             resolveItem: entry => itemMetaByEntry.TryGetValue(entry, out var meta) ? meta : null);
 
-        var teleportDocument = Load("tables/teleport_spot.tbl");
-        var knownTeleportRows = teleportDocument.Rows.Where(row =>
-            row[2] is uint map && map <= ushort.MaxValue && mapIds.Contains((ushort)map)).ToList();
-        int droppedTeleportStops = teleportDocument.Rows.Count - knownTeleportRows.Count;
-        var teleportStops = TeleportStopTableMapper.MapTeleportStops(
-            teleportDocument.WithRows(knownTeleportRows), TeleportStopColumns.Resolve(teleportDocument), mapIds);
+        IReadOnlyList<TeleportStopDefinition> teleportStops = [];
+        int droppedTeleportStops = 0;
+        if (LoadOptional("tables/teleport_spot.tbl", "there are no teleport stops") is { } teleportDocument)
+        {
+            var teleportColumns = Columns(TeleportStopColumns.Layout, teleportDocument).As<TeleportStopTableColumns>();
+            var knownTeleportRows = teleportDocument.Rows.Where(row => OnKnownMap(row, teleportColumns.MapId)).ToList();
+            droppedTeleportStops = teleportDocument.Rows.Count - knownTeleportRows.Count;
+            teleportStops = TeleportStopTableMapper.MapTeleportStops(
+                teleportDocument.WithRows(knownTeleportRows), teleportColumns, mapIds);
+        }
 
         var stopIds = new HashSet<uint>(teleportStops.Select(s => s.Id));
-        var travelRouteDocument = Load("tables/t_bus_route.tbl");
-        var knownTravelRouteRows = travelRouteDocument.Rows.Where(row =>
-            row[1] is uint from && stopIds.Contains(from)
-            && row[2] is uint to && stopIds.Contains(to) && from != to).ToList();
-        int droppedTravelRoutes = travelRouteDocument.Rows.Count - knownTravelRouteRows.Count;
-        var travelRoutes = TravelRouteTableMapper.MapTravelRoutes(
-            travelRouteDocument.WithRows(knownTravelRouteRows), TravelRouteColumns.Resolve(travelRouteDocument), stopIds);
+        IReadOnlyList<TravelRouteDefinition> travelRoutes = [];
+        int droppedTravelRoutes = 0;
+        if (LoadOptional("tables/t_bus_route.tbl", "there are no travel routes") is { } travelRouteDocument)
+        {
+            var routeColumns = Columns(TravelRouteColumns.Layout, travelRouteDocument).As<TravelRouteTableColumns>();
+            var knownTravelRouteRows = travelRouteDocument.Rows.Where(row =>
+                row[routeColumns.FirstStop] is uint from && stopIds.Contains(from)
+                && row[routeColumns.SecondStop] is uint to && stopIds.Contains(to) && from != to).ToList();
+            droppedTravelRoutes = travelRouteDocument.Rows.Count - knownTravelRouteRows.Count;
+            travelRoutes = TravelRouteTableMapper.MapTravelRoutes(
+                travelRouteDocument.WithRows(knownTravelRouteRows), routeColumns, stopIds);
+        }
 
         var staticObjectDocument = Load("tables/staticobject_spawns.tbl");
-        var knownStaticObjectRows = staticObjectDocument.Rows.Where(row =>
-            row[2] is uint map && map <= ushort.MaxValue && mapIds.Contains((ushort)map)).ToList();
+        var staticObjectColumns = Columns(StaticObjectColumns.Layout, staticObjectDocument).As<StaticObjectTableColumns>();
+        var knownStaticObjectRows = staticObjectDocument.Rows
+            .Where(row => OnKnownMap(row, staticObjectColumns.MapId)).ToList();
         int droppedStaticObjects = staticObjectDocument.Rows.Count - knownStaticObjectRows.Count;
         var staticObjects = StaticObjectTableMapper.MapStaticObjects(
-            staticObjectDocument.WithRows(knownStaticObjectRows), StaticObjectColumns.Resolve(staticObjectDocument), mapIds);
+            staticObjectDocument.WithRows(knownStaticObjectRows), staticObjectColumns, mapIds);
 
-        var graveyardDocument = Load("tables/map_graveyard.tbl");
-        var knownGraveyardRows = graveyardDocument.Rows.Where(row =>
-            row[6] is uint map && map <= ushort.MaxValue && mapIds.Contains((ushort)map)).ToList();
-        int droppedGraveyards = graveyardDocument.Rows.Count - knownGraveyardRows.Count;
-        var graveyards = MapGraveyardTableMapper.MapGraveyards(
-            graveyardDocument.WithRows(knownGraveyardRows), MapGraveyardColumns.Resolve(graveyardDocument), mapIds);
+        IReadOnlyList<MapGraveyardDefinition> graveyards = [];
+        int droppedGraveyards = 0;
+        if (LoadOptional("tables/map_graveyard.tbl", "the dead rise where they fell") is { } graveyardDocument)
+        {
+            var graveyardColumns = Columns(MapGraveyardColumns.Layout, graveyardDocument).As<MapGraveyardTableColumns>();
+            var knownGraveyardRows = graveyardDocument.Rows.Where(row => OnKnownMap(row, graveyardColumns.MapId)).ToList();
+            droppedGraveyards = graveyardDocument.Rows.Count - knownGraveyardRows.Count;
+            graveyards = MapGraveyardTableMapper.MapGraveyards(
+                graveyardDocument.WithRows(knownGraveyardRows), graveyardColumns, mapIds);
+        }
 
-        var gossip = GossipMenuTableMapper.MapMenus(
-            Load("tables/chat_menu.tbl"),
-            StringTableMapper.MapStrings(Load("tables/String_Menu_en.tbl")),
-            zones.ToDictionary(zone => zone.Id, zone => zone.MapId));
-        var gossipMenus = gossip.Menus;
+        IReadOnlyList<GossipMenuDefinition> gossipMenus = [];
+        int droppedGossipTeleports = 0;
+        if (LoadOptional("tables/chat_menu.tbl", "creatures have nothing to say") is { } menuDocument)
+        {
+            var gossip = GossipMenuTableMapper.MapMenus(
+                menuDocument,
+                Columns(GossipMenuColumns.Layout, menuDocument).As<GossipMenuTableColumns>(),
+                StringTableMapper.MapStrings(Load("tables/String_Menu_en.tbl")),
+                zones.ToDictionary(zone => zone.Id, zone => zone.MapId));
+            gossipMenus = gossip.Menus;
+            droppedGossipTeleports = gossip.DroppedTeleports;
+        }
 
-        var storageUpgradeDocument = Load("tables/storage_upgrade.tbl");
-        var storageUpgrades = StorageUpgradeTableMapper.MapUpgrades(
-            storageUpgradeDocument, StorageUpgradeColumns.Resolve(storageUpgradeDocument));
+        IReadOnlyList<StorageUpgradeDefinition> storageUpgrades = [];
+        if (LoadOptional("tables/storage_upgrade.tbl", "bags and the bank cannot be enlarged") is { } storageUpgradeDocument)
+        {
+            storageUpgrades = StorageUpgradeTableMapper.MapUpgrades(
+                storageUpgradeDocument,
+                Columns(StorageUpgradeColumns.Layout, storageUpgradeDocument).As<StorageUpgradeTableColumns>());
+        }
 
         var staticObjectTypes = StaticObjectProtoTableMapper.MapTypes(
             staticObjectProtoDocument, staticObjectProtoColumns);
 
-        var spellTalentDocument = Load("tables/spell_talent.tbl");
-        var characterClassDocument = Load("tables/character_class.tbl");
-        var (talentColumns, classColumns) = TalentColumns.Resolve(spellTalentDocument, characterClassDocument);
-        var talentTrees = TalentTableMapper.MapTrees(
-            spellTalentDocument, characterClassDocument, talentColumns, classColumns);
+        IReadOnlyList<TalentTreeDefinition> talentTrees = [];
+        if (LoadOptional("tables/spell_talent.tbl", "there are no talents") is { } spellTalentDocument
+            && LoadOptional("tables/character_class.tbl", "there are no talents") is { } characterClassDocument)
+        {
+            talentTrees = TalentTableMapper.MapTrees(
+                spellTalentDocument, characterClassDocument,
+                Columns(TalentColumns.Layout, spellTalentDocument).As<TalentTableColumns>(),
+                Columns(TalentColumns.ClassLayout, characterClassDocument).As<ClassTreeColumns>());
+        }
 
         Directory.CreateDirectory(outDirectory);
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
@@ -544,7 +590,8 @@ public static class PackageImporter
             GameVersion: build,
             SourceHash: sourceHash,
             GeneratedAt: DateTimeOffset.UtcNow,
-            Datasets: datasets);
+            Datasets: datasets,
+            ImportNotes: notes.Count > 0 ? notes : null);
         DataManifestJson.Save(manifest, Path.Combine(outDirectory, DataManifest.FileName));
 
         return new ImportResult(
@@ -556,11 +603,11 @@ public static class PackageImporter
             staticObjectQuestItemBindings.Count, creatureQuestFinishers.Count,
             creatureLootTables.Count,
             graveyards.Count, droppedGraveyards,
-            gossipMenus.Count, gossip.DroppedTeleports,
+            gossipMenus.Count, droppedGossipTeleports,
             talentTrees.Count,
             dungeonRewards.Count,
             build,
-            string.Join(",", effectSlotOrder));
+            notes);
     }
 
     private static void WriteTerrain(IReadOnlyDictionary<ushort, byte[]> archiveByMapId, string outDirectory)

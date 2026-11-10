@@ -2,29 +2,18 @@ namespace Ubiquitous.AssetExtractor;
 
 public static class TeleportStopColumns
 {
-    private const string Table = "tables/teleport_spot.tbl";
+    public static readonly ColumnLayout Layout = new(
+        "tables/teleport_spot.tbl",
+        "usuffffu",
+        [
+            LayoutColumn.Must(nameof(TeleportStopTableColumns.Id), 0, "uk"),
+            LayoutColumn.Must(nameof(TeleportStopTableColumns.MapId), 2, "u"),
+            LayoutColumn.Must(nameof(TeleportStopTableColumns.X), 3, "f"),
+            LayoutColumn.Must(nameof(TeleportStopTableColumns.Y), 4, "f"),
+            LayoutColumn.Must(nameof(TeleportStopTableColumns.Z), 5, "f"),
+            LayoutColumn.Must(nameof(TeleportStopTableColumns.Yaw), 6, "f"),
+            LayoutColumn.Must(nameof(TeleportStopTableColumns.Type), 7, "u"),
+        ]);
 
-    public static TeleportStopTableColumns Resolve(FTableDocument document)
-    {
-        string format = document.Header.ColumnTypes;
-        if (TableSchemas.Matches(Table, format, "1.1.4")) return Build114;
-        TableShape.Expect(Table, format,
-            (Build114.Id, "uk"),
-            (Build114.MapId, "u"),
-            (Build114.X, "f"),
-            (Build114.Y, "f"),
-            (Build114.Z, "f"),
-            (Build114.Yaw, "f"),
-            (Build114.Type, "u"));
-        return Build114;
-    }
-
-    public static readonly TeleportStopTableColumns Build114 = new(
-        Id: 0,
-        MapId: 2,
-        X: 3,
-        Y: 4,
-        Z: 5,
-        Yaw: 6,
-        Type: 7);
+    public static TeleportStopTableColumns Reference => Layout.Reference.As<TeleportStopTableColumns>();
 }

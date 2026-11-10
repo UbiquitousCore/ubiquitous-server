@@ -27,7 +27,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(42u, creature.EntryId);
         Assert.Equal("Test Creature", creature.NameKey);
@@ -55,7 +55,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(20, creature.NoticeDistance);
         Assert.Equal(25.5f, creature.LeashRange);
@@ -73,7 +73,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(0xDu, creature.RawNpcFlags);
     }
@@ -90,7 +90,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(128u, creature.RawExtraFlags);
     }
@@ -114,7 +114,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(rank, creature.Rank);
     }
@@ -131,7 +131,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(2000, creature.RangedAttackIntervalMs);
         Assert.True(creature.FightsAtRange);
@@ -153,7 +153,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(festival, creature.FestivalId);
         Assert.Equal(seasonal, FestivalIds.IsSeasonal(creature.FestivalId));
@@ -245,7 +245,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal((int)faction, creature.FactionType);
     }
@@ -262,7 +262,7 @@ public class CreatureProtoColumnsTests
         });
 
         var creature = Assert.Single(CreatureTableMapper.MapCreatures(
-            FTableDocument.Load(data), CreatureProtoColumns.Build114, resolveName: _ => "Test Creature"));
+            FTableDocument.Load(data), CreatureProtoColumns.Reference, resolveName: _ => "Test Creature"));
 
         Assert.Equal(CreatureFamilies.Critter, creature.Family);
     }

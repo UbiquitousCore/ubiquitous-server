@@ -2,30 +2,22 @@ namespace Ubiquitous.AssetExtractor;
 
 public static class ZoneColumns
 {
-    private const string Table = "tables/zones.tbl";
+    public static readonly ColumnLayout Layout = new(
+        "tables/zones.tbl",
+        "iiiuffffffffuuffuuuussssssfffffusiii",
+        [
+            LayoutColumn.Must(nameof(ZoneTableColumns.Id), 0, "iu"),
+            LayoutColumn.Must(nameof(ZoneTableColumns.ParentZoneId), 2, "iu"),
+            LayoutColumn.Must(nameof(ZoneTableColumns.MapId), 3, "u"),
+            LayoutColumn.Must(nameof(ZoneTableColumns.MinX), 4, "f"),
+            LayoutColumn.Must(nameof(ZoneTableColumns.MinZ), 6, "f"),
+            LayoutColumn.Must(nameof(ZoneTableColumns.MaxX), 8, "f"),
+            LayoutColumn.Must(nameof(ZoneTableColumns.MaxZ), 10, "f"),
+        ],
+        // 1.0.0 to 1.0.3
+        new LayoutRevision("iiiuffffffffuuffuuuusssiii", new LayoutEdit.Lacks(22, 10)),
+        // 2.2.0 on
+        new LayoutRevision("iiiuffffffffuuffffuuuussssssfffffusiiiu", new LayoutEdit.Adds(16, 2), new LayoutEdit.Adds(36)));
 
-    public static ZoneTableColumns Resolve(FTableDocument document)
-    {
-        string format = document.Header.ColumnTypes;
-        if (TableSchemas.Matches(Table, format, "1.1.4")) return Build114;
-        TableShape.Expect(Table, format,
-            (Build114.Id, "iu"),
-            (Build114.MapId, "u"),
-            (Build114.ParentZoneId, "iu"),
-            (Build114.MinX, "f"),
-            (Build114.MinZ, "f"),
-            (Build114.MaxX, "f"),
-            (Build114.MaxZ, "f"));
-        return Build114;
-    }
-
-    public static readonly ZoneTableColumns Build114 = new(
-        Id: 0,
-        MapId: 3,
-        ParentZoneId: 2,
-        Name: -1,
-        MinX: 4,
-        MinZ: 6,
-        MaxX: 8,
-        MaxZ: 10);
+    public static ZoneTableColumns Reference => Layout.Reference.As<ZoneTableColumns>();
 }

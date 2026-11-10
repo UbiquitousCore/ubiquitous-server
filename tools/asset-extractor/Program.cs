@@ -126,8 +126,8 @@ public static class Program
             Console.WriteLine("                                              File column stem. Optional — a map with no");
             Console.WriteLine("                                              matching archive imports with no bounds.");
             Console.WriteLine();
-            Console.WriteLine("Every DataCatalog dataset has a pinned column layout for build 1.1.4 (see");
-            Console.WriteLine("CreatureProtoColumns and siblings).");
+            Console.WriteLine("Each table's columns are named in a ColumnLayout (see TableLayouts), one");
+            Console.WriteLine("layout per table covering every build in fingerprints/.");
             return 0;
         }
 
@@ -711,20 +711,20 @@ public static class Program
 
     private static void ReportBuildIdentity(IReadOnlyDictionary<string, byte[]> entries)
     {
-        // Phase 1: name the build before the pinned column layouts run, so a
-        // new build fails with its drift listed, not a bare column error.
         var identity = TableFingerprint.Capture(entries, sourceHash: string.Empty);
-        var build = TableSchemas.IdentifyBuild(identity);
-        if (build != "unknown")
-        {
-            Console.WriteLine($"Tables read as build {build} ({identity.Tables.Count} tables).");
-            return;
-        }
+        var build = KnownBuilds.Identify(identity);
+        Console.WriteLine(build == KnownBuilds.Unknown
+            ? $"Tables match no known build ({identity.Tables.Count} tables)."
+            : $"Tables read as build {build} ({identity.Tables.Count} tables).");
 
-        Console.WriteLine("Tables match no pinned build; drift from 1.1.4 on load-bearing tables:");
-        var drift = TableSchemas.DescribeDrift(identity, "1.1.4");
-        if (drift.Count == 0) Console.WriteLine("  (shapes match; new or renamed tables only)");
-        foreach (var line in drift) Console.WriteLine($"  ! {line}");
+        var formats = identity.Tables.Where(t => t.Error is null).ToDictionary(t => t.Name, t => t.Format, StringComparer.Ordinal);
+        foreach (var layout in TableLayouts.All)
+        {
+            if (formats.TryGetValue(layout.Table, out var format) && !layout.KnownFormats.Contains(format))
+            {
+                Console.WriteLine($"  ! {layout.Table}: format \"{format}\" is not a known layout.");
+            }
+        }
     }
 
     private static int Import(string archivePath, string outDirectory, IReadOnlyDictionary<string, byte[]>? worldArchives = null)
@@ -738,7 +738,7 @@ public static class Program
         PackageImporter.ImportResult result;
         try
         {
-            result = PackageImporter.ImportBuild114(entries, outDirectory, PackageImporter.HashArchive(archiveBytes), worldArchives);
+            result = PackageImporter.Import(entries, outDirectory, PackageImporter.HashArchive(archiveBytes), worldArchives);
         }
         catch (FTableFormatException ex)
         {
@@ -764,7 +764,7 @@ public static class Program
         PackageImporter.ImportResult result;
         try
         {
-            result = PackageImporter.ImportBuild114(entries, outDirectory, sourceHash: "local-tables-directory", worldArchives);
+            result = PackageImporter.Import(entries, outDirectory, sourceHash: "local-tables-directory", worldArchives);
         }
         catch (FTableFormatException ex)
         {
@@ -802,8 +802,8 @@ public static class Program
 
     private static void ReportImportResult(string outDirectory, PackageImporter.ImportResult result)
     {
-        Console.WriteLine($"Wrote package to {outDirectory} (build {result.Build}, " +
-            $"spell effect slots {result.SpellEffectSlotColumns}):");
+        foreach (var note in result.Notes) Console.WriteLine($"  note: {note}");
+        Console.WriteLine($"Wrote package to {outDirectory} (build {result.Build}):");
         Console.WriteLine($"  {result.MapCount} maps, {result.CreatureCount} creatures, " +
             $"{result.SpawnCount} creature spawns ({result.DroppedSpawnCount} dropped: unresolvable creature entry), " +
             $"{result.SpellCount} spells, {result.ItemCount} items, " +

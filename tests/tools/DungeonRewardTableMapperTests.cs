@@ -8,21 +8,7 @@ namespace Ubiquitous.Integration.Tests;
 // 7400 of the two unsettled amounts).
 public class DungeonRewardTableMapperTests
 {
-    private static readonly string Format220 =
-        TableSchemas.FormatFor("tables/dungeon_reward.tbl", "2.2.0")!;
-
-    [Fact]
-    public void Resolve_ReturnsBuild220_OnThe220Shape()
-    {
-        var document = Table(
-        [
-            new Dictionary<int, object>
-            {
-                [0] = 0u, [1] = 14u, [2] = 0u, [3] = 9545u, [4] = 10000u, [5] = 7400u,
-            },
-        ]);
-        Assert.Same(DungeonRewardColumns.Build220, DungeonRewardColumns.Resolve(document));
-    }
+    private static readonly string Format220 = DungeonRewardColumns.Layout.ReferenceFormat;
 
     [Fact]
     public void MapsARewardRow()
@@ -39,7 +25,7 @@ public class DungeonRewardTableMapperTests
             },
         ]);
         var rewards = DungeonRewardTableMapper.MapRewards(
-            document, DungeonRewardColumns.Resolve(document),
+            document, DungeonRewardColumns.Layout.Resolve(document).As<DungeonRewardTableColumns>(),
             mapIds: new HashSet<ushort> { 14 }, itemIds: new HashSet<uint> { 9545u, 9551u });
         Assert.Equal(
             [
@@ -61,7 +47,7 @@ public class DungeonRewardTableMapperTests
         ]);
         var ex = Assert.Throws<FTableFormatException>(() =>
             DungeonRewardTableMapper.MapRewards(
-                document, DungeonRewardColumns.Resolve(document),
+                document, DungeonRewardColumns.Layout.Resolve(document).As<DungeonRewardTableColumns>(),
                 mapIds: new HashSet<ushort> { 14 }, itemIds: new HashSet<uint> { 9545u }));
         Assert.Contains("471", ex.Message);
     }
@@ -78,7 +64,7 @@ public class DungeonRewardTableMapperTests
         ]);
         var ex = Assert.Throws<FTableFormatException>(() =>
             DungeonRewardTableMapper.MapRewards(
-                document, DungeonRewardColumns.Resolve(document),
+                document, DungeonRewardColumns.Layout.Resolve(document).As<DungeonRewardTableColumns>(),
                 mapIds: new HashSet<ushort> { 14 }, itemIds: new HashSet<uint> { 9545u }));
         Assert.Contains("424242", ex.Message);
     }

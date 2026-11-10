@@ -15,7 +15,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 5, [4] = 2, [6] = 0, [7] = 9, [11] = 900, [17] = 8 },
             ints: new Dictionary<int, int> { [9] = 100 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectTargets.SingleEnemy, effect.Target);
         Assert.Equal(0u, effect.TargetCondition);
@@ -29,7 +29,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 3, [6] = 0, [7] = 1 },
             ints: new Dictionary<int, int> { [8] = 1, [9] = 20, [10] = 10 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(3u, effect.Id);
         Assert.Equal(SpellEffectColumns.DirectDamageType, effect.Type);
@@ -46,7 +46,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 5, [6] = 0, [7] = 3 },
             ints: new Dictionary<int, int> { [9] = 140, [10] = 40 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.HealType, effect.Type);
         Assert.Equal(SpellEffectColumns.HealSubType, effect.SubType);
@@ -60,7 +60,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 64, [6] = 1, [7] = 1 },
             ints: new Dictionary<int, int> { [8] = 6, [9] = 12 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.PeriodicDamageSubType, effect.SubType);
@@ -74,7 +74,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 62, [6] = 1, [7] = 2 },
             ints: new Dictionary<int, int> { [8] = -1, [9] = 20 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.PeriodicHealSubType, effect.SubType);
@@ -88,7 +88,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 61, [6] = 1, [7] = 10 },
             ints: new Dictionary<int, int>());
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.StunSubType, effect.SubType);
@@ -102,7 +102,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 65, [6] = 1, [7] = 13 },
             ints: new Dictionary<int, int>());
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.SleepSubType, effect.SubType);
@@ -115,7 +115,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 90, [6] = 1, [7] = 31 },
             ints: new Dictionary<int, int>());
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.SilenceSubType, effect.SubType);
@@ -129,7 +129,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 61, [6] = 1, [7] = 4, [11] = 25 },
             ints: new Dictionary<int, int> { [9] = 10 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.AttributeModifierFlatSubType, effect.SubType);
@@ -144,7 +144,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 88, [6] = 1, [7] = 14, [11] = 0 },
             ints: new Dictionary<int, int> { [9] = -40 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.AttributeModifierPercentSubType, effect.SubType);
@@ -159,7 +159,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 41, [6] = 1, [7] = 7 },
             ints: new Dictionary<int, int> { [9] = 50 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.SlowSubType, effect.SubType);
@@ -173,7 +173,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 170, [6] = 1, [7] = 16 },
             ints: new Dictionary<int, int> { [9] = 20 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.SpeedupSubType, effect.SubType);
@@ -187,7 +187,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 3752, [6] = 1, [7] = 16 },
             ints: new Dictionary<int, int> { [9] = -50 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.SpeedupSubType, effect.SubType);
         Assert.Equal(-50, effect.BaseValue);
@@ -200,7 +200,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 386, [6] = 1, [7] = 26 },
             ints: new Dictionary<int, int> { [9] = 30 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.MeleeAttackSpeedModifierSubType, effect.SubType);
@@ -214,7 +214,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 961, [6] = 1, [7] = 27 },
             ints: new Dictionary<int, int> { [9] = 50 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.RangeAttackSpeedModifierSubType, effect.SubType);
         Assert.Equal(50, effect.BaseValue);
@@ -227,7 +227,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 117, [6] = 1, [7] = 11, [11] = 0 },
             ints: new Dictionary<int, int> { [9] = 0 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.ChillSubType, effect.SubType);
@@ -242,7 +242,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 156, [6] = 1, [7] = 15, [11] = 95 },
             ints: new Dictionary<int, int> { [9] = 20 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.TriggerSpellSubType, effect.SubType);
@@ -257,7 +257,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 3736, [6] = 1, [7] = 37, [11] = 2679 },
             ints: new Dictionary<int, int> { [9] = 100 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.PeriodicTriggerSpellSubType, effect.SubType);
@@ -272,7 +272,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 210, [6] = 1, [7] = 8, [11] = 6 },
             ints: new Dictionary<int, int> { [9] = 500 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.ModifierSpellFlatSubType, effect.SubType);
@@ -287,7 +287,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 211, [6] = 1, [7] = 9, [11] = 11 },
             ints: new Dictionary<int, int> { [9] = 20 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.ModifierSpellPercentSubType, effect.SubType);
@@ -302,7 +302,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 5394, [6] = 0, [7] = 28, [11] = 100 },
             ints: new Dictionary<int, int> { [8] = 7, [9] = 15 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.DirectDamageType, effect.Type);
         Assert.Equal(SpellEffectColumns.RangedWeaponHitSubType, effect.SubType);
@@ -318,7 +318,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 5396, [6] = 0, [7] = 9, [11] = 5342 },
             ints: new Dictionary<int, int> { [9] = 100 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.DirectDamageType, effect.Type);
         Assert.Equal(SpellEffectColumns.InstantTriggerSpellSubType, effect.SubType);
@@ -333,7 +333,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 5570, [6] = 0, [7] = 23, [11] = 110 },
             ints: new Dictionary<int, int> { [9] = 10 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.DirectDamageType, effect.Type);
         Assert.Equal(SpellEffectColumns.MainHandWeaponHitSubType, effect.SubType);
@@ -348,7 +348,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 5565, [6] = 1, [7] = 23, [11] = 0 },
             ints: new Dictionary<int, int> { [9] = 0 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(SpellEffectColumns.AuraType, effect.Type);
         Assert.Equal(SpellEffectColumns.StealthSubType, effect.SubType);
@@ -371,7 +371,7 @@ public class SpellEffectColumnsTests
             uints: new Dictionary<int, uint> { [0] = 99 },
             ints: new Dictionary<int, int> { [9] = -2000 });
 
-        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Build114));
+        var effect = Assert.Single(SpellEffectTableMapper.MapEffects(FTableDocument.Load(data), SpellEffectColumns.Reference));
 
         Assert.Equal(-2000, effect.BaseValue);
     }

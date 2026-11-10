@@ -9,14 +9,14 @@ namespace Ubiquitous.Integration.Tests;
 public class PackageImporterTests
 {
     [Fact]
-    public void ImportBuild114_WritesAValidPackageFromAPackedArchive()
+    public void Import_WritesAValidPackageFromAPackedArchive()
     {
         var archive = BuildArchive();
         var tempDir = Path.Combine(Path.GetTempPath(), "ubiquitous-package-importer-tests-" + Guid.NewGuid());
 
         try
         {
-            var result = PackageImporter.ImportBuild114(
+            var result = PackageImporter.Import(
                 TableArchiveReader.ReadEntries(archive), tempDir, sourceHash: "test-hash");
 
             Assert.Equal(1, result.MapCount);
@@ -256,11 +256,11 @@ public class PackageImporterTests
     }
 
     [Fact]
-    public void ImportBuild114_FailsLoudlyWhenARequiredTableIsMissing()
+    public void Import_FailsLoudlyWhenARequiredTableIsMissing()
     {
         var archive = BuildArchive(omit: "tables/spell_new.tbl");
 
-        Assert.Throws<FTableFormatException>(() => PackageImporter.ImportBuild114(
+        Assert.Throws<FTableFormatException>(() => PackageImporter.Import(
             TableArchiveReader.ReadEntries(archive), Path.GetTempPath(), sourceHash: "test-hash"));
     }
 

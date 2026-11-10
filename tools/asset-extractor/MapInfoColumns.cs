@@ -2,42 +2,24 @@ namespace Ubiquitous.AssetExtractor;
 
 public static class MapInfoColumns
 {
-    private const string Table = "tables/map_info.tbl";
+    public static readonly ColumnLayout Layout = new(
+        "tables/map_info.tbl",
+        "uuuuufffussuuufuuu",
+        [
+            LayoutColumn.Must(nameof(MapTableColumns.Id), 0, "uk"),
+            LayoutColumn.May(nameof(MapTableColumns.Kind), 3, "u"),
+            LayoutColumn.May(nameof(MapTableColumns.MinLevel), 4, "u"),
+            LayoutColumn.May(nameof(MapTableColumns.RecallX), 5, "f"),
+            LayoutColumn.May(nameof(MapTableColumns.RecallY), 6, "f"),
+            LayoutColumn.May(nameof(MapTableColumns.RecallZ), 7, "f"),
+            LayoutColumn.May(nameof(MapTableColumns.RecallMapId), 8, "u"),
+            LayoutColumn.Must(nameof(MapTableColumns.InternalName), 9, "s"),
+            LayoutColumn.May(nameof(MapTableColumns.File), 10, "s"),
+        ],
+        // 1.0.0
+        new LayoutRevision("uuuuufffussuuuf", new LayoutEdit.Lacks(15, 3)),
+        // 2.2.0 on: three floats of its own ahead of the recall point
+        new LayoutRevision("uuuuuffffffussuuufuuu", new LayoutEdit.Adds(5, 3)));
 
-    // The name and .wld path travel together as the table's adjacent
-    // string pair (the client's rule); everything else is validated
-    // where it sits and degraded to absent when retyped.
-    public static MapTableColumns Resolve(FTableDocument document)
-    {
-        string format = document.Header.ColumnTypes;
-        if (TableSchemas.Matches(Table, format, "1.1.4")) return Build114;
-        TableShape.Expect(Table, format, (Build114.Id, "uk"));
-        int name = TableShape.AdjacentPair(format, 's');
-        if (name < 0)
-        {
-            throw new FTableFormatException(
-                $"{Table}: no adjacent pair of string columns for the map name and .wld path " +
-                $"(format \"{format}\") — no layout in {nameof(TableSchemas)} matches; " +
-                "fingerprint the build and add one.");
-        }
-
-        return Build114 with
-        {
-            InternalName = name,
-            File = name + 1,
-            RecallX = TableShape.Optional(Table, format, Build114.RecallX, "f"),
-            RecallY = TableShape.Optional(Table, format, Build114.RecallY, "f"),
-            RecallZ = TableShape.Optional(Table, format, Build114.RecallZ, "f"),
-            RecallMapId = TableShape.Optional(Table, format, Build114.RecallMapId, "u"),
-            Kind = TableShape.Optional(Table, format, Build114.Kind, "u"),
-            MinLevel = TableShape.Optional(Table, format, Build114.MinLevel, "u"),
-        };
-    }
-
-    public static readonly MapTableColumns Build114 = new(
-        Id: 0,
-        InternalName: 9,
-        File: 10,
-        RecallX: 5, RecallY: 6, RecallZ: 7, RecallMapId: 8,
-        Kind: 3, MinLevel: 4);
+    public static MapTableColumns Reference => Layout.Reference.As<MapTableColumns>();
 }

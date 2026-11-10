@@ -67,7 +67,7 @@ public sealed class TalentColumnsTests
 
     private static IReadOnlyList<Ubiquitous.Data.TalentTreeDefinition> Map(byte[] talents) =>
         TalentTableMapper.MapTrees(FTableDocument.Load(talents), FTableDocument.Load(Classes),
-            TalentColumns.Build114, TalentColumns.ClassBuild114);
+            TalentColumns.Reference, TalentColumns.ClassReference);
 
     private static byte[] BuildTable(string format, IReadOnlyList<Dictionary<int, uint>> rows)
     {

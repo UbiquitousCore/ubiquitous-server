@@ -65,44 +65,6 @@ public class TableFingerprintTests
         Assert.DoesNotContain(failures, p => p.Contains("quests"));
     }
 
-    [Fact]
-    public void IdentifyBuild_Names114_FromItsPinnedShapes()
-    {
-        var tables = TableSchemas.Known.Single(b => b.Build == "1.1.4");
-        var fingerprint = new TableFingerprint("hash",
-            tables.Formats.Select(kv => new TableFingerprintEntry(kv.Key, 3, kv.Value.Length, kv.Value)).ToList(),
-            DateTimeOffset.UtcNow);
-        Assert.Equal("1.1.4", TableSchemas.IdentifyBuild(fingerprint));
-        Assert.Empty(TableSchemas.DescribeDrift(fingerprint, "1.1.4"));
-    }
-
-    [Fact]
-    public void IdentifyBuild_Tells110From111_ByThePortugueseStrings()
-    {
-        var formats110 = TableSchemas.Known.Single(b => b.Build == "1.1.0").Formats;
-        var tables110 = formats110
-            .Select(kv => new TableFingerprintEntry(kv.Key, 3, kv.Value.Length, kv.Value))
-            .ToList();
-        Assert.Equal("1.1.0", TableSchemas.IdentifyBuild(new TableFingerprint("h", tables110, DateTimeOffset.UtcNow)));
-        tables110.Add(new TableFingerprintEntry("tables/String_Menu_pt.tbl", 538, 2, "us"));
-        Assert.Equal("1.1.1", TableSchemas.IdentifyBuild(new TableFingerprint("h", tables110, DateTimeOffset.UtcNow)));
-    }
-
-    [Fact]
-    public void IdentifyBuild_SaysUnknown_WhenALoadBearingFormatMoves()
-    {
-        var entries = TableSchemas.Known.Single(b => b.Build == "1.1.4").Formats
-            .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
-        entries["tables/spell_new.tbl"] += "u";
-        var fingerprint = new TableFingerprint("hash",
-            entries.Select(kv => new TableFingerprintEntry(kv.Key, 3, kv.Value.Length, kv.Value)).ToList(),
-            DateTimeOffset.UtcNow);
-        Assert.Equal("unknown", TableSchemas.IdentifyBuild(fingerprint));
-        var drift = TableSchemas.DescribeDrift(fingerprint, "1.1.4");
-        Assert.Single(drift);
-        Assert.Contains("spell_new", drift[0]);
-    }
-
     private static byte[] Build(string format, IReadOnlyList<Dictionary<int, object>> rows)
     {
         int cols = format.Length;

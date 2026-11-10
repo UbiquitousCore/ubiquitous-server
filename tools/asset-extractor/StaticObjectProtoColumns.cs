@@ -1,26 +1,20 @@
-using Ubiquitous.Data;
-
 namespace Ubiquitous.AssetExtractor;
 
 public static class StaticObjectProtoColumns
 {
-    private const string Table = "tables/staticobject_proto.tbl";
+    public static readonly ColumnLayout Layout = new(
+        "tables/staticobject_proto.tbl",
+        "uuuuuuufuuuuuuuuuuuu",
+        [
+            LayoutColumn.Must(nameof(StaticObjectProtoTableColumns.Entry), 0, "uk"),
+            LayoutColumn.Must(nameof(StaticObjectProtoTableColumns.Type), 1, "u"),
+            LayoutColumn.May(nameof(StaticObjectProtoTableColumns.Display), 3, "u"),
+            LayoutColumn.May(nameof(StaticObjectProtoTableColumns.Festival), 19, "u"),
+        ],
+        // 1.0.0 to 1.0.3
+        new LayoutRevision("uuuuuuufuuuuuuuuuu", new LayoutEdit.Lacks(18, 2)),
+        // 1.1.0 and 1.1.1: the festival is there, the column ahead of it is not
+        new LayoutRevision("uuuuuuufuuuuuuuuuuu", new LayoutEdit.Lacks(18)));
 
-    public static StaticObjectProtoTableColumns Resolve(FTableDocument document)
-    {
-        string format = document.Header.ColumnTypes;
-        if (TableSchemas.Matches(Table, format, "1.1.4")) return Build114;
-        TableShape.Expect(Table, format,
-            (Build114.Entry, "uk"),
-            (Build114.Type, "u"));
-        return Build114 with
-        {
-            Festival = TableShape.Optional(Table, format, Build114.Festival, "u"),
-        };
-    }
-
-    public static readonly StaticObjectProtoTableColumns Build114 = new(
-        Entry: 0,
-        Type: 1,
-        Festival: 19);
+    public static StaticObjectProtoTableColumns Reference => Layout.Reference.As<StaticObjectProtoTableColumns>();
 }

@@ -13,7 +13,7 @@ public class TravelRouteColumnsTests
         var data = BuildRow(new Dictionary<int, uint> { [0] = 1u, [1] = 1u, [2] = 7u, [3] = 45u, [4] = 7559u });
 
         var route = Assert.Single(TravelRouteTableMapper.MapTravelRoutes(
-            FTableDocument.Load(data), TravelRouteColumns.Build114, stopIds: new HashSet<uint> { 1u, 7u }));
+            FTableDocument.Load(data), TravelRouteColumns.Reference, stopIds: new HashSet<uint> { 1u, 7u }));
 
         Assert.Equal(1u, route.Id);
         Assert.Equal(1u, route.FirstStop);

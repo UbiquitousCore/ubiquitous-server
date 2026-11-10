@@ -14,7 +14,7 @@ public class ItemColumnsTests
         var data = BuildRow(new Dictionary<int, uint> { [0] = 7, [1] = 4, [2] = 5, [3] = 900, [4] = 7 });
 
         var item = Assert.Single(ItemTableMapper.MapItems(
-            FTableDocument.Load(data), ItemColumns.Build114, resolveName: _ => "Test Shield"));
+            FTableDocument.Load(data), ItemColumns.Reference, resolveName: _ => "Test Shield"));
 
         Assert.Equal(7u, item.Id);
         Assert.Equal("Test Shield", item.NameKey);
@@ -29,7 +29,7 @@ public class ItemColumnsTests
         var data = BuildRow(new Dictionary<int, uint> { [0] = 9, [1] = 0, [2] = 0, [3] = 900, [4] = 9, [15] = 12, [25] = 20 });
 
         var item = Assert.Single(ItemTableMapper.MapItems(
-            FTableDocument.Load(data), ItemColumns.Build114, resolveName: _ => "Test Potion"));
+            FTableDocument.Load(data), ItemColumns.Reference, resolveName: _ => "Test Potion"));
 
         Assert.Equal(12u, item.ItemLevel);
         Assert.Equal(20u, item.MaxStack);
@@ -49,7 +49,7 @@ public class ItemColumnsTests
         });
 
         var item = Assert.Single(ItemTableMapper.MapItems(
-            FTableDocument.Load(data), ItemColumns.Build114, resolveName: _ => "Test Scroll"));
+            FTableDocument.Load(data), ItemColumns.Reference, resolveName: _ => "Test Scroll"));
 
         Assert.Equal(5001u, item.QuestId);
         Assert.Null(item.OnUseSpellId);
@@ -71,7 +71,7 @@ public class ItemColumnsTests
         });
 
         var item = Assert.Single(ItemTableMapper.MapItems(
-            FTableDocument.Load(data), ItemColumns.Build114, resolveName: _ => "test-potion"));
+            FTableDocument.Load(data), ItemColumns.Reference, resolveName: _ => "test-potion"));
 
         Assert.Equal(20u, item.OnUseSpellId);
         Assert.Equal(60u, item.OnUseCooldownSeconds);
@@ -93,7 +93,7 @@ public class ItemColumnsTests
         });
 
         var item = Assert.Single(ItemTableMapper.MapItems(
-            FTableDocument.Load(data), ItemColumns.Build114, resolveName: _ => "test-bond"));
+            FTableDocument.Load(data), ItemColumns.Reference, resolveName: _ => "test-bond"));
 
         Assert.Equal(6952u, item.RequiredSpellId);
         Assert.Equal(6979u, item.OnUseSpellId);
@@ -112,7 +112,7 @@ public class ItemColumnsTests
         });
 
         var item = Assert.Single(ItemTableMapper.MapItems(
-            FTableDocument.Load(data), ItemColumns.Build114, resolveName: _ => "Trinket"));
+            FTableDocument.Load(data), ItemColumns.Reference, resolveName: _ => "Trinket"));
 
         Assert.Null(item.OnUseSpellId);
         Assert.Null(item.OnUseCooldownSeconds);
@@ -129,7 +129,7 @@ public class ItemColumnsTests
         }
 
         var item = Assert.Single(ItemTableMapper.MapItems(
-            FTableDocument.Load(BuildRow(values)), ItemColumns.Build114, resolveName: _ => "Test Charm"));
+            FTableDocument.Load(BuildRow(values)), ItemColumns.Reference, resolveName: _ => "Test Charm"));
 
         Assert.Equal(Enumerable.Range(1, 10), item.Stats!.Select(stat => stat.Amount));
     }
