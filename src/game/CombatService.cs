@@ -56,7 +56,7 @@ public sealed partial class CombatService
         };
 
     public static int RegenAmount(int classId, int totalStamina, int healthRegenRating) =>
-        (RegenByClass.TryGetValue(classId, out var rate)
+        (RegenByClass.TryGetValue(PlayerClassIds.StatsLike(classId), out var rate)
             ? (int)(Math.Max(0, totalStamina) * rate.PerStamina + rate.Plus)
             : RegenPerInterval)
         + Math.Max(0, healthRegenRating) * HealthRegenPerRating;

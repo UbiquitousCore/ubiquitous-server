@@ -467,7 +467,12 @@ public static class PackageImporter
                 ["staticObjectTypes"] = "staticObjectTypes.json",
                 ["talentTrees"] = "talentTrees.json",
             }.Where(dataset => !leftOut.Contains(dataset.Key))
-                .ToDictionary(dataset => dataset.Key, dataset => dataset.Value));
+                .ToDictionary(dataset => dataset.Key, dataset => dataset.Value),
+            LevelCap: TryLoad("tables/achievement.tbl") is { } achievements
+                && TryLoad("tables/String_Achievement_en.tbl") is { } achievementStrings
+                ? AchievementColumns.HighestPlayerLevelAskedFor(
+                    achievements, StringTableMapper.MapStrings(achievementStrings))
+                : null);
         DataManifestJson.Save(manifest, Path.Combine(outDirectory, DataManifest.FileName));
 
         return new ImportResult(

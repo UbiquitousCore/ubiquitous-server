@@ -52,6 +52,22 @@ public class SpellNewColumnsTests
     }
 
     [Fact]
+    public void Build114_ReadsTheFirstRankOfTheChain_AndNoneForASpellWithout()
+    {
+        var second = BuildRow(
+            uints: new Dictionary<int, uint> { [0] = 10012, [6] = 2, [27] = 10000 },
+            floats: new Dictionary<int, float>());
+        var alone = BuildRow(
+            uints: new Dictionary<int, uint> { [0] = 14615, [6] = 1 },
+            floats: new Dictionary<int, float>());
+
+        Assert.Equal(10000u, Assert.Single(SpellTableMapper.MapSpells(
+            FTableDocument.Load(second), SpellNewColumns.Build114, resolveName: _ => "Fireball")).ChainFirstSpellId);
+        Assert.Null(Assert.Single(SpellTableMapper.MapSpells(
+            FTableDocument.Load(alone), SpellNewColumns.Build114, resolveName: _ => "Metamorphosis")).ChainFirstSpellId);
+    }
+
+    [Fact]
     public void Build114_ReadsTheProjectileSpeedColumn()
     {
         var data = BuildRow(

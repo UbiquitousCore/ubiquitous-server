@@ -39,10 +39,15 @@ public sealed record ServerOptions(
         DataDirectory: Path.Combine("data", "generated"),
         DevelopmentUserId: "developer",
         DevelopmentPassHash: "",
-        LogLevel: "Information",
-        // 1.1.4 has no Mendel to play: the race button is unnamed and its
-        // starting land has no zones.
-        DisabledRaces: [PlayerRaceIds.Mendel]);
+        LogLevel: "Information");
+
+    // 1.1.4 has no Mendel to play: the race button is unnamed and its starting
+    // land has no zones. A later build names them, so unless the host says
+    // otherwise its races are all open.
+    public IReadOnlyList<int> DisabledRacesFor(string? gameVersion) =>
+        DisabledRaces ?? (gameVersion is null || DataManifest.IsTargetGameVersion(gameVersion)
+            ? [PlayerRaceIds.Mendel]
+            : []);
 
     public string ResolvedStateDirectory => StateDirectory ?? DataDirectory;
 

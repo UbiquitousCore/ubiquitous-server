@@ -86,7 +86,7 @@ UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=10
 | `UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED` | `false` | start bots |
 | `UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT` | `5` | how many bots play on their own (0-500) |
 | `UBIQUITOUS_MAX_CONNECTIONS` | `500` | players connected at once |
-| `UBIQUITOUS_DISABLED_RACES` | `7` (Mendel, which 1.1.4 cannot play) | race ids that cannot be picked, comma-separated; `none` opens every race |
+| `UBIQUITOUS_DISABLED_RACES` | `7` (Mendel, which 1.1.4 cannot play) on a 1.1.4 package; none on a later build | race ids that cannot be picked, comma-separated; `none` opens every race |
 | `UBIQUITOUS_LOG_LEVEL` | `Information` | `Trace` to `Critical` |
 | `UBIQUITOUS_SITE` | `localhost` | the address other devices open (below) |
 | `UBIQUITOUS_HTTP_PORT`, `UBIQUITOUS_HTTPS_PORT` | `80`, `443` | the proxy's ports (then open `http://localhost:<port>`) |

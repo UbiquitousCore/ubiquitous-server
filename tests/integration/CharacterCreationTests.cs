@@ -194,6 +194,31 @@ public sealed class CharacterCreationTests
     }
 
     [Fact]
+    public async Task A_Build_s_Own_Loadout_Places_The_Character_At_Its_Level_And_Start()
+    {
+        var store = new InMemoryCharacterStore([]);
+        var warrior = StartingLoadouts.For(PlayerRaceIds.Elf, PlayerClassIds.Warrior)!;
+        var knight = warrior with
+        {
+            PlayerClass = PlayerClassIds.FlameKnight,
+            MapId = 38,
+            X = -287f,
+            Y = 10f,
+            Z = -278f,
+            Level = StartingLoadouts.FlameKnightStartingLevel,
+        };
+        var session = await SignedIn(store, content: GameContent.Development with { Loadouts = [knight] });
+
+        await Create(session, "Kindle", PlayerRaceIds.Elf, PlayerClassIds.FlameKnight);
+        var refused = await Create(session, "Blade", PlayerRaceIds.Elf, PlayerClassIds.Warrior);
+
+        var character = Assert.Single(await store.ListForAccountAsync(1));
+        Assert.Equal(StartingLoadouts.FlameKnightStartingLevel, character.Level);
+        Assert.Equal((ushort)38, character.MapId);
+        Assert.Contains($"\"code\":{(int)CharacterCreateCode.PairingNotPlayable}", refused[0]);
+    }
+
+    [Fact]
     public async Task A_Race_The_Server_Did_Open_With_Is_Made()
     {
         var session = await SignedIn(new InMemoryCharacterStore([]));

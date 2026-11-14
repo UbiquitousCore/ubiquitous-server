@@ -49,7 +49,7 @@ public static class SettingCatalog
         new("UBIQUITOUS_EXHAUSTION_LIMIT", "Exhaustion limit", SettingKind.WholeNumber, "100",
             "Legend exhaustion a player can build up before the daily reset.", 0, 100_000),
         new("UBIQUITOUS_DISABLED_RACES", "Closed races", SettingKind.RaceList, "7",
-            "Race ids that cannot be picked, comma-separated; none opens every race. 7 is Mendel, which 1.1.4 cannot play."),
+            "Race ids that cannot be picked, comma-separated; none opens every race. Unset, 7 (Mendel) is closed on a 1.1.4 package, which cannot play it, and every race is open on a later one."),
         new("UBIQUITOUS_MAX_CONNECTIONS", "Most players at once", SettingKind.WholeNumber, "500",
             "Players connected at once.", 1, 100_000),
         new("UBIQUITOUS_LOG_LEVEL", "Log level", SettingKind.Choice, "Information",

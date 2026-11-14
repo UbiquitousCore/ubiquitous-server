@@ -14,5 +14,6 @@ public static class SpellNewColumns
         WornSlotNeeded: 12,
         RequiredItemClass: 13,
         ItemSubclassesAllowed: 14,
-        Speed: 39);
+        Speed: 39,
+        ChainFirst: 27);
 }

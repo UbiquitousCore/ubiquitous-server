@@ -8,7 +8,9 @@ public sealed record DataManifest(
     string GameVersion,
     string SourceHash,
     DateTimeOffset GeneratedAt,
-    Dictionary<string, string> Datasets)
+    Dictionary<string, string> Datasets,
+    // The highest level the client's own achievements ask a player to reach.
+    int? LevelCap = null)
 {
     public const string FileName = "manifest.json";
 

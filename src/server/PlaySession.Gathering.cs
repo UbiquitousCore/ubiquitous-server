@@ -17,18 +17,18 @@ public sealed partial class PlaySession
         if (_gathering.InProgress) return [];
         if (_combat.IsPlayerDead || _spells.IsCasting)
             return [Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(
-                casterId, MiningRules.GatherSpellId, WireCodes.SpellRefusal.AlreadyCasting))];
+                casterId, _content.MiningGatherSpellId, WireCodes.SpellRefusal.AlreadyCasting))];
         if (!_staticObjectPositions.TryGetValue(networkId, out var at)
             || !InteractionRange.Within(_world.PlayerPosition, at))
             return [Error(WireCodes.ProtocolError.InvalidStaticObject, "Too far away.")];
         if (_shared.ActiveOreAt(networkId) is null)
             return [Error(WireCodes.ProtocolError.InvalidStaticObject, "This object has nothing to give.")];
 
-        _content.Spells.TryGetValue(MiningRules.GatherSpellId, out var gatherSpell);
+        _content.Spells.TryGetValue(_content.MiningGatherSpellId, out var gatherSpell);
         var castTime = MiningRules.CastTime(gatherSpell, _character.Race);
         _gathering.Begin(networkId, Now, castTime);
         return [Reply(WebMessageTypes.SpellCasting, new SpellCastingPayload(
-            MiningRules.GatherSpellId, casterId, (int)castTime.TotalMilliseconds))];
+            _content.MiningGatherSpellId, casterId, (int)castTime.TotalMilliseconds))];
     }
 
     private void TickGathering(DateTimeOffset now, List<string> responses)
@@ -55,7 +55,7 @@ public sealed partial class PlaySession
         _loot[finished.NetworkId] = loot;
         _gatheredLoot.Add(finished.NetworkId);
         responses.Add(Reply(WebMessageTypes.SpellReleased,
-            new SpellReleasedPayload(MiningRules.GatherSpellId, casterId, [target], [], 0f, Aimed: false)));
+            new SpellReleasedPayload(_content.MiningGatherSpellId, casterId, [target], [], 0f, Aimed: false)));
         responses.AddRange(LootWindowReplies(target, loot));
     }
 

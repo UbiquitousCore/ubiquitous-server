@@ -228,7 +228,7 @@ public sealed class SpellService
     private int ManaTick(int wisdomBonus, bool inCombat)
     {
         var wisdom = Math.Max(0, TotalWisdom(wisdomBonus));
-        var tick = _classId switch
+        var tick = PlayerClassIds.ManaLike(_classId) switch
         {
             PlayerClassIds.Mage => (int)((5 + Math.Sqrt(wisdom)) * wisdom * 0.07 + 10),
             PlayerClassIds.Monk => (int)((8 + Math.Sqrt(wisdom)) * wisdom * 0.08 + 14),

@@ -69,7 +69,9 @@ public sealed record SpellDefinition(
     uint? AuraAvatarDisplayId = null,
     // Fires only when the caster was hidden (sneaking) as the cast began: the opener's stun.
     uint? EffectFromHidingTriggerSpellId = null,
-    int? EffectFromHidingTriggerChancePercent = null);
+    int? EffectFromHidingTriggerChancePercent = null,
+    // The first rank of the chain this spell belongs to, when the table names one.
+    uint? ChainFirstSpellId = null);
 
 public static class SpellEffectTargets
 {
@@ -91,7 +93,7 @@ public static class PowerKinds
     public static int ForClass(int playerClass) => playerClass switch
     {
         PlayerClassIds.Warrior => Morale,
-        PlayerClassIds.Mage or PlayerClassIds.Monk => Mana,
+        PlayerClassIds.Mage or PlayerClassIds.Monk or PlayerClassIds.FlameKnight => Mana,
         PlayerClassIds.Ranger => Vigor,
         _ => 0,
     };
@@ -314,7 +316,7 @@ public sealed record StaticObjectSpawnDefinition(
     uint State = 0,
     uint Flags = 0);
 
-public sealed record StaticObjectTypeDefinition(uint Entry, uint Type, uint Festival = 0);
+public sealed record StaticObjectTypeDefinition(uint Entry, uint Type, uint Festival = 0, uint GatherSpellId = 0);
 
 public static class OperatorSpells
 {
@@ -652,8 +654,16 @@ public static class PlayerClassIds
     public const int Mage = 2;
     public const int Ranger = 3;
     public const int Monk = 4;
+    // 4.2.2's fifth `character_class` row: its talent trees are the Flame Knight's.
+    public const int FlameKnight = 5;
 
     public static readonly IReadOnlySet<int> All = new HashSet<int> { Warrior, Mage, Ranger, Monk };
+
+    // TODO: Verify a Flame Knight's numbers in play. Own placeholder until then: it takes the
+    // Warrior's health, attributes, attack power and regeneration, and the Monk's mana.
+    public static int StatsLike(int playerClass) => playerClass == FlameKnight ? Warrior : playerClass;
+
+    public static int ManaLike(int playerClass) => playerClass == FlameKnight ? Monk : playerClass;
 }
 
 public static class ItemClasses
@@ -719,7 +729,8 @@ public sealed record CharacterStartingLoadout(
     StartingAttributes Attributes,
     IReadOnlyList<StartingLoadoutItem> Items,
     IReadOnlyList<uint> Spells,
-    IReadOnlyList<StartingActionButton> ActionBar)
+    IReadOnlyList<StartingActionButton> ActionBar,
+    int Level = 1)
 {
     public IReadOnlyList<int> WornEquipment() => EquipmentSlots.Build(
         [.. Items.Where(item => item.IsWorn).Select(item => (item.Slot, (int)item.ItemEntry))]);

@@ -46,7 +46,7 @@ public sealed class PlayerStatCurvesTests
 
     [Theory]
     [InlineData(0)]
-    [InlineData(5)]
+    [InlineData(6)]
     public void BaseMaxHealth_ReturnsTheFallbackForAnUnknownClassId(int classId)
     {
         Assert.Equal(999, PlayerStatCurves.BaseMaxHealth(classId, level: 10, fallback: 999));
@@ -78,6 +78,18 @@ public sealed class PlayerStatCurvesTests
     public void BaseMaxPower_ReturnsTheFallbackForAnUnknownClassId()
     {
         Assert.Equal(999, PlayerStatCurves.BaseMaxPower(classId: 0, level: 10, fallback: 999));
+    }
+
+    [Fact]
+    public void AFlameKnight_HasTheWarriorsHealthAndAttackPowerAndTheMonksMana()
+    {
+        Assert.Equal(PlayerStatCurves.BaseMaxHealth(PlayerClassIds.Warrior, 40, fallback: -1),
+            PlayerStatCurves.BaseMaxHealth(PlayerClassIds.FlameKnight, 40, fallback: -1));
+        Assert.Equal(PlayerStatCurves.AttackPower(PlayerClassIds.Warrior, 40, 50, 30),
+            PlayerStatCurves.AttackPower(PlayerClassIds.FlameKnight, 40, 50, 30));
+        Assert.Equal(PlayerStatCurves.BaseMaxPower(PlayerClassIds.Monk, 40, fallback: -1),
+            PlayerStatCurves.BaseMaxPower(PlayerClassIds.FlameKnight, 40, fallback: -1));
+        Assert.Equal(PowerKinds.Mana, PowerKinds.ForClass(PlayerClassIds.FlameKnight));
     }
 
     [Fact]

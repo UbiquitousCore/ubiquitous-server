@@ -90,6 +90,13 @@ public sealed partial record GameContent(
 
     public IReadOnlyList<PlayerLookDefinition> PlayerLooks { get; init; } = [];
 
+    public IReadOnlyList<CharacterStartingLoadout> Loadouts { get; init; } = StartingLoadouts.All;
+
+    public CharacterStartingLoadout? LoadoutFor(int race, int playerClass) =>
+        StartingLoadouts.For(Loadouts, race, playerClass);
+
+    public uint MiningGatherSpellId { get; init; } = MiningRules.GatherSpellId;
+
     public Ubiquitous.World.ITerrainHeightSource? Terrain { get; init; }
 
     public IReadOnlyDictionary<uint, int> SpellStackLimits { get; init; } = new Dictionary<uint, int>();

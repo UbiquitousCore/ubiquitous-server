@@ -11,7 +11,7 @@ public sealed partial class PlaySession
 {
     private IReadOnlyList<uint> KnownSpellsFor(CharacterRecord character)
     {
-        var loadout = StartingLoadouts.For(character.Race, character.Class);
+        var loadout = _content.LoadoutFor(character.Race, character.Class);
         if (loadout is null)
         {
             return _content.StartingSpells;
@@ -132,7 +132,8 @@ public sealed partial class PlaySession
             request.Name, request.Race, request.Class, request.Gender,
             look.Skin, look.HairStyle, look.HairColour, look.Face,
             held.Count, nameIsTaken,
-            _content.PlayableRaces);
+            _content.PlayableRaces,
+            _content.Loadouts);
 
         if (plan is null)
         {
@@ -199,7 +200,7 @@ public sealed partial class PlaySession
         }
 
         var request = WebMessageJson.DeserializePayload<OutfitRequest>(payload);
-        var loadout = StartingLoadouts.For(request.Race, request.Class);
+        var loadout = _content.LoadoutFor(request.Race, request.Class);
         return Reply(WebMessageTypes.CharactersOutfitted, new OutfitPayload(
             request.Race,
             request.Class,
@@ -314,7 +315,7 @@ public sealed partial class PlaySession
             _belongings.Currency = Math.Max(_belongings.Currency, DevelopmentFixtures.Purse);
         _belongings.BagSlots = character.BagSlots ?? PlayerBelongings.DefaultBagCapacity;
         _belongings.BankSlots = character.BankSlots ?? PlayerBelongings.DefaultBankCapacity;
-        var startingAttributes = StartingLoadouts.For(character.Race, character.Class)?.Attributes;
+        var startingAttributes = _content.LoadoutFor(character.Race, character.Class)?.Attributes;
         _combat.EnterAsCharacter(character.Class, character.Level, $"player:{character.Guid}", character.Health,
             startingAttributes);
         RefreshWornAttributes();

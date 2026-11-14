@@ -7,5 +7,6 @@ public static class StaticObjectProtoColumns
     public static readonly StaticObjectProtoTableColumns Build114 = new(
         Entry: 0,
         Type: 1,
-        Festival: 19);
+        Festival: 19,
+        GatherSpell: 12);
 }
