@@ -78,6 +78,8 @@ public sealed class TalentColumnsTests
         var tree = Assert.Single(TalentTableMapper.MapTrees(document, FTableDocument.Load(Classes),
             TalentColumns.For(document.Header), TalentColumns.ClassBuild114));
         Assert.Equal([61u, 62u, 63u], Assert.Single(tree.Talents).RankSpellIds);
+        Assert.Equal(200u, document.Rows[0][TalentColumns.Build422.NameTextId]);
+        Assert.Equal(-1, TalentColumns.Build114.NameTextId);
     }
 
     private static IReadOnlyList<Ubiquitous.Data.TalentTreeDefinition> Map(byte[] talents) =>

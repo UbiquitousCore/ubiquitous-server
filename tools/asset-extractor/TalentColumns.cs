@@ -12,8 +12,9 @@ public static class TalentColumns
         RankCount: 8,
         RankSpells: [9, 10, 11, 12, 13]);
 
-    // 4.2.2 gives each rank five columns, its spell first.
-    public static readonly TalentTableColumns Build422 = Build114 with { RankSpells = [9, 14, 19, 24, 29] };
+    // 4.2.2 gives each rank five columns, its spell first, and names the talent's
+    // `String_Talent` string in column 35.
+    public static readonly TalentTableColumns Build422 = Build114 with { RankSpells = [9, 14, 19, 24, 29], NameTextId = 35 };
 
     public static TalentTableColumns For(TableLayout layout) => layout.Cols == 42 ? Build422 : Build114;
 

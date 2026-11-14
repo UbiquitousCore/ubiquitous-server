@@ -401,9 +401,23 @@ public static class PackageImporter
             Load("tables/staticobject_proto.tbl"), StaticObjectProtoColumns.Build114);
 
         var talentDocument = Load("tables/spell_talent.tbl");
+        var talentColumns = TalentColumns.For(talentDocument.Header);
         var talentTrees = TalentTableMapper.MapTrees(
-            talentDocument, Load("tables/character_class.tbl"),
-            TalentColumns.For(talentDocument.Header), TalentColumns.ClassBuild114);
+            talentDocument, Load("tables/character_class.tbl"), talentColumns, TalentColumns.ClassBuild114);
+        if (talentColumns.NameTextId >= 0 && TryLoad("tables/String_Talent_en.tbl") is { } talentStringDocument)
+        {
+            var renamed = TalentSpellNames.Renamed(
+                spellNewDocument.Rows
+                    .Where(row => row.Count > SpellNewColumns.Build114.NameTextId && row[SpellNewColumns.Build114.NameTextId] is uint)
+                    .ToDictionary(row => (uint)row[0], row => (uint)row[SpellNewColumns.Build114.NameTextId]),
+                spellStrings,
+                talentTrees.SelectMany(tree => tree.Talents).Select(talent => new TalentNaming(
+                    talent.Id,
+                    talentDocument.ByKey.TryGetValue(talent.Id, out var row) && row[talentColumns.NameTextId] is uint nameId ? nameId : 0,
+                    talent.RankSpellIds)),
+                StringTableMapper.MapStrings(talentStringDocument));
+            spells = [.. spells.Select(spell => renamed.TryGetValue(spell.Id, out var name) ? spell with { NameKey = name } : spell)];
+        }
 
         Directory.CreateDirectory(outDirectory);
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
