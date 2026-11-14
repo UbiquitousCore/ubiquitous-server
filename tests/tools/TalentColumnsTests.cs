@@ -65,6 +65,21 @@ public sealed class TalentColumnsTests
         Assert.Throws<FTableFormatException>(() => Map(talents));
     }
 
+    [Fact]
+    public void Build422_ReadsOneRankSpellEveryFifthColumn_AndIsChosenByTheTablesShape()
+    {
+        const string Format422 = "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusuuuuuuu";
+        var talents = BuildTable(Format422,
+            [new() { [0] = 1, [1] = 1, [2] = 1, [3] = 114, [8] = 3, [9] = 61, [10] = 7, [14] = 62, [19] = 63, [35] = 200 }]);
+        var document = FTableDocument.Load(talents);
+
+        Assert.Same(TalentColumns.Build422, TalentColumns.For(document.Header));
+        Assert.Same(TalentColumns.Build114, TalentColumns.For(FTableDocument.Load(BuildTable(TalentFormat, [])).Header));
+        var tree = Assert.Single(TalentTableMapper.MapTrees(document, FTableDocument.Load(Classes),
+            TalentColumns.For(document.Header), TalentColumns.ClassBuild114));
+        Assert.Equal([61u, 62u, 63u], Assert.Single(tree.Talents).RankSpellIds);
+    }
+
     private static IReadOnlyList<Ubiquitous.Data.TalentTreeDefinition> Map(byte[] talents) =>
         TalentTableMapper.MapTrees(FTableDocument.Load(talents), FTableDocument.Load(Classes),
             TalentColumns.Build114, TalentColumns.ClassBuild114);

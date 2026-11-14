@@ -7,7 +7,7 @@ namespace Ubiquitous.AssetExtractor;
 public static class PackageImporter
 {
     public sealed record ImportResult(
-        int MapCount, int CreatureCount, int SpawnCount, int DroppedSpawnCount, int SpellCount, int ItemCount,
+        int MapCount, int CreatureCount, int SpawnCount, int DroppedSpawnCount, int SpellCount, int ItemCount, int DroppedItemCount,
         int ZoneCount, int DroppedZoneCount, int QuestCount, int DroppedQuestCount, int NpcCount,
         int QuestRewardCount, int TeleportStopCount, int DroppedTeleportStopCount, int TravelRouteCount,
         int DroppedTravelRouteCount, int StaticObjectCount, int DroppedStaticObjectCount,
@@ -33,7 +33,11 @@ public static class PackageImporter
             return FTableDocument.Load(bytes);
         }
 
-        var maps = MapTableMapper.MapMaps(Load("tables/map_info.tbl"), MapInfoColumns.Build114);
+        FTableDocument? TryLoad(string name) =>
+            archiveEntries.TryGetValue(name, out var bytes) ? FTableDocument.Load(bytes) : null;
+
+        var mapInfoDocument = Load("tables/map_info.tbl");
+        var maps = MapTableMapper.MapMaps(mapInfoDocument, MapInfoColumns.For(mapInfoDocument.Header));
         var archiveByMapId = new Dictionary<ushort, byte[]>();
         if (worldArchives is { Count: > 0 })
         {
@@ -101,6 +105,12 @@ public static class PackageImporter
 
         var itemStrings = StringTableMapper.MapStrings(Load("tables/String_Item_en.tbl"));
         var itemDocument = Load("tables/items.tbl");
+        // 4.2.2 marks some parts no one carries (class 15) with subclass 9999.
+        var knownItemRows = itemDocument.Rows.Where(row =>
+            row[ItemColumns.Build114.Class] is uint itemClass && itemClass <= byte.MaxValue
+            && row[ItemColumns.Build114.SubClass] is uint subClass && subClass <= byte.MaxValue).ToList();
+        int droppedItems = itemDocument.Rows.Count - knownItemRows.Count;
+        itemDocument = itemDocument.WithRows(knownItemRows);
         var items = ItemTableMapper.MapItems(itemDocument, ItemColumns.Build114,
             resolveName: id => itemStrings.TryGetValue(id, out var text) && !string.IsNullOrWhiteSpace(text)
                 ? text
@@ -152,63 +162,71 @@ public static class PackageImporter
         var itemsByEntry = items.ToDictionary(i => i.Id);
 
         var creaturesByEntry = creatures.ToDictionary(c => c.EntryId);
-        var lootItemsByGroup = new Dictionary<uint, List<LootTableItemDefinition>>();
-        foreach (var row in Load("tables/loot_feature_items.tbl").Rows)
-        {
-            if (row[1] is not uint groupId || row[2] is not uint itemId || row[3] is not float chance
-                || row[4] is not uint fewest || row[5] is not uint most)
-            {
-                continue;
-            }
-
-            if (!itemsByEntry.ContainsKey(itemId) || chance <= 0 || fewest == 0 || fewest > most)
-            {
-                continue;
-            }
-
-            if (!lootItemsByGroup.TryGetValue(groupId, out var candidateItems))
-            {
-                lootItemsByGroup[groupId] = candidateItems = [];
-            }
-
-            candidateItems.Add(new LootTableItemDefinition(itemId, chance, unchecked((int)fewest), unchecked((int)most)));
-        }
-
-        var lootGroupsById = new Dictionary<uint, (int MinLevel, int MaxLevel, int GuaranteedDrops, int MaxDrops)>();
-        foreach (var row in Load("tables/loot_feature.tbl").Rows)
-        {
-            if (row[0] is not uint groupId || row[2] is not uint lowestLevel || row[3] is not uint highestLevel
-                || row[6] is not uint guaranteed || row[7] is not uint upTo)
-            {
-                continue;
-            }
-
-            lootGroupsById[groupId] = (
-                unchecked((int)lowestLevel), unchecked((int)highestLevel),
-                unchecked((int)guaranteed), unchecked((int)upTo));
-        }
-
-        const uint CreatureLootTargetType = 1;
+        // Later builds (4.2.2) carry no loot tables; the dataset is then left out.
+        var lootFeatureItems = TryLoad("tables/loot_feature_items.tbl");
+        var lootFeature = TryLoad("tables/loot_feature.tbl");
+        var loot = TryLoad("tables/loot.tbl");
+        bool hasLoot = lootFeatureItems is not null && lootFeature is not null && loot is not null;
         var lootGroupsByCreature = new Dictionary<uint, List<LootGroupDefinition>>();
-        foreach (var row in Load("tables/loot.tbl").Rows)
+        if (lootFeatureItems is not null && lootFeature is not null && loot is not null)
         {
-            if (row[1] is not uint targetId || row[2] is not uint targetKind || targetKind != CreatureLootTargetType
-                || row[3] is not uint groupId)
+            var lootItemsByGroup = new Dictionary<uint, List<LootTableItemDefinition>>();
+            foreach (var row in lootFeatureItems.Rows)
             {
-                continue;
+                if (row[1] is not uint groupId || row[2] is not uint itemId || row[3] is not float chance
+                    || row[4] is not uint fewest || row[5] is not uint most)
+                {
+                    continue;
+                }
+
+                if (!itemsByEntry.ContainsKey(itemId) || chance <= 0 || fewest == 0 || fewest > most)
+                {
+                    continue;
+                }
+
+                if (!lootItemsByGroup.TryGetValue(groupId, out var candidateItems))
+                {
+                    lootItemsByGroup[groupId] = candidateItems = [];
+                }
+
+                candidateItems.Add(new LootTableItemDefinition(itemId, chance, unchecked((int)fewest), unchecked((int)most)));
             }
 
-            if (!creaturesByEntry.TryGetValue(targetId, out var creature)) continue;
-            if (!lootGroupsById.TryGetValue(groupId, out var group)) continue;
-            if (creature.Level < group.MinLevel || creature.Level > group.MaxLevel) continue;
-            if (!lootItemsByGroup.TryGetValue(groupId, out var candidates) || candidates.Count == 0) continue;
-
-            if (!lootGroupsByCreature.TryGetValue(targetId, out var creatureGroups))
+            var lootGroupsById = new Dictionary<uint, (int MinLevel, int MaxLevel, int GuaranteedDrops, int MaxDrops)>();
+            foreach (var row in lootFeature.Rows)
             {
-                lootGroupsByCreature[targetId] = creatureGroups = [];
+                if (row[0] is not uint groupId || row[2] is not uint lowestLevel || row[3] is not uint highestLevel
+                    || row[6] is not uint guaranteed || row[7] is not uint upTo)
+                {
+                    continue;
+                }
+
+                lootGroupsById[groupId] = (
+                    unchecked((int)lowestLevel), unchecked((int)highestLevel),
+                    unchecked((int)guaranteed), unchecked((int)upTo));
             }
 
-            creatureGroups.Add(new LootGroupDefinition(group.GuaranteedDrops, group.MaxDrops, candidates));
+            const uint CreatureLootTargetType = 1;
+            foreach (var row in loot.Rows)
+            {
+                if (row[1] is not uint targetId || row[2] is not uint targetKind || targetKind != CreatureLootTargetType
+                    || row[3] is not uint groupId)
+                {
+                    continue;
+                }
+
+                if (!creaturesByEntry.TryGetValue(targetId, out var creature)) continue;
+                if (!lootGroupsById.TryGetValue(groupId, out var group)) continue;
+                if (creature.Level < group.MinLevel || creature.Level > group.MaxLevel) continue;
+                if (!lootItemsByGroup.TryGetValue(groupId, out var candidates) || candidates.Count == 0) continue;
+
+                if (!lootGroupsByCreature.TryGetValue(targetId, out var creatureGroups))
+                {
+                    lootGroupsByCreature[targetId] = creatureGroups = [];
+                }
+
+                creatureGroups.Add(new LootGroupDefinition(group.GuaranteedDrops, group.MaxDrops, candidates));
+            }
         }
 
         var creatureLootTables = lootGroupsByCreature
@@ -373,9 +391,10 @@ public static class PackageImporter
         var staticObjectTypes = StaticObjectProtoTableMapper.MapTypes(
             Load("tables/staticobject_proto.tbl"), StaticObjectProtoColumns.Build114);
 
+        var talentDocument = Load("tables/spell_talent.tbl");
         var talentTrees = TalentTableMapper.MapTrees(
-            Load("tables/spell_talent.tbl"), Load("tables/character_class.tbl"),
-            TalentColumns.Build114, TalentColumns.ClassBuild114);
+            talentDocument, Load("tables/character_class.tbl"),
+            TalentColumns.For(talentDocument.Header), TalentColumns.ClassBuild114);
 
         Directory.CreateDirectory(outDirectory);
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
@@ -392,7 +411,8 @@ public static class PackageImporter
         File.WriteAllText(Path.Combine(outDirectory, "staticObjectQuestFinishers.json"), JsonSerializer.Serialize(staticObjectQuestFinishers, options));
         File.WriteAllText(Path.Combine(outDirectory, "staticObjectQuestItemBindings.json"), JsonSerializer.Serialize(staticObjectQuestItemBindings, options));
         File.WriteAllText(Path.Combine(outDirectory, "creatureQuestFinishers.json"), JsonSerializer.Serialize(creatureQuestFinishers, options));
-        File.WriteAllText(Path.Combine(outDirectory, "creatureLootTables.json"), JsonSerializer.Serialize(creatureLootTables, options));
+        if (hasLoot)
+            File.WriteAllText(Path.Combine(outDirectory, "creatureLootTables.json"), JsonSerializer.Serialize(creatureLootTables, options));
         File.WriteAllText(Path.Combine(outDirectory, "teleportStops.json"), JsonSerializer.Serialize(teleportStops, options));
         File.WriteAllText(Path.Combine(outDirectory, "gossipMenus.json"), JsonSerializer.Serialize(gossipMenus, options));
         File.WriteAllText(Path.Combine(outDirectory, "mapGraveyards.json"), JsonSerializer.Serialize(graveyards, options));
@@ -405,7 +425,7 @@ public static class PackageImporter
 
         var manifest = new DataManifest(
             ExtractorVersion: "0.1.0",
-            GameVersion: "1.1.4",
+            GameVersion: MapInfoColumns.BuildOf(mapInfoDocument.Header),
             SourceHash: sourceHash,
             GeneratedAt: DateTimeOffset.UtcNow,
             Datasets: new Dictionary<string, string>
@@ -432,11 +452,12 @@ public static class PackageImporter
                 ["storageUpgrades"] = "storageUpgrades.json",
                 ["staticObjectTypes"] = "staticObjectTypes.json",
                 ["talentTrees"] = "talentTrees.json",
-            });
+            }.Where(dataset => hasLoot || dataset.Key != "creatureLootTables")
+                .ToDictionary(dataset => dataset.Key, dataset => dataset.Value));
         DataManifestJson.Save(manifest, Path.Combine(outDirectory, DataManifest.FileName));
 
         return new ImportResult(
-            maps.Count, creatures.Count, spawns.Count, droppedSpawns, spells.Count, items.Count,
+            maps.Count, creatures.Count, spawns.Count, droppedSpawns, spells.Count, items.Count, droppedItems,
             zones.Count, droppedZones, quests.Count, droppedQuests, npcs.Count, questRewards.Count,
             teleportStops.Count, droppedTeleportStops, travelRoutes.Count, droppedTravelRoutes,
             staticObjects.Count, droppedStaticObjects, storageUpgrades.Count, staticObjectTypes.Count,

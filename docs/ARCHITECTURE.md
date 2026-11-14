@@ -7,7 +7,9 @@ composition root.
 ## Data
 
 Raw client formats (`.tbl`, GBMP archives, terrain, collision) are read only
-by `tools/asset-extractor`, with column layouts pinned to client build 1.1.4.
+by `tools/asset-extractor`, with column layouts pinned to client build 1.1.4;
+`map_info` and `spell_talent` also have a 4.2.2 layout, chosen by the table's
+column count (see `docs/PROVENANCE.md`).
 It writes a package to `data/generated/` (`manifest.json` plus one JSON file
 per dataset); game code reads only the `Ubiquitous.Data` records.
 

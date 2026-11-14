@@ -25,6 +25,40 @@ public class MapInfoColumnsTests
         Assert.True(map.IsDungeon);
     }
 
+    [Fact]
+    public void Build422_ReadsTheNameFileAndPutOutPointThreeColumnsOn_AndIsChosenByTheTablesShape()
+    {
+        const string Format422 = "uuuuuffffffussuuufuuu";
+        var data = PackageImporterTests.BuildTable(Format422,
+            new Dictionary<int, object>
+            {
+                [0] = 15u, [3] = MapTableMapper.DungeonKind, [4] = 20u,
+                [5] = -220f, [6] = 40f, [7] = 215f,
+                [8] = -871f, [9] = -7.9f, [10] = -1903f, [11] = 1u,
+                [12] = "swamp_eye", [13] = "world/swamp_eye.wld",
+            });
+        var document = FTableDocument.Load(data);
+
+        Assert.Same(MapInfoColumns.Build422, MapInfoColumns.For(document.Header));
+        Assert.Equal("4.2.2", MapInfoColumns.BuildOf(document.Header));
+        var map = Assert.Single(MapTableMapper.MapMaps(document, MapInfoColumns.For(document.Header)));
+
+        Assert.Equal("swamp_eye", map.InternalName);
+        Assert.Equal("world/swamp_eye.wld", map.File);
+        Assert.Equal((ushort)1, map.RecallMapId);
+        Assert.Equal((-871f, -7.9f, -1903f), (map.RecallX!.Value, map.RecallY!.Value, map.RecallZ!.Value));
+        Assert.Equal(20, map.MinLevel);
+        Assert.True(map.IsDungeon);
+    }
+
+    [Fact]
+    public void A114ShapedTable_KeepsThe114Columns()
+    {
+        var data = PackageImporterTests.BuildTable(TableFormat, new Dictionary<int, object> { [0] = 1u, [9] = "a" });
+
+        Assert.Same(MapInfoColumns.Build114, MapInfoColumns.For(FTableDocument.Load(data).Header));
+    }
+
     private static byte[] BuildRow(
         uint id, short nameLength, int nameOffset, short fileLength, int fileOffset, byte[] pool)
     {
