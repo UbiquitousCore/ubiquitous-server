@@ -30,7 +30,7 @@ public sealed record PlayerbotSettings(
         var count = settings.Number("randomBotCount", 5);
         if (count is < 0 or > MostRandomBots)
             throw new InvalidDataException($"playerbots randomBotCount must be between 0 and {MostRandomBots}.");
-        var minLevel = Math.Clamp(settings.Number("minLevel", 1), 1, LevelingService.MaxLevel);
+        var minLevel = Math.Clamp(settings.Number("minLevel", 1), 1, LevelingService.SeenMaxLevel);
         var onlineMin = Math.Max(1, settings.Number("onlineMinutesMin", 40));
         var offlineMin = Math.Max(1, settings.Number("offlineMinutesMin", 10));
         return new PlayerbotSettings(
@@ -52,7 +52,7 @@ public sealed record PlayerbotSettings(
             Seed: settings.Number("seed", Environment.TickCount),
             UnwatchedTurnEvery: Math.Clamp(settings.Number("unwatchedTurnEvery", 2), 1, 2),
             MinLevel: minLevel,
-            MaxLevel: Math.Max(minLevel, Math.Clamp(settings.Number("maxLevel", 20), 1, LevelingService.MaxLevel)),
+            MaxLevel: Math.Max(minLevel, Math.Clamp(settings.Number("maxLevel", 20), 1, LevelingService.SeenMaxLevel)),
             LogInAndOut: settings.Flag("logInAndOut", true),
             OnlineMinutesMin: onlineMin,
             OnlineMinutesMax: Math.Max(onlineMin, settings.Number("onlineMinutesMax", 240)),

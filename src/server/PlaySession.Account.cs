@@ -21,7 +21,7 @@ public sealed partial class PlaySession
             .ToHashSet();
         _actionBar.Clear();
         foreach (var button in loadout.ActionBar) _actionBar[button.Slot] = (button.SpellId, 0);
-        IReadOnlyList<uint> trained = character.Level >= LevelingService.MaxLevel
+        IReadOnlyList<uint> trained = character.Level >= LevelingService.SeenMaxLevel && _content.HasSeenSpellbooks
             ? PlaytestSpellbook.AtMaxLevel(character.Class)
             : [];
         return [.. _content.StartingSpells.Where(id => !books.Contains(id)), .. loadout.Spells, .. trained];
@@ -100,8 +100,8 @@ public sealed partial class PlaySession
             character.MapId,
             new Position(character.X, character.Y, character.Z),
             character.Equipment,
-            LevelingService.HeldXp(character.Level, character.Xp),
-            LevelingService.XpToNextLevel(character.Level))).ToArray();
+            LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap),
+            LevelingService.XpToNextLevel(character.Level, _content.LevelCap))).ToArray();
 
         var offered = _content.PlayableRaces.OrderBy(race => race).ToArray();
         return Reply(WebMessageTypes.CharactersListed, new CharactersListedPayload(summaries, offered));
@@ -306,7 +306,7 @@ public sealed partial class PlaySession
         Volatile.Write(ref _nextAutosaveTicks, (Now + AutosaveInterval).UtcTicks);
         _character = character;
         _level = character.Level;
-        _xp = LevelingService.HeldXp(character.Level, character.Xp);
+        _xp = LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap);
         _exhaustion = character.Exhaustion ?? 0;
         _exhaustionDay = character.ExhaustionDay;
         if (character.LegendDungeons == true) _instances.RecallMode($"player:{character.Guid}", DungeonMode.Legend);
@@ -362,7 +362,7 @@ public sealed partial class PlaySession
             [WireCodes.UnitValue.Power] = _spells.Power,
             [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(enterWisdomBonus),
             [WireCodes.UnitValue.Xp] = _xp,
-            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level),
+            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level, _content.LevelCap),
             [WireCodes.UnitValue.Exhaustion] = ExhaustionNow(enterNow),
             [WireCodes.UnitValue.MaxExhaustion] = _content.Rates.ExhaustionLimit,
         };

@@ -43,7 +43,7 @@ public static class PlayerStatCurves
         ],
     ];
 
-    private static readonly int[] NoPowerPool = new int[LevelingService.MaxLevel];
+    private static readonly int[] NoPowerPool = new int[LevelingService.SeenMaxLevel];
 
     private static readonly int[][] BasePowerByClass =
     [
@@ -191,7 +191,7 @@ public static class PlayerStatCurves
         classId = PlayerClassIds.StatsLike(classId);
         if (!IsKnownClass(classId)) return levelOne;
         var gains = AttributeGainByClass[classId - 1];
-        int Gain(int stat) => gains[stat][Math.Clamp(level, 1, LevelingService.MaxLevel) - 1];
+        int Gain(int stat) => gains[stat][Math.Clamp(level, 1, gains[stat].Length) - 1];
         return new StartingAttributes(
             levelOne.Strength + Gain(0),
             levelOne.Agility + Gain(1),

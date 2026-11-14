@@ -9,14 +9,14 @@ public sealed partial class PlaySession
     private IReadOnlyList<string> GrantXp(int gained, DateTimeOffset now)
     {
         gained = _content.Rates.ScaleXp(gained);
-        if (_character is null || gained <= 0 || _level >= LevelingService.MaxLevel) return [];
+        if (_character is null || gained <= 0 || _level >= _content.LevelCap) return [];
 
-        var result = LevelingService.ApplyXp(_level, _xp, gained);
+        var result = LevelingService.ApplyXp(_level, _xp, gained, _content.LevelCap);
         _xp = result.Xp;
         var values = new Dictionary<string, int>
         {
             [WireCodes.UnitValue.Xp] = _xp,
-            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(result.Level),
+            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(result.Level, _content.LevelCap),
         };
 
         if (result.LevelsGained > 0) ApplyLevel(result.Level, _character.Health, values, now);

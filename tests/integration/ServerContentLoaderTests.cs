@@ -183,6 +183,8 @@ public sealed class ServerContentLoaderTests
             Assert.Equal([new StartingActionButton(0, 5), new StartingActionButton(1, 10000)], mage.ActionBar);
             Assert.Null(content.LoadoutFor(PlayerRaceIds.Human, PlayerClassIds.Warrior));
             Assert.Equal(2u, content.MiningGatherSpellId);
+            Assert.Equal(75, content.LevelCap);
+            Assert.False(content.HasSeenSpellbooks);
         }
         finally
         {
@@ -215,6 +217,7 @@ public sealed class ServerContentLoaderTests
 
         Assert.DoesNotContain(PlayerRaceIds.Mendel, content.PlayableRaces);
         Assert.Same(StartingLoadouts.All, content.Loadouts);
+        Assert.Equal(LevelingService.SeenMaxLevel, content.LevelCap);
         Assert.Equal([PlayerRaceIds.Mendel], ServerOptions.Defaults.DisabledRacesFor(DataManifest.TargetGameVersion));
         Assert.Empty(ServerOptions.Defaults.DisabledRacesFor("4.2.2"));
     }

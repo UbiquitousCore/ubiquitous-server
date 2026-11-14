@@ -2,7 +2,8 @@ namespace Ubiquitous.Game;
 
 public static class LevelingService
 {
-    public const int MaxLevel = 60;
+    // The cap 1.1.4 was seen with, and the last level whose XP bar was read in play.
+    public const int SeenMaxLevel = 60;
 
     private static readonly int[] XpBarByLevel =
     [
@@ -14,8 +15,14 @@ public static class LevelingService
         238500, 251100, 263950, 277050, 290450, 304050, 317950, 332100, 346500,
     ];
 
-    public static int XpToNextLevel(int level) =>
-        level is >= 1 and < MaxLevel ? XpBarByLevel[level - 1] : 0;
+    // Own choice: past the levels read in play, each bar grows by the last step that was seen.
+    public static int XpToNextLevel(int level, int levelCap)
+    {
+        if (level < 1 || level >= levelCap) return 0;
+        if (level <= XpBarByLevel.Length) return XpBarByLevel[level - 1];
+        var last = XpBarByLevel[^1];
+        return last + (level - XpBarByLevel.Length) * (last - XpBarByLevel[^2]);
+    }
 
     private static readonly (int MaxGap, int Percent)[] QuestRewardBands =
     [
@@ -75,22 +82,22 @@ public static class LevelingService
 
     public readonly record struct GrantResult(int Level, int Xp, int LevelsGained);
 
-    public static int HeldXp(int level, int xp) => level >= MaxLevel ? 0 : Math.Max(0, xp);
+    public static int HeldXp(int level, int xp, int levelCap) => level >= levelCap ? 0 : Math.Max(0, xp);
 
-    public static GrantResult ApplyXp(int level, int xp, int gained)
+    public static GrantResult ApplyXp(int level, int xp, int gained, int levelCap)
     {
-        if (level >= MaxLevel) return new GrantResult(level, 0, 0);
+        if (level >= levelCap) return new GrantResult(level, 0, 0);
 
         xp += gained;
         var levelsGained = 0;
-        while (level < MaxLevel && xp >= XpToNextLevel(level))
+        while (level < levelCap && xp >= XpToNextLevel(level, levelCap))
         {
-            xp -= XpToNextLevel(level);
+            xp -= XpToNextLevel(level, levelCap);
             level++;
             levelsGained++;
         }
 
-        if (level >= MaxLevel) xp = 0;
+        if (level >= levelCap) xp = 0;
         return new GrantResult(level, xp, levelsGained);
     }
 }

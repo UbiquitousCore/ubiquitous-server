@@ -173,6 +173,7 @@ public sealed class ServerContentLoader(
             Terrain = LoadTerrain(),
             Loadouts = book is not null ? StartingLoadouts.FromSpellbook(book, items!) : fallback.Loadouts,
             MiningGatherSpellId = book?.MiningGather ?? fallback.MiningGatherSpellId,
+            LevelCap = book is not null ? catalog.Manifest.LevelCap ?? fallback.LevelCap : fallback.LevelCap,
         };
     }
 

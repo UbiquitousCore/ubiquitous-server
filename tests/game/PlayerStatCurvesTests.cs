@@ -24,7 +24,7 @@ public sealed class PlayerStatCurvesTests
     {
         for (var classId = 1; classId <= 4; classId++)
         {
-            for (var level = 2; level <= LevelingService.MaxLevel; level++)
+            for (var level = 2; level <= LevelingService.SeenMaxLevel; level++)
             {
                 Assert.True(
                     PlayerStatCurves.BaseMaxHealth(classId, level, fallback: -1)
@@ -36,7 +36,7 @@ public sealed class PlayerStatCurvesTests
 
     [Theory]
     [InlineData(0, 1)]
-    [InlineData(LevelingService.MaxLevel + 5, LevelingService.MaxLevel)]
+    [InlineData(LevelingService.SeenMaxLevel + 5, LevelingService.SeenMaxLevel)]
     public void BaseMaxHealth_ReadsTheNearestLevelOutsideTheTable(int level, int nearest)
     {
         Assert.Equal(
@@ -170,7 +170,7 @@ public sealed class PlayerStatCurvesTests
         var zero = new StartingAttributes(0, 0, 0, 0);
         for (var classId = 1; classId <= 4; classId++)
         {
-            for (var level = 2; level <= LevelingService.MaxLevel; level++)
+            for (var level = 2; level <= LevelingService.SeenMaxLevel; level++)
             {
                 var before = PlayerStatCurves.AttributesAt(classId, level - 1, zero);
                 var after = PlayerStatCurves.AttributesAt(classId, level, zero);

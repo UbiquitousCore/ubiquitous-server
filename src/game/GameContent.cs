@@ -95,7 +95,12 @@ public sealed partial record GameContent(
     public CharacterStartingLoadout? LoadoutFor(int race, int playerClass) =>
         StartingLoadouts.For(Loadouts, race, playerClass);
 
+    // The level-60 spellbooks were read off 1.1.4; a build with its own loadouts has none of them.
+    public bool HasSeenSpellbooks => ReferenceEquals(Loadouts, StartingLoadouts.All);
+
     public uint MiningGatherSpellId { get; init; } = MiningRules.GatherSpellId;
+
+    public int LevelCap { get; init; } = LevelingService.SeenMaxLevel;
 
     public Ubiquitous.World.ITerrainHeightSource? Terrain { get; init; }
 

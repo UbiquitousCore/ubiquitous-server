@@ -61,7 +61,7 @@ public sealed class ModuleHost(
         // Full health at the new level: the session works it out from a character with none saved.
         await characters.UpdateAsync(character with
         {
-            Level = Math.Clamp(level, CharacterCreation.StartingLevel, LevelingService.MaxLevel),
+            Level = Math.Clamp(level, CharacterCreation.StartingLevel, sessions.Content.Game.LevelCap),
             Health = null,
             MapId = start?.MapId ?? character.MapId,
             X = start?.At.X ?? character.X,

@@ -49,7 +49,7 @@ public sealed class ServerCharacters(ICharacterStore store, IInventoryStore inve
 
         if (edit.Level is { } level)
         {
-            if (level < 1 || level > LevelingService.MaxLevel) return CharacterChange.BadLevel;
+            if (level < 1 || level > LevelingService.SeenMaxLevel) return CharacterChange.BadLevel;
             // Full health and an empty experience bar, as a GM's in-game level change leaves them.
             if (level != character.Level) changed = changed with { Level = level, Xp = 0, Health = null };
         }

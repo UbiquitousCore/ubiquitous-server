@@ -26,7 +26,8 @@ public sealed class OperatorBuildStartTests
             var content = new ServerContentLoader(catalog, ServerOptions.Defaults, NullLogger.Instance, ContentDirectory.Find())
                 .Load().Game;
 
-            Assert.True(catalog.Manifest.LevelCap > LevelingService.MaxLevel);
+            Assert.True(catalog.Manifest.LevelCap > LevelingService.SeenMaxLevel);
+            Assert.Equal(catalog.Manifest.LevelCap, content.LevelCap);
             Assert.Contains(PlayerRaceIds.Mendel, content.PlayableRaces);
             var classes = content.Loadouts.Select(loadout => loadout.PlayerClass).ToHashSet();
             Assert.Contains(PlayerClassIds.FlameKnight, classes);

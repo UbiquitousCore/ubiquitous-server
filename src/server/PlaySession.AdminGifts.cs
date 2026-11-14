@@ -53,15 +53,15 @@ public sealed partial class PlaySession
     {
         if (RefuseNonAdmin("set levels") is { } refused) return refused;
         var request = WebMessageJson.DeserializePayload<AdminSetLevelPayload>(payload);
-        if (request.Level < 1 || request.Level > LevelingService.MaxLevel)
-            return [Error(WireCodes.ProtocolError.InvalidPayload, $"Choose a level from 1 to {LevelingService.MaxLevel}.")];
+        if (request.Level < 1 || request.Level > _content.LevelCap)
+            return [Error(WireCodes.ProtocolError.InvalidPayload, $"Choose a level from 1 to {_content.LevelCap}.")];
 
         var wasLevel = _level;
         _xp = 0;
         var values = new Dictionary<string, int>
         {
             [WireCodes.UnitValue.Xp] = 0,
-            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(request.Level),
+            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(request.Level, _content.LevelCap),
         };
         // Full health: a GM changing level is not in a fight.
         ApplyLevel(request.Level, null, values, Now);
@@ -100,7 +100,7 @@ public sealed partial class PlaySession
             .Select(id => (id, SpellLearning.LevelOf(levels, id, 1)))
             .Concat(TalentEffects.Castable(_talents.CurrentSpells, _content.Spells)
                 .SelectMany(PlaytestSpellbook.TalentAbilityRanksAtMaxLevel)
-                .Select(id => (id, SpellLearning.LevelOf(levels, id, LevelingService.MaxLevel))));
+                .Select(id => (id, SpellLearning.LevelOf(levels, id, LevelingService.SeenMaxLevel))));
 
     // Every rank of the class's spells that the level has reached, and every GM-only spell.
     private IReadOnlyList<string> AdminLearnSpells()
