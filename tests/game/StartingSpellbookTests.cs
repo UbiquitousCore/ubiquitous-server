@@ -58,7 +58,9 @@ public sealed class StartingSpellbookTests
         RangedWeapon(6003, Wand, PlayerClassIds.FlameKnight),
         new(7001, "flame-knight-blade", Class: ItemClasses.Weapons, SubClass: 8, DisplayInfoId: 0,
             AllowableClassMask: ItemClassMask.BitFor(PlayerClassIds.FlameKnight),
-            InventoryType: InventoryTypes.TwoHand, RequiredLevel: 65),
+            InventoryType: InventoryTypes.TwoHand, RequiredLevel: 65, MinDamage: 424, MaxDamage: 585),
+        new(7003, "flame-knight-costume-lance", Class: ItemClasses.Weapons, SubClass: 8, DisplayInfoId: 0,
+            AllowableClassMask: ItemClassMask.BitFor(PlayerClassIds.FlameKnight), InventoryType: InventoryTypes.TwoHand),
         new(7002, "everyones-blade", Class: ItemClasses.Weapons, SubClass: 8, DisplayInfoId: 0,
             InventoryType: InventoryTypes.TwoHand),
     }.ToDictionary(item => item.Id);

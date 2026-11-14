@@ -108,7 +108,7 @@ public sealed class ServerModuleTests
         {
             [7001] = new(7001, "lance", Class: ItemClasses.Weapons, SubClass: 8, DisplayInfoId: 0,
                 AllowableClassMask: ItemClassMask.BitFor(PlayerClassIds.FlameKnight),
-                InventoryType: InventoryTypes.TwoHand, RequiredLevel: 65),
+                InventoryType: InventoryTypes.TwoHand, RequiredLevel: 65, MaxDamage: 585),
         };
         var game = GameContent.Development with
         {

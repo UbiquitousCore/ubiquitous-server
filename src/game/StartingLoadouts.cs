@@ -187,7 +187,7 @@ public static class StartingLoadouts
 
     // A build other than 1.1.4: the same races, kits, level-1 attributes and start points 1.1.4
     // was seen with (own choice, as nothing else is known of them), with that build's own spells.
-    // A Flame Knight wears the Warrior's armour and the lowest-level weapon only it may use, and
+    // A Flame Knight wears the Warrior's armour and the lowest-level weapon only it may use that deals damage, and
     // starts with the Warrior's attributes for its race (own placeholder).
     public static IReadOnlyList<CharacterStartingLoadout> FromSpellbook(
         StartingSpellbook book, IReadOnlyDictionary<uint, ItemDefinition> items)
@@ -240,7 +240,7 @@ public static class StartingLoadouts
     private static ItemDefinition? OwnLowestWeapon(IReadOnlyDictionary<uint, ItemDefinition> items, int playerClass) =>
         items.Values
             .Where(item => item.Class == ItemClasses.Weapons && item.AllowableClassMask == ItemClassMask.BitFor(playerClass)
-                && EquipSlotRules.IsValidSlot(item.InventoryType, EquipmentSlots.MainHand))
+                && item.MaxDamage is > 0 && EquipSlotRules.IsValidSlot(item.InventoryType, EquipmentSlots.MainHand))
             .OrderBy(item => item.RequiredLevel)
             .ThenBy(item => item.Id)
             .FirstOrDefault();
