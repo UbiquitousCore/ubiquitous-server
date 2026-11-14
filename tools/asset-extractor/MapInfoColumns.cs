@@ -21,5 +21,6 @@ public static class MapInfoColumns
     public static MapTableColumns For(TableLayout layout) => layout.Cols == 21 ? Build422 : Build114;
 
     // The build whose column layouts a package was read with, for its manifest.
+    // TODO: Verify the 21-column shape against other builds; it is measured on 4.2.2 only, and 2.2.0 may share it.
     public static string BuildOf(TableLayout layout) => For(layout) == Build422 ? "4.2.2" : "1.1.4";
 }

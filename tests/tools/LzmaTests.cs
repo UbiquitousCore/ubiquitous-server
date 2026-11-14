@@ -166,6 +166,24 @@ public class LzmaTests
         }
     }
 
+    [Fact]
+    public void ASampleOfTheOperatorsResourcePack_DecodesToTheSizeAndCrcItsDirectoryRecords()
+    {
+        if (Environment.GetEnvironmentVariable("UBIQUITOUS_TEST_CLIENT_BUILD") is not { Length: > 0 } build) return;
+        var opened = BuildPacks.Open(build, ["res.bin"]);
+        try
+        {
+            if (opened.Count == 0) return;
+            var archive = opened[0].Archive;
+            var names = archive.Names.Order(StringComparer.Ordinal).ToList();
+            Assert.All(names.Where((_, i) => i % 200 == 0), name => archive.Read(name));
+        }
+        finally
+        {
+            foreach (var pack in opened) pack.Dispose();
+        }
+    }
+
     // One member stored with method 14, in a GBMP-stamped pack.
     private static byte[] LzmaPack(string name, byte[] plain, byte[] stream, ushort flags, uint crc)
     {

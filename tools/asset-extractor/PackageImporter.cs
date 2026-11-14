@@ -105,7 +105,7 @@ public static class PackageImporter
 
         var itemStrings = StringTableMapper.MapStrings(Load("tables/String_Item_en.tbl"));
         var itemDocument = Load("tables/items.tbl");
-        // 4.2.2 marks some parts no one carries (class 15) with subclass 9999.
+        // 4.2.2 gives 68 class 15 rows, open to every class and race, the subclass 9999.
         var knownItemRows = itemDocument.Rows.Where(row =>
             row[ItemColumns.Build114.Class] is uint itemClass && itemClass <= byte.MaxValue
             && row[ItemColumns.Build114.SubClass] is uint subClass && subClass <= byte.MaxValue).ToList();
