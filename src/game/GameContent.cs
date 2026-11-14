@@ -98,6 +98,11 @@ public sealed partial record GameContent(
     // The level-60 spellbooks were read off 1.1.4; a build with its own loadouts has none of them.
     public bool HasSeenSpellbooks => ReferenceEquals(Loadouts, StartingLoadouts.All);
 
+    // For each quest item a generated loot table holds, the quests it drops for; empty when the
+    // build's own loot tables are used.
+    public IReadOnlyDictionary<uint, IReadOnlySet<uint>> GeneratedQuestItems { get; init; } =
+        new Dictionary<uint, IReadOnlySet<uint>>();
+
     // A later build's own spellbook rule; null for 1.1.4, whose books were seen in play.
     public StartingSpellbook? Spellbook { get; init; }
 

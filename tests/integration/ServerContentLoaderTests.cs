@@ -194,6 +194,47 @@ public sealed class ServerContentLoaderTests
     }
 
     [Fact]
+    public void ALaterBuildWithoutLootTables_GetsLootMadeFromItsData_UnlessTheHostSaysNo()
+    {
+        var package = Directory.CreateTempSubdirectory("ubiquitous-package-");
+        try
+        {
+            var catalog = LaterBuild(package);
+            var datasets = new Dictionary<string, string>(catalog.Manifest.Datasets);
+            Write(package, datasets, "creatures", new CreatureDefinition[]
+            {
+                new(20, "Gray Wolf", 10, 100, FactionType: UnitFactionTypes.Hostile),
+                new(21, "Sheriff", 10, 100, FactionType: UnitFactionTypes.Townsfolk),
+            });
+            Write(package, datasets, "items", new ItemDefinition[]
+            {
+                new(9000, "lesson", 9, 0, 0, OnUseSpellId: 10020, AllowableClassMask: ItemClassMask.BitFor(PlayerClassIds.Mage),
+                    RequiredLevel: 2),
+                new(9100, "Wolf Pelt", 10, 0, 0),
+                new(9200, "Hide Vest", ItemClasses.Armour, 1, 0, SellPrice: 5, InventoryType: InventoryTypes.Chest,
+                    RequiredLevel: 9, Quality: 2),
+            });
+            Write(package, datasets, QuestItemSourceDefinition.Dataset, new QuestItemSourceDefinition[] { new(7, 9100, [20]) });
+            catalog = new DataCatalog(catalog.Manifest with { Datasets = datasets }, package.FullName);
+
+            var made = new ServerContentLoader(catalog, ServerOptions.Defaults, NullLogger.Instance, ContentDirectory.Find())
+                .Load().Game;
+            var none = new ServerContentLoader(catalog, ServerOptions.Defaults with { GeneratedLootEnabled = false },
+                NullLogger.Instance, ContentDirectory.Find()).Load().Game;
+
+            Assert.Equal([20u], made.LootTables.Keys);
+            Assert.Equal([9100u, 9200u], made.LootTables[20].Groups.SelectMany(group => group.Items).Select(item => item.ItemId));
+            Assert.Equal([7u], made.GeneratedQuestItems[9100]);
+            Assert.Empty(none.LootTables);
+            Assert.Empty(none.GeneratedQuestItems);
+        }
+        finally
+        {
+            package.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
     public void ALaterBuild_StillClosesARaceTheHostClosed()
     {
         var package = Directory.CreateTempSubdirectory("ubiquitous-package-");

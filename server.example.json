@@ -25,6 +25,10 @@
   // "festivalStaticEntries": [288, 145],
   // "festivalCreatureEntries": [3012, 2781],
 
+  // A build whose tables carry no loot (4.2.2) gets loot made from its quests
+  // and items; false leaves bodies with only their money.
+  // "generatedLoot": true,
+
   // Rates. 1 is the game as it plays; each is a multiplier, so 1.5 is half
   // as much again and 0.5 is half. playerDamageRate is what players deal,
   // creatureDamageRate what creatures deal. exhaustionLimit is how much Legend

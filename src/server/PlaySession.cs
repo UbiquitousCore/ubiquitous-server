@@ -1070,9 +1070,7 @@ public sealed partial class PlaySession : ISessionPlayer
             if (_sight.Entries.TryGetValue(swing.TargetId, out var victimEntry))
             {
                 var creature = _content.Creatures.TryGetValue(victimEntry, out var found) ? found : null;
-                var lootTable = _content.LootTables.TryGetValue(victimEntry, out var table) ? table : null;
-                _loot[swing.TargetId] = _lootService.Generate(
-                    checked((int)victimEntry), lootTable, creature?.MoneyDropMin, creature?.MoneyDropMax);
+                _loot[swing.TargetId] = CorpseLootOf(victimEntry, creature);
                 responses.AddRange(RewardKill(victimEntry, creature, swing.TargetId, now));
             }
             var carriesLoot = _loot.TryGetValue(swing.TargetId, out var spoils)

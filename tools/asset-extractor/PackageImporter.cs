@@ -354,6 +354,16 @@ public static class PackageImporter
             QuestRewardColumns.Build114, questIds,
             resolveItem: entry => itemMetaByEntry.TryGetValue(entry, out var meta) ? meta : null);
 
+        // A build without loot tables gets the creatures its quests name for their items instead.
+        var questItemSources = leftOut.Contains("creatureLootTables")
+            ? QuestItemSources.Find(quests, itemsByEntry, creatures, spawns,
+                TryLoad("tables/String_Quest_en.tbl") is { } questStrings
+                    ? StringTableMapper.MapStrings(questStrings)
+                    : new Dictionary<uint, string>(),
+                staticObjectQuestItemBindings)
+            : [];
+        if (!leftOut.Contains("creatureLootTables")) leftOut.Add(QuestItemSourceDefinition.Dataset);
+
         var teleportDocument = Load("tables/teleport_spot.tbl");
         var knownTeleportRows = teleportDocument.Rows.Where(row =>
             row[2] is uint map && map <= ushort.MaxValue && mapIds.Contains((ushort)map)).ToList();
@@ -450,6 +460,7 @@ public static class PackageImporter
         Write("storageUpgrades", storageUpgrades);
         Write("staticObjectTypes", staticObjectTypes);
         Write("talentTrees", talentTrees);
+        Write(QuestItemSourceDefinition.Dataset, questItemSources);
         WriteTerrain(archiveByMapId, outDirectory);
 
         var manifest = new DataManifest(
@@ -481,6 +492,7 @@ public static class PackageImporter
                 ["storageUpgrades"] = "storageUpgrades.json",
                 ["staticObjectTypes"] = "staticObjectTypes.json",
                 ["talentTrees"] = "talentTrees.json",
+                [QuestItemSourceDefinition.Dataset] = QuestItemSourceDefinition.Dataset + ".json",
             }.Where(dataset => !leftOut.Contains(dataset.Key))
                 .ToDictionary(dataset => dataset.Key, dataset => dataset.Value),
             LevelCap: TryLoad("tables/achievement.tbl") is { } achievements

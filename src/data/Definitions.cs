@@ -358,6 +358,12 @@ public sealed record LootGroupDefinition(int GuaranteedDrops, int MaxDrops, IRea
 
 public sealed record CreatureLootTableDefinition(uint CreatureEntryId, IReadOnlyList<LootGroupDefinition> Groups);
 
+// The creatures a quest names as carrying an item it asks for; read only from a build without loot tables.
+public sealed record QuestItemSourceDefinition(uint QuestId, uint ItemEntry, IReadOnlyList<uint> CreatureEntryIds)
+{
+    public const string Dataset = "questItemSources";
+}
+
 public sealed record StaticObjectItemBindingDefinition(uint StaticObjectEntry, uint QuestId, uint ItemEntry, uint Reserve = 0);
 
 public static class AttributeIds
@@ -668,7 +674,9 @@ public static class PlayerClassIds
 
 public static class ItemClasses
 {
+    public const byte Consumables = 0;
     public const byte Weapons = 2;
+    public const byte Armour = 4;
     public const byte Riding = 14;
 }
 

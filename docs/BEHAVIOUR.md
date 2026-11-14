@@ -303,6 +303,17 @@ comes from is in `PROVENANCE.md`.
 - Loot is generated for the killer: money from the creature's range (or 50
   copper); each group item rolls its chance, topped up to the group minimum by
   the nearest misses and trimmed to its maximum; at most 8 rows.
+- A build whose tables carry no loot (4.2.2) has its loot made at start-up
+  (`LootGenerator`, `UBIQUITOUS_GENERATED_LOOT`). A quest item drops 40% of
+  the time from each creature the quest names (always from a boss), and only
+  for a killer whose log holds the quest and who still needs it; party
+  members' quests do not count. Gear asked for at the creature's level or up
+  to 4 below (else 9 below), worn in a slot and bought by vendors but neither
+  sold nor given for a quest, drops by rank: ordinary 8% (poor to fine),
+  rare 40% (common to rare), elite 25% (fine and rare), boss always one and
+  at most two, world boss two to three (rare and epic). Each creature draws
+  from its own fixed 12 such pieces. Food and potions of its level or up to
+  9 below drop 10% of the time. Money is the creature's own range.
 - Vendors sell without stock limits. Any vendor buys any bag stack at the
   item's sell price; a zero sell price is refused (`cantSell`); no buyback.
 - Bus fares are the cheapest total of legs, which run both ways.

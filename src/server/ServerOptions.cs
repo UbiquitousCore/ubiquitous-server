@@ -29,7 +29,8 @@ public sealed record ServerOptions(
     string? PostgresPasswordFile = null,
     bool RequireDataPackage = false,
     GameRates? Rates = null,
-    string? AdminTokenFile = null)
+    string? AdminTokenFile = null,
+    bool GeneratedLootEnabled = true)
 {
     private const string ModuleEnvironmentPrefix = "UBIQUITOUS_MODULE_";
 
@@ -94,6 +95,8 @@ public sealed record ServerOptions(
             (options, value, _) => options with { PostgresPasswordFile = value }),
         new(null, "UBIQUITOUS_ADMIN_TOKEN_FILE", ["--admin-token-file"],
             (options, value, _) => options with { AdminTokenFile = value }),
+        new("generatedLoot", "UBIQUITOUS_GENERATED_LOOT", ["--generated-loot"],
+            (options, value, name) => options with { GeneratedLootEnabled = ParseBool(value, name) }),
         new("festivalContentEnabled", "UBIQUITOUS_FESTIVAL_CONTENT_ENABLED", ["--festival-content"],
             (options, value, name) => options with { FestivalContentEnabled = ParseBool(value, name) }),
         new("festivalStaticEntries", "UBIQUITOUS_FESTIVAL_STATIC_ENTRIES", ["--festival-static-entries"],

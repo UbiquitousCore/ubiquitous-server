@@ -56,6 +56,13 @@ public sealed class OperatorBuildStartTests
                 Assert.All(whole, spell => Assert.True(content.Spells.ContainsKey(spell)));
             }
 
+            Assert.True(content.LootTables.Count > 1000);
+            Assert.True(content.GeneratedQuestItems.Count > 200);
+            Assert.All(content.LootTables.Values.SelectMany(table => table.Groups).SelectMany(group => group.Items),
+                item => Assert.True(content.Items.ContainsKey(item.ItemId)));
+            Assert.Contains(content.LootTables.Keys, entry => content.Creatures[entry].Level is >= 1 and <= 3);
+            Assert.Contains(content.LootTables.Keys, entry => content.Creatures[entry].Level >= 70);
+
             var mage = content.LoadoutFor(PlayerRaceIds.Human, PlayerClassIds.Mage)!;
             Assert.Equal(["Fireball", "Frost Bolt", "Energy Field"],
                 mage.Spells.Take(3).Select(spell => content.Spells[spell].NameKey));

@@ -60,8 +60,9 @@ public sealed class ModuleHost(
         if (character is null || character.AccountId != ModuleAccounts.AccountIdFor(login.UserId)
             || character.Level != startingLevel || character.Xp != 0 || character.LearnedSpells is { Count: > 0 })
             return false;
-        // A class that starts above `level` (a Flame Knight) stays at its own start.
+        // A class that starts above `level` (a Flame Knight) stays at its own start, and where it starts.
         var raised = Math.Clamp(level, startingLevel, content.LevelCap);
+        if (raised > level) start = null;
         // Full health at the new level: the session works it out from a character with none saved.
         await characters.UpdateAsync(character with
         {

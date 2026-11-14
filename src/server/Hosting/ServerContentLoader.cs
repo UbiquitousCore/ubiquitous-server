@@ -141,6 +141,19 @@ public sealed class ServerContentLoader(
 
         var travelLoaded = stops is not null && routes is not null;
 
+        // A later build ships no loot tables; its loot is made from the rest of its data unless the host says no.
+        var generated = GeneratedLoot.None;
+        if (lootTables is null && !seenBuild && options.GeneratedLootEnabled && creatures is not null && items is not null)
+        {
+            generated = LootGenerator.Build(creatures, items, spells ?? fallback.Spells,
+                npcs ?? new Dictionary<uint, NpcDefinition>(), rewards ?? new Dictionary<uint, QuestRewardDefinition>(),
+                vendorTabs ?? new Dictionary<uint, IReadOnlyList<VendorTab>>(),
+                LoadOptional("quest item sources", cat => cat.LoadQuestItemSources()) ?? [],
+                LootGeneratorRules.Default);
+            logger.LogInformation("Loot made for {Creatures} creature(s), {QuestItems} of their quest items named by quests",
+                generated.Tables.Count, generated.QuestItems.Count);
+        }
+
         return fallback with
         {
             StartingCurrency = 0,
@@ -166,7 +179,8 @@ public sealed class ServerContentLoader(
             QuestItemBindingsByStaticObject = questItemBindingsByStaticObject ?? fallback.QuestItemBindingsByStaticObject,
             QuestFinishersByCreature = questFinishersByCreature ?? fallback.QuestFinishersByCreature,
             Maps = maps ?? fallback.Maps,
-            LootTables = lootTables ?? fallback.LootTables,
+            LootTables = lootTables ?? (seenBuild ? fallback.LootTables : generated.Tables),
+            GeneratedQuestItems = generated.QuestItems,
             Graveyards = graveyards ?? fallback.Graveyards,
             GossipMenus = gossipMenus ?? fallback.GossipMenus,
             TalentTrees = talentTrees ?? fallback.TalentTrees,

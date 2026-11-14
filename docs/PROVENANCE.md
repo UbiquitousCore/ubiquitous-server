@@ -39,6 +39,8 @@ own copy of client build 1.1.4.
 | The 4.2.2 `map_info` (21 columns, against 1.1.4's 18) adds three floats after the level, so the put-out point is columns 8-10, its map column 11, the name 12 and the file 13; the layout is chosen by the table's column count, and a package read with it records game version 4.2.2. An own reading of the user's 4.2.2 files: the swamp eye and its legend copy share one put-out point, 3 units from a waypoint placed in `staticobject_spawns` on the column 11 map, and 24 of the 32 dungeon rows put the player out within 20 units of a static object on that map; columns 5-7 lie on the dungeon's own map and are not read. | `tools/asset-extractor/MapInfoColumns.cs` | `tests/tools/MapInfoColumnsTests.cs` |
 | The 4.2.2 `spell_talent` (42 columns, against 1.1.4's 16) gives each rank five columns, the rank's spell first: rank spells are columns 9, 14, 19, 24 and 29; columns 0-8 keep their 1.1.4 meaning. On all 456 rows of the user's 4.2.2 table the rank count in column 8 equals the number of non-zero spells in those columns. Chosen by the table's column count. | `tools/asset-extractor/TalentColumns.cs` | `tests/tools/TalentColumnsTests.cs` |
 | The 4.2.2 `items` table gives 68 rows of class 15 the subclass 9999 (parts such as "Magical Combustion Engine of Stamina", with no class or race restriction); an item whose class or subclass does not fit a byte is left out of the package and counted. The 4.2.2 `tables.bin` carries no `loot`, `loot_feature` or `loot_feature_items` table, so a package from it lists no `creatureLootTables` dataset. | `tools/asset-extractor/PackageImporter.cs` | `tests/tools/PackageImporterTests.cs` |
+| Which creatures carry a quest's item in a build without loot tables (`questItemSources`), an own reading of the user's 4.2.2 files: no table links an item a quest asks for to a creature, and 145 of the 728 asked-for items lie in the world for their quest (`staticobject_quest_item_binding`); the quest's words name the rest. The creatures are found, first hit wins, as the quest's own kill objectives; the creatures whose full name the item's name holds ("Porulic's Head"), else the objective text, else the title and story (the longest name first, singular or plural, markup skipped); else, on the quest giver's map, a creature sharing a word of four letters or more with the item's name ("Tender Wolf Loin"). A named creature counts only if it is placed, is not townsfolk (`creature_proto` faction type 1) and is within 5 levels of the quest. On the user's 4.2.2 files this names carriers for 353 of the remaining 583 items, most (246) one creature each; the other 230 are not dropped. The tiers, the 5 levels and the four letters are own choices. Written only when the tables have no loot, so a 1.1.4 package is unchanged. | `tools/asset-extractor/QuestItemSources.cs`, `PackageImporter.cs` | `tests/tools/QuestItemSourcesTests.cs`, `tests/integration/OperatorBuildStartTests.cs` |
+| `items` class 0 holds consumables and class 4 armour (class 2 is weapons), an own reading of the user's files: class 0 holds the potions, food, scrolls and skill books ("Minor Healing Potion", "Dinner Bread", "Fireball V"), and class 4 "Militia Mail" and the development characters' armour sets. The 1-5 quality scale is the one `ubiquitous-client` colours (1 poor to 5 epic); 4.2.2 also carries 206 items of quality 8 and 7 of 2147483647, which are off it. | `src/data/Definitions.cs` (`ItemClasses`), `src/game/LootGenerator.cs` | `tests/game/LootGeneratorTests.cs` |
 | In the user's 4.2.2 `quests` table 9 quests give an objective a count of 0 (for example quest 934's second item); such a quest is left out of the package and counted with the other dropped quests, since the server refuses an objective nobody could finish. | `tools/asset-extractor/PackageImporter.cs` | `tests/tools/PackageImporterTests.cs` |
 | The 4.2.2 `storage_upgrade` has 8 columns, against 1.1.4's 7: a new column 2 (0 to 3) sorts the rows into ladders and pushes the slot counts, currency, price and slots before along by one (columns 3, 4, 5 and 7). An own reading of the user's 4.2.2 files: in ladder 0 each bag and bank size appears once as a starting point, the bag climbs 12, 18, ... 60 in copper (12 to 18 for 100) and on to 120 in currency 8, and the bank 24, 36, 48, 60 in copper and on to 96 in currency 8, so it starts where every character starts; ladders 1 and 2 start there too at other prices (12 to 18 for 1,000,000 copper in ladder 1), and ladder 3 climbs 3 to 50 in currency 11, no bag size. What ladders 1 to 3 are for is not settled; only ladder 0 is read, so each step has one price. 1.1.4's layout is chosen by its 7 columns. | `tools/asset-extractor/StorageUpgradeColumns.cs`, `StorageUpgradeTableMapper.cs`, `PackageImporter.cs` | `tests/tools/PackageImporterTests.cs`, `tests/integration/OperatorBuildStartTests.cs` |
 | Mining locations and ore nodes, an own reading of the user's files: `staticobject_spawns` entry 52 (model `mine_cross`, type 1) has 1,192 placements on six maps and no gather spell; type 1 entries 132, 167, 168, 198, 199 and 200 (models `ore_main01` to `ore_main06`) have no placements, name the gather spell in `staticobject_proto` column 12 (23, "Gather mine") and carry figures in columns 16 (120 or 180) and 17 (300, once 400) whose meaning is not settled and which are not used. Spell 23's cast time (`spell_new` column 16) is 3,500 ms, read into `spells.json` as `castTimeMs`. The six `Bronze Mineral`, `Marcasite`, `Primal Iron`, `Light Silver`, `Matted Gold Mineral` and `Magical Blood Mineral` items (5192-5195, 5197, 5198) are the ores in rising price order; pairing them with the six nodes in entry order is this project's reading, since no table links a node to an item. | `src/game/MiningRules.cs` (`MiningRules`, `MiningOres`) | `tests/game/MiningPoolTests.cs` |
@@ -277,7 +279,8 @@ this project's own:
   its level at the build's level cap and, own choice for testing, on a
   development login; `admin.learnSpells` takes the ranks the level has
   reached. A playerbot or other module character raised past its class's
-  starting level (a Flame Knight's 65 counts as fresh) learns the ranks taught
+  starting level (a Flame Knight's 65 counts as fresh, and one asked for a
+  lower level stays at 65 where it starts) learns the ranks taught
   by then, as one that had played there could (own choice); in 1.1.4 it still
   learns them in play. The development characters keep their level-60 gear,
   whose ids name the same pieces in the operator's 4.2.2 `items`
@@ -404,6 +407,21 @@ this project's own:
 - Where a released spirit lands (`src/game/GraveyardLookup.cs`): the nearest
   graveyard on the same map, then the map's recall point, then where the
   player stands.
+- Loot made for a build without loot tables (`src/game/LootGenerator.cs`,
+  `LootGeneratorRules`), every number this project's own: a quest item 40%
+  from each creature `questItemSources` names (100% from a boss or world
+  boss), dropped only for a killer who holds the quest and still needs it;
+  gear by the creature's level (required level at it or up to 4 below, else
+  up to 9 below) and rank (ordinary 8% for qualities 1-3, rare 40% for 2-4,
+  elite 25% for 3-4, boss one guaranteed of at most two and world boss two of
+  three, both for 4-5), drawn from 12 pieces fixed per creature by a hash of
+  its entry; food and potions (an item of class 0 whose use eats, drinks,
+  heals its user or restores power) of the level or up to 9 below, 10%.
+  World gear is worn in a slot, has a level and a quality on the 1-5 scale and
+  a sell price, and is neither sold by a vendor, given by a quest nor bound to
+  one; rows named `*...`, `item-N` or with "test" are the developers' and are
+  left out. Townsfolk and creatures that serve players carry nothing. A host
+  turns it off with `UBIQUITOUS_GENERATED_LOOT=false`.
 - Loot generation (`src/game/LootService.cs`): per-item chance rolls, top-up
   to the group minimum with the nearest misses, trim to the group maximum, at
   most 8 rows per corpse.

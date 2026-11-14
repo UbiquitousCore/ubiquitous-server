@@ -88,7 +88,8 @@ public sealed class ServerModuleTests
         CharacterRecord Made(string name, int playerClass, int level) =>
             new(name, account, name, 0, PlayerRaceIds.Human, playerClass, 1684, 1, 1, 1, 1, 1, 0, 0, 0, level, []);
         var characters = new InMemoryCharacterStore(
-            [Made("Knight", PlayerClassIds.FlameKnight, 65), Made("Mage", PlayerClassIds.Mage, 1)]);
+            [Made("Knight", PlayerClassIds.FlameKnight, 65), Made("Young Knight", PlayerClassIds.FlameKnight, 65),
+                Made("Mage", PlayerClassIds.Mage, 1)]);
         var stores = new SessionStores(accounts, characters);
         var classes = new Dictionary<int, ClassStartingSpells>
         {
@@ -111,6 +112,7 @@ public sealed class ServerModuleTests
         };
         var game = GameContent.Development with
         {
+            Maps = new Dictionary<ushort, MapDefinition> { [13] = new(13, "test-city") },
             Items = items,
             Spellbook = book,
             Loadouts = StartingLoadouts.FromSpellbook(book, items),
@@ -123,6 +125,7 @@ public sealed class ServerModuleTests
 
         Assert.True(await host.StartAtLevelAsync(login, "Knight", 70));
         Assert.True(await host.StartAtLevelAsync(login, "Mage", 20));
+        Assert.True(await host.StartAtLevelAsync(login, "Young Knight", 20, (13, new Ubiquitous.Common.Position(5, 2, 5))));
 
         var knight = (await characters.FindByNameAsync("Knight"))!;
         Assert.Equal(70, knight.Level);
@@ -131,6 +134,8 @@ public sealed class ServerModuleTests
         Assert.Equal(20, mage.Level);
         Assert.Equal([101u], mage.LearnedSpells!);
         Assert.False(await host.StartAtLevelAsync(login, "Mage", 30));
+        var young = (await characters.FindByNameAsync("Young Knight"))!;
+        Assert.Equal((65, (ushort)1), (young.Level, young.MapId));
     }
 
     [Fact]
