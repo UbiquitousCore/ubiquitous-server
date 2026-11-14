@@ -17,7 +17,9 @@ public sealed record LootGeneratorRules(
     double ConsumablePercent = 10,
     int ConsumableLevelWindow = 10,
     int ConsumablesPerCreature = 4,
-    IReadOnlyDictionary<CreatureRank, RankGear>? Gear = null)
+    IReadOnlyDictionary<CreatureRank, RankGear>? Gear = null,
+    // A host's multiplier on the gear and consumable chances, each held at 100%.
+    double DropRate = 1)
 {
     public IReadOnlyDictionary<CreatureRank, RankGear> Gear { get; init; } = Gear ?? new Dictionary<CreatureRank, RankGear>
     {
@@ -77,20 +79,21 @@ public static class LootGenerator
 
             var carried = questDrops[creature.EntryId].Select(drop => drop.ItemEntry).Distinct().Order()
                 .Where(items.ContainsKey)
-                .Select(item => new LootTableItemDefinition(item, guaranteedQuestDrop ? 100 : rules.QuestItemPercent, 1, 1))
+                .Select(item => new LootTableItemDefinition(item, guaranteedQuestDrop ? 100 : Math.Clamp(rules.QuestItemPercent, 0, 100), 1, 1))
+                .Where(item => item.DropChancePercent > 0)
                 .ToArray();
             if (carried.Length > 0) groups.Add(new LootGroupDefinition(0, 0, carried));
 
             var pieces = Pick(Within(gear, creature.Level, rules.GearLevelWindow,
                     item => item.Quality is uint quality && quality >= rank.LowestQuality && quality <= rank.HighestQuality),
                 creature.EntryId, rules.GearPerCreature);
-            if (pieces.Count > 0)
-                groups.Add(new LootGroupDefinition(rank.Guaranteed, rank.Most, Shared(pieces, rank.ChancePercent)));
+            if (pieces.Count > 0 && Scaled(rank.ChancePercent, rules) > 0)
+                groups.Add(new LootGroupDefinition(rank.Guaranteed, rank.Most, Shared(pieces, Scaled(rank.ChancePercent, rules))));
 
             var supplies = Pick(Within(consumables, creature.Level, rules.ConsumableLevelWindow, _ => true),
                 creature.EntryId, rules.ConsumablesPerCreature);
-            if (supplies.Count > 0)
-                groups.Add(new LootGroupDefinition(0, 1, Shared(supplies, rules.ConsumablePercent)));
+            if (supplies.Count > 0 && Scaled(rules.ConsumablePercent, rules) > 0)
+                groups.Add(new LootGroupDefinition(0, 1, Shared(supplies, Scaled(rules.ConsumablePercent, rules))));
 
             if (groups.Count > 0) tables[creature.EntryId] = new CreatureLootTableDefinition(creature.EntryId, groups);
         }
@@ -150,6 +153,8 @@ public static class LootGenerator
     // The same creature always draws the same pieces, and two creatures of one level mostly different ones.
     private static IReadOnlyList<ItemDefinition> Pick(IReadOnlyList<ItemDefinition> pool, uint entry, int most) =>
         [.. pool.OrderBy(item => Mix(entry, item.Id)).ThenBy(item => item.Id).Take(most).OrderBy(item => item.Id)];
+
+    private static double Scaled(double percent, LootGeneratorRules rules) => Math.Min(100, percent * rules.DropRate);
 
     private static LootTableItemDefinition[] Shared(IReadOnlyList<ItemDefinition> pieces, double chancePercent) =>
         [.. pieces.Select(item => new LootTableItemDefinition(item.Id, chancePercent / pieces.Count, 1, 1))];

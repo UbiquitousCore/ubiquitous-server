@@ -421,7 +421,9 @@ this project's own:
   a sell price, and is neither sold by a vendor, given by a quest nor bound to
   one; rows named `*...`, `item-N` or with "test" are the developers' and are
   left out. Townsfolk and creatures that serve players carry nothing. A host
-  turns it off with `UBIQUITOUS_GENERATED_LOOT=false`.
+  turns it off with `UBIQUITOUS_GENERATED_LOOT=false` and sets the quest-item
+  percent, a multiplier on the other chances and the gear level window
+  (`UBIQUITOUS_LOOT_QUEST_ITEM_PERCENT`, `_DROP_RATE`, `_LEVEL_WINDOW`).
 - Loot generation (`src/game/LootService.cs`): per-item chance rolls, top-up
   to the group minimum with the nearest misses, trim to the group maximum, at
   most 8 rows per corpse.

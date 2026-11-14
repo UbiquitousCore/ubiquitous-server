@@ -121,8 +121,10 @@ public sealed class ServerContentLoader(
             cat => cat.LoadStaticObjectQuestItemBindings());
         var questFinishersByCreature = LoadOptional("creature quest finishers",
             cat => cat.LoadCreatureQuestFinishers());
-        var lootTables = LoadOptional("creature loot tables",
-            cat => cat.LoadCreatureLootTables().ToDictionary(table => table.CreatureEntryId));
+        var lootTables = catalog.Manifest.Datasets.ContainsKey("creatureLootTables")
+            || DataManifest.IsTargetGameVersion(catalog.Manifest.GameVersion)
+            ? LoadOptional("creature loot tables", cat => cat.LoadCreatureLootTables().ToDictionary(table => table.CreatureEntryId))
+            : null;
 
         var seenBuild = DataManifest.IsTargetGameVersion(catalog.Manifest.GameVersion);
         StartingSpellbook? book = null;
@@ -149,7 +151,7 @@ public sealed class ServerContentLoader(
                 npcs ?? new Dictionary<uint, NpcDefinition>(), rewards ?? new Dictionary<uint, QuestRewardDefinition>(),
                 vendorTabs ?? new Dictionary<uint, IReadOnlyList<VendorTab>>(),
                 LoadOptional("quest item sources", cat => cat.LoadQuestItemSources()) ?? [],
-                LootGeneratorRules.Default);
+                options.ResolvedLootRules);
             logger.LogInformation("Loot made for {Creatures} creature(s), {QuestItems} of their quest items named by quests",
                 generated.Tables.Count, generated.QuestItems.Count);
         }

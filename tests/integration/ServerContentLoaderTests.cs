@@ -227,6 +227,16 @@ public sealed class ServerContentLoaderTests
             Assert.Equal([7u], made.GeneratedQuestItems[9100]);
             Assert.Empty(none.LootTables);
             Assert.Empty(none.GeneratedQuestItems);
+
+            var hosted = ServerOptions.Load([], new Dictionary<string, string?>
+            {
+                ["UBIQUITOUS_LOOT_QUEST_ITEM_PERCENT"] = "90",
+                ["UBIQUITOUS_LOOT_DROP_RATE"] = "2",
+            });
+            var richer = new ServerContentLoader(catalog, hosted, NullLogger.Instance, ContentDirectory.Find()).Load().Game;
+            var items = richer.LootTables[20].Groups.SelectMany(group => group.Items).ToDictionary(item => item.ItemId);
+            Assert.Equal(90, items[9100].DropChancePercent);
+            Assert.Equal(2 * LootGeneratorRules.Default.Gear[CreatureRank.Ordinary].ChancePercent, items[9200].DropChancePercent);
         }
         finally
         {

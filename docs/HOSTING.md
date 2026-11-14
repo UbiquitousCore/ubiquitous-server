@@ -86,6 +86,9 @@ UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT=10
 | `UBIQUITOUS_MODULE_PLAYERBOTS_ENABLED` | `false` | start bots |
 | `UBIQUITOUS_MODULE_PLAYERBOTS_RANDOM_BOT_COUNT` | `5` | how many bots play on their own (0-500) |
 | `UBIQUITOUS_GENERATED_LOOT` | `true` | on a build whose tables carry no loot (4.2.2), make creature loot from its quests and items; `false` leaves bodies with only money |
+| `UBIQUITOUS_LOOT_QUEST_ITEM_PERCENT` | `40` | with made loot, how often a quest item drops from a creature its quest names (a boss always drops it) |
+| `UBIQUITOUS_LOOT_DROP_RATE` | `1` | with made loot, multiplies the gear, food and potion chances (each held at 100%) |
+| `UBIQUITOUS_LOOT_LEVEL_WINDOW` | `5` | with made loot, how many levels at and below a creature's own its gear may ask for |
 | `UBIQUITOUS_MAX_CONNECTIONS` | `500` | players connected at once |
 | `UBIQUITOUS_DISABLED_RACES` | `7` (Mendel, which 1.1.4 cannot play) on a 1.1.4 package; none on a later build | race ids that cannot be picked, comma-separated; `none` opens every race |
 | `UBIQUITOUS_LOG_LEVEL` | `Information` | `Trace` to `Critical` |

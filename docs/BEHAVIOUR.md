@@ -313,7 +313,9 @@ comes from is in `PROVENANCE.md`.
   rare 40% (common to rare), elite 25% (fine and rare), boss always one and
   at most two, world boss two to three (rare and epic). Each creature draws
   from its own fixed 12 such pieces. Food and potions of its level or up to
-  9 below drop 10% of the time. Money is the creature's own range.
+  9 below drop 10% of the time. Money is the creature's own range. The
+  quest-item percent, a multiplier on the other chances and the gear level
+  window are host settings (`UBIQUITOUS_LOOT_*`).
 - Vendors sell without stock limits. Any vendor buys any bag stack at the
   item's sell price; a zero sell price is refused (`cantSell`); no buyback.
 - Bus fares are the cheapest total of legs, which run both ways.

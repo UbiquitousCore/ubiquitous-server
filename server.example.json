@@ -28,6 +28,9 @@
   // A build whose tables carry no loot (4.2.2) gets loot made from its quests
   // and items; false leaves bodies with only their money.
   // "generatedLoot": true,
+  // "lootQuestItemPercent": 40,
+  // "lootDropRate": 1,
+  // "lootLevelWindow": 5,
 
   // Rates. 1 is the game as it plays; each is a multiplier, so 1.5 is half
   // as much again and 0.5 is half. playerDamageRate is what players deal,
