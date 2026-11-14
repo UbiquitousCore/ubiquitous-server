@@ -390,12 +390,13 @@ public static class PackageImporter
             zones.ToDictionary(zone => zone.Id, zone => zone.MapId));
         var gossipMenus = gossip.Menus;
 
-        // 4.2.2 adds a column whose meaning is not settled, so that table stays out.
+        // A layout the columns do not know keeps that table out.
         var storageUpgradeDocument = Load("tables/storage_upgrade.tbl");
-        var storageUpgrades = storageUpgradeDocument.Header.Cols == StorageUpgradeColumns.Build114Cols
-            ? StorageUpgradeTableMapper.MapUpgrades(storageUpgradeDocument, StorageUpgradeColumns.Build114)
+        var storageUpgradeColumns = StorageUpgradeColumns.For(storageUpgradeDocument.Header);
+        var storageUpgrades = storageUpgradeColumns is not null
+            ? StorageUpgradeTableMapper.MapUpgrades(storageUpgradeDocument, storageUpgradeColumns)
             : [];
-        if (storageUpgradeDocument.Header.Cols != StorageUpgradeColumns.Build114Cols) leftOut.Add("storageUpgrades");
+        if (storageUpgradeColumns is null) leftOut.Add("storageUpgrades");
 
         var staticObjectTypes = StaticObjectProtoTableMapper.MapTypes(
             Load("tables/staticobject_proto.tbl"), StaticObjectProtoColumns.Build114);

@@ -44,6 +44,18 @@ public sealed class OperatorBuildStartTests
             Assert.DoesNotContain(talentNames, name => System.Text.RegularExpressions.Regex.IsMatch(name, @"^spell-\d+$"));
             Assert.DoesNotContain(talentNames, name => name.StartsWith("Permanently increases", StringComparison.Ordinal));
 
+            Assert.Contains(content.StorageUpgrades, rung => rung is { Area: "bag", FromSlotCount: 12, PriceCurrency: 0 });
+            Assert.Contains(content.StorageUpgrades, rung => rung is { Area: "bank", FromSlotCount: 24, PriceCurrency: 0 });
+            Assert.All(content.StorageUpgrades.GroupBy(rung => (rung.Area, rung.FromSlotCount)), rungs => Assert.Single(rungs));
+            foreach (var playerClass in classes)
+            {
+                var start = content.Loadouts.First(loadout => loadout.PlayerClass == playerClass);
+                var whole = ClassSpellbook.WholeBookAt(content, playerClass, content.LevelCap);
+                Assert.Superset(content.Spellbook!.Classes[playerClass].ClassSpells.ToHashSet(), whole.ToHashSet());
+                if (playerClass != PlayerClassIds.FlameKnight) Assert.True(whole.Count > start.Spells.Count);
+                Assert.All(whole, spell => Assert.True(content.Spells.ContainsKey(spell)));
+            }
+
             var mage = content.LoadoutFor(PlayerRaceIds.Human, PlayerClassIds.Mage)!;
             Assert.Equal(["Fireball", "Frost Bolt", "Energy Field"],
                 mage.Spells.Take(3).Select(spell => content.Spells[spell].NameKey));

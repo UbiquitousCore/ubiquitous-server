@@ -290,12 +290,14 @@ public class PackageImporterTests
     }
 
     [Fact]
-    public void ImportBuild114_LeavesStorageUpgradesOut_WhenTheTableHasAColumnThe114LayoutLacks()
+    public void ImportBuild114_ReadsA422StorageTable_ItsLadderZeroOnly()
     {
         var entries = new Dictionary<string, byte[]>(TableArchiveReader.ReadEntries(BuildArchive()))
         {
-            ["tables/storage_upgrade.tbl"] = BuildTable("uuuuuuuu",
-                new Dictionary<int, object> { [0] = 1u, [1] = 0u, [2] = 0u, [3] = 18u, [4] = 0u, [5] = 100u, [7] = 12u }),
+            ["tables/storage_upgrade.tbl"] = BuildTable("uuuuuuuu", [
+                new Dictionary<int, object> { [0] = 4u, [1] = 0u, [2] = 0u, [3] = 18u, [4] = 0u, [5] = 100u, [7] = 12u },
+                new Dictionary<int, object> { [0] = 17u, [1] = 0u, [2] = 1u, [3] = 18u, [4] = 0u, [5] = 1000000u, [7] = 12u },
+                new Dictionary<int, object> { [0] = 46u, [1] = 0u, [2] = 3u, [3] = 4u, [4] = 11u, [5] = 15u, [7] = 3u }]),
         };
         var tempDir = Path.Combine(Path.GetTempPath(), "ubiquitous-package-importer-tests-" + Guid.NewGuid());
 
@@ -303,10 +305,9 @@ public class PackageImporterTests
         {
             var result = PackageImporter.ImportBuild114(entries, tempDir, sourceHash: "test-hash");
 
-            Assert.Equal(0, result.StorageUpgradeCount);
-            Assert.True(DataPackageWriter.ValidatePackage(tempDir).IsValid);
-            Assert.DoesNotContain("storageUpgrades", DataCatalog.LoadFromDirectory(tempDir).Manifest.Datasets.Keys);
-            Assert.False(File.Exists(Path.Combine(tempDir, "storageUpgrades.json")));
+            Assert.Equal(1, result.StorageUpgradeCount);
+            var upgrade = Assert.Single(DataCatalog.LoadFromDirectory(tempDir).LoadStorageUpgrades());
+            Assert.Equal(new StorageUpgradeDefinition(4, "bag", 18, 12, 0, 100), upgrade);
         }
         finally
         {
