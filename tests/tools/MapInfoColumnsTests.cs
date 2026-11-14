@@ -40,10 +40,18 @@ public class MapInfoColumnsTests
         var data = PackageImporterTests.BuildTable(Format422,
             new Dictionary<int, object>
             {
-                [0] = 15u, [3] = MapTableMapper.DungeonKind, [4] = 20u,
-                [5] = -220f, [6] = 40f, [7] = 215f,
-                [8] = -871f, [9] = -7.9f, [10] = -1903f, [11] = 1u,
-                [12] = "swamp_eye", [13] = "world/swamp_eye.wld",
+                [0] = 15u,
+                [3] = MapTableMapper.DungeonKind,
+                [4] = 20u,
+                [5] = -220f,
+                [6] = 40f,
+                [7] = 215f,
+                [8] = -871f,
+                [9] = -7.9f,
+                [10] = -1903f,
+                [11] = 1u,
+                [12] = "swamp_eye",
+                [13] = "world/swamp_eye.wld",
             });
         var document = FTableDocument.Load(data);
 

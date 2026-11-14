@@ -15,7 +15,10 @@ public static class MapInfoColumns
     {
         InternalName = 12,
         File = 13,
-        RecallX = 8, RecallY = 9, RecallZ = 10, RecallMapId = 11,
+        RecallX = 8,
+        RecallY = 9,
+        RecallZ = 10,
+        RecallMapId = 11,
     };
 
     public static MapTableColumns For(TableLayout layout) => layout.Cols == 21 ? Build422 : Build114;
