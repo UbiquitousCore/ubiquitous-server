@@ -39,6 +39,11 @@ public sealed class OperatorBuildStartTests
                 Assert.True(content.Maps.ContainsKey(loadout.MapId));
             }
 
+            var talentNames = content.TalentTrees.SelectMany(tree => tree.Talents)
+                .Select(talent => content.Spells[talent.RankSpellIds[0]].NameKey).ToList();
+            Assert.DoesNotContain(talentNames, name => System.Text.RegularExpressions.Regex.IsMatch(name, @"^spell-\d+$"));
+            Assert.DoesNotContain(talentNames, name => name.StartsWith("Permanently increases", StringComparison.Ordinal));
+
             var mage = content.LoadoutFor(PlayerRaceIds.Human, PlayerClassIds.Mage)!;
             Assert.Equal(["Fireball", "Frost Bolt", "Energy Field"],
                 mage.Spells.Take(3).Select(spell => content.Spells[spell].NameKey));

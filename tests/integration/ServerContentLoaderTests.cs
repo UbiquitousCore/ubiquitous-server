@@ -185,6 +185,7 @@ public sealed class ServerContentLoaderTests
             Assert.Equal(2u, content.MiningGatherSpellId);
             Assert.Equal(75, content.LevelCap);
             Assert.False(content.HasSeenSpellbooks);
+            Assert.Equal(OperatorSpells.All, content.StartingSpells);
         }
         finally
         {

@@ -152,7 +152,8 @@ public sealed class ServerContentLoader(
             Routes = travelLoaded ? routes! : fallback.Routes,
             VendorTabs = vendorTabs ?? fallback.VendorTabs,
             Spells = WithOperatorSpells(spells ?? fallback.Spells, fallback.Spells),
-            StartingSpells = fallback.StartingSpells,
+            // The development spellbook names 1.1.4 ids; a later build starts with its own and the GM spells.
+            StartingSpells = book is not null ? [.. OperatorSpells.All] : fallback.StartingSpells,
             Items = items ?? fallback.Items,
             StorageUpgrades = storageUpgrades ?? fallback.StorageUpgrades,
             BankBoxEntries = EntriesOfType(staticObjectTypes, StaticObjectTypes.StorageBox) ?? fallback.BankBoxEntries,

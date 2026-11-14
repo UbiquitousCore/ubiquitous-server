@@ -26,6 +26,14 @@ public class MapInfoColumnsTests
     }
 
     [Fact]
+    public void Build114_IsTheGameVersionTheServerPlaysAsSeen()
+    {
+        var data = BuildRow(id: 13, nameLength: 0, nameOffset: 0, fileLength: 0, fileOffset: 0, []);
+
+        Assert.True(Ubiquitous.Data.DataManifest.IsTargetGameVersion(MapInfoColumns.BuildOf(FTableDocument.Load(data).Header)));
+    }
+
+    [Fact]
     public void Build422_ReadsTheNameFileAndPutOutPointThreeColumnsOn_AndIsChosenByTheTablesShape()
     {
         const string Format422 = "uuuuuffffffussuuufuuu";

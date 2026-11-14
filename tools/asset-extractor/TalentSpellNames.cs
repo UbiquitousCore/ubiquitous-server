@@ -3,8 +3,9 @@ namespace Ubiquitous.AssetExtractor;
 public sealed record TalentNaming(uint TalentId, uint NameTextId, IReadOnlyList<uint> RankSpellIds);
 
 // A talent's rank spells often carry no name of their own in `String_Spell`, or one
-// string several talents share (4.2.2 points eleven mage talents at one sentence of a
-// description). Those take the talent's own name; a rank spell with a name of its own keeps it.
+// string several talents share (4.2.2 points eighteen talents of its two mage trees at
+// one sentence of a description). Those take the talent's own name; a rank spell with a
+// name of its own keeps it.
 public static class TalentSpellNames
 {
     public static IReadOnlyDictionary<uint, string> Renamed(
