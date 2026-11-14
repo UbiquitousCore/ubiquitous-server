@@ -21,8 +21,8 @@ public sealed partial class PlaySession
             .ToHashSet();
         _actionBar.Clear();
         foreach (var button in loadout.ActionBar) _actionBar[button.Slot] = (button.SpellId, 0);
-        IReadOnlyList<uint> trained = character.Level >= LevelingService.SeenMaxLevel && _content.HasSeenSpellbooks
-            ? PlaytestSpellbook.AtMaxLevel(character.Class)
+        var trained = ClassSpellbook.HoldsWholeBook(_content, character.Level, OnDevelopmentLogin)
+            ? ClassSpellbook.WholeBookAt(_content, character.Class, character.Level)
             : [];
         return [.. _content.StartingSpells.Where(id => !books.Contains(id)), .. loadout.Spells, .. trained];
     }
@@ -374,6 +374,11 @@ public sealed partial class PlaySession
         return responses;
     }
 
+    private bool _enteredForDevelopment;
+
+    private bool OnDevelopmentLogin =>
+        _enteredForDevelopment || (_account is not null && _developmentUserIds.Contains(_account.UserId));
+
     private async Task<IReadOnlyList<string>> DevEnterWorldAsync(
         JsonElement payload, CancellationToken cancellationToken)
     {
@@ -390,6 +395,7 @@ public sealed partial class PlaySession
 
         _loginAttempted = true;
         _account = new AccountRecord(character.AccountId, $"dev:{character.Guid}", string.Empty);
+        _enteredForDevelopment = true;
         return await EnterAsCharacterAsync(character, cancellationToken);
     }
 }

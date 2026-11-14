@@ -98,6 +98,9 @@ public sealed partial record GameContent(
     // The level-60 spellbooks were read off 1.1.4; a build with its own loadouts has none of them.
     public bool HasSeenSpellbooks => ReferenceEquals(Loadouts, StartingLoadouts.All);
 
+    // A later build's own spellbook rule; null for 1.1.4, whose books were seen in play.
+    public StartingSpellbook? Spellbook { get; init; }
+
     public uint MiningGatherSpellId { get; init; } = MiningRules.GatherSpellId;
 
     public int LevelCap { get; init; } = LevelingService.SeenMaxLevel;

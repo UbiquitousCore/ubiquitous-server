@@ -55,13 +55,18 @@ public sealed class ModuleHost(
         if (!accounts.Holds(module, login)) return false;
         var characters = sessions.Stores.Characters;
         var character = await characters.FindByNameAsync(characterName, cancellationToken);
+        var content = sessions.Content.Game;
+        var startingLevel = content.LoadoutFor(character?.Race ?? 0, character?.Class ?? 0)?.Level ?? CharacterCreation.StartingLevel;
         if (character is null || character.AccountId != ModuleAccounts.AccountIdFor(login.UserId)
-            || character.Level != CharacterCreation.StartingLevel || character.Xp != 0)
+            || character.Level != startingLevel || character.Xp != 0 || character.LearnedSpells is { Count: > 0 })
             return false;
+        // A class that starts above `level` (a Flame Knight) stays at its own start.
+        var raised = Math.Clamp(level, startingLevel, content.LevelCap);
         // Full health at the new level: the session works it out from a character with none saved.
         await characters.UpdateAsync(character with
         {
-            Level = Math.Clamp(level, CharacterCreation.StartingLevel, sessions.Content.Game.LevelCap),
+            Level = raised,
+            LearnedSpells = LessonsUpTo(content, character.Race, character.Class, raised),
             Health = null,
             MapId = start?.MapId ?? character.MapId,
             X = start?.At.X ?? character.X,
@@ -69,6 +74,16 @@ public sealed class ModuleHost(
             Z = start?.At.Z ?? character.Z,
         }, cancellationToken);
         return true;
+    }
+
+    // A later build's character raised here knows the ranks its class's own lessons teach by that level,
+    // as one that had played up to it could; a 1.1.4 character learns them in play.
+    private static IReadOnlyList<uint>? LessonsUpTo(GameContent content, int race, int playerClass, int level)
+    {
+        if (content.Spellbook is null) return null;
+        var start = content.LoadoutFor(race, playerClass)?.Spells ?? [];
+        var learned = ClassSpellbook.WholeBookAt(content, playerClass, level).Where(id => !start.Contains(id)).ToArray();
+        return learned.Length == 0 ? null : learned;
     }
 
     public IClientConnection Connect() => new LocalConnection(sessions, hub, messagesPerSecond, playedByModule: true);

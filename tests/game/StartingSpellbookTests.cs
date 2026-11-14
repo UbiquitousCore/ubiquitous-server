@@ -159,4 +159,14 @@ public sealed class StartingSpellbookTests
         Assert.Equal(StartingLoadouts.For(PlayerRaceIds.Orc, PlayerClassIds.Warrior)!.Attributes, knight.Attributes);
         Assert.Equal(PlayerRaceIds.All.Count, loadouts.Count(loadout => loadout.PlayerClass == PlayerClassIds.FlameKnight));
     }
+
+    [Fact]
+    public void EveryRankOfAClassChain_ComesAtItsLessonsLevel_AndAnUntaughtFirstRankALittleBefore()
+    {
+        var book = Book();
+
+        Assert.Equal(new Dictionary<uint, int> { [100] = 1, [101] = 2, [110] = 1, [111] = 3, [120] = 6, [121] = 9 },
+            book.ClassRanks[PlayerClassIds.Mage]);
+        Assert.Equal(new Dictionary<uint, int> { [300] = 65 }, book.ClassRanks[PlayerClassIds.FlameKnight]);
+    }
 }

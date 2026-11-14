@@ -1,9 +1,17 @@
+using Ubiquitous.Data;
+
 namespace Ubiquitous.Game;
 
 public static class LevelingService
 {
     // The cap 1.1.4 was seen with, and the last level whose XP bar was read in play.
     public const int SeenMaxLevel = 60;
+
+    // A later build's cap is what its own achievements ask for; 1.1.4 and a package that says nothing keep 60.
+    public static int CapOf(DataManifest? manifest) =>
+        manifest is null || DataManifest.IsTargetGameVersion(manifest.GameVersion)
+            ? SeenMaxLevel
+            : manifest.LevelCap ?? SeenMaxLevel;
 
     private static readonly int[] XpBarByLevel =
     [

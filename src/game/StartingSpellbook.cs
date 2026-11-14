@@ -14,6 +14,12 @@ public sealed record StartingSpellbook(
     IReadOnlyDictionary<int, uint> RacialSpells,
     IReadOnlyDictionary<int, ClassStartingSpells> Classes)
 {
+    // Every rank of each class chain and the level it comes at, by the same rule the starting spells
+    // follow: a lesson's rank at the lesson's level, a chain's untaught first rank `FirstRankLead`
+    // levels before its lowest lesson.
+    public IReadOnlyDictionary<int, IReadOnlyDictionary<uint, int>> ClassRanks { get; init; } =
+        new Dictionary<int, IReadOnlyDictionary<uint, int>>();
+
     public const string AutoAttackName = "Auto Attack";
     public const string AutoShootName = "Auto Shoot";
     public const string SwitchTargetName = "Switch Target";
@@ -77,10 +83,13 @@ public sealed record StartingSpellbook(
         if (autoShoots.Count == 0) missing.Add($"no ranged spell named \"{AutoShootName}\"");
 
         var classes = new Dictionary<int, ClassStartingSpells>();
+        var ranks = new Dictionary<int, IReadOnlyDictionary<uint, int>>();
         var playable = startingLevelByClass.Keys.ToHashSet();
         foreach (var (playerClass, level) in startingLevelByClass)
         {
-            var classSpells = ClassSpellsAt(items, spells, playerClass, level, playable);
+            var taughtAt = OwnLessonLevels(items, spells, playerClass, playable);
+            ranks[playerClass] = RankLevels(spells, taughtAt);
+            var classSpells = ClassSpellsAt(spells, taughtAt, level);
             if (classSpells.Count == 0) missing.Add($"class {playerClass} has no spell a lesson of its own teaches");
             var autoShoot = autoShoots
                 .OrderByDescending(spell => RangedWeaponsCovered(spell, items.Values, playerClass))
@@ -92,7 +101,7 @@ public sealed record StartingSpellbook(
         if (missing.Count > 0)
             throw new InvalidOperationException("Cannot read the starting spells: " + string.Join("; ", missing));
 
-        return new StartingSpellbook(autoAttack, switchTarget, gathering, miningGather, racial, classes);
+        return new StartingSpellbook(autoAttack, switchTarget, gathering, miningGather, racial, classes) { ClassRanks = ranks };
     }
 
     private static IReadOnlyList<uint> EveryonesGathering(IReadOnlyList<StaticObjectTypeDefinition> types) =>
@@ -102,18 +111,36 @@ public sealed record StartingSpellbook(
             .Select(group => group.Key)
             .Order()];
 
-    // A lesson that names this class and not every class in play is the class's own. Each chain it
-    // teaches starts with the rank the class holds by then: the first rank once the chain's lowest
-    // lesson is close, and the highest rank whose lesson is at or below the starting level.
-    private static IReadOnlyList<uint> ClassSpellsAt(
+    // A lesson that names this class and not every class in play is the class's own.
+    private static IReadOnlyDictionary<uint, int> OwnLessonLevels(
         IReadOnlyDictionary<uint, ItemDefinition> items, IReadOnlyDictionary<uint, SpellDefinition> spells,
-        int playerClass, int level, IReadOnlySet<int> playable)
+        int playerClass, IReadOnlySet<int> playable)
     {
         var everyClass = playable.Aggregate(0u, (mask, each) => mask | ItemClassMask.BitFor(each));
         var ownLessons = items.Values.Where(item => item.AllowableClassMask is uint mask and not 0
             && (mask & ItemClassMask.BitFor(playerClass)) != 0 && (playable.Count == 1 || (mask & everyClass) != everyClass));
-        var taughtAt = SpellLearning.LevelsFor(ownLessons, spells, playerClass);
+        return SpellLearning.LevelsFor(ownLessons, spells, playerClass);
+    }
 
+    private static IReadOnlyDictionary<uint, int> RankLevels(
+        IReadOnlyDictionary<uint, SpellDefinition> spells, IReadOnlyDictionary<uint, int> taughtAt)
+    {
+        var levels = taughtAt.Where(pair => spells.ContainsKey(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
+        foreach (var chain in levels.ToArray().GroupBy(pair => spells[pair.Key].ChainFirstSpellId ?? pair.Key))
+        {
+            if (levels.ContainsKey(chain.Key) || !spells.ContainsKey(chain.Key)) continue;
+            levels[chain.Key] = Math.Max(CharacterCreation.StartingLevel, chain.Min(pair => pair.Value) - FirstRankLead);
+        }
+
+        return levels;
+    }
+
+    // Each chain the class's lessons teach starts with the rank the class holds by then: the first
+    // rank once the chain's lowest lesson is close, and the highest rank whose lesson is at or below
+    // the starting level.
+    private static IReadOnlyList<uint> ClassSpellsAt(
+        IReadOnlyDictionary<uint, SpellDefinition> spells, IReadOnlyDictionary<uint, int> taughtAt, int level)
+    {
         var chains = taughtAt
             .Where(pair => spells.ContainsKey(pair.Key))
             .GroupBy(pair => spells[pair.Key].ChainFirstSpellId ?? pair.Key);

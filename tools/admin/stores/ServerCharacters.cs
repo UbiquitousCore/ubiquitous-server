@@ -29,7 +29,7 @@ public sealed class ServerCharacters(ICharacterStore store, IInventoryStore inve
             .OrderBy(item => item.Slot)
             .Select(item => new AdminBagItem(item.Entry, items.NameOf(item.Entry), item.Count, item.Slot))
             .ToArray();
-        return new CharacterDetail(Summary(character), (character.Currency ?? 0) / CoinWords.Gold, BagSlotsOf(character), bag);
+        return new CharacterDetail(Summary(character), (character.Currency ?? 0) / CoinWords.Gold, BagSlotsOf(character), bag, items.LevelCap);
     }
 
     public async Task<CharacterChange> EditAsync(string guid, CharacterEdit edit, CancellationToken cancellationToken = default)
@@ -49,7 +49,7 @@ public sealed class ServerCharacters(ICharacterStore store, IInventoryStore inve
 
         if (edit.Level is { } level)
         {
-            if (level < 1 || level > LevelingService.SeenMaxLevel) return CharacterChange.BadLevel;
+            if (level < 1 || level > items.LevelCap) return CharacterChange.BadLevel;
             // Full health and an empty experience bar, as a GM's in-game level change leaves them.
             if (level != character.Level) changed = changed with { Level = level, Xp = 0, Health = null };
         }

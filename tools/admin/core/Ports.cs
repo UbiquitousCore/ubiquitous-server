@@ -6,7 +6,7 @@ public sealed record AdminCharacter(string Guid, string Name, string Race, strin
 
 public sealed record AdminBagItem(int Entry, string Name, int Count, int Slot);
 
-public sealed record CharacterDetail(AdminCharacter Character, int Gold, int BagSlots, IReadOnlyList<AdminBagItem> Bag);
+public sealed record CharacterDetail(AdminCharacter Character, int Gold, int BagSlots, IReadOnlyList<AdminBagItem> Bag, int LevelCap);
 
 // What the admin page can change on a character; a null leaves that part as it is.
 public sealed record CharacterEdit(string? Name = null, int? Level = null, int? Gold = null);

@@ -268,6 +268,23 @@ this project's own:
   column 27 the first rank of its chain; a chain whose first rank is a
   `spell_talent` rank spell is a talent ability. That 60 grants every rank
   is this project's own rule.
+- A later build (`ClassSpellbook`, `StartingSpellbook.ClassRanks`) reads the
+  same book from its own lessons, by the rule its starting spells follow:
+  each rank its class's own lessons teach comes at the lesson's level, and a
+  chain's untaught first rank three levels before its lowest lesson; a
+  talent ability's higher ranks are the ranks of its chain a lesson the class
+  may use teaches, at that lesson's level. A character holds that book up to
+  its level at the build's level cap and, own choice for testing, on a
+  development login; `admin.learnSpells` takes the ranks the level has
+  reached. A playerbot or other module character raised past its class's
+  starting level (a Flame Knight's 65 counts as fresh) learns the ranks taught
+  by then, as one that had played there could (own choice); in 1.1.4 it still
+  learns them in play. The development characters keep their level-60 gear,
+  whose ids name the same pieces in the operator's 4.2.2 `items`
+  ("Strong Defender's Helmet" and so on, required level 60); their 1.1.4
+  talent picks name no 4.2.2 class talent, so a 4.2.2 server ignores them.
+- The level cap a server, its playerbots and the admin page allow
+  (`LevelingService.CapOf`) is the package's own, as above.
 - The level a class spell is learned at is the required level of the lesson
   item that teaches it (the item's on-use spell has the spell as a learn
   effect), the lowest among the items the class may use; for example Fireball
