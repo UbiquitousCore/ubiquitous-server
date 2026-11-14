@@ -262,7 +262,7 @@ comes from is in `PROVENANCE.md`.
   dead is saved at their graveyard.
 - Losing a duel leaves the loser at 10 health, begging; forfeiting plays
   nothing.
-- Level cap 60. Kill XP is `5 × level + 50`, +5% per level above (to +50%),
+- Level cap 60 on a 1.1.4 package, 75 on 4.2.2 (see PROVENANCE). Kill XP is `5 × level + 50`, +5% per level above (to +50%),
   -10% per level for one or two below, then to nothing across a grey window of
   at least five levels; elites pay double. Teammates on the same map copy
   within 50 units of the body share a kill: it is valued at the highest
