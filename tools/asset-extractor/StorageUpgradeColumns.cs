@@ -9,4 +9,6 @@ public static class StorageUpgradeColumns
         PriceCurrency: 3,
         PriceAmount: 4,
         FromSlotCount: 6);
+
+    public const int Build114Cols = 7;
 }

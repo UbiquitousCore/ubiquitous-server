@@ -166,7 +166,8 @@ public static class PackageImporter
         var lootFeatureItems = TryLoad("tables/loot_feature_items.tbl");
         var lootFeature = TryLoad("tables/loot_feature.tbl");
         var loot = TryLoad("tables/loot.tbl");
-        bool hasLoot = lootFeatureItems is not null && lootFeature is not null && loot is not null;
+        var leftOut = new HashSet<string>();
+        if (lootFeatureItems is null || lootFeature is null || loot is null) leftOut.Add("creatureLootTables");
         var lootGroupsByCreature = new Dictionary<uint, List<LootGroupDefinition>>();
         if (lootFeatureItems is not null && lootFeature is not null && loot is not null)
         {
@@ -337,11 +338,15 @@ public static class PackageImporter
 
         var nonCreatureStarterQuestIds = itemStarterQuestIds
             .Union(staticObjectStarterQuestIds).Union(staticObjectFinisherQuestIds).ToHashSet();
-        var quests = QuestTableMapper.MapQuests(
+        var mappedQuests = QuestTableMapper.MapQuests(
             questDocument.WithRows(questsWithKnownGivers), QuestColumns.Build114,
             npcEntries: npcs.Select(n => n.EntryId).ToHashSet(),
             resolveGiverEntry: id => giversByQuest.TryGetValue(id, out var giver) ? giver : null,
             nonCreatureStarterQuestIds: nonCreatureStarterQuestIds);
+        // 4.2.2 gives a few objectives a count of 0, which no player could finish
+        // against; such a quest is left out rather than guessed at.
+        var quests = mappedQuests.Where(quest => quest.Objectives.All(objective => objective.GoalCount > 0)).ToList();
+        droppedQuests += mappedQuests.Count - quests.Count;
 
         var questIds = new HashSet<uint>(quests.Select(q => q.Id));
         var questRewards = QuestRewardTableMapper.MapRewards(
@@ -385,8 +390,12 @@ public static class PackageImporter
             zones.ToDictionary(zone => zone.Id, zone => zone.MapId));
         var gossipMenus = gossip.Menus;
 
-        var storageUpgrades = StorageUpgradeTableMapper.MapUpgrades(
-            Load("tables/storage_upgrade.tbl"), StorageUpgradeColumns.Build114);
+        // 4.2.2 adds a column whose meaning is not settled, so that table stays out.
+        var storageUpgradeDocument = Load("tables/storage_upgrade.tbl");
+        var storageUpgrades = storageUpgradeDocument.Header.Cols == StorageUpgradeColumns.Build114Cols
+            ? StorageUpgradeTableMapper.MapUpgrades(storageUpgradeDocument, StorageUpgradeColumns.Build114)
+            : [];
+        if (storageUpgradeDocument.Header.Cols != StorageUpgradeColumns.Build114Cols) leftOut.Add("storageUpgrades");
 
         var staticObjectTypes = StaticObjectProtoTableMapper.MapTypes(
             Load("tables/staticobject_proto.tbl"), StaticObjectProtoColumns.Build114);
@@ -398,29 +407,34 @@ public static class PackageImporter
 
         Directory.CreateDirectory(outDirectory);
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
-        File.WriteAllText(Path.Combine(outDirectory, "maps.json"), JsonSerializer.Serialize(maps, options));
-        File.WriteAllText(Path.Combine(outDirectory, "creatures.json"), JsonSerializer.Serialize(creatures, options));
-        File.WriteAllText(Path.Combine(outDirectory, "creatureSpawns.json"), JsonSerializer.Serialize(spawns, options));
-        File.WriteAllText(Path.Combine(outDirectory, "spells.json"), JsonSerializer.Serialize(spells, options));
-        File.WriteAllText(Path.Combine(outDirectory, "items.json"), JsonSerializer.Serialize(items, options));
-        File.WriteAllText(Path.Combine(outDirectory, "quests.json"), JsonSerializer.Serialize(quests, options));
-        File.WriteAllText(Path.Combine(outDirectory, "questRewards.json"), JsonSerializer.Serialize(questRewards, options));
-        File.WriteAllText(Path.Combine(outDirectory, "npcs.json"), JsonSerializer.Serialize(npcs, options));
-        File.WriteAllText(Path.Combine(outDirectory, "vendorStock.json"), JsonSerializer.Serialize(vendorStock, options));
-        File.WriteAllText(Path.Combine(outDirectory, "staticObjectQuestStarters.json"), JsonSerializer.Serialize(staticObjectQuestStarters, options));
-        File.WriteAllText(Path.Combine(outDirectory, "staticObjectQuestFinishers.json"), JsonSerializer.Serialize(staticObjectQuestFinishers, options));
-        File.WriteAllText(Path.Combine(outDirectory, "staticObjectQuestItemBindings.json"), JsonSerializer.Serialize(staticObjectQuestItemBindings, options));
-        File.WriteAllText(Path.Combine(outDirectory, "creatureQuestFinishers.json"), JsonSerializer.Serialize(creatureQuestFinishers, options));
-        if (hasLoot)
-            File.WriteAllText(Path.Combine(outDirectory, "creatureLootTables.json"), JsonSerializer.Serialize(creatureLootTables, options));
-        File.WriteAllText(Path.Combine(outDirectory, "teleportStops.json"), JsonSerializer.Serialize(teleportStops, options));
-        File.WriteAllText(Path.Combine(outDirectory, "gossipMenus.json"), JsonSerializer.Serialize(gossipMenus, options));
-        File.WriteAllText(Path.Combine(outDirectory, "mapGraveyards.json"), JsonSerializer.Serialize(graveyards, options));
-        File.WriteAllText(Path.Combine(outDirectory, "travelRoutes.json"), JsonSerializer.Serialize(travelRoutes, options));
-        File.WriteAllText(Path.Combine(outDirectory, "staticObjectSpawns.json"), JsonSerializer.Serialize(staticObjects, options));
-        File.WriteAllText(Path.Combine(outDirectory, "storageUpgrades.json"), JsonSerializer.Serialize(storageUpgrades, options));
-        File.WriteAllText(Path.Combine(outDirectory, "staticObjectTypes.json"), JsonSerializer.Serialize(staticObjectTypes, options));
-        File.WriteAllText(Path.Combine(outDirectory, "talentTrees.json"), JsonSerializer.Serialize(talentTrees, options));
+        void Write<T>(string dataset, T value)
+        {
+            if (!leftOut.Contains(dataset))
+                File.WriteAllText(Path.Combine(outDirectory, dataset + ".json"), JsonSerializer.Serialize(value, options));
+        }
+
+        Write("maps", maps);
+        Write("creatures", creatures);
+        Write("creatureSpawns", spawns);
+        Write("spells", spells);
+        Write("items", items);
+        Write("quests", quests);
+        Write("questRewards", questRewards);
+        Write("npcs", npcs);
+        Write("vendorStock", vendorStock);
+        Write("staticObjectQuestStarters", staticObjectQuestStarters);
+        Write("staticObjectQuestFinishers", staticObjectQuestFinishers);
+        Write("staticObjectQuestItemBindings", staticObjectQuestItemBindings);
+        Write("creatureQuestFinishers", creatureQuestFinishers);
+        Write("creatureLootTables", creatureLootTables);
+        Write("teleportStops", teleportStops);
+        Write("gossipMenus", gossipMenus);
+        Write("mapGraveyards", graveyards);
+        Write("travelRoutes", travelRoutes);
+        Write("staticObjectSpawns", staticObjects);
+        Write("storageUpgrades", storageUpgrades);
+        Write("staticObjectTypes", staticObjectTypes);
+        Write("talentTrees", talentTrees);
         WriteTerrain(archiveByMapId, outDirectory);
 
         var manifest = new DataManifest(
@@ -452,7 +466,7 @@ public static class PackageImporter
                 ["storageUpgrades"] = "storageUpgrades.json",
                 ["staticObjectTypes"] = "staticObjectTypes.json",
                 ["talentTrees"] = "talentTrees.json",
-            }.Where(dataset => hasLoot || dataset.Key != "creatureLootTables")
+            }.Where(dataset => !leftOut.Contains(dataset.Key))
                 .ToDictionary(dataset => dataset.Key, dataset => dataset.Value));
         DataManifestJson.Save(manifest, Path.Combine(outDirectory, DataManifest.FileName));
 

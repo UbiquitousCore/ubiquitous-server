@@ -29,7 +29,7 @@ public class PackageImporterTests
             Assert.Equal(1, result.ZoneCount);
             Assert.Equal(0, result.DroppedZoneCount);
             Assert.Equal(2, result.QuestCount);
-            Assert.Equal(0, result.DroppedQuestCount);
+            Assert.Equal(1, result.DroppedQuestCount);
             Assert.Equal(2, result.NpcCount);
             Assert.Equal(2, result.QuestRewardCount);
             Assert.Equal(2, result.TeleportStopCount);
@@ -289,6 +289,31 @@ public class PackageImporterTests
         }
     }
 
+    [Fact]
+    public void ImportBuild114_LeavesStorageUpgradesOut_WhenTheTableHasAColumnThe114LayoutLacks()
+    {
+        var entries = new Dictionary<string, byte[]>(TableArchiveReader.ReadEntries(BuildArchive()))
+        {
+            ["tables/storage_upgrade.tbl"] = BuildTable("uuuuuuuu",
+                new Dictionary<int, object> { [0] = 1u, [1] = 0u, [2] = 0u, [3] = 18u, [4] = 0u, [5] = 100u, [7] = 12u }),
+        };
+        var tempDir = Path.Combine(Path.GetTempPath(), "ubiquitous-package-importer-tests-" + Guid.NewGuid());
+
+        try
+        {
+            var result = PackageImporter.ImportBuild114(entries, tempDir, sourceHash: "test-hash");
+
+            Assert.Equal(0, result.StorageUpgradeCount);
+            Assert.True(DataPackageWriter.ValidatePackage(tempDir).IsValid);
+            Assert.DoesNotContain("storageUpgrades", DataCatalog.LoadFromDirectory(tempDir).Manifest.Datasets.Keys);
+            Assert.False(File.Exists(Path.Combine(tempDir, "storageUpgrades.json")));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
     private static byte[] BuildArchive(params string[] omit)
     {
         var mapInfo = BuildTable(new string('u', 9) + "s",
@@ -430,8 +455,13 @@ public class PackageImporterTests
                 [0] = 5000u, [4] = 1u, [24] = 155u, [25] = 156u, [87] = 200u, [91] = 2u, [108] = 50u,
             },
             new Dictionary<int, object> { [0] = 5002u, [4] = 1u, [24] = 12007u, [25] = 12008u },
+            new Dictionary<int, object> { [0] = 5003u, [4] = 1u, [24] = 157u, [25] = 158u, [35] = 200u, [39] = 0u },
         ]);
-        var questStarter = BuildTable("uu", new Dictionary<int, object> { [0] = 12u, [1] = 5000u });
+        var questStarter = BuildTable("uu",
+        [
+            new Dictionary<int, object> { [0] = 12u, [1] = 5000u },
+            new Dictionary<int, object> { [0] = 12u, [1] = 5003u },
+        ]);
         var creatureQuestFinisher = BuildTable("uu", new Dictionary<int, object> { [0] = 12u, [1] = 5000u });
 
         var mapGraveyard = BuildTable("uffffuuu",
