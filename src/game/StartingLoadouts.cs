@@ -70,6 +70,22 @@ public static class StartingLoadouts
         [5460, 5470, 5574, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoAttack,
             BasicSpells.GatherChest, BasicSpells.SwitchTarget, BasicSpells.AutoShootMagic];
 
+    // Own choice: four rank-1 spells of the Flame Knight's own sets. 4.2.21
+    // teaches it from no lesson items, so what it starts with is not in the files.
+    private static IReadOnlyList<uint> FlameKnightOwnSpells => [15427, 15428, 15429, 15430];
+
+    private static IReadOnlyList<uint> FlameKnightSpells =>
+    [
+        .. FlameKnightOwnSpells, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoAttack,
+        BasicSpells.GatherChest, BasicSpells.SwitchTarget,
+    ];
+
+    private static bool flameKnightOffered;
+
+    /// <summary>Offers the Flame Knight wherever the loaded spells hold its own.</summary>
+    public static void UseClassesOf(IReadOnlyDictionary<uint, SpellDefinition> spells) =>
+        flameKnightOffered = FlameKnightOwnSpells.All(spells.ContainsKey);
+
     private static IReadOnlyList<uint> RacialSpells(int race) => race switch
     {
         PlayerRaceIds.Human => [6995],
@@ -118,11 +134,14 @@ public static class StartingLoadouts
         PlayerClassIds.Warrior => 5233,
         PlayerClassIds.Mage => 5000,
         PlayerClassIds.Ranger => 5692,
+        PlayerClassIds.FlameKnight => FlameKnightOwnSpells[0],
         _ => 5460,
     };
 
     private static IReadOnlyList<StartingLoadoutItem> Kit(int playerClass) => playerClass switch
     {
+        // Own choice: the potions every class carries and nothing worn.
+        PlayerClassIds.FlameKnight => Consumables,
         PlayerClassIds.Warrior => WarriorKit,
         PlayerClassIds.Mage => MageKit,
         PlayerClassIds.Ranger => RangerKit,
@@ -134,6 +153,7 @@ public static class StartingLoadouts
         PlayerClassIds.Warrior => WarriorSpells,
         PlayerClassIds.Mage => MageSpells,
         PlayerClassIds.Ranger => RangerSpells,
+        PlayerClassIds.FlameKnight => FlameKnightSpells,
         _ => MonkSpells,
     };
 
@@ -149,8 +169,7 @@ public static class StartingLoadouts
             ActionBar(playerClass));
     }
 
-    // Built on each read: the basic skills take the loaded build's numbering.
-    public static IReadOnlyList<CharacterStartingLoadout> All =>
+    private static IReadOnlyList<CharacterStartingLoadout> FourClasses =>
     [
         Loadout(PlayerRaceIds.Human,  PlayerClassIds.Warrior, 21, 12, 18, 9),
         Loadout(PlayerRaceIds.Human,  PlayerClassIds.Mage,    10, 10, 15, 25),
@@ -173,6 +192,18 @@ public static class StartingLoadouts
         Loadout(PlayerRaceIds.Mendel, PlayerClassIds.Ranger,   9, 26, 16, 14),
         Loadout(PlayerRaceIds.Mendel, PlayerClassIds.Monk,  15, 17, 18, 15),
     ];
+
+    // Built on each read: the basic skills take the loaded build's numbering.
+    public static IReadOnlyList<CharacterStartingLoadout> All =>
+        flameKnightOffered ? [.. FourClasses, .. FlameKnights] : FourClasses;
+
+    // Own choice: each race's warrior attributes, until a Flame Knight's are read in play.
+    private static IEnumerable<CharacterStartingLoadout> FlameKnights =>
+        FourClasses
+            .Where(loadout => loadout.PlayerClass == PlayerClassIds.Warrior)
+            .Select(warrior => Loadout(
+                warrior.Race, PlayerClassIds.FlameKnight, warrior.Attributes.Strength,
+                warrior.Attributes.Agility, warrior.Attributes.Stamina, warrior.Attributes.Intellect));
 
     public static CharacterStartingLoadout? For(int race, int playerClass) =>
         All.FirstOrDefault(loadout => loadout.Race == race && loadout.PlayerClass == playerClass);

@@ -88,11 +88,15 @@ public static class PowerKinds
     public const int Morale = 2;
     public const int Vigor = 3;
 
+    /// <summary>What 4.2.21's Flame Knight spells cost, beside mana. How it fills is not read yet.</summary>
+    public const int FlameKnightPower = 4;
+
     public static int ForClass(int playerClass) => playerClass switch
     {
         PlayerClassIds.Warrior => Morale,
         PlayerClassIds.Mage or PlayerClassIds.Monk => Mana,
         PlayerClassIds.Ranger => Vigor,
+        PlayerClassIds.FlameKnight => FlameKnightPower,
         _ => 0,
     };
 }
@@ -659,6 +663,10 @@ public static class PlayerClassIds
     public const int Ranger = 3;
     public const int Monk = 4;
 
+    /// <summary>4.2.21 on.</summary>
+    public const int FlameKnight = 5;
+
+    /// <summary>The classes every build has; the Flame Knight is offered where the loaded build has it.</summary>
     public static readonly IReadOnlySet<int> All = new HashSet<int> { Warrior, Mage, Ranger, Monk };
 }
 

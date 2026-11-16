@@ -16,8 +16,8 @@ public sealed class EncounterRulesTests
     public void NoticeRange_CountsACreatureAboveTheLevelCapAsAtTheCap()
     {
         Assert.Equal(
-            EncounterRules.NoticeRange(8, LevelingService.MaxLevel, 50, CreatureRank.Ordinary),
-            EncounterRules.NoticeRange(8, LevelingService.MaxLevel + 20, 50, CreatureRank.Ordinary));
+            EncounterRules.NoticeRange(8, LevelingService.FirstCap, 50, CreatureRank.Ordinary),
+            EncounterRules.NoticeRange(8, LevelingService.FirstCap + 20, 50, CreatureRank.Ordinary));
     }
 
     [Theory]

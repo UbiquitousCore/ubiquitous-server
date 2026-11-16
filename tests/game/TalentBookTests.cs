@@ -22,8 +22,8 @@ public sealed class TalentBookTests
     [InlineData(9, 0)]
     [InlineData(10, 1)]
     [InlineData(11, 2)]
-    [InlineData(LevelingService.MaxLevel, 51)]
-    [InlineData(LevelingService.MaxLevel + 5, 51)]
+    [InlineData(LevelingService.FirstCap, 51)]
+    [InlineData(LevelingService.FirstCap + 5, 51)]
     public void PointsForLevel_EarnsOneALevelFromTen(int level, int expected)
     {
         Assert.Equal(expected, TalentBook.PointsForLevel(level));

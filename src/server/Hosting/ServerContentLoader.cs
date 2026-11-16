@@ -11,6 +11,8 @@ public sealed class ServerContentLoader(
 {
     public ServerContent Load()
     {
+        var build = catalog?.LoadBuild() ?? DataBuild.Unknown;
+        LevelingService.UseCapOf(build.GameVersion);
         var staticObjectTypes = LoadOptional("static object types", cat => cat.LoadStaticObjectTypes());
         var creatureSpawns = LoadCreatureSpawns();
         var (staticObjectSpawns, hiddenStaticObjects) = LoadStaticObjectSpawns(staticObjectTypes);
@@ -28,7 +30,7 @@ public sealed class ServerContentLoader(
         return new ServerContent(game, creatureSpawns, staticObjectSpawns, LoadWalkableGround())
         {
             Patrols = patrols,
-            Build = catalog?.LoadBuild() ?? DataBuild.Unknown,
+            Build = build,
         };
     }
 
@@ -132,6 +134,7 @@ public sealed class ServerContentLoader(
         if (spells is not null)
         {
             BasicSpells.UseNumberingOf(spells);
+            StartingLoadouts.UseClassesOf(spells);
             StartingLoadouts.ValidateAgainst(spells);
         }
         var travelLoaded = stops is not null && routes is not null;

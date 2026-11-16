@@ -2,7 +2,23 @@ namespace Ubiquitous.Game;
 
 public static class LevelingService
 {
-    public const int MaxLevel = 60;
+    /// <summary>The cap through 1.1.5, where every level's values were read in play.</summary>
+    public const int FirstCap = 60;
+
+    /// <summary>The loaded build's level cap (`UseCapOf`).</summary>
+    public static int MaxLevel { get; private set; } = FirstCap;
+
+    /// <summary>
+    /// The cap each build's content reaches: quests stop and gear gathers at
+    /// 60 through 1.1.5, 70 in 2.2.0 and 2.5.0, 75 in 4.2.21.
+    /// </summary>
+    public static void UseCapOf(string gameVersion) =>
+        MaxLevel = gameVersion.Split('.')[0] switch
+        {
+            "2" => 70,
+            "4" => 75,
+            _ => FirstCap,
+        };
 
     private static readonly int[] XpBarByLevel =
     [
@@ -12,10 +28,14 @@ public static class LevelingService
         41300, 48700, 56350, 64250, 72450, 80850, 89550, 98500, 107700, 117200,
         126900, 136900, 147150, 157650, 168450, 179450, 190750, 202300, 214100, 226200,
         238500, 251100, 263950, 277050, 290450, 304050, 317950, 332100, 346500,
+        // Own choice: past 60 each bar grows by 300 more than the one before,
+        // continuing the last steps read in play.
+        361200, 376200, 391500, 407100, 423000, 439200, 455700, 472500, 489600, 507000,
+        524700, 542700, 561000, 579600, 598500,
     ];
 
     public static int XpToNextLevel(int level) =>
-        level is >= 1 and < MaxLevel ? XpBarByLevel[level - 1] : 0;
+        level >= 1 && level < MaxLevel ? XpBarByLevel[level - 1] : 0;
 
     private static readonly (int MaxGap, int Percent)[] QuestRewardBands =
     [

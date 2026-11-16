@@ -458,3 +458,6 @@ this project's own:
   level of hostile creatures within 150 units, leaving a place outgrown by five
   levels, counting trips within two levels of the best as equally good, and
   stints of 40-240 minutes with 10-90 minutes away are this project's own.
+
+- read from the user's own files: the level cap each build's content reaches — 60 through 1.1.5, 70 in 2.2.0 and 2.5.0, 75 in 4.2.21 — taken from where quests stop and worn gear gathers (`LevelingService.UseCapOf`); from 2.2.0 the seven basic skills are spells 1 to 7, matched to 1.1.4's by the working name each row carries (`BasicSpells`); 4.2.21's Flame Knight is class 5, its spells cost power kind 4, and only its talent trees and one level-65 lesson item name it. Pinned by `tests/game/BuildRulesTests.cs` and `BasicSpellsTests.cs`.
+- own choice, not read in play: the XP bar past level 60 grows by 300 more each level than the last; a Flame Knight starts with four rank-1 spells of its own sets, potions and nothing worn, has a warrior's attributes, health and melee, and a mage's power pool, which fills as mana does.
