@@ -55,16 +55,20 @@ public static class StartingLoadouts
     ];
 
     private static IReadOnlyList<uint> WarriorSpells =>
-        [5233, 5253, 5350, 23, 57, 58, 108, 1822, 111];
+        [5233, 5253, 5350, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoShootPhysical,
+            BasicSpells.AutoAttack, BasicSpells.GatherChest, BasicSpells.SwitchTarget];
 
     private static IReadOnlyList<uint> MageSpells =>
-        [5000, 5121, 5118, 23, 57, 108, 1822, 111, 89];
+        [5000, 5121, 5118, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoAttack,
+            BasicSpells.GatherChest, BasicSpells.SwitchTarget, BasicSpells.AutoShootMagic];
 
     private static IReadOnlyList<uint> RangerSpells =>
-        [5692, 5815, 5813, 23, 57, 58, 108, 648, 690, 1822, 111];
+        [5692, 5815, 5813, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoShootPhysical,
+            BasicSpells.AutoAttack, 648, 690, BasicSpells.GatherChest, BasicSpells.SwitchTarget];
 
     private static IReadOnlyList<uint> MonkSpells =>
-        [5460, 5470, 5574, 23, 57, 108, 1822, 111, 89];
+        [5460, 5470, 5574, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoAttack,
+            BasicSpells.GatherChest, BasicSpells.SwitchTarget, BasicSpells.AutoShootMagic];
 
     private static IReadOnlyList<uint> RacialSpells(int race) => race switch
     {
@@ -106,10 +110,8 @@ public static class StartingLoadouts
         _ => (1, 2f, 7f, 55f, 0f),
     };
 
-    private const uint MeleeButtonSpell = 108;
-
     private static IReadOnlyList<StartingActionButton> ActionBar(int playerClass) =>
-        [new StartingActionButton(0, MeleeButtonSpell), new StartingActionButton(1, Opener(playerClass))];
+        [new StartingActionButton(0, BasicSpells.AutoAttack), new StartingActionButton(1, Opener(playerClass))];
 
     private static uint Opener(int playerClass) => playerClass switch
     {
@@ -147,7 +149,8 @@ public static class StartingLoadouts
             ActionBar(playerClass));
     }
 
-    public static IReadOnlyList<CharacterStartingLoadout> All { get; } =
+    // Built on each read: the basic skills take the loaded build's numbering.
+    public static IReadOnlyList<CharacterStartingLoadout> All =>
     [
         Loadout(PlayerRaceIds.Human,  PlayerClassIds.Warrior, 21, 12, 18, 9),
         Loadout(PlayerRaceIds.Human,  PlayerClassIds.Mage,    10, 10, 15, 25),

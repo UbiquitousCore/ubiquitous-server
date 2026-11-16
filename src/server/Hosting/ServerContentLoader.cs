@@ -129,7 +129,11 @@ public sealed class ServerContentLoader(
         var lootTables = LoadOptional("creature loot tables",
             cat => cat.LoadCreatureLootTables().ToDictionary(table => table.CreatureEntryId));
 
-        if (spells is not null) StartingLoadouts.ValidateAgainst(spells);
+        if (spells is not null)
+        {
+            BasicSpells.UseNumberingOf(spells);
+            StartingLoadouts.ValidateAgainst(spells);
+        }
         var travelLoaded = stops is not null && routes is not null;
 
         return fallback with

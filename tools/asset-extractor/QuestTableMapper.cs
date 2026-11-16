@@ -123,6 +123,8 @@ public static class QuestTableMapper
             if (itemId != 0)
             {
                 uint itemCount = (uint)SlotValue(columns.ObjectiveItemCounts, slot);
+                // An item asked for none of is one the quest names but never takes back.
+                if (itemCount == 0) continue;
                 objectives.Add(new QuestObjectiveDefinition(
                     slot, QuestObjectiveKind.Held, (int)itemCount, ObjectiveItem: itemId,
                     ObjectiveStringId: objectiveStringId));
@@ -136,6 +138,9 @@ public static class QuestTableMapper
                 : 0;
             if (killCreatureId != 0)
             {
+                // 4.2.21 names the creature a "talk to" quest sends a player to, asking
+                // for none of it: the quest is done where it is handed in.
+                if (goalCount == 0) continue;
                 objectives.Add(new QuestObjectiveDefinition(
                     slot, QuestObjectiveKind.Killed, (int)goalCount, ObjectiveCreature: killCreatureId,
                     ObjectiveStringId: objectiveStringId));

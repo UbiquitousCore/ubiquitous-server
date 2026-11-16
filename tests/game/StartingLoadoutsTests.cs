@@ -241,7 +241,11 @@ public sealed class StartingLoadoutsTests
     public void DevelopmentContent_IsBuiltFromTheHumanRangerLoadout()
     {
         var ranger = Loadout(PlayerRaceIds.Human, PlayerClassIds.Ranger);
-        Assert.Equal(ranger, GameContent.DevelopmentLoadout);
+        var development = GameContent.DevelopmentLoadout;
+        Assert.Equal((ranger.Race, ranger.PlayerClass, ranger.Attributes), (development.Race, development.PlayerClass, development.Attributes));
+        Assert.Equal(ranger.Spells, development.Spells);
+        Assert.Equal(ranger.Items, development.Items);
+        Assert.Equal(ranger.ActionBar, development.ActionBar);
 
         Assert.Equal(
             [
