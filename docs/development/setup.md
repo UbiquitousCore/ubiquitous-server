@@ -142,6 +142,9 @@ inside the container unless `content/` is mounted.
   `FakeTimeProvider` via `TestSessions.Create(time: ...)`, never sleeps.
 - Drive integration tests through `TestClient` (see `DuelTests.cs`).
 - Postgres tests skip unless `UBIQUITOUS_TEST_POSTGRES_CONNECTION_STRING` is set.
+- Tests that read the operator's own client build (its `.ipa`, app directory or
+  a directory holding its packs) skip unless `UBIQUITOUS_TEST_CLIENT_BUILD`
+  names it.
 - After renaming a message, key or code, regenerate the wire fixtures with
   `UBIQUITOUS_WRITE_WIRE_FIXTURES=1 dotnet test` and copy them to `ubiquitous-client`'s
   `client/test/fixtures/`.

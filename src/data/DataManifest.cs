@@ -9,8 +9,16 @@ public sealed record DataManifest(
     string SourceHash,
     DateTimeOffset GeneratedAt,
     Dictionary<string, string> Datasets,
-    IReadOnlyList<string>? ImportNotes = null)
+    IReadOnlyList<string>? ImportNotes = null,
+    // The highest level the client's own achievements ask a player to reach.
+    int? LevelCap = null)
 {
+    /// <summary>The build whose spellbooks, starting kits and level cap were read in play.</summary>
+    public const string TargetGameVersion = "1.1.4";
+
+    public static bool IsTargetGameVersion(string? gameVersion) =>
+        string.Equals(gameVersion, TargetGameVersion, StringComparison.Ordinal);
+
     public const string FileName = "manifest.json";
 
     public static readonly IReadOnlyList<string> RequiredDatasets = new[]

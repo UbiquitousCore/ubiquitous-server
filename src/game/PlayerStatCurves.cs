@@ -43,7 +43,7 @@ public static class PlayerStatCurves
         ],
     ];
 
-    private static readonly int[] NoPowerPool = new int[60];
+    private static readonly int[] NoPowerPool = new int[LevelingService.SeenMaxLevel];
 
     private static readonly int[][] BasePowerByClass =
     [
@@ -159,25 +159,23 @@ public static class PlayerStatCurves
         ],
     ];
 
-    // Own choice: a Flame Knight lives and hits as a warrior does and draws its
-    // pool as a mage's, until its curves are read in play.
-    private static int BodyOf(int classId) => classId == PlayerClassIds.FlameKnight ? PlayerClassIds.Warrior : classId;
-
-    private static int PoolOf(int classId) => classId == PlayerClassIds.FlameKnight ? PlayerClassIds.Mage : classId;
-
-    public static int BaseMaxHealth(int classId, int level, int fallback) =>
-        IsKnownClass(BodyOf(classId)) ? Lookup(BaseHealthByClass, BodyOf(classId), level) + StartingHealth : fallback;
+    public static int BaseMaxHealth(int classId, int level, int fallback)
+    {
+        classId = PlayerClassIds.StatsLike(classId);
+        return IsKnownClass(classId) ? Lookup(BaseHealthByClass, classId, level) + StartingHealth : fallback;
+    }
 
     public static int BaseMaxPower(int classId, int level, int fallback)
     {
-        if (!IsKnownClass(PoolOf(classId))) return fallback;
-        var curve = Lookup(BasePowerByClass, PoolOf(classId), level);
+        classId = PlayerClassIds.ManaLike(classId);
+        if (!IsKnownClass(classId)) return fallback;
+        var curve = Lookup(BasePowerByClass, classId, level);
         return curve > 0 ? curve + StartingMana : 0;
     }
 
     public static int AttackPower(int classId, int level, int strength, int agility)
     {
-        var total = BodyOf(classId) switch
+        var total = PlayerClassIds.StatsLike(classId) switch
         {
             1 => 2 * strength + 3 * level - 20,
             2 => strength + 3 * level - 6,
@@ -190,9 +188,9 @@ public static class PlayerStatCurves
 
     public static StartingAttributes AttributesAt(int classId, int level, StartingAttributes levelOne)
     {
-        if (!IsKnownClass(BodyOf(classId))) return levelOne;
-        var gains = AttributeGainByClass[BodyOf(classId) - 1];
-        // Past the last level read in play, a character keeps that level's gains.
+        classId = PlayerClassIds.StatsLike(classId);
+        if (!IsKnownClass(classId)) return levelOne;
+        var gains = AttributeGainByClass[classId - 1];
         int Gain(int stat) => gains[stat][Math.Clamp(level, 1, gains[stat].Length) - 1];
         return new StartingAttributes(
             levelOne.Strength + Gain(0),

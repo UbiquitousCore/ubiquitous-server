@@ -64,7 +64,8 @@ public class TableArchiveReaderTests
         // header layout copied from a real newer-build tables.bin entry.
         byte[] payload = Convert.FromBase64String(
             "BEEFAF0AAIAAADYeid19SVLhBgLa8goeRA1s4UfokwD8XinSjKEKpPwXlONyTWnX//9KcAAA");
-        var archive = BuildMethod14Archive("tables/achievement.tbl", payload, uncompressedSize: 35);
+        var archive = BuildMethod14Archive("tables/achievement.tbl", payload, uncompressedSize: 35,
+            crc: Crc32.Compute("lzma method fourteen decodes tables"u8));
 
         var entries = TableArchiveReader.ReadEntries(archive);
 
@@ -109,7 +110,7 @@ public class TableArchiveReaderTests
         return bytes;
     }
 
-    private static byte[] BuildMethod14Archive(string name, byte[] payload, int uncompressedSize)
+    private static byte[] BuildMethod14Archive(string name, byte[] payload, int uncompressedSize, uint crc = 0)
     {
         byte[] nameBytes = Encoding.ASCII.GetBytes(name);
         using var stream = new MemoryStream();
@@ -120,7 +121,7 @@ public class TableArchiveReaderTests
         WriteU16(stream, 14); // LZMA
         WriteU16(stream, 0); // time
         WriteU16(stream, 0); // date
-        WriteU32(stream, 0); // crc (unchecked by the reader)
+        WriteU32(stream, crc);
         WriteU32(stream, (uint)payload.Length);
         WriteU32(stream, (uint)uncompressedSize);
         WriteU16(stream, (ushort)nameBytes.Length);
@@ -135,7 +136,7 @@ public class TableArchiveReaderTests
         WriteU16(stream, 14); // LZMA
         WriteU16(stream, 0); // time
         WriteU16(stream, 0); // date
-        WriteU32(stream, 0); // crc
+        WriteU32(stream, crc);
         WriteU32(stream, (uint)payload.Length);
         WriteU32(stream, (uint)uncompressedSize);
         WriteU16(stream, (ushort)nameBytes.Length);

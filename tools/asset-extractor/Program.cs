@@ -806,7 +806,7 @@ public static class Program
         Console.WriteLine($"Wrote package to {outDirectory} (build {result.Build}):");
         Console.WriteLine($"  {result.MapCount} maps, {result.CreatureCount} creatures, " +
             $"{result.SpawnCount} creature spawns ({result.DroppedSpawnCount} dropped: unresolvable creature entry), " +
-            $"{result.SpellCount} spells, {result.ItemCount} items, " +
+            $"{result.SpellCount} spells, {result.ItemCount} items ({result.DroppedItemCount} dropped: class or subclass past a byte), " +
             $"{result.ZoneCount} zones ({result.DroppedZoneCount} dropped), " +
             $"{result.QuestCount} quests ({result.DroppedQuestCount} dropped), " +
             $"{result.NpcCount} service NPCs (NPC flags plus quest givers), {result.QuestRewardCount} quest rewards, " +

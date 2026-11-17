@@ -29,7 +29,8 @@
 # UBIQUITOUS_EXHAUSTION_LIMIT=100
 
 # Race ids that cannot be picked, comma-separated; none opens every race.
-# Mendel (7) is closed unless this says otherwise: 1.1.4 cannot play it.
+# Unset, Mendel (7) is closed on a 1.1.4 package, which cannot play it, and
+# every race is open on a later build.
 # UBIQUITOUS_DISABLED_RACES=7
 
 # Players connected at once.

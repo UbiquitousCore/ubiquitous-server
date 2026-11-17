@@ -55,36 +55,16 @@ public static class StartingLoadouts
     ];
 
     private static IReadOnlyList<uint> WarriorSpells =>
-        [5233, 5253, 5350, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoShootPhysical,
-            BasicSpells.AutoAttack, BasicSpells.GatherChest, BasicSpells.SwitchTarget];
+        [5233, 5253, 5350, 23, 57, 58, 108, 1822, 111];
 
     private static IReadOnlyList<uint> MageSpells =>
-        [5000, 5121, 5118, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoAttack,
-            BasicSpells.GatherChest, BasicSpells.SwitchTarget, BasicSpells.AutoShootMagic];
+        [5000, 5121, 5118, 23, 57, 108, 1822, 111, 89];
 
     private static IReadOnlyList<uint> RangerSpells =>
-        [5692, 5815, 5813, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoShootPhysical,
-            BasicSpells.AutoAttack, 648, 690, BasicSpells.GatherChest, BasicSpells.SwitchTarget];
+        [5692, 5815, 5813, 23, 57, 58, 108, 648, 690, 1822, 111];
 
     private static IReadOnlyList<uint> MonkSpells =>
-        [5460, 5470, 5574, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoAttack,
-            BasicSpells.GatherChest, BasicSpells.SwitchTarget, BasicSpells.AutoShootMagic];
-
-    // Own choice: four rank-1 spells of the Flame Knight's own sets. 4.2.21
-    // teaches it from no lesson items, so what it starts with is not in the files.
-    private static IReadOnlyList<uint> FlameKnightOwnSpells => [15427, 15428, 15429, 15430];
-
-    private static IReadOnlyList<uint> FlameKnightSpells =>
-    [
-        .. FlameKnightOwnSpells, BasicSpells.GatherMine, BasicSpells.GatherNormal, BasicSpells.AutoAttack,
-        BasicSpells.GatherChest, BasicSpells.SwitchTarget,
-    ];
-
-    private static bool flameKnightOffered;
-
-    /// <summary>Offers the Flame Knight wherever the loaded spells hold its own.</summary>
-    public static void UseClassesOf(IReadOnlyDictionary<uint, SpellDefinition> spells) =>
-        flameKnightOffered = FlameKnightOwnSpells.All(spells.ContainsKey);
+        [5460, 5470, 5574, 23, 57, 108, 1822, 111, 89];
 
     private static IReadOnlyList<uint> RacialSpells(int race) => race switch
     {
@@ -126,22 +106,21 @@ public static class StartingLoadouts
         _ => (1, 2f, 7f, 55f, 0f),
     };
 
+    private const uint MeleeButtonSpell = 108;
+
     private static IReadOnlyList<StartingActionButton> ActionBar(int playerClass) =>
-        [new StartingActionButton(0, BasicSpells.AutoAttack), new StartingActionButton(1, Opener(playerClass))];
+        [new StartingActionButton(0, MeleeButtonSpell), new StartingActionButton(1, Opener(playerClass))];
 
     private static uint Opener(int playerClass) => playerClass switch
     {
         PlayerClassIds.Warrior => 5233,
         PlayerClassIds.Mage => 5000,
         PlayerClassIds.Ranger => 5692,
-        PlayerClassIds.FlameKnight => FlameKnightOwnSpells[0],
         _ => 5460,
     };
 
     private static IReadOnlyList<StartingLoadoutItem> Kit(int playerClass) => playerClass switch
     {
-        // Own choice: the potions every class carries and nothing worn.
-        PlayerClassIds.FlameKnight => Consumables,
         PlayerClassIds.Warrior => WarriorKit,
         PlayerClassIds.Mage => MageKit,
         PlayerClassIds.Ranger => RangerKit,
@@ -153,7 +132,6 @@ public static class StartingLoadouts
         PlayerClassIds.Warrior => WarriorSpells,
         PlayerClassIds.Mage => MageSpells,
         PlayerClassIds.Ranger => RangerSpells,
-        PlayerClassIds.FlameKnight => FlameKnightSpells,
         _ => MonkSpells,
     };
 
@@ -169,7 +147,7 @@ public static class StartingLoadouts
             ActionBar(playerClass));
     }
 
-    private static IReadOnlyList<CharacterStartingLoadout> FourClasses =>
+    public static IReadOnlyList<CharacterStartingLoadout> All { get; } =
     [
         Loadout(PlayerRaceIds.Human,  PlayerClassIds.Warrior, 21, 12, 18, 9),
         Loadout(PlayerRaceIds.Human,  PlayerClassIds.Mage,    10, 10, 15, 25),
@@ -193,18 +171,77 @@ public static class StartingLoadouts
         Loadout(PlayerRaceIds.Mendel, PlayerClassIds.Monk,  15, 17, 18, 15),
     ];
 
-    // Built on each read: the basic skills take the loaded build's numbering.
-    public static IReadOnlyList<CharacterStartingLoadout> All =>
-        flameKnightOffered ? [.. FourClasses, .. FlameKnights] : FourClasses;
+    public static CharacterStartingLoadout? For(int race, int playerClass) => For(All, race, playerClass);
 
-    // Own choice: each race's warrior attributes, until a Flame Knight's are read in play.
-    private static IEnumerable<CharacterStartingLoadout> FlameKnights =>
-        FourClasses
-            .Where(loadout => loadout.PlayerClass == PlayerClassIds.Warrior)
-            .Select(warrior => Loadout(
-                warrior.Race, PlayerClassIds.FlameKnight, warrior.Attributes.Strength,
-                warrior.Attributes.Agility, warrior.Attributes.Stamina, warrior.Attributes.Intellect));
+    public static CharacterStartingLoadout? For(
+        IReadOnlyList<CharacterStartingLoadout> loadouts, int race, int playerClass) =>
+        loadouts.FirstOrDefault(loadout => loadout.Race == race && loadout.PlayerClass == playerClass);
 
-    public static CharacterStartingLoadout? For(int race, int playerClass) =>
-        All.FirstOrDefault(loadout => loadout.Race == race && loadout.PlayerClass == playerClass);
+    // Own reading of the operator's 4.2.2 files: the quests only a Flame Knight may take begin at
+    // level 65 (one festive quest aside) on Flare Island, map 38, where Kyrian Gallica gives the
+    // first with nothing before it, and its own gear begins at 65 too.
+    public const int FlameKnightStartingLevel = 65;
+
+    private static readonly (ushort MapId, float X, float Y, float Z, float Orientation) FlameKnightStart =
+        (38, -287f, 10f, -278f, 0f);
+
+    // A build other than 1.1.4: the same races, kits, level-1 attributes and start points 1.1.4
+    // was seen with (own choice, as nothing else is known of them), with that build's own spells.
+    // A Flame Knight wears the Warrior's armour and the lowest-level weapon only it may use that deals damage, and
+    // starts with the Warrior's attributes for its race (own placeholder).
+    public static IReadOnlyList<CharacterStartingLoadout> FromSpellbook(
+        StartingSpellbook book, IReadOnlyDictionary<uint, ItemDefinition> items)
+    {
+        var loadouts = new List<CharacterStartingLoadout>();
+        foreach (var seen in All)
+        {
+            if (!book.Classes.ContainsKey(seen.PlayerClass)) continue;
+            loadouts.Add(seen with
+            {
+                Spells = book.SpellsFor(seen.Race, seen.PlayerClass),
+                ActionBar = BookActionBar(book, seen.PlayerClass),
+            });
+        }
+
+        if (book.Classes.ContainsKey(PlayerClassIds.FlameKnight)
+            && OwnLowestWeapon(items, PlayerClassIds.FlameKnight) is { } weapon)
+        {
+            foreach (var warrior in All.Where(loadout => loadout.PlayerClass == PlayerClassIds.Warrior))
+            {
+                var (mapId, x, y, z, orientation) = FlameKnightStart;
+                loadouts.Add(warrior with
+                {
+                    PlayerClass = PlayerClassIds.FlameKnight,
+                    MapId = mapId,
+                    X = x,
+                    Y = y,
+                    Z = z,
+                    Orientation = orientation,
+                    Items =
+                    [
+                        .. warrior.Items.Where(item => item.Slot is EquipmentSlots.Chest or EquipmentSlots.Legs
+                            or EquipmentSlots.Feet),
+                        new(weapon.Id, EquipmentSlots.MainHand, 0),
+                        .. Consumables,
+                    ],
+                    Spells = book.SpellsFor(warrior.Race, PlayerClassIds.FlameKnight),
+                    ActionBar = BookActionBar(book, PlayerClassIds.FlameKnight),
+                    Level = FlameKnightStartingLevel,
+                });
+            }
+        }
+
+        return loadouts;
+    }
+
+    private static IReadOnlyList<StartingActionButton> BookActionBar(StartingSpellbook book, int playerClass) =>
+        [new StartingActionButton(0, book.AutoAttack), new StartingActionButton(1, book.Classes[playerClass].Opener)];
+
+    private static ItemDefinition? OwnLowestWeapon(IReadOnlyDictionary<uint, ItemDefinition> items, int playerClass) =>
+        items.Values
+            .Where(item => item.Class == ItemClasses.Weapons && item.AllowableClassMask == ItemClassMask.BitFor(playerClass)
+                && item.MaxDamage is > 0 && EquipSlotRules.IsValidSlot(item.InventoryType, EquipmentSlots.MainHand))
+            .OrderBy(item => item.RequiredLevel)
+            .ThenBy(item => item.Id)
+            .FirstOrDefault();
 }

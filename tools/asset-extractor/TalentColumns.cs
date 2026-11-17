@@ -14,6 +14,8 @@ public static class TalentColumns
             LayoutColumn.MustRun(nameof(TalentTableColumns.Prerequisites), "u", 5, 6),
             LayoutColumn.Must(nameof(TalentTableColumns.RankCount), 8, "u"),
             LayoutColumn.MustRun(nameof(TalentTableColumns.RankSpells), "u", 9, 10, 11, 12, 13),
+            // The talent's own `String_Talent` string: column 35 from 2.2.0 on.
+            LayoutColumn.May(nameof(TalentTableColumns.NameTextId), 15, "u"),
         ],
         // 1.1.5: ranks spread as in 2.2.0, with a shorter tail
         new LayoutRevision(

@@ -24,7 +24,7 @@ public sealed class PlayerStatCurvesTests
     {
         for (var classId = 1; classId <= 4; classId++)
         {
-            for (var level = 2; level <= LevelingService.FirstCap; level++)
+            for (var level = 2; level <= LevelingService.SeenMaxLevel; level++)
             {
                 Assert.True(
                     PlayerStatCurves.BaseMaxHealth(classId, level, fallback: -1)
@@ -36,7 +36,7 @@ public sealed class PlayerStatCurvesTests
 
     [Theory]
     [InlineData(0, 1)]
-    [InlineData(LevelingService.FirstCap + 5, LevelingService.FirstCap)]
+    [InlineData(LevelingService.SeenMaxLevel + 5, LevelingService.SeenMaxLevel)]
     public void BaseMaxHealth_ReadsTheNearestLevelOutsideTheTable(int level, int nearest)
     {
         Assert.Equal(
@@ -78,6 +78,18 @@ public sealed class PlayerStatCurvesTests
     public void BaseMaxPower_ReturnsTheFallbackForAnUnknownClassId()
     {
         Assert.Equal(999, PlayerStatCurves.BaseMaxPower(classId: 0, level: 10, fallback: 999));
+    }
+
+    [Fact]
+    public void AFlameKnight_HasTheWarriorsHealthAndAttackPowerAndTheMonksMana()
+    {
+        Assert.Equal(PlayerStatCurves.BaseMaxHealth(PlayerClassIds.Warrior, 40, fallback: -1),
+            PlayerStatCurves.BaseMaxHealth(PlayerClassIds.FlameKnight, 40, fallback: -1));
+        Assert.Equal(PlayerStatCurves.AttackPower(PlayerClassIds.Warrior, 40, 50, 30),
+            PlayerStatCurves.AttackPower(PlayerClassIds.FlameKnight, 40, 50, 30));
+        Assert.Equal(PlayerStatCurves.BaseMaxPower(PlayerClassIds.Monk, 40, fallback: -1),
+            PlayerStatCurves.BaseMaxPower(PlayerClassIds.FlameKnight, 40, fallback: -1));
+        Assert.Equal(PowerKinds.Mana, PowerKinds.ForClass(PlayerClassIds.FlameKnight));
     }
 
     [Fact]
@@ -158,7 +170,7 @@ public sealed class PlayerStatCurvesTests
         var zero = new StartingAttributes(0, 0, 0, 0);
         for (var classId = 1; classId <= 4; classId++)
         {
-            for (var level = 2; level <= LevelingService.FirstCap; level++)
+            for (var level = 2; level <= LevelingService.SeenMaxLevel; level++)
             {
                 var before = PlayerStatCurves.AttributesAt(classId, level - 1, zero);
                 var after = PlayerStatCurves.AttributesAt(classId, level, zero);

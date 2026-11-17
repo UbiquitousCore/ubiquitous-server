@@ -25,12 +25,14 @@ public class PackageImporterTests
             Assert.Equal(0, result.DroppedSpawnCount);
             Assert.Equal(7, result.SpellCount);
             Assert.Equal(1, result.ItemCount);
+            Assert.Equal(1, result.DroppedItemCount);
             Assert.Equal(1, result.ZoneCount);
             Assert.Equal(0, result.DroppedZoneCount);
-            Assert.Equal(2, result.QuestCount);
+            // The quest whose objective asks for none of an item is kept, without that objective.
+            Assert.Equal(3, result.QuestCount);
             Assert.Equal(0, result.DroppedQuestCount);
             Assert.Equal(2, result.NpcCount);
-            Assert.Equal(2, result.QuestRewardCount);
+            Assert.Equal(3, result.QuestRewardCount);
             Assert.Equal(2, result.TeleportStopCount);
             Assert.Equal(0, result.DroppedTeleportStopCount);
             Assert.Equal(1, result.MapGraveyardCount);
@@ -156,7 +158,8 @@ public class PackageImporterTests
             Assert.False(catalog.Manifest.Datasets.ContainsKey("zones"));
 
             var quests = catalog.LoadQuests();
-            Assert.Equal(2, quests.Count);
+            Assert.Equal(3, quests.Count);
+            Assert.All(quests, q => Assert.All(q.Objectives, objective => Assert.True(objective.GoalCount > 0)));
             var quest = Assert.Single(quests, q => q.Id == 5000u);
             Assert.Equal(12u, quest.GiverEntryId);
             Assert.Equal(1, quest.MinLevel);
@@ -206,7 +209,7 @@ public class PackageImporterTests
             Assert.Equal(1, stockItem.StackCount);
 
             var rewards = catalog.LoadQuestRewards();
-            Assert.Equal(2, rewards.Count);
+            Assert.Equal(3, rewards.Count);
             var reward = Assert.Single(rewards, r => r.QuestId == 5000u);
             Assert.Equal(50, reward.Money);
             var rewardItem = Assert.Single(reward.Fixed);
@@ -258,13 +261,63 @@ public class PackageImporterTests
     [Fact]
     public void Import_FailsLoudlyWhenARequiredTableIsMissing()
     {
-        var archive = BuildArchive(omit: "tables/spell_new.tbl");
+        var archive = BuildArchive("tables/spell_new.tbl");
 
         Assert.Throws<FTableFormatException>(() => PackageImporter.Import(
             TableArchiveReader.ReadEntries(archive), Path.GetTempPath(), sourceHash: "test-hash"));
     }
 
-    private static byte[] BuildArchive(string? omit = null)
+    [Fact]
+    public void Import_LeavesLootOutOfThePackage_WhenTheBuildCarriesNoLootTables()
+    {
+        var archive = BuildArchive("tables/loot.tbl", "tables/loot_feature.tbl", "tables/loot_feature_items.tbl");
+        var tempDir = Path.Combine(Path.GetTempPath(), "ubiquitous-package-importer-tests-" + Guid.NewGuid());
+
+        try
+        {
+            var result = PackageImporter.Import(
+                TableArchiveReader.ReadEntries(archive), tempDir, sourceHash: "test-hash");
+
+            Assert.Equal(0, result.CreatureLootTableCount);
+            var validation = DataPackageWriter.ValidatePackage(tempDir);
+            Assert.True(validation.IsValid, string.Join("; ", validation.Errors));
+            var catalog = DataCatalog.LoadFromDirectory(tempDir);
+            Assert.DoesNotContain("creatureLootTables", catalog.Manifest.Datasets.Keys);
+            Assert.False(File.Exists(Path.Combine(tempDir, "creatureLootTables.json")));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Import_ReadsA422StorageTable_ItsLadderZeroOnly()
+    {
+        var entries = new Dictionary<string, byte[]>(TableArchiveReader.ReadEntries(BuildArchive()))
+        {
+            ["tables/storage_upgrade.tbl"] = BuildTable("uuuuuuuu", [
+                new Dictionary<int, object> { [0] = 4u, [1] = 0u, [2] = 0u, [3] = 18u, [4] = 0u, [5] = 100u, [7] = 12u },
+                new Dictionary<int, object> { [0] = 17u, [1] = 0u, [2] = 1u, [3] = 18u, [4] = 0u, [5] = 1000000u, [7] = 12u },
+                new Dictionary<int, object> { [0] = 46u, [1] = 0u, [2] = 3u, [3] = 4u, [4] = 11u, [5] = 15u, [7] = 3u }]),
+        };
+        var tempDir = Path.Combine(Path.GetTempPath(), "ubiquitous-package-importer-tests-" + Guid.NewGuid());
+
+        try
+        {
+            var result = PackageImporter.Import(entries, tempDir, sourceHash: "test-hash");
+
+            Assert.Equal(1, result.StorageUpgradeCount);
+            var upgrade = Assert.Single(DataCatalog.LoadFromDirectory(tempDir).LoadStorageUpgrades());
+            Assert.Equal(new StorageUpgradeDefinition(4, "bag", 18, 12, 0, 100), upgrade);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private static byte[] BuildArchive(params string[] omit)
     {
         // Synthetic rows in real 1.1.4 shapes (see fingerprints/1.1.4.json): the
         // import resolves these through the same fast paths as real data, so
@@ -387,8 +440,12 @@ public class PackageImporterTests
             new Dictionary<int, object> { [0] = 550u, [4] = 1u, [6] = 1u, [7] = 4u, [9] = 5, [11] = 3u },
         ]);
 
+        // 4.2.21 gives 68 rows of class 15 the subclass 9999, which the server cannot keep.
         var items = BuildTable("uuukuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuffuffuuuufuuuuuuuuuuuuukuuuuuuuufuuuuuuuuuuuuuuuusuuuusuuuuuuuuuu",
-            new Dictionary<int, object> { [0] = 200u, [1] = 4u, [2] = 5u, [3] = 950u, [4] = 200u, [5] = 3u, [8] = 75u });
+        [
+            new Dictionary<int, object> { [0] = 200u, [1] = 4u, [2] = 5u, [3] = 950u, [4] = 200u, [5] = 3u, [8] = 75u },
+            new Dictionary<int, object> { [0] = 201u, [1] = 15u, [2] = 9999u, [3] = 950u },
+        ]);
         var stringItem = BuildTable("us", new Dictionary<int, object> { [0] = 950u, [1] = "Shield" });
 
         var zones = BuildTable("iiiuffffffffuuffuuuussssssfffffusiii",
@@ -402,8 +459,13 @@ public class PackageImporterTests
                 [0] = 5000u, [4] = 1u, [24] = 155u, [25] = 156u, [87] = 200u, [91] = 2u, [108] = 50u,
             },
             new Dictionary<int, object> { [0] = 5002u, [4] = 1u, [24] = 12007u, [25] = 12008u },
+            new Dictionary<int, object> { [0] = 5003u, [4] = 1u, [24] = 157u, [25] = 158u, [35] = 200u, [39] = 0u },
         ]);
-        var questStarter = BuildTable("uu", new Dictionary<int, object> { [0] = 12u, [1] = 5000u });
+        var questStarter = BuildTable("uu",
+        [
+            new Dictionary<int, object> { [0] = 12u, [1] = 5000u },
+            new Dictionary<int, object> { [0] = 12u, [1] = 5003u },
+        ]);
         var creatureQuestFinisher = BuildTable("uu", new Dictionary<int, object> { [0] = 12u, [1] = 5000u });
 
         var mapGraveyard = BuildTable("uffffuuu",
@@ -504,10 +566,7 @@ public class PackageImporterTests
             ["tables/loot_feature.tbl"] = lootFeature,
             ["tables/loot_feature_items.tbl"] = lootFeatureItems,
         };
-        if (omit is not null)
-        {
-            files.Remove(omit);
-        }
+        foreach (var name in omit) files.Remove(name);
 
         using var stream = new MemoryStream();
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
@@ -534,9 +593,9 @@ public class PackageImporterTests
         return bytes;
     }
 
-    private static byte[] BuildTable(string format, Dictionary<int, object> row) => BuildTable(format, [row]);
+    internal static byte[] BuildTable(string format, Dictionary<int, object> row) => BuildTable(format, [row]);
 
-    private static byte[] BuildTable(string format, IReadOnlyList<Dictionary<int, object>> rows)
+    internal static byte[] BuildTable(string format, IReadOnlyList<Dictionary<int, object>> rows)
     {
         int cols = format.Length;
         var widths = new int[cols];

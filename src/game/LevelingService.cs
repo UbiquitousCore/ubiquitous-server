@@ -1,24 +1,19 @@
+using Ubiquitous.Data;
+
 namespace Ubiquitous.Game;
 
 public static class LevelingService
 {
-    /// <summary>The cap through 1.1.5, where every level's values were read in play.</summary>
-    public const int FirstCap = 60;
+    // The cap 1.1.4 was seen with, and the last level whose XP bar was read in play.
+    public const int SeenMaxLevel = 60;
 
-    /// <summary>The loaded build's level cap (`UseCapOf`).</summary>
-    public static int MaxLevel { get; private set; } = FirstCap;
-
-    /// <summary>
-    /// The cap each build's content reaches: quests stop and gear gathers at
-    /// 60 through 1.1.5, 70 in 2.2.0 and 2.5.0, 75 in 4.2.21.
-    /// </summary>
-    public static void UseCapOf(string gameVersion) =>
-        MaxLevel = gameVersion.Split('.')[0] switch
-        {
-            "2" => 70,
-            "4" => 75,
-            _ => FirstCap,
-        };
+    // A later build's cap is what its own achievements ask for; 1.1.4 and a package that says nothing keep 60.
+    // 1.x keeps the 60 seen in play: its `achievement` table holds its conditions
+    // elsewhere, so the reading below does not apply to it.
+    public static int CapOf(DataManifest? manifest) =>
+        manifest is null || manifest.GameVersion.StartsWith("1.", StringComparison.Ordinal)
+            ? SeenMaxLevel
+            : manifest.LevelCap ?? SeenMaxLevel;
 
     private static readonly int[] XpBarByLevel =
     [
@@ -28,14 +23,16 @@ public static class LevelingService
         41300, 48700, 56350, 64250, 72450, 80850, 89550, 98500, 107700, 117200,
         126900, 136900, 147150, 157650, 168450, 179450, 190750, 202300, 214100, 226200,
         238500, 251100, 263950, 277050, 290450, 304050, 317950, 332100, 346500,
-        // Own choice: past 60 each bar grows by 300 more than the one before,
-        // continuing the last steps read in play.
-        361200, 376200, 391500, 407100, 423000, 439200, 455700, 472500, 489600, 507000,
-        524700, 542700, 561000, 579600, 598500,
     ];
 
-    public static int XpToNextLevel(int level) =>
-        level >= 1 && level < MaxLevel ? XpBarByLevel[level - 1] : 0;
+    // Own choice: past the levels read in play, each bar grows by the last step that was seen.
+    public static int XpToNextLevel(int level, int levelCap)
+    {
+        if (level < 1 || level >= levelCap) return 0;
+        if (level <= XpBarByLevel.Length) return XpBarByLevel[level - 1];
+        var last = XpBarByLevel[^1];
+        return last + (level - XpBarByLevel.Length) * (last - XpBarByLevel[^2]);
+    }
 
     private static readonly (int MaxGap, int Percent)[] QuestRewardBands =
     [
@@ -95,22 +92,22 @@ public static class LevelingService
 
     public readonly record struct GrantResult(int Level, int Xp, int LevelsGained);
 
-    public static int HeldXp(int level, int xp) => level >= MaxLevel ? 0 : Math.Max(0, xp);
+    public static int HeldXp(int level, int xp, int levelCap) => level >= levelCap ? 0 : Math.Max(0, xp);
 
-    public static GrantResult ApplyXp(int level, int xp, int gained)
+    public static GrantResult ApplyXp(int level, int xp, int gained, int levelCap)
     {
-        if (level >= MaxLevel) return new GrantResult(level, 0, 0);
+        if (level >= levelCap) return new GrantResult(level, 0, 0);
 
         xp += gained;
         var levelsGained = 0;
-        while (level < MaxLevel && xp >= XpToNextLevel(level))
+        while (level < levelCap && xp >= XpToNextLevel(level, levelCap))
         {
-            xp -= XpToNextLevel(level);
+            xp -= XpToNextLevel(level, levelCap);
             level++;
             levelsGained++;
         }
 
-        if (level >= MaxLevel) xp = 0;
+        if (level >= levelCap) xp = 0;
         return new GrantResult(level, xp, levelsGained);
     }
 }

@@ -9,6 +9,7 @@ public static class SpellNewColumns
             LayoutColumn.Must(nameof(SpellTableColumns.Id), 0, "uk"),
             LayoutColumn.Must(nameof(SpellTableColumns.NameTextId), 5, "u"),
             LayoutColumn.Must(nameof(SpellTableColumns.Rank), 6, "u"),
+            LayoutColumn.May(nameof(SpellTableColumns.ChainFirst), 27, "u"),
             LayoutColumn.Must(nameof(SpellTableColumns.WornSlotNeeded), 12, "iu"),
             LayoutColumn.Must(nameof(SpellTableColumns.RequiredItemClass), 13, "u"),
             LayoutColumn.Must(nameof(SpellTableColumns.ItemSubclassesAllowed), 14, "u"),

@@ -12,7 +12,7 @@ public sealed partial class PlaySession
 {
     private IReadOnlyList<uint> KnownSpellsFor(CharacterRecord character)
     {
-        var loadout = StartingLoadouts.For(character.Race, character.Class);
+        var loadout = _content.LoadoutFor(character.Race, character.Class);
         if (loadout is null)
         {
             return _content.StartingSpells;
@@ -22,8 +22,8 @@ public sealed partial class PlaySession
             .ToHashSet();
         _actionBar.Clear();
         foreach (var button in loadout.ActionBar) _actionBar[button.Slot] = (button.SpellId, 0);
-        IReadOnlyList<uint> trained = character.Level >= LevelingService.MaxLevel
-            ? PlaytestSpellbook.AtMaxLevel(character.Class)
+        var trained = ClassSpellbook.HoldsWholeBook(_content, character.Level, OnDevelopmentLogin)
+            ? ClassSpellbook.WholeBookAt(_content, character.Class, character.Level)
             : [];
         return [.. _content.StartingSpells.Where(id => !books.Contains(id)), .. loadout.Spells, .. trained];
     }
@@ -122,8 +122,8 @@ public sealed partial class PlaySession
             character.MapId,
             new Position(character.X, character.Y, character.Z),
             character.Equipment,
-            LevelingService.HeldXp(character.Level, character.Xp),
-            LevelingService.XpToNextLevel(character.Level))).ToArray();
+            LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap),
+            LevelingService.XpToNextLevel(character.Level, _content.LevelCap))).ToArray();
 
         var offered = _content.PlayableRaces.OrderBy(race => race).ToArray();
         return Reply(WebMessageTypes.CharactersListed, new CharactersListedPayload(summaries, offered));
@@ -154,7 +154,8 @@ public sealed partial class PlaySession
             request.Name, request.Race, request.Class, request.Gender,
             look.Skin, look.HairStyle, look.HairColour, look.Face,
             held.Count, nameIsTaken,
-            _content.PlayableRaces);
+            _content.PlayableRaces,
+            _content.Loadouts);
 
         if (plan is null)
         {
@@ -221,7 +222,7 @@ public sealed partial class PlaySession
         }
 
         var request = WebMessageJson.DeserializePayload<OutfitRequest>(payload);
-        var loadout = StartingLoadouts.For(request.Race, request.Class);
+        var loadout = _content.LoadoutFor(request.Race, request.Class);
         return Reply(WebMessageTypes.CharactersOutfitted, new OutfitPayload(
             request.Race,
             request.Class,
@@ -327,7 +328,7 @@ public sealed partial class PlaySession
         Volatile.Write(ref _nextAutosaveTicks, (Now + AutosaveInterval).UtcTicks);
         _character = character;
         _level = character.Level;
-        _xp = LevelingService.HeldXp(character.Level, character.Xp);
+        _xp = LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap);
         _exhaustion = character.Exhaustion ?? 0;
         _exhaustionDay = character.ExhaustionDay;
         if (character.LegendDungeons == true) _instances.RecallMode($"player:{character.Guid}", DungeonMode.Legend);
@@ -336,7 +337,7 @@ public sealed partial class PlaySession
             _belongings.Currency = Math.Max(_belongings.Currency, DevelopmentFixtures.Purse);
         _belongings.BagSlots = character.BagSlots ?? PlayerBelongings.DefaultBagCapacity;
         _belongings.BankSlots = character.BankSlots ?? PlayerBelongings.DefaultBankCapacity;
-        var startingAttributes = StartingLoadouts.For(character.Race, character.Class)?.Attributes;
+        var startingAttributes = _content.LoadoutFor(character.Race, character.Class)?.Attributes;
         _combat.EnterAsCharacter(character.Class, character.Level, $"player:{character.Guid}", character.Health,
             startingAttributes);
         RefreshWornAttributes();
@@ -383,7 +384,7 @@ public sealed partial class PlaySession
             [WireCodes.UnitValue.Power] = _spells.Power,
             [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(enterWisdomBonus),
             [WireCodes.UnitValue.Xp] = _xp,
-            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level),
+            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level, _content.LevelCap),
             [WireCodes.UnitValue.Exhaustion] = ExhaustionNow(enterNow),
             [WireCodes.UnitValue.MaxExhaustion] = _content.Rates.ExhaustionLimit,
         };
@@ -394,6 +395,11 @@ public sealed partial class PlaySession
 
         return responses;
     }
+
+    private bool _enteredForDevelopment;
+
+    private bool OnDevelopmentLogin =>
+        _enteredForDevelopment || (_account is not null && _developmentUserIds.Contains(_account.UserId));
 
     private async Task<IReadOnlyList<string>> DevEnterWorldAsync(
         JsonElement payload, CancellationToken cancellationToken)
@@ -411,6 +417,7 @@ public sealed partial class PlaySession
 
         _loginAttempted = true;
         _account = new AccountRecord(character.AccountId, $"dev:{character.Guid}", string.Empty);
+        _enteredForDevelopment = true;
         return await EnterAsCharacterAsync(character, cancellationToken);
     }
 }

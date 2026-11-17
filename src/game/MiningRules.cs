@@ -53,7 +53,7 @@ public static class MiningRules
 {
     public const uint LocationEntry = 52;
 
-    public static uint GatherSpellId => BasicSpells.GatherMine;
+    public const uint GatherSpellId = 23;
 
     public const int DefaultCastTimeMs = 3500;
 

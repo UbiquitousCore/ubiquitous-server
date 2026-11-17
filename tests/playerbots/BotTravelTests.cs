@@ -31,7 +31,7 @@ public sealed class BotTravelTests
 
     private static BotBrain Brain(GameContent content, IReadOnlyList<CreatureSpawnDefinition> spawns) =>
         new(new BotKnowledge(content, spawns), PlayerbotSettings.From(new ModuleSettings(
-            new Dictionary<string, string> { ["idleBreaks"] = "false" })), new Random(1), _ => false);
+            new Dictionary<string, string> { ["idleBreaks"] = "false" }), LevelingService.SeenMaxLevel), new Random(1), _ => false);
 
     private static BotView InWorld(int level = 1, float x = 0, float z = 0)
     {
@@ -160,7 +160,7 @@ public sealed class BotTravelTests
         for (var seed = 0; seed < 5; seed++)
         {
             var brain = new BotBrain(new BotKnowledge(TwoFares(), HighAndLow), PlayerbotSettings.From(new ModuleSettings(
-                new Dictionary<string, string> { ["idleBreaks"] = "false" })), new Random(seed), _ => false);
+                new Dictionary<string, string> { ["idleBreaks"] = "false" }), LevelingService.SeenMaxLevel), new Random(seed), _ => false);
             var view = InWorld(x: 29);
             brain.Decide(view, Start);
 

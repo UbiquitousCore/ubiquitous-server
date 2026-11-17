@@ -69,7 +69,9 @@ public sealed record SpellDefinition(
     uint? AuraAvatarDisplayId = null,
     // Fires only when the caster was hidden (sneaking) as the cast began: the opener's stun.
     uint? EffectFromHidingTriggerSpellId = null,
-    int? EffectFromHidingTriggerChancePercent = null);
+    int? EffectFromHidingTriggerChancePercent = null,
+    // The first rank of the chain this spell belongs to, when the table names one.
+    uint? ChainFirstSpellId = null);
 
 public static class SpellEffectTargets
 {
@@ -88,15 +90,11 @@ public static class PowerKinds
     public const int Morale = 2;
     public const int Vigor = 3;
 
-    /// <summary>What 4.2.21's Flame Knight spells cost, beside mana. How it fills is not read yet.</summary>
-    public const int FlameKnightPower = 4;
-
     public static int ForClass(int playerClass) => playerClass switch
     {
         PlayerClassIds.Warrior => Morale,
-        PlayerClassIds.Mage or PlayerClassIds.Monk => Mana,
+        PlayerClassIds.Mage or PlayerClassIds.Monk or PlayerClassIds.FlameKnight => Mana,
         PlayerClassIds.Ranger => Vigor,
-        PlayerClassIds.FlameKnight => FlameKnightPower,
         _ => 0,
     };
 }
@@ -324,7 +322,7 @@ public sealed record StaticObjectSpawnDefinition(
     uint State = 0,
     uint Flags = 0);
 
-public sealed record StaticObjectTypeDefinition(uint Entry, uint Type, uint Festival = 0);
+public sealed record StaticObjectTypeDefinition(uint Entry, uint Type, uint Festival = 0, uint GatherSpellId = 0);
 
 public static class OperatorSpells
 {
@@ -365,6 +363,12 @@ public sealed record LootTableItemDefinition(uint ItemId, double DropChancePerce
 public sealed record LootGroupDefinition(int GuaranteedDrops, int MaxDrops, IReadOnlyList<LootTableItemDefinition> Items);
 
 public sealed record CreatureLootTableDefinition(uint CreatureEntryId, IReadOnlyList<LootGroupDefinition> Groups);
+
+// The creatures a quest names as carrying an item it asks for; read only from a build without loot tables.
+public sealed record QuestItemSourceDefinition(uint QuestId, uint ItemEntry, IReadOnlyList<uint> CreatureEntryIds)
+{
+    public const string Dataset = "questItemSources";
+}
 
 public sealed record StaticObjectItemBindingDefinition(uint StaticObjectEntry, uint QuestId, uint ItemEntry, uint Reserve = 0);
 
@@ -662,17 +666,24 @@ public static class PlayerClassIds
     public const int Mage = 2;
     public const int Ranger = 3;
     public const int Monk = 4;
-
-    /// <summary>4.2.21 on.</summary>
+    // 4.2.2's fifth `character_class` row: its talent trees are the Flame Knight's.
     public const int FlameKnight = 5;
 
     /// <summary>The classes every build has; the Flame Knight is offered where the loaded build has it.</summary>
     public static readonly IReadOnlySet<int> All = new HashSet<int> { Warrior, Mage, Ranger, Monk };
+
+    // TODO: Verify a Flame Knight's numbers in play. Own placeholder until then: it takes the
+    // Warrior's health, attributes, attack power and regeneration, and the Monk's mana.
+    public static int StatsLike(int playerClass) => playerClass == FlameKnight ? Warrior : playerClass;
+
+    public static int ManaLike(int playerClass) => playerClass == FlameKnight ? Monk : playerClass;
 }
 
 public static class ItemClasses
 {
+    public const byte Consumables = 0;
     public const byte Weapons = 2;
+    public const byte Armour = 4;
     public const byte Riding = 14;
 }
 
@@ -733,7 +744,8 @@ public sealed record CharacterStartingLoadout(
     StartingAttributes Attributes,
     IReadOnlyList<StartingLoadoutItem> Items,
     IReadOnlyList<uint> Spells,
-    IReadOnlyList<StartingActionButton> ActionBar)
+    IReadOnlyList<StartingActionButton> ActionBar,
+    int Level = 1)
 {
     public IReadOnlyList<int> WornEquipment() => EquipmentSlots.Build(
         [.. Items.Where(item => item.IsWorn).Select(item => (item.Slot, (int)item.ItemEntry))]);

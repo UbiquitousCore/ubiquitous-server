@@ -151,7 +151,7 @@ public sealed class LevelingTests
                 [9001] = new(9001, "creature-9001", Level: 9, MaxHealth: 1, MinDamage: 0, MaxDamage: 0),
             },
         };
-        var session = await SessionAsync(content, level: 9, xp: LevelingService.XpToNextLevel(9) - 1);
+        var session = await SessionAsync(content, level: 9, xp: LevelingService.XpToNextLevel(9, LevelingService.SeenMaxLevel) - 1);
 
         await AttackAsync(session, "Creature:1");
         var now = DateTimeOffset.UtcNow;
@@ -170,7 +170,7 @@ public sealed class LevelingTests
     [Fact]
     public async Task AtTheLevelCap_XpLeftOverFromAnEarlierSaveIsZeroedOnEntry()
     {
-        var store = new InMemoryCharacterStore([Character(LevelingService.MaxLevel) with { Xp = 12_345 }]);
+        var store = new InMemoryCharacterStore([Character(LevelingService.SeenMaxLevel) with { Xp = 12_345 }]);
         var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), store,
             [], null, GameContent.Development);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -191,16 +191,43 @@ public sealed class LevelingTests
     }
 
     [Fact]
+    public async Task UnderAHigherBuildCap_ALevel60KillStillPaysXp()
+    {
+        var content = GameContent.Development with
+        {
+            LevelCap = 75,
+            Creatures = new Dictionary<uint, CreatureDefinition>
+            {
+                [9001] = new(9001, "creature-9001", Level: 60, MaxHealth: 1, MinDamage: 0, MaxDamage: 0),
+            },
+        };
+        var session = await SessionAsync(content, level: LevelingService.SeenMaxLevel, xp: 500);
+
+        await AttackAsync(session, "Creature:1");
+        var now = DateTimeOffset.UtcNow;
+        var responses = new List<string>();
+        for (var swing = 0; swing < 20; swing++)
+        {
+            now += TimeSpan.FromSeconds(2);
+            responses.AddRange(session.TickCombat(now));
+            if (responses.Any(m => m.Contains("\"type\":\"unit.died\""))) break;
+        }
+
+        Assert.Contains(responses, m => m.Contains("\"type\":\"player.expGained\""));
+        Assert.Contains(responses, m => m.Contains("\"xpToNextLevel\":360900"));
+    }
+
+    [Fact]
     public async Task AtTheLevelCap_AKillPaysNoXpAndSendsNoGain()
     {
         var content = GameContent.Development with
         {
             Creatures = new Dictionary<uint, CreatureDefinition>
             {
-                [9001] = new(9001, "creature-9001", Level: LevelingService.MaxLevel, MaxHealth: 1, MinDamage: 0, MaxDamage: 0),
+                [9001] = new(9001, "creature-9001", Level: LevelingService.SeenMaxLevel, MaxHealth: 1, MinDamage: 0, MaxDamage: 0),
             },
         };
-        var session = await SessionAsync(content, level: LevelingService.MaxLevel, xp: 500);
+        var session = await SessionAsync(content, level: LevelingService.SeenMaxLevel, xp: 500);
 
         await AttackAsync(session, "Creature:1");
         var now = DateTimeOffset.UtcNow;

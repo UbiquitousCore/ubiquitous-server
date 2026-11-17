@@ -7,7 +7,7 @@ namespace Ubiquitous.AssetExtractor;
 public static class PackageImporter
 {
     public sealed record ImportResult(
-        int MapCount, int CreatureCount, int SpawnCount, int DroppedSpawnCount, int SpellCount, int ItemCount,
+        int MapCount, int CreatureCount, int SpawnCount, int DroppedSpawnCount, int SpellCount, int ItemCount, int DroppedItemCount,
         int ZoneCount, int DroppedZoneCount, int QuestCount, int DroppedQuestCount, int NpcCount,
         int QuestRewardCount, int TeleportStopCount, int DroppedTeleportStopCount, int TravelRouteCount,
         int DroppedTravelRouteCount, int StaticObjectCount, int DroppedStaticObjectCount,
@@ -111,7 +111,7 @@ public static class PackageImporter
         var spellStrings = StringTableMapper.MapStrings(Load("tables/String_Spell_en.tbl"));
         var spellNewDocument = Load("tables/spell_new.tbl");
         var spellNewColumns = Columns(SpellNewColumns.Layout, spellNewDocument).As<SpellTableColumns>();
-        var spells = SpellTableMapper.MapSpells(spellNewDocument, spellNewColumns,
+        IReadOnlyList<SpellDefinition> spells = SpellTableMapper.MapSpells(spellNewDocument, spellNewColumns,
             resolveName: id => spellStrings.TryGetValue(id, out var text) && !string.IsNullOrWhiteSpace(text)
                 ? text
                 : $"spell-{id}");
@@ -140,7 +140,8 @@ public static class PackageImporter
         var itemColumns = Columns(ItemColumns.Layout, itemDocument).As<ItemTableColumns>();
         var itemRows = itemDocument.Rows.Where(row =>
             ItemTableMapper.FitsKind(row[itemColumns.Class]) && ItemTableMapper.FitsKind(row[itemColumns.SubClass])).ToList();
-        if (itemRows.Count < itemDocument.Rows.Count)
+        int droppedItems = itemDocument.Rows.Count - itemRows.Count;
+        if (droppedItems > 0)
         {
             notes.Add($"tables/items.tbl: {itemDocument.Rows.Count - itemRows.Count} item(s) dropped: " +
                 "a class or subclass larger than the server keeps.");
@@ -218,10 +219,12 @@ public static class PackageImporter
         var lootGroupsById = new Dictionary<uint, (int MinLevel, int MaxLevel, int GuaranteedDrops, int MaxDrops)>();
         var lootGroupsByCreature = new Dictionary<uint, List<LootGroupDefinition>>();
         const string WithoutLoot = "creatures drop nothing";
+        bool hasLootTables = false;
         if (LoadOptional("tables/loot_feature_items.tbl", WithoutLoot) is { } lootItemsDocument
             && LoadOptional("tables/loot_feature.tbl", WithoutLoot) is { } lootFeatureDocument
             && LoadOptional("tables/loot.tbl", WithoutLoot) is { } lootDocument)
         {
+            hasLootTables = true;
             var lootItemColumns = Columns(LootColumns.ItemLayout, lootItemsDocument).As<LootItemTableColumns>();
             foreach (var row in lootItemsDocument.Rows)
             {
@@ -505,9 +508,10 @@ public static class PackageImporter
         IReadOnlyList<StorageUpgradeDefinition> storageUpgrades = [];
         if (LoadOptional("tables/storage_upgrade.tbl", "bags and the bank cannot be enlarged") is { } storageUpgradeDocument)
         {
+            var storageColumns = Columns(StorageUpgradeColumns.Layout, storageUpgradeDocument).As<StorageUpgradeTableColumns>();
             storageUpgrades = StorageUpgradeTableMapper.MapUpgrades(
                 storageUpgradeDocument,
-                Columns(StorageUpgradeColumns.Layout, storageUpgradeDocument).As<StorageUpgradeTableColumns>());
+                storageColumns with { LadderColumn = StorageUpgradeColumns.LadderOf(storageUpgradeDocument) });
         }
 
         var staticObjectTypes = StaticObjectProtoTableMapper.MapTypes(
@@ -517,11 +521,36 @@ public static class PackageImporter
         if (LoadOptional("tables/spell_talent.tbl", "there are no talents") is { } spellTalentDocument
             && LoadOptional("tables/character_class.tbl", "there are no talents") is { } characterClassDocument)
         {
+            var talentColumns = Columns(TalentColumns.Layout, spellTalentDocument).As<TalentTableColumns>();
             talentTrees = TalentTableMapper.MapTrees(
-                spellTalentDocument, characterClassDocument,
-                Columns(TalentColumns.Layout, spellTalentDocument).As<TalentTableColumns>(),
+                spellTalentDocument, characterClassDocument, talentColumns,
                 Columns(TalentColumns.ClassLayout, characterClassDocument).As<ClassTreeColumns>());
+            if (talentColumns.NameTextId >= 0
+                && archiveEntries.TryGetValue("tables/String_Talent_en.tbl", out var talentStringBytes))
+            {
+                var renamed = TalentSpellNames.Renamed(
+                    spellNewDocument.Rows
+                        .Where(row => row[spellNewColumns.NameTextId] is uint)
+                        .ToDictionary(row => (uint)row[spellNewColumns.Id], row => (uint)row[spellNewColumns.NameTextId]),
+                    spellStrings,
+                    talentTrees.SelectMany(tree => tree.Talents).Select(talent => new TalentNaming(
+                        talent.Id,
+                        spellTalentDocument.ByKey.TryGetValue(talent.Id, out var row)
+                            && row[talentColumns.NameTextId] is uint nameId ? nameId : 0,
+                        talent.RankSpellIds)),
+                    StringTableMapper.MapStrings(FTableDocument.Load(talentStringBytes)));
+                spells = [.. spells.Select(spell => renamed.TryGetValue(spell.Id, out var name) ? spell with { NameKey = name } : spell)];
+            }
         }
+
+        // A build without loot tables gets the creatures its quests name for their items instead.
+        var questItemSources = hasLootTables
+            ? []
+            : QuestItemSources.Find(quests, itemsByEntry, creatures, spawns,
+                archiveEntries.TryGetValue("tables/String_Quest_en.tbl", out var questStringBytes)
+                    ? StringTableMapper.MapStrings(FTableDocument.Load(questStringBytes))
+                    : new Dictionary<uint, string>(),
+                staticObjectQuestItemBindings);
 
         Directory.CreateDirectory(outDirectory);
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
@@ -538,7 +567,10 @@ public static class PackageImporter
         File.WriteAllText(Path.Combine(outDirectory, "staticObjectQuestFinishers.json"), JsonSerializer.Serialize(staticObjectQuestFinishers, options));
         File.WriteAllText(Path.Combine(outDirectory, "staticObjectQuestItemBindings.json"), JsonSerializer.Serialize(staticObjectQuestItemBindings, options));
         File.WriteAllText(Path.Combine(outDirectory, "creatureQuestFinishers.json"), JsonSerializer.Serialize(creatureQuestFinishers, options));
-        File.WriteAllText(Path.Combine(outDirectory, "creatureLootTables.json"), JsonSerializer.Serialize(creatureLootTables, options));
+        if (hasLootTables)
+            File.WriteAllText(Path.Combine(outDirectory, "creatureLootTables.json"), JsonSerializer.Serialize(creatureLootTables, options));
+        else
+            File.WriteAllText(Path.Combine(outDirectory, QuestItemSourceDefinition.Dataset + ".json"), JsonSerializer.Serialize(questItemSources, options));
         File.WriteAllText(Path.Combine(outDirectory, "teleportStops.json"), JsonSerializer.Serialize(teleportStops, options));
         File.WriteAllText(Path.Combine(outDirectory, "gossipMenus.json"), JsonSerializer.Serialize(gossipMenus, options));
         File.WriteAllText(Path.Combine(outDirectory, "mapGraveyards.json"), JsonSerializer.Serialize(graveyards, options));
@@ -585,17 +617,29 @@ public static class PackageImporter
             datasets["dungeonRewards"] = dungeonRewardsFile;
         }
 
+        if (!hasLootTables)
+        {
+            datasets.Remove("creatureLootTables");
+            datasets[QuestItemSourceDefinition.Dataset] = QuestItemSourceDefinition.Dataset + ".json";
+        }
+
         var manifest = new DataManifest(
             ExtractorVersion: "0.1.0",
             GameVersion: build,
             SourceHash: sourceHash,
             GeneratedAt: DateTimeOffset.UtcNow,
             Datasets: datasets,
-            ImportNotes: notes.Count > 0 ? notes : null);
+            ImportNotes: notes.Count > 0 ? notes : null,
+            LevelCap: archiveEntries.TryGetValue("tables/achievement.tbl", out var achievementBytes)
+                && archiveEntries.TryGetValue("tables/String_Achievement_en.tbl", out var achievementStringBytes)
+                ? AchievementColumns.HighestPlayerLevelAskedFor(
+                    FTableDocument.Load(achievementBytes),
+                    StringTableMapper.MapStrings(FTableDocument.Load(achievementStringBytes)))
+                : null);
         DataManifestJson.Save(manifest, Path.Combine(outDirectory, DataManifest.FileName));
 
         return new ImportResult(
-            maps.Count, creatures.Count, spawns.Count, droppedSpawns, spells.Count, items.Count,
+            maps.Count, creatures.Count, spawns.Count, droppedSpawns, spells.Count, items.Count, droppedItems,
             zones.Count, droppedZones, quests.Count, droppedQuests, npcs.Count, questRewards.Count,
             teleportStops.Count, droppedTeleportStops, travelRoutes.Count, droppedTravelRoutes,
             staticObjects.Count, droppedStaticObjects, storageUpgrades.Count, staticObjectTypes.Count,

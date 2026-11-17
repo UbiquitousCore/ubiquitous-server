@@ -9,6 +9,7 @@ public static class StaticObjectProtoColumns
             LayoutColumn.Must(nameof(StaticObjectProtoTableColumns.Entry), 0, "uk"),
             LayoutColumn.Must(nameof(StaticObjectProtoTableColumns.Type), 1, "u"),
             LayoutColumn.May(nameof(StaticObjectProtoTableColumns.Display), 3, "u"),
+            LayoutColumn.May(nameof(StaticObjectProtoTableColumns.GatherSpell), 12, "u"),
             LayoutColumn.May(nameof(StaticObjectProtoTableColumns.Festival), 19, "u"),
         ],
         // 1.0.0 to 1.0.3

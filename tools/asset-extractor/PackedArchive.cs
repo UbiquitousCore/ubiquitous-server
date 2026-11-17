@@ -72,8 +72,7 @@ public sealed class PackedArchive : IDisposable
         {
             0 => compressed,
             8 => Inflate(compressed, entry.UncompressedSize, name),
-            14 => LzmaMethod.Decode(name, compressed, entry.UncompressedSize,
-                message => new PackedArchiveFormatException(message)),
+            Lzma.ZipMethod => DecodeLzma(compressed, entry, name),
             _ => throw new PackedArchiveFormatException(
                 $"Entry '{name}' uses compression method {entry.Method}, which this reader does not know."),
         };
@@ -82,6 +81,26 @@ public sealed class PackedArchive : IDisposable
     public void Dispose()
     {
         if (_ownsStream) _stream.Dispose();
+    }
+
+    private static byte[] DecodeLzma(byte[] compressed, Entry entry, string name)
+    {
+        byte[] output;
+        try
+        {
+            output = Lzma.DecodeZip(compressed, entry.UncompressedSize, (entry.Flags & Lzma.ZipEndMarkerFlag) != 0);
+        }
+        catch (LzmaFormatException ex)
+        {
+            throw new PackedArchiveFormatException($"Entry '{name}': {ex.Message}");
+        }
+
+        if (Crc32.Compute(output) != entry.Crc)
+        {
+            throw new PackedArchiveFormatException($"Entry '{name}' decompressed to bytes whose CRC-32 is not the one recorded.");
+        }
+
+        return output;
     }
 
     private static byte[] Inflate(byte[] compressed, int uncompressedSize, string name)
@@ -161,7 +180,9 @@ public sealed class PackedArchive : IDisposable
                 throw new PackedArchiveFormatException($"Central directory record {i} has a bad signature.");
             }
 
+            ushort flags = BinaryPrimitives.ReadUInt16LittleEndian(directory.AsSpan(cursor + 8, 2));
             ushort method = BinaryPrimitives.ReadUInt16LittleEndian(directory.AsSpan(cursor + 10, 2));
+            uint crc = BinaryPrimitives.ReadUInt32LittleEndian(directory.AsSpan(cursor + 16, 4));
             int compressedSize = checked((int)BinaryPrimitives.ReadUInt32LittleEndian(directory.AsSpan(cursor + 20, 4)));
             int uncompressedSize = checked((int)BinaryPrimitives.ReadUInt32LittleEndian(directory.AsSpan(cursor + 24, 4)));
             int nameLength = BinaryPrimitives.ReadUInt16LittleEndian(directory.AsSpan(cursor + 28, 2));
@@ -176,10 +197,11 @@ public sealed class PackedArchive : IDisposable
             }
 
             var name = Encoding.ASCII.GetString(directory.AsSpan(nameAt, nameLength)).Replace('\\', '/');
-            _entries.TryAdd(name, new Entry(method, compressedSize, uncompressedSize, localHeaderOffset));
+            _entries.TryAdd(name, new Entry(method, flags, crc, compressedSize, uncompressedSize, localHeaderOffset));
             cursor = nameAt + nameLength + extraLength + commentLength;
         }
     }
 
-    private readonly record struct Entry(ushort Method, int CompressedSize, int UncompressedSize, long LocalHeaderOffset);
+    private readonly record struct Entry(
+        ushort Method, ushort Flags, uint Crc, int CompressedSize, int UncompressedSize, long LocalHeaderOffset);
 }

@@ -38,25 +38,46 @@ public sealed class LevelingServiceTests
     [InlineData(59, 346500)]
     public void XpToNextLevel_ReturnsTheBarTotalForTheLevel(int level, int expected)
     {
-        Assert.Equal(expected, LevelingService.XpToNextLevel(level));
+        Assert.Equal(expected, LevelingService.XpToNextLevel(level, LevelingService.SeenMaxLevel));
     }
 
     [Theory]
-    [InlineData(LevelingService.FirstCap)]
-    [InlineData(LevelingService.FirstCap + 1)]
+    [InlineData(LevelingService.SeenMaxLevel)]
+    [InlineData(LevelingService.SeenMaxLevel + 1)]
     [InlineData(0)]
     public void XpToNextLevel_IsZeroWhereThereIsNoNextLevel(int level)
     {
-        Assert.Equal(0, LevelingService.XpToNextLevel(level));
+        Assert.Equal(0, LevelingService.XpToNextLevel(level, LevelingService.SeenMaxLevel));
+    }
+
+    [Theory]
+    [InlineData(60, 360_900)]
+    [InlineData(74, 562_500)]
+    [InlineData(75, 0)]
+    public void UnderAHigherCap_EachBarPastTheSeenOnesGrowsByTheLastSeenStep(int level, int expected)
+    {
+        Assert.Equal(expected, LevelingService.XpToNextLevel(level, levelCap: 75));
+    }
+
+    [Fact]
+    public void UnderAHigherCap_Level60KeepsLevelling_AndStopsAtTheCap()
+    {
+        var past = LevelingService.ApplyXp(level: 60, xp: 0, gained: 360_900 + 5, levelCap: 75);
+        var capped = LevelingService.ApplyXp(level: 74, xp: 0, gained: 9_999_999, levelCap: 75);
+
+        Assert.Equal((61, 5, 1), (past.Level, past.Xp, past.LevelsGained));
+        Assert.Equal((75, 0), (capped.Level, capped.Xp));
+        Assert.Equal(0, LevelingService.HeldXp(75, 100, levelCap: 75));
+        Assert.Equal(100, LevelingService.HeldXp(60, 100, levelCap: 75));
     }
 
     [Fact]
     public void XpToNextLevel_RisesEveryLevelInWholeFifties()
     {
-        for (var level = 1; level < LevelingService.FirstCap; level++)
+        for (var level = 1; level < LevelingService.SeenMaxLevel; level++)
         {
-            Assert.Equal(0, LevelingService.XpToNextLevel(level) % 50);
-            if (level > 1) Assert.True(LevelingService.XpToNextLevel(level) > LevelingService.XpToNextLevel(level - 1));
+            Assert.Equal(0, LevelingService.XpToNextLevel(level, LevelingService.SeenMaxLevel) % 50);
+            if (level > 1) Assert.True(LevelingService.XpToNextLevel(level, LevelingService.SeenMaxLevel) > LevelingService.XpToNextLevel(level - 1, LevelingService.SeenMaxLevel));
         }
     }
 
@@ -88,7 +109,7 @@ public sealed class LevelingServiceTests
     [Fact]
     public void ApplyXp_AccumulatesWithoutLevelingBelowTheThreshold()
     {
-        var result = LevelingService.ApplyXp(level: 1, xp: 0, gained: 100);
+        var result = LevelingService.ApplyXp(level: 1, xp: 0, gained: 100, LevelingService.SeenMaxLevel);
         Assert.Equal(1, result.Level);
         Assert.Equal(100, result.Xp);
         Assert.Equal(0, result.LevelsGained);
@@ -97,7 +118,7 @@ public sealed class LevelingServiceTests
     [Fact]
     public void ApplyXp_LevelsUpOnceOnceTheThresholdIsCrossed()
     {
-        var result = LevelingService.ApplyXp(level: 1, xp: 200, gained: 100);
+        var result = LevelingService.ApplyXp(level: 1, xp: 200, gained: 100, LevelingService.SeenMaxLevel);
         Assert.Equal(2, result.Level);
         Assert.Equal(50, result.Xp);
         Assert.Equal(1, result.LevelsGained);
@@ -106,7 +127,7 @@ public sealed class LevelingServiceTests
     [Fact]
     public void ApplyXp_CanCarryAcrossSeveralLevelsInOneGrant()
     {
-        var result = LevelingService.ApplyXp(level: 1, xp: 0, gained: 250 + 600 + 100);
+        var result = LevelingService.ApplyXp(level: 1, xp: 0, gained: 250 + 600 + 100, LevelingService.SeenMaxLevel);
         Assert.Equal(3, result.Level);
         Assert.Equal(100, result.Xp);
         Assert.Equal(2, result.LevelsGained);
@@ -115,8 +136,8 @@ public sealed class LevelingServiceTests
     [Fact]
     public void ApplyXp_AtMaxLevel_GrantsNothingFurther()
     {
-        var result = LevelingService.ApplyXp(level: LevelingService.FirstCap, xp: 0, gained: 999_999);
-        Assert.Equal(LevelingService.FirstCap, result.Level);
+        var result = LevelingService.ApplyXp(level: LevelingService.SeenMaxLevel, xp: 0, gained: 999_999, LevelingService.SeenMaxLevel);
+        Assert.Equal(LevelingService.SeenMaxLevel, result.Level);
         Assert.Equal(0, result.Xp);
         Assert.Equal(0, result.LevelsGained);
     }
@@ -124,10 +145,10 @@ public sealed class LevelingServiceTests
     [Fact]
     public void ApplyXp_StopsExactlyAtMaxLevel_EvenWithXpLeftOver()
     {
-        var justBelowCap = LevelingService.FirstCap - 1;
-        var needed = LevelingService.XpToNextLevel(justBelowCap);
-        var result = LevelingService.ApplyXp(level: justBelowCap, xp: 0, gained: needed + 10_000);
-        Assert.Equal(LevelingService.FirstCap, result.Level);
+        var justBelowCap = LevelingService.SeenMaxLevel - 1;
+        var needed = LevelingService.XpToNextLevel(justBelowCap, LevelingService.SeenMaxLevel);
+        var result = LevelingService.ApplyXp(level: justBelowCap, xp: 0, gained: needed + 10_000, LevelingService.SeenMaxLevel);
+        Assert.Equal(LevelingService.SeenMaxLevel, result.Level);
         Assert.Equal(0, result.Xp);
         Assert.Equal(1, result.LevelsGained);
     }
@@ -135,19 +156,19 @@ public sealed class LevelingServiceTests
     [Fact]
     public void ApplyXp_AtMaxLevel_ZeroesXpAlreadyHeld()
     {
-        var result = LevelingService.ApplyXp(level: LevelingService.FirstCap, xp: 12_345, gained: 100);
+        var result = LevelingService.ApplyXp(level: LevelingService.SeenMaxLevel, xp: 12_345, gained: 100, LevelingService.SeenMaxLevel);
         Assert.Equal(0, result.Xp);
         Assert.Equal(0, result.LevelsGained);
     }
 
     [Theory]
-    [InlineData(LevelingService.FirstCap, 12_345, 0)]
-    [InlineData(LevelingService.FirstCap + 1, 50, 0)]
+    [InlineData(LevelingService.SeenMaxLevel, 12_345, 0)]
+    [InlineData(LevelingService.SeenMaxLevel + 1, 50, 0)]
     [InlineData(10, 400, 400)]
     [InlineData(10, -5, 0)]
     public void HeldXp_IsZeroAtTheCapAndNeverNegative(int level, int stored, int expected)
     {
-        Assert.Equal(expected, LevelingService.HeldXp(level, stored));
+        Assert.Equal(expected, LevelingService.HeldXp(level, stored, LevelingService.SeenMaxLevel));
     }
 
     [Fact]

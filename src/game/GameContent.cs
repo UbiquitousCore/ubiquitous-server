@@ -90,6 +90,26 @@ public sealed partial record GameContent(
 
     public IReadOnlyList<PlayerLookDefinition> PlayerLooks { get; init; } = [];
 
+    public IReadOnlyList<CharacterStartingLoadout> Loadouts { get; init; } = StartingLoadouts.All;
+
+    public CharacterStartingLoadout? LoadoutFor(int race, int playerClass) =>
+        StartingLoadouts.For(Loadouts, race, playerClass);
+
+    // The level-60 spellbooks were read off 1.1.4; a build with its own loadouts has none of them.
+    public bool HasSeenSpellbooks => ReferenceEquals(Loadouts, StartingLoadouts.All);
+
+    // For each quest item a generated loot table holds, the quests it drops for; empty when the
+    // build's own loot tables are used.
+    public IReadOnlyDictionary<uint, IReadOnlySet<uint>> GeneratedQuestItems { get; init; } =
+        new Dictionary<uint, IReadOnlySet<uint>>();
+
+    // A later build's own spellbook rule; null for 1.1.4, whose books were seen in play.
+    public StartingSpellbook? Spellbook { get; init; }
+
+    public uint MiningGatherSpellId { get; init; } = MiningRules.GatherSpellId;
+
+    public int LevelCap { get; init; } = LevelingService.SeenMaxLevel;
+
     public Ubiquitous.World.ITerrainHeightSource? Terrain { get; init; }
 
     public IReadOnlyDictionary<uint, int> SpellStackLimits { get; init; } = new Dictionary<uint, int>();

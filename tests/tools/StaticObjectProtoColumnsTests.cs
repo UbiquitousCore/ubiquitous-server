@@ -36,6 +36,18 @@ public class StaticObjectProtoColumnsTests
         Assert.True(FestivalIds.IsSeasonal(second.Festival));
     }
 
+    [Fact]
+    public void Build114_ReadsTheSpellAPropIsGatheredWith()
+    {
+        var ore = BuildRow(new Dictionary<int, uint> { [0] = 132, [1] = 1, [12] = 23 });
+        var plain = BuildRow(new Dictionary<int, uint> { [0] = 52, [1] = 1 });
+
+        Assert.Equal(23u, Assert.Single(StaticObjectProtoTableMapper.MapTypes(
+            FTableDocument.Load(ore), StaticObjectProtoColumns.Reference)).GatherSpellId);
+        Assert.Equal(0u, Assert.Single(StaticObjectProtoTableMapper.MapTypes(
+            FTableDocument.Load(plain), StaticObjectProtoColumns.Reference)).GatherSpellId);
+    }
+
     private static byte[] BuildRow(IReadOnlyDictionary<int, uint> values)
     {
         int cols = Build114Format.Length;

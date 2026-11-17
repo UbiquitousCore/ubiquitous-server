@@ -17,4 +17,11 @@ public static class StorageUpgradeColumns
         new LayoutRevision("uuuuuuuu", new LayoutEdit.Adds(2)));
 
     public static StorageUpgradeTableColumns Reference => Layout.Reference.As<StorageUpgradeTableColumns>();
+
+    /// <summary>
+    /// The column 2.5.0 on adds ahead of 2, which sorts the rows into ladders 0
+    /// to 3; only ladder 0 is read. -1 where the table has no such column.
+    /// </summary>
+    public static int LadderOf(FTableDocument document) =>
+        document.Header.ColumnTypes.Length == Layout.ReferenceFormat.Length + 1 ? 2 : -1;
 }

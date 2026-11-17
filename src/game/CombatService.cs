@@ -53,12 +53,10 @@ public sealed partial class CombatService
             [PlayerClassIds.Mage] = (1.2, 6),
             [PlayerClassIds.Ranger] = (1.8, 2),
             [PlayerClassIds.Monk] = (1.5, 5),
-            // Own choice: the warrior's, until a Flame Knight's is read in play.
-            [PlayerClassIds.FlameKnight] = (2.0, 9),
         };
 
     public static int RegenAmount(int classId, int totalStamina, int healthRegenRating) =>
-        (RegenByClass.TryGetValue(classId, out var rate)
+        (RegenByClass.TryGetValue(PlayerClassIds.StatsLike(classId), out var rate)
             ? (int)(Math.Max(0, totalStamina) * rate.PerStamina + rate.Plus)
             : RegenPerInterval)
         + Math.Max(0, healthRegenRating) * HealthRegenPerRating;

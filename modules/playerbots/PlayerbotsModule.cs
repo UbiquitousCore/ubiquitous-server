@@ -10,7 +10,7 @@ public sealed class PlayerbotsModule : IServerModule
 
     public void Register(IModuleHost host)
     {
-        var settings = PlayerbotSettings.From(host.Settings);
+        var settings = PlayerbotSettings.From(host.Settings, host.Content.LevelCap);
         if (!settings.Enabled)
         {
             host.Logger.LogInformation("Playerbots are off; set modules.playerbots.enabled to start them");

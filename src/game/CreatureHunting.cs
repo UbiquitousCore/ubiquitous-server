@@ -12,7 +12,7 @@ public static class CreatureHunting
         return FactionStance.AttacksCreatureOnSight(FactionStance.Resolve(hunter.FactionType), preyFaction);
     }
 
-    public static int NoticeRange(CreatureDefinition hunter, CreatureDefinition prey, int fallbackRange) =>
+    public static int NoticeRange(CreatureDefinition hunter, CreatureDefinition prey, int fallbackRange, int levelCap) =>
         EncounterRules.NoticeRange(
-            hunter.NoticeDistance is int sight && sight > 0 ? sight : fallbackRange, hunter, prey.Level);
+            hunter.NoticeDistance is int sight && sight > 0 ? sight : fallbackRange, hunter, prey.Level, levelCap);
 }

@@ -27,8 +27,8 @@ public sealed class TalentBook
         }
     }
 
-    public static int PointsForLevel(int level) =>
-        Math.Max(0, Math.Min(level, LevelingService.MaxLevel) - FirstPointLevel + 1);
+    // A character never passes its build's level cap, so the cap needs no say here.
+    public static int PointsForLevel(int level) => Math.Max(0, level - FirstPointLevel + 1);
 
     public IReadOnlyDictionary<uint, int> Ranks => _ranks;
 

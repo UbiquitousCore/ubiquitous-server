@@ -6,7 +6,7 @@ public sealed record StaticObjectProtoTableColumns(
     int Entry,
     int Type,
     int Festival = -1,
-    int Display = -1);
+    int Display = -1, int GatherSpell = -1);
 
 public static class StaticObjectProtoTableMapper
 {
@@ -26,7 +26,8 @@ public static class StaticObjectProtoTableMapper
 
             uint type = RequireUInt(row, columns.Type, i, "type");
             uint festival = columns.Festival >= 0 ? OptionalUInt(row, columns.Festival) : 0;
-            types.Add(new StaticObjectTypeDefinition(entry, type, festival));
+            uint gatherSpell = columns.GatherSpell >= 0 ? OptionalUInt(row, columns.GatherSpell) : 0;
+            types.Add(new StaticObjectTypeDefinition(entry, type, festival, gatherSpell));
         }
 
         return types;
