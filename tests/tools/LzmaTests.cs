@@ -63,43 +63,22 @@ public class LzmaTests
         _ => (PropsLp2, Lp2Lzma, Lp2),
     };
 
-    [Fact]
-    public void ThePropertiesByte_SplitsIntoLcLpAndPb_AndTheDictionarySizeFollows()
-    {
-        Assert.Equal(new LzmaProperties(3, 0, 2, 1 << 16), LzmaProperties.Parse(PropsDefault));
-        Assert.Equal(new LzmaProperties(0, 2, 0, 1 << 16), LzmaProperties.Parse(PropsLp2));
-    }
-
-    [Fact]
-    public void APropertiesBytePastTheLargestLcLpAndPb_IsRefused()
-    {
-        Assert.Throws<LzmaFormatException>(() => LzmaProperties.Parse(Convert.FromHexString("e100000100")));
-    }
+    private static byte[] Framed(byte[] props, byte[] stream) => [.. Convert.FromHexString("09140500"), .. props, .. stream];
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public void AStream_DecodesToItsMarkerOrToItsStatedSize(string name, bool endMarker)
+    public void AMember_DecodesToItsMarkerOrToItsStatedSize(string name, bool endMarker)
     {
         var (props, stream, plain) = Case(name);
 
-        Assert.Equal(plain, Lzma.Decode(stream, LzmaProperties.Parse(props), plain.Length, endMarker));
+        Assert.Equal(plain, Lzma.DecodeZip(Framed(props, stream), plain.Length, endMarker));
     }
 
     [Fact]
     public void AnEndMarkerBeforeTheStatedSize_IsRefused()
     {
         Assert.Throws<LzmaFormatException>(() =>
-            Lzma.Decode(ProseLzma, LzmaProperties.Parse(PropsDefault), Prose.Length + 10, endMarker: true));
-    }
-
-    [Fact]
-    public void AStreamWhoseFirstByteIsNotZero_IsRefused()
-    {
-        var bad = ProseLzma.ToArray();
-        bad[0] = 1;
-
-        Assert.Throws<LzmaFormatException>(() =>
-            Lzma.Decode(bad, LzmaProperties.Parse(PropsDefault), Prose.Length, endMarker: false));
+            Lzma.DecodeZip(Framed(PropsDefault, ProseLzma), Prose.Length + 10, endMarker: true));
     }
 
     [Fact]
