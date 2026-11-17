@@ -102,7 +102,7 @@ public sealed partial class PlaySession
 
     // Only a later build reads its talent ranks from the lessons; 1.1.4's are listed.
     private IReadOnlyDictionary<uint, int> LaterBuildSpellLevels() =>
-        _content.Spellbook is null || _character is null ? new Dictionary<uint, int>() : SpellLevels();
+        _content.PlaysAsSeen || _character is null ? new Dictionary<uint, int>() : SpellLevels();
 
     // Every rank of the class's spells that the level has reached, and every GM-only spell.
     private IReadOnlyList<string> AdminLearnSpells()

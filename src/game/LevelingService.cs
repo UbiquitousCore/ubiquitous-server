@@ -8,10 +8,6 @@ public static class LevelingService
     public const int SeenMaxLevel = 60;
 
     // A later build's cap is what its own achievements ask for; 1.1.4 and a package that says nothing keep 60.
-    public static int CapOf(DataManifest? manifest) =>
-        manifest is null || DataManifest.PlaysAsSeen(manifest.GameVersion)
-            ? SeenMaxLevel
-            : manifest.LevelCap ?? SeenMaxLevel;
 
     private static readonly int[] XpBarByLevel =
     [

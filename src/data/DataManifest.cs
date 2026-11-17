@@ -23,8 +23,15 @@ public sealed record DataManifest(
     // package whose build is not known, since a near-1.1.4 copy with one table
     // changed is far likelier than an unmeasured later build.
     public static bool PlaysAsSeen(string? gameVersion) =>
-        string.IsNullOrEmpty(gameVersion) || gameVersion == "unknown"
+        string.IsNullOrEmpty(gameVersion) || gameVersion == UnknownGameVersion
         || gameVersion.StartsWith("1.", StringComparison.Ordinal);
+
+    // What the importer records for tables that match no captured build.
+    public const string UnknownGameVersion = "unknown";
+
+    // The level cap this package plays to: the one 1.1.4 was seen with, unless a
+    // later known build's achievements asked for another.
+    public int PlayerLevelCap(int seenCap) => PlaysAsSeen(GameVersion) ? seenCap : LevelCap ?? seenCap;
 
     public const string FileName = "manifest.json";
 

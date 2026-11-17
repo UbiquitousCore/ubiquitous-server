@@ -141,6 +141,18 @@ public class LzmaTests
     }
 
     [Fact]
+    public void AStoredMemberWhoseBytesDoNotMatchItsCrc_IsRefusedToo()
+    {
+        var good = Pack("tables/a.tbl", Prose, Prose, 0, 0, Crc32.Compute(Prose));
+        var bad = Pack("tables/a.tbl", Prose, Prose, 0, 0, Crc32.Compute(Prose) ^ 1);
+
+        Assert.Equal(Prose, TableArchiveReader.ReadEntries(good)["tables/a.tbl"]);
+        using var archive = PackedArchive.Open(new MemoryStream(bad));
+        Assert.Throws<PackedArchiveFormatException>(() => archive.Read("tables/a.tbl"));
+        Assert.Throws<TableArchiveFormatException>(() => TableArchiveReader.ReadEntries(bad));
+    }
+
+    [Fact]
     public void Crc32_IsTheZipChecksum()
     {
         Assert.Equal(0xCBF43926u, Crc32.Compute("123456789"u8));
@@ -185,15 +197,17 @@ public class LzmaTests
     }
 
     // One member stored with method 14, in a GBMP-stamped pack.
-    private static byte[] LzmaPack(string name, byte[] plain, byte[] stream, ushort flags, uint crc)
+    private static byte[] LzmaPack(string name, byte[] plain, byte[] stream, ushort flags, uint crc) =>
+        Pack(name, plain, [.. Convert.FromHexString("09140500"), .. PropsDefault, .. stream], Lzma.ZipMethod, flags, crc);
+
+    private static byte[] Pack(string name, byte[] plain, byte[] data, ushort method, ushort flags, uint crc)
     {
         var nameBytes = Encoding.ASCII.GetBytes(name);
-        byte[] data = [.. Convert.FromHexString("09140500"), .. PropsDefault, .. stream];
 
         var local = new byte[30 + nameBytes.Length];
         "GBMP"u8.CopyTo(local);
         BinaryPrimitives.WriteUInt16LittleEndian(local.AsSpan(6), flags);
-        BinaryPrimitives.WriteUInt16LittleEndian(local.AsSpan(8), Lzma.ZipMethod);
+        BinaryPrimitives.WriteUInt16LittleEndian(local.AsSpan(8), method);
         BinaryPrimitives.WriteUInt32LittleEndian(local.AsSpan(14), crc);
         BinaryPrimitives.WriteUInt32LittleEndian(local.AsSpan(18), (uint)data.Length);
         BinaryPrimitives.WriteUInt32LittleEndian(local.AsSpan(22), (uint)plain.Length);
@@ -203,7 +217,7 @@ public class LzmaTests
         var central = new byte[46 + nameBytes.Length];
         BinaryPrimitives.WriteUInt32LittleEndian(central, 0x02014b50);
         BinaryPrimitives.WriteUInt16LittleEndian(central.AsSpan(8), flags);
-        BinaryPrimitives.WriteUInt16LittleEndian(central.AsSpan(10), Lzma.ZipMethod);
+        BinaryPrimitives.WriteUInt16LittleEndian(central.AsSpan(10), method);
         BinaryPrimitives.WriteUInt32LittleEndian(central.AsSpan(16), crc);
         BinaryPrimitives.WriteUInt32LittleEndian(central.AsSpan(20), (uint)data.Length);
         BinaryPrimitives.WriteUInt32LittleEndian(central.AsSpan(24), (uint)plain.Length);

@@ -1,4 +1,5 @@
 using System.Reflection;
+using Ubiquitous.Data;
 
 namespace Ubiquitous.AssetExtractor;
 
@@ -6,7 +7,7 @@ namespace Ubiquitous.AssetExtractor;
 // naming of a tables archive by the one it agrees with.
 public static class KnownBuilds
 {
-    public const string Unknown = "unknown";
+    public const string Unknown = DataManifest.UnknownGameVersion;
 
     private const string ResourcePrefix = "fingerprints/";
 
@@ -14,13 +15,17 @@ public static class KnownBuilds
 
     // The build every table the capture shares with it agrees with on shape.
     // Where several do (a partial archive), the one sharing the most tables
-    // and leaving the fewest unshared is named; none agreeing is Unknown.
-    public static string Identify(TableFingerprint capture)
+    // and leaving the fewest unshared is named; on a tie, 1.1.4, else the
+    // earlier build by version; none agreeing is Unknown.
+    public static string Identify(TableFingerprint capture) => Identify(capture, All);
+
+    public static string Identify(
+        TableFingerprint capture, IReadOnlyList<(string Build, TableFingerprint Shapes)> builds)
     {
         var captured = capture.Tables.Where(t => t.Error is null).ToDictionary(t => t.Name, t => t.Format, StringComparer.Ordinal);
         string best = Unknown;
         (int Shared, int Unshared) bestScore = (0, int.MaxValue);
-        foreach (var (build, shapes) in All)
+        foreach (var (build, shapes) in builds.OrderBy(entry => TieOrder(entry.Build)))
         {
             int shared = 0;
             bool agrees = true;
@@ -47,6 +52,11 @@ public static class KnownBuilds
 
         return best;
     }
+
+    // 1.1.4 first, then by version number, so `1.1.10` follows `1.1.4`.
+    private static (int, Version) TieOrder(string build) =>
+        (DataManifest.IsTargetGameVersion(build) ? 0 : 1,
+            Version.TryParse(build, out var version) ? version : new Version(int.MaxValue, 0));
 
     private static IReadOnlyList<(string, TableFingerprint)> Load()
     {

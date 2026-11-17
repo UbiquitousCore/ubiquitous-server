@@ -68,7 +68,7 @@ public sealed class PackedArchive : IDisposable
         _stream.Position = entry.LocalHeaderOffset + LocalHeaderSize + nameLength + extraLength;
         var compressed = ReadExactly(entry.CompressedSize, $"data of '{name}'");
 
-        return entry.Method switch
+        var output = entry.Method switch
         {
             0 => compressed,
             8 => Inflate(compressed, entry.UncompressedSize, name),
@@ -76,6 +76,14 @@ public sealed class PackedArchive : IDisposable
             _ => throw new PackedArchiveFormatException(
                 $"Entry '{name}' uses compression method {entry.Method}, which this reader does not know."),
         };
+
+        // Every member of every pack on hand records its true CRC-32, whatever its method.
+        if (Crc32.Compute(output) != entry.Crc)
+        {
+            throw new PackedArchiveFormatException($"Entry '{name}' decompressed to bytes whose CRC-32 is not the one recorded.");
+        }
+
+        return output;
     }
 
     public void Dispose()
@@ -85,22 +93,14 @@ public sealed class PackedArchive : IDisposable
 
     private static byte[] DecodeLzma(byte[] compressed, Entry entry, string name)
     {
-        byte[] output;
         try
         {
-            output = Lzma.DecodeZip(compressed, entry.UncompressedSize, (entry.Flags & Lzma.ZipEndMarkerFlag) != 0);
+            return Lzma.DecodeZip(compressed, entry.UncompressedSize, (entry.Flags & Lzma.ZipEndMarkerFlag) != 0);
         }
         catch (LzmaFormatException ex)
         {
             throw new PackedArchiveFormatException($"Entry '{name}': {ex.Message}");
         }
-
-        if (Crc32.Compute(output) != entry.Crc)
-        {
-            throw new PackedArchiveFormatException($"Entry '{name}' decompressed to bytes whose CRC-32 is not the one recorded.");
-        }
-
-        return output;
     }
 
     private static byte[] Inflate(byte[] compressed, int uncompressedSize, string name)

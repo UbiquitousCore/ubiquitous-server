@@ -95,8 +95,10 @@ public sealed partial record GameContent(
     public CharacterStartingLoadout? LoadoutFor(int race, int playerClass) =>
         StartingLoadouts.For(Loadouts, race, playerClass);
 
-    // The level-60 spellbooks were read off 1.1.4; a build with its own loadouts has none of them.
-    public bool HasSeenSpellbooks => ReferenceEquals(Loadouts, StartingLoadouts.All);
+    // Whether this content plays by what 1.1.4 was seen to do (its kits, level-60
+    // books and cap) or by a later build's own tables: the loader reads a
+    // spellbook from the tables only for a later known build.
+    public bool PlaysAsSeen => Spellbook is null;
 
     // For each quest item a generated loot table holds, the quests it drops for; empty when the
     // build's own loot tables are used.

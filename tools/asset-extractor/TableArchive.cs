@@ -99,33 +99,33 @@ public static class TableArchiveReader
         }
 
         var compressed = archive.Slice(dataAt, compressedSize);
-        return method switch
+        var output = method switch
         {
             0 => compressed.ToArray(),
             8 => Inflate(compressed, uncompressedSize, name),
-            Lzma.ZipMethod => DecodeLzma(compressed, flags, crc, uncompressedSize, name),
+            Lzma.ZipMethod => DecodeLzma(compressed, flags, uncompressedSize, name),
             _ => throw new TableArchiveFormatException($"Entry '{name}' uses unsupported compression method {method}."),
         };
-    }
 
-    private static byte[] DecodeLzma(ReadOnlySpan<byte> compressed, ushort flags, uint crc, int uncompressedSize, string name)
-    {
-        byte[] output;
-        try
-        {
-            output = Lzma.DecodeZip(compressed, uncompressedSize, (flags & Lzma.ZipEndMarkerFlag) != 0);
-        }
-        catch (LzmaFormatException ex)
-        {
-            throw new TableArchiveFormatException($"Entry '{name}': {ex.Message}");
-        }
-
+        // Every member of every pack on hand records its true CRC-32, whatever its method.
         if (Crc32.Compute(output) != crc)
         {
             throw new TableArchiveFormatException($"Entry '{name}' decompressed to bytes whose CRC-32 is not the one recorded.");
         }
 
         return output;
+    }
+
+    private static byte[] DecodeLzma(ReadOnlySpan<byte> compressed, ushort flags, int uncompressedSize, string name)
+    {
+        try
+        {
+            return Lzma.DecodeZip(compressed, uncompressedSize, (flags & Lzma.ZipEndMarkerFlag) != 0);
+        }
+        catch (LzmaFormatException ex)
+        {
+            throw new TableArchiveFormatException($"Entry '{name}': {ex.Message}");
+        }
     }
 
     private static byte[] Inflate(ReadOnlySpan<byte> compressed, int uncompressedSize, string name)

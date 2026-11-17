@@ -9,10 +9,10 @@ public sealed class PackageItems(string dataDirectory) : IItemCatalog
 {
     private readonly Lazy<IReadOnlyDictionary<int, AdminItem>> _items = new(() => Load(dataDirectory));
 
-    private readonly Lazy<int> _levelCap = new(() => LevelingService.CapOf(
+    private readonly Lazy<int> _levelCap = new(() =>
         File.Exists(Path.Combine(dataDirectory, DataManifest.FileName))
-            ? DataManifestJson.Load(Path.Combine(dataDirectory, DataManifest.FileName))
-            : null));
+            ? DataManifestJson.Load(Path.Combine(dataDirectory, DataManifest.FileName)).PlayerLevelCap(LevelingService.SeenMaxLevel)
+            : LevelingService.SeenMaxLevel);
 
     // The highest level the game server lets this package's characters reach.
     public int LevelCap => _levelCap.Value;

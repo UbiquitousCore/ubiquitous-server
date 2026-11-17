@@ -127,7 +127,7 @@ public sealed class ServerContentLoader(
             : null;
 
         var seenBuild = DataManifest.PlaysAsSeen(catalog.Manifest.GameVersion);
-        if (catalog.Manifest.GameVersion == "unknown")
+        if (catalog.Manifest.GameVersion == DataManifest.UnknownGameVersion)
         {
             logger.LogWarning(
                 "The data package's tables match no build this server knows; it plays as 1.1.4 does. " +
@@ -197,7 +197,7 @@ public sealed class ServerContentLoader(
             Loadouts = book is not null ? StartingLoadouts.FromSpellbook(book, items!) : fallback.Loadouts,
             Spellbook = book,
             MiningGatherSpellId = book?.MiningGather ?? fallback.MiningGatherSpellId,
-            LevelCap = LevelingService.CapOf(catalog.Manifest),
+            LevelCap = book is null ? LevelingService.SeenMaxLevel : catalog.Manifest.PlayerLevelCap(LevelingService.SeenMaxLevel),
         };
     }
 

@@ -81,7 +81,7 @@ public sealed class ModuleHost(
     // as one that had played up to it could; a 1.1.4 character learns them in play.
     private static IReadOnlyList<uint>? LessonsUpTo(GameContent content, int race, int playerClass, int level)
     {
-        if (content.Spellbook is null) return null;
+        if (content.PlaysAsSeen) return null;
         var start = content.LoadoutFor(race, playerClass)?.Spells ?? [];
         var learned = ClassSpellbook.WholeBookAt(content, playerClass, level).Where(id => !start.Contains(id)).ToArray();
         return learned.Length == 0 ? null : learned;

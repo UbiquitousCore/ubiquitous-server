@@ -13,7 +13,7 @@ public sealed record DataBuild(string GameVersion, IReadOnlyDictionary<string, T
     public static DataBuild Unknown { get; } = new(string.Empty, new Dictionary<string, TableShape>());
 
     // The tables among theirs that this build holds differently or not at
-    // all. Nothing is known to differ where this build's shapes were not kept.
+    // all, by name in any case, as pack names vary in capitalisation. Nothing is known to differ where this build's shapes were not kept.
     public IReadOnlyList<string> Differences(IEnumerable<TableShape> theirs)
     {
         if (Tables.Count == 0) return [];
@@ -21,8 +21,8 @@ public sealed record DataBuild(string GameVersion, IReadOnlyDictionary<string, T
             .Where(table => !Tables.TryGetValue(table.Name, out var ours)
                 || ours.Rows != table.Rows || ours.Format != table.Format)
             .Select(table => table.Name)
-            .Distinct(StringComparer.Ordinal)
-            .Order(StringComparer.Ordinal)];
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase)];
     }
 
     public static DataBuild Load(string gameVersion, string directory)
@@ -32,7 +32,7 @@ public sealed record DataBuild(string GameVersion, IReadOnlyDictionary<string, T
 
         using var stream = File.OpenRead(path);
         using var document = JsonDocument.Parse(stream);
-        var tables = new Dictionary<string, TableShape>(StringComparer.Ordinal);
+        var tables = new Dictionary<string, TableShape>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in document.RootElement.GetProperty("tables").EnumerateArray())
         {
             if (!entry.TryGetProperty("format", out var format) || format.GetString() is not { Length: > 0 } letters)

@@ -9,14 +9,14 @@ public static class ClassSpellbook
     // Whether a character of this level starts each session knowing the whole book up to its level:
     // at 1.1.4's 60, at a later build's cap, and always on a development login of a later build.
     public static bool HoldsWholeBook(GameContent content, int level, bool developmentLogin) =>
-        content.Spellbook is null
-            ? content.HasSeenSpellbooks && level >= LevelingService.SeenMaxLevel
+        content.PlaysAsSeen
+            ? level >= LevelingService.SeenMaxLevel
             : developmentLogin || level >= content.LevelCap;
 
     // The class's own ranks and the level each comes at. A 1.1.4 spell no lesson teaches comes with the class.
     public static IEnumerable<(uint Id, int Level)> ClassRanks(
         GameContent content, int playerClass, IReadOnlyDictionary<uint, int> lessonLevels) =>
-        content.Spellbook is { } book
+        !content.PlaysAsSeen && content.Spellbook is { } book
             ? book.ClassRanks.TryGetValue(playerClass, out var ranks)
                 ? ranks.OrderBy(pair => pair.Value).ThenBy(pair => pair.Key).Select(pair => (pair.Key, pair.Value))
                 : []
@@ -27,7 +27,7 @@ public static class ClassSpellbook
     public static IEnumerable<(uint Id, int Level)> TalentAbilityRanks(
         GameContent content, uint talentSpellId, IReadOnlyDictionary<uint, int> lessonLevels)
     {
-        if (content.Spellbook is null)
+        if (content.PlaysAsSeen)
             return PlaytestSpellbook.TalentAbilityRanksAtMaxLevel(talentSpellId)
                 .Select(id => (id, SpellLearning.LevelOf(lessonLevels, id, LevelingService.SeenMaxLevel)));
         if (!content.Spells.TryGetValue(talentSpellId, out var ability) || ability.Rank <= 0) return [];
@@ -42,14 +42,14 @@ public static class ClassSpellbook
     // What a session starts with besides its starting spells: 1.1.4's whole level-60 book, or a later
     // build's ranks up to the character's level.
     public static IReadOnlyList<uint> WholeBookAt(GameContent content, int playerClass, int level) =>
-        content.Spellbook is null
+        content.PlaysAsSeen
             ? PlaytestSpellbook.AtMaxLevel(playerClass)
             : [.. ClassRanks(content, playerClass, new Dictionary<uint, int>())
                 .Where(rank => rank.Level <= level).Select(rank => rank.Id)];
 
     public static IReadOnlyList<uint> TalentRanksAt(
         GameContent content, IEnumerable<uint> talentAbilities, int level, IReadOnlyDictionary<uint, int> lessonLevels) =>
-        content.Spellbook is null
+        content.PlaysAsSeen
             ? [.. talentAbilities.SelectMany(PlaytestSpellbook.TalentAbilityRanksAtMaxLevel)]
             : [.. talentAbilities.SelectMany(id => TalentAbilityRanks(content, id, lessonLevels))
                 .Where(rank => rank.Level <= level).Select(rank => rank.Id)];
