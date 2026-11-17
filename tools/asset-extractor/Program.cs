@@ -475,7 +475,7 @@ public static class Program
         Console.WriteLine($"{captured.Tables.Count} tables, source {sourceHash}.");
         if (outPath is not null)
         {
-            captured.Save(outPath);
+            captured.AsGolden().Save(outPath);
             Console.WriteLine($"Wrote fingerprint to {outPath}.");
         }
         else if (goldenPath is null)

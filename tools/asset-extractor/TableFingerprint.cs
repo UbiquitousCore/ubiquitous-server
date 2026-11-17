@@ -6,18 +6,19 @@ using System.Text.Json.Serialization;
 namespace Ubiquitous.AssetExtractor;
 
 // One row of a build fingerprint: the shape of a single table, not its
-// contents. Format strings and row counts are schema metadata — the same
-// kind of string the mapper tests already pin — so golden files may be
-// committed. Never put cell data here.
+// contents. A committed golden file keeps only the name, column count and
+// format string, the kind of string the mapper tests already pin; row counts
+// and the source hash come from one copy of the game, so only the fingerprint
+// an import writes beside its own package keeps them. Never put cell data here.
 public sealed record TableFingerprintEntry(
     string Name,
-    int Rows,
+    int? Rows,
     int Cols,
     string Format,
     string? Error = null);
 
 public sealed record TableFingerprint(
-    string SourceHash,
+    string? SourceHash,
     IReadOnlyList<TableFingerprintEntry> Tables,
     DateTimeOffset CapturedAt)
 {
@@ -76,6 +77,10 @@ public sealed record TableFingerprint(
         return Convert.ToHexString(sha.Hash ?? []);
     }
 
+    // What a committed golden file keeps: the shape alone.
+    public TableFingerprint AsGolden() =>
+        this with { SourceHash = null, Tables = [.. Tables.Select(table => table with { Rows = null })] };
+
     public void Save(string path)
     {
         using var stream = File.Create(path);
@@ -124,7 +129,7 @@ public sealed record TableFingerprint(
             {
                 problems.Add($"'{want.Name}': format changed (golden \"{want.Format}\", actual \"{got.Format}\").");
             }
-            else if (want.Rows != got.Rows)
+            else if (want.Rows is not null && got.Rows is not null && want.Rows != got.Rows)
             {
                 problems.Add($"note '{want.Name}': {got.Rows} rows, golden had {want.Rows} (same shape, content drift).");
             }
