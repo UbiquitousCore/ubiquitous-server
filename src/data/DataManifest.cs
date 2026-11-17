@@ -13,11 +13,18 @@ public sealed record DataManifest(
     // The highest level the client's own achievements ask a player to reach.
     int? LevelCap = null)
 {
-    /// <summary>The build whose spellbooks, starting kits and level cap were read in play.</summary>
+    // The build whose spellbooks, starting kits and level cap were read in play.
     public const string TargetGameVersion = "1.1.4";
 
     public static bool IsTargetGameVersion(string? gameVersion) =>
         string.Equals(gameVersion, TargetGameVersion, StringComparison.Ordinal);
+
+    // Whether a package plays by what 1.1.4 was seen to do: any 1.x build, and a
+    // package whose build is not known, since a near-1.1.4 copy with one table
+    // changed is far likelier than an unmeasured later build.
+    public static bool PlaysAsSeen(string? gameVersion) =>
+        string.IsNullOrEmpty(gameVersion) || gameVersion == "unknown"
+        || gameVersion.StartsWith("1.", StringComparison.Ordinal);
 
     public const string FileName = "manifest.json";
 

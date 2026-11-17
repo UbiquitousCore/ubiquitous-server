@@ -139,7 +139,7 @@ public sealed class AdminServiceTests : IDisposable
     {
         var package = Path.Combine(_folder.FullName, "package");
         var path = Path.Combine(package, DataManifest.FileName);
-        DataManifestJson.Save(DataManifestJson.Load(path) with { GameVersion = "4.2.2", LevelCap = 75 }, path);
+        DataManifestJson.Save(DataManifestJson.Load(path) with { GameVersion = "4.2.21", LevelCap = 75 }, path);
         var admin = new AdminService(
             _accounts, new ServerCharacters(_characters, _inventory, new PackageItems(package)),
             new EnvFileSettings(Path.Combine(_folder.FullName, ".env")), new FixedStatus(), _control, new PackageItems(package), _online);

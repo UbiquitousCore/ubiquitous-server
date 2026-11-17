@@ -165,7 +165,7 @@ public sealed class ServerContentLoaderTests
         });
         Write(package, datasets, "talentTrees", new TalentTreeDefinition[] { new(137, PlayerClassIds.Mage, [new(1, 1, 1, 0, [], [10000])]) });
         return new DataCatalog(
-            new DataManifest("test", "4.2.2", "hash", DateTimeOffset.UnixEpoch, datasets, LevelCap: 75), package.FullName);
+            new DataManifest("test", "4.2.21", "hash", DateTimeOffset.UnixEpoch, datasets, LevelCap: 75), package.FullName);
     }
 
     [Fact]
@@ -272,7 +272,7 @@ public sealed class ServerContentLoaderTests
         Assert.Same(StartingLoadouts.All, content.Loadouts);
         Assert.Equal(LevelingService.SeenMaxLevel, content.LevelCap);
         Assert.Equal([PlayerRaceIds.Mendel], ServerOptions.Defaults.DisabledRacesFor(DataManifest.TargetGameVersion));
-        Assert.Empty(ServerOptions.Defaults.DisabledRacesFor("4.2.2"));
+        Assert.Empty(ServerOptions.Defaults.DisabledRacesFor("4.2.21"));
     }
 
     [Fact]

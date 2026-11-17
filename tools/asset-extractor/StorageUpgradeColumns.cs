@@ -18,10 +18,10 @@ public static class StorageUpgradeColumns
 
     public static StorageUpgradeTableColumns Reference => Layout.Reference.As<StorageUpgradeTableColumns>();
 
-    /// <summary>
-    /// The column 2.5.0 on adds ahead of 2, which sorts the rows into ladders 0
-    /// to 3; only ladder 0 is read. -1 where the table has no such column.
-    /// </summary>
+    // The column 2.5.0 on adds ahead of 2, which sorts the rows into ladders 0 to
+    // 3; only ladder 0 is read. -1 where the table has no such column, or is in a
+    // format no revision names.
     public static int LadderOf(FTableDocument document) =>
-        document.Header.ColumnTypes.Length == Layout.ReferenceFormat.Length + 1 ? 2 : -1;
+        Layout.Resolve(document).Basis != LayoutBasis.Unrecognised
+        && document.Header.ColumnTypes.Length == Layout.ReferenceFormat.Length + 1 ? 2 : -1;
 }

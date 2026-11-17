@@ -666,10 +666,10 @@ public static class PlayerClassIds
     public const int Mage = 2;
     public const int Ranger = 3;
     public const int Monk = 4;
-    // 4.2.2's fifth `character_class` row: its talent trees are the Flame Knight's.
+    // 4.2.21's fifth `character_class` row: its talent trees are the Flame Knight's.
     public const int FlameKnight = 5;
 
-    /// <summary>The classes every build has; the Flame Knight is offered where the loaded build has it.</summary>
+    // The classes every build has; the Flame Knight is offered where the loaded build has it.
     public static readonly IReadOnlySet<int> All = new HashSet<int> { Warrior, Mage, Ranger, Monk };
 
     // TODO: Verify a Flame Knight's numbers in play. Own placeholder until then: it takes the

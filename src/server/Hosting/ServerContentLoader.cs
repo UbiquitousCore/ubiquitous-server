@@ -122,11 +122,17 @@ public sealed class ServerContentLoader(
         var questFinishersByCreature = LoadOptional("creature quest finishers",
             cat => cat.LoadCreatureQuestFinishers());
         var lootTables = catalog.Manifest.Datasets.ContainsKey("creatureLootTables")
-            || DataManifest.IsTargetGameVersion(catalog.Manifest.GameVersion)
+            || DataManifest.PlaysAsSeen(catalog.Manifest.GameVersion)
             ? LoadOptional("creature loot tables", cat => cat.LoadCreatureLootTables().ToDictionary(table => table.CreatureEntryId))
             : null;
 
-        var seenBuild = DataManifest.IsTargetGameVersion(catalog.Manifest.GameVersion);
+        var seenBuild = DataManifest.PlaysAsSeen(catalog.Manifest.GameVersion);
+        if (catalog.Manifest.GameVersion == "unknown")
+        {
+            logger.LogWarning(
+                "The data package's tables match no build this server knows; it plays as 1.1.4 does. " +
+                "Fingerprint the build to have its own spells, cap and classes read.");
+        }
         StartingSpellbook? book = null;
         if (spells is not null && seenBuild) StartingLoadouts.ValidateAgainst(spells);
         else if (spells is not null)
@@ -191,7 +197,7 @@ public sealed class ServerContentLoader(
             Loadouts = book is not null ? StartingLoadouts.FromSpellbook(book, items!) : fallback.Loadouts,
             Spellbook = book,
             MiningGatherSpellId = book?.MiningGather ?? fallback.MiningGatherSpellId,
-            LevelCap = book is not null ? LevelingService.CapOf(catalog.Manifest) : fallback.LevelCap,
+            LevelCap = LevelingService.CapOf(catalog.Manifest),
         };
     }
 

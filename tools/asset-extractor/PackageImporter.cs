@@ -630,7 +630,10 @@ public static class PackageImporter
             GeneratedAt: DateTimeOffset.UtcNow,
             Datasets: datasets,
             ImportNotes: notes.Count > 0 ? notes : null,
-            LevelCap: archiveEntries.TryGetValue("tables/achievement.tbl", out var achievementBytes)
+            // 1.x keeps its conditions in other columns of `achievement`, and an unknown
+            // build has not been measured, so only a later known build has its cap read.
+            LevelCap: !DataManifest.PlaysAsSeen(build)
+                && archiveEntries.TryGetValue("tables/achievement.tbl", out var achievementBytes)
                 && archiveEntries.TryGetValue("tables/String_Achievement_en.tbl", out var achievementStringBytes)
                 ? AchievementColumns.HighestPlayerLevelAskedFor(
                     FTableDocument.Load(achievementBytes),

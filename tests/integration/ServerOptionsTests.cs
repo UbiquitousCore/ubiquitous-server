@@ -558,6 +558,11 @@ public sealed class ServerOptionsTests
             Assert.Empty(unset.DisabledRacesFor("4.2.21"));
             Assert.Empty(unset.DisabledRacesFor("2.2.0"));
             Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRacesFor("1.1.5"));
+            Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRacesFor("unknown"));
+            Assert.Equal(LevelingService.SeenMaxLevel, LevelingService.CapOf(
+                new DataManifest("test", "unknown", "hash", DateTimeOffset.UnixEpoch, [], LevelCap: 99)));
+            Assert.Equal(75, LevelingService.CapOf(
+                new DataManifest("test", "4.2.21", "hash", DateTimeOffset.UnixEpoch, [], LevelCap: 75)));
             Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRacesFor(null));
         }
         finally

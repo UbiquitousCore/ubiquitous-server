@@ -23,7 +23,7 @@ public sealed class OperatorBuildStartTests
             var catalog = DataCatalog.LoadFromDirectory(package.FullName);
             if (DataManifest.IsTargetGameVersion(catalog.Manifest.GameVersion)) return;
 
-            var content = new ServerContentLoader(catalog, ServerOptions.Defaults, NullLogger.Instance, ContentDirectory.Find())
+            var content = new ServerContentLoader(catalog, ServerOptions.Defaults with { GeneratedLootEnabled = true }, NullLogger.Instance, ContentDirectory.Find())
                 .Load().Game;
 
             Assert.True(catalog.Manifest.LevelCap > LevelingService.SeenMaxLevel);

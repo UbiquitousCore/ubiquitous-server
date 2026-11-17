@@ -47,9 +47,7 @@ public sealed record ServerOptions(
     // race button is unnamed and its starting land has no zones. From 2.2.0 the
     // build names the race, so unless the host says otherwise every race is open.
     public IReadOnlyList<int> DisabledRacesFor(string? gameVersion) =>
-        DisabledRaces ?? (string.IsNullOrEmpty(gameVersion) || gameVersion.StartsWith("1.", StringComparison.Ordinal)
-            ? [PlayerRaceIds.Mendel]
-            : []);
+        DisabledRaces ?? (DataManifest.PlaysAsSeen(gameVersion) ? [PlayerRaceIds.Mendel] : []);
 
     public string ResolvedStateDirectory => StateDirectory ?? DataDirectory;
 
