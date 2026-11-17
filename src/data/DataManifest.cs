@@ -8,14 +8,32 @@ public sealed record DataManifest(
     string GameVersion,
     string SourceHash,
     DateTimeOffset GeneratedAt,
-    Dictionary<string, string> Datasets)
+    Dictionary<string, string> Datasets,
+    IReadOnlyList<string>? ImportNotes = null,
+    // The highest level the client's own achievements ask a player to reach.
+    int? LevelCap = null)
 {
-    public const string FileName = "manifest.json";
-
+    // The build whose spellbooks, starting kits and level cap were read in play.
     public const string TargetGameVersion = "1.1.4";
 
     public static bool IsTargetGameVersion(string? gameVersion) =>
         string.Equals(gameVersion, TargetGameVersion, StringComparison.Ordinal);
+
+    // Whether a package plays by what 1.1.4 was seen to do: any 1.x build, and a
+    // package whose build is not known, since a near-1.1.4 copy with one table
+    // changed is far likelier than an unmeasured later build.
+    public static bool PlaysAsSeen(string? gameVersion) =>
+        string.IsNullOrEmpty(gameVersion) || gameVersion == UnknownGameVersion
+        || gameVersion.StartsWith("1.", StringComparison.Ordinal);
+
+    // What the importer records for tables that match no captured build.
+    public const string UnknownGameVersion = "unknown";
+
+    // The level cap this package plays to: the one 1.1.4 was seen with, unless a
+    // later known build's achievements asked for another.
+    public int PlayerLevelCap(int seenCap) => PlaysAsSeen(GameVersion) ? seenCap : LevelCap ?? seenCap;
+
+    public const string FileName = "manifest.json";
 
     public static readonly IReadOnlyList<string> RequiredDatasets = new[]
     {

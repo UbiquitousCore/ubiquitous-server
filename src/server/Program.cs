@@ -216,10 +216,9 @@ public static class Program
         }
 
         readiness.SetDataReady();
-        if (!DataManifest.IsTargetGameVersion(manifest.GameVersion))
+        foreach (var note in manifest.ImportNotes ?? [])
         {
-            logger.LogWarning("Game version {GameVersion} differs from target {Target}; schema drift may apply",
-                manifest.GameVersion, DataManifest.TargetGameVersion);
+            logger.LogWarning("Game version {GameVersion}: {Note}", manifest.GameVersion, note);
         }
 
         return true;

@@ -13,4 +13,6 @@ public sealed record ServerContent(
     public static ServerContent Empty { get; } = new(GameContent.Development, [], []);
 
     public PatrolRouteLibrary Patrols { get; init; } = PatrolRouteLibrary.Fixed(Game.WaypointRoutes);
+
+    public DataBuild Build { get; init; } = DataBuild.Unknown;
 }

@@ -1,14 +1,5 @@
 namespace Ubiquitous.AssetExtractor;
 
-public static class CollisionPlacementColumns
-{
-    public const int SpawnScale = 11;
-
-    public const int ProtoDisplay = 3;
-
-    public const int DisplayModel = 1;
-}
-
 public static class CollisionPlacementReader
 {
     public static IReadOnlyDictionary<ushort, List<CollisionPlacement>> ReadByMap(string tablesDirectory)
@@ -17,10 +8,14 @@ public static class CollisionPlacementReader
         var protos = LoadTable(tablesDirectory, "staticobject_proto.tbl");
         var displays = LoadTable(tablesDirectory, "staticobject_displayinfo.tbl");
 
+        var displayColumns = StaticObjectDisplayColumns.Layout.Resolve(displays).As<StaticObjectDisplayTableColumns>();
+        var protoColumns = StaticObjectProtoColumns.Layout.Resolve(protos).As<StaticObjectProtoTableColumns>();
+        var columns = StaticObjectColumns.Layout.Resolve(spawns).As<StaticObjectTableColumns>();
+
         var modelOfDisplay = new Dictionary<uint, string>();
         foreach (var (key, row) in displays.ByKey)
         {
-            if (Cell(row, CollisionPlacementColumns.DisplayModel) is string model && model.Length > 0)
+            if (Cell(row, displayColumns.Model) is string model && model.Length > 0)
             {
                 modelOfDisplay[key] = model;
             }
@@ -29,10 +24,9 @@ public static class CollisionPlacementReader
         var displayOfEntry = new Dictionary<uint, uint>();
         foreach (var (key, row) in protos.ByKey)
         {
-            if (Cell(row, CollisionPlacementColumns.ProtoDisplay) is uint display) displayOfEntry[key] = display;
+            if (Cell(row, protoColumns.Display) is uint display) displayOfEntry[key] = display;
         }
 
-        var columns = StaticObjectColumns.Build114;
         var byMap = new Dictionary<ushort, List<CollisionPlacement>>();
         foreach (var row in spawns.Rows)
         {
@@ -46,7 +40,7 @@ public static class CollisionPlacementReader
             if (Cell(row, columns.Z) is not float z) continue;
 
             float yaw = Cell(row, columns.Yaw) as float? ?? 0f;
-            float scale = Cell(row, CollisionPlacementColumns.SpawnScale) as float? ?? 1f;
+            float scale = Cell(row, columns.Scale) as float? ?? 1f;
             if (!float.IsFinite(x) || !float.IsFinite(y) || !float.IsFinite(z) || !float.IsFinite(yaw)) continue;
             if (!float.IsFinite(scale) || scale <= 0f) scale = 1f;
 

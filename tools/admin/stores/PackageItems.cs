@@ -1,4 +1,5 @@
 using Ubiquitous.Data;
+using Ubiquitous.Game;
 
 namespace Ubiquitous.Admin.Stores;
 
@@ -7,6 +8,14 @@ namespace Ubiquitous.Admin.Stores;
 public sealed class PackageItems(string dataDirectory) : IItemCatalog
 {
     private readonly Lazy<IReadOnlyDictionary<int, AdminItem>> _items = new(() => Load(dataDirectory));
+
+    private readonly Lazy<int> _levelCap = new(() =>
+        File.Exists(Path.Combine(dataDirectory, DataManifest.FileName))
+            ? DataManifestJson.Load(Path.Combine(dataDirectory, DataManifest.FileName)).PlayerLevelCap(LevelingService.SeenMaxLevel)
+            : LevelingService.SeenMaxLevel);
+
+    // The highest level the game server lets this package's characters reach.
+    public int LevelCap => _levelCap.Value;
 
     public AdminItem? Find(int id) => _items.Value.TryGetValue(id, out var item) ? item : null;
 

@@ -20,7 +20,7 @@ public sealed partial class PlaySession
     }
 
     private int NoticeRangeFor(int baseRange, CreatureDefinition? creature) =>
-        EncounterRules.NoticeRange(baseRange, creature, _level);
+        EncounterRules.NoticeRange(baseRange, creature, _level, _content.LevelCap);
 
     private bool IsServiceNpc(uint entry) =>
         _content.Npcs.TryGetValue(entry, out var npc)

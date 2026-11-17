@@ -52,8 +52,8 @@ public sealed partial class PlaySession
     private IReadOnlyList<uint> SpellBookWithTalents()
     {
         var talentAbilities = TalentEffects.Castable(_talents.CurrentSpells, _content.Spells);
-        var higherRanks = _level >= LevelingService.MaxLevel
-            ? talentAbilities.SelectMany(PlaytestSpellbook.TalentAbilityRanksAtMaxLevel)
+        var higherRanks = ClassSpellbook.HoldsWholeBook(_content, _level, OnDevelopmentLogin)
+            ? ClassSpellbook.TalentRanksAt(_content, talentAbilities, _level, LaterBuildSpellLevels())
             : [];
         return [.. _baseSpells.Concat(talentAbilities).Concat(higherRanks).Distinct()];
     }

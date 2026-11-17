@@ -22,6 +22,11 @@ public static class TableArchiveReader
 
     private static ReadOnlySpan<byte> LocalHeaderMagic => "GBMP"u8;
 
+
+    // Some builds keep the ordinary signature.
+
+    private static ReadOnlySpan<byte> StandardLocalHeaderMagic => "PK\u0003\u0004"u8;
+
     public static IReadOnlyDictionary<string, byte[]> ReadEntries(ReadOnlySpan<byte> archive)
     {
         int eocd = FindEndOfCentralDirectory(archive);
@@ -42,7 +47,9 @@ public static class TableArchiveReader
                 throw new TableArchiveFormatException($"Central directory record {i} has a bad signature.");
             }
 
+            ushort flags = BinaryPrimitives.ReadUInt16LittleEndian(archive.Slice(cursor + 8, 2));
             ushort method = BinaryPrimitives.ReadUInt16LittleEndian(archive.Slice(cursor + 10, 2));
+            uint crc = BinaryPrimitives.ReadUInt32LittleEndian(archive.Slice(cursor + 16, 4));
             uint compressedSize = BinaryPrimitives.ReadUInt32LittleEndian(archive.Slice(cursor + 20, 4));
             uint uncompressedSize = BinaryPrimitives.ReadUInt32LittleEndian(archive.Slice(cursor + 24, 4));
             ushort nameLength = BinaryPrimitives.ReadUInt16LittleEndian(archive.Slice(cursor + 28, 2));
@@ -57,7 +64,7 @@ public static class TableArchiveReader
             }
 
             string name = Encoding.ASCII.GetString(archive.Slice(nameAt, nameLength));
-            byte[] bytes = ReadEntryData(archive, checked((int)localHeaderOffset), method,
+            byte[] bytes = ReadEntryData(archive, checked((int)localHeaderOffset), method, flags, crc,
                 checked((int)compressedSize), checked((int)uncompressedSize), name);
             entries.TryAdd(name, bytes);
 
@@ -68,7 +75,7 @@ public static class TableArchiveReader
     }
 
     private static byte[] ReadEntryData(
-        ReadOnlySpan<byte> archive, int localHeaderOffset, int method,
+        ReadOnlySpan<byte> archive, int localHeaderOffset, int method, ushort flags, uint crc,
         int compressedSize, int uncompressedSize, string name)
     {
         if (localHeaderOffset < 0 || localHeaderOffset + LocalHeaderSize > archive.Length)
@@ -76,9 +83,10 @@ public static class TableArchiveReader
             throw new TableArchiveFormatException($"Entry '{name}' has a local header outside the file.");
         }
 
-        if (!archive.Slice(localHeaderOffset, 4).SequenceEqual(LocalHeaderMagic))
+        var magic = archive.Slice(localHeaderOffset, 4);
+        if (!magic.SequenceEqual(LocalHeaderMagic) && !magic.SequenceEqual(StandardLocalHeaderMagic))
         {
-            throw new TableArchiveFormatException($"Entry '{name}' is missing the packed local header signature.");
+            throw new TableArchiveFormatException($"Entry '{name}' has neither local header signature this reader knows.");
         }
 
         ushort localNameLength = BinaryPrimitives.ReadUInt16LittleEndian(archive.Slice(localHeaderOffset + 26, 2));
@@ -91,12 +99,33 @@ public static class TableArchiveReader
         }
 
         var compressed = archive.Slice(dataAt, compressedSize);
-        return method switch
+        var output = method switch
         {
             0 => compressed.ToArray(),
             8 => Inflate(compressed, uncompressedSize, name),
+            Lzma.ZipMethod => DecodeLzma(compressed, flags, uncompressedSize, name),
             _ => throw new TableArchiveFormatException($"Entry '{name}' uses unsupported compression method {method}."),
         };
+
+        // Every member of every pack on hand records its true CRC-32, whatever its method.
+        if (Crc32.Compute(output) != crc)
+        {
+            throw new TableArchiveFormatException($"Entry '{name}' decompressed to bytes whose CRC-32 is not the one recorded.");
+        }
+
+        return output;
+    }
+
+    private static byte[] DecodeLzma(ReadOnlySpan<byte> compressed, ushort flags, int uncompressedSize, string name)
+    {
+        try
+        {
+            return Lzma.DecodeZip(compressed, uncompressedSize, (flags & Lzma.ZipEndMarkerFlag) != 0);
+        }
+        catch (LzmaFormatException ex)
+        {
+            throw new TableArchiveFormatException($"Entry '{name}': {ex.Message}");
+        }
     }
 
     private static byte[] Inflate(ReadOnlySpan<byte> compressed, int uncompressedSize, string name)

@@ -7,7 +7,9 @@ composition root.
 ## Data
 
 Raw client formats (`.tbl`, GBMP archives, terrain, collision) are read only
-by `tools/asset-extractor`, with column layouts pinned to client build 1.1.4.
+by `tools/asset-extractor`. Columns have no names in the files and move
+between builds, so each table has one `ColumnLayout` naming them and saying
+how every known build's shape differs.
 It writes a package to `data/generated/` (`manifest.json` plus one JSON file
 per dataset); game code reads only the `Ubiquitous.Data` records.
 
@@ -15,9 +17,9 @@ per dataset); game code reads only the `Ubiquitous.Data` records.
 - A dataset the manifest does not list falls back to development content with
   a warning. A listed dataset that is missing or invalid stops the server
   (exit code 1), so a broken package never runs half on development content.
-- A package from another build only warns. Columns move between builds
-  (`map_info`'s name is column 9 in 1.1.4 and 12 in 2.2.0), so check a table
-  against the build it came from.
+- The manifest names the build the tables came from and lists what that
+  build's files leave out (`ImportNotes`); the server logs each at startup.
+  1.1.4 is the build the rules were read from, so others may play with gaps.
 
 Project-authored content that no client file carries lives in `content/`.
 

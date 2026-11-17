@@ -91,7 +91,7 @@ public sealed class BotWalkingTests
     private static async Task<List<string>> WalkTowardsAGiverAsync(CornerMap map, float giverZ = 10, int seed = 1, int turns = 3)
     {
         var connection = new Connection();
-        var settings = PlayerbotSettings.From(new ModuleSettings());
+        var settings = PlayerbotSettings.From(new ModuleSettings(), LevelingService.SeenMaxLevel);
         var bot = new Bot(map, connection, new ModuleLogin("bot", "secret"),
             new BotBrain(new BotKnowledge(map.Content), settings, new Random(seed), _ => false), new Random(seed),
             new HashSet<int> { Ubiquitous.Data.PlayerRaceIds.Human });

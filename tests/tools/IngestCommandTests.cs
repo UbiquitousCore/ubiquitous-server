@@ -56,9 +56,14 @@ public sealed class IngestCommandTests : IDisposable
     }
 
     [Fact]
-    public void AnotherGameVersionIsWarnedAbout()
+    public void WhatAVersionsFilesLeaveOutIsWarnedAbout()
     {
-        Assert.Contains(IngestReport.Done(Manifest("2.2.0"), inContainer: true), line => line.Contains("Warning"));
+        var manifest = Manifest("2.2.0") with { ImportNotes = ["tables/loot.tbl: not in this build; creatures drop nothing."] };
+
+        var lines = IngestReport.Done(manifest, inContainer: true);
+
+        Assert.Contains(lines, line => line.Contains("Warning"));
+        Assert.Contains(lines, line => line.Contains("creatures drop nothing"));
     }
 
     private static DataManifest Manifest(string version) => new(

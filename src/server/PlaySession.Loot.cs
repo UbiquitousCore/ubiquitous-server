@@ -7,6 +7,21 @@ namespace Ubiquitous.Server;
 
 public sealed partial class PlaySession
 {
+    // What the killer finds on a body. A quest item a generated table holds drops only for a killer whose
+    // log holds one of its quests and still needs it.
+    private CorpseLoot CorpseLootOf(uint entry, CreatureDefinition? creature) =>
+        _lootService.Generate(
+            checked((int)entry),
+            _content.LootTables.TryGetValue(entry, out var table) ? table : null,
+            creature?.MoneyDropMin, creature?.MoneyDropMax,
+            _content.GeneratedQuestItems.Count == 0 ? null : StillNeeded);
+
+    private bool StillNeeded(uint item) =>
+        !_content.GeneratedQuestItems.TryGetValue(item, out var quests)
+        || _content.Quests.Any(quest => quests.Contains(quest.Id) && _quests.Holds(quest.Id)
+            && quest.Objectives.Any(objective => objective.Kind == QuestObjectiveKind.Held
+                && objective.ObjectiveItem == item && HeldCountFor(item) < objective.GoalCount));
+
     private IReadOnlyList<string> LootOpen(JsonElement payload)
     {
         if (_world is null || _character is null) return [];

@@ -244,6 +244,33 @@ public class QuestTableMapperTests
     }
 
     [Fact]
+    public void MapQuests_LeavesOutACreatureTheQuestAsksForNoneOf()
+    {
+        var row = ObjectiveRow();
+        row[22] = 756u;
+
+        var quest = Assert.Single(QuestTableMapper.MapQuests(DocumentWithRow(row), ColumnsWithObjectives, Npcs));
+
+        Assert.Empty(quest.Objectives);
+    }
+
+    [Fact]
+    public void MapQuests_LeavesOutAnItemTheQuestAsksForNoneOf()
+    {
+        // 2.2.0 on: a quest names the empty bottle its water is drawn into,
+        // asking for none of it back.
+        var row = ObjectiveRow();
+        row[14] = 1035u;
+        row[18] = 1u;
+        row[15] = 1036u;
+
+        var quest = Assert.Single(QuestTableMapper.MapQuests(DocumentWithRow(row), ColumnsWithObjectives, Npcs));
+
+        var objective = Assert.Single(quest.Objectives);
+        Assert.Equal(1035u, objective.ObjectiveItem);
+    }
+
+    [Fact]
     public void MapQuests_ReadsATriggeredObjectiveFromRequiredStaticObject()
     {
         var row = ObjectiveRow();

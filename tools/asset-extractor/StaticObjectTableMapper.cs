@@ -4,7 +4,7 @@ namespace Ubiquitous.AssetExtractor;
 
 public sealed record StaticObjectTableColumns(
     int Id, int MapId, int EntryId, int X, int Y, int Z, int Yaw,
-    int State = -1, int Flags = -1);
+    int State = -1, int Flags = -1, int Scale = -1);
 
 public static class StaticObjectTableMapper
 {

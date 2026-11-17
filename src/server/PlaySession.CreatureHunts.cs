@@ -85,7 +85,7 @@ public sealed partial class PlaySession
             {
                 if (!CreatureHunting.Hunts(hunter, quarry[i].Creature)) continue;
                 var distance = hunterPosition.DistanceSquaredTo(quarry[i].Position);
-                var range = CreatureHunting.NoticeRange(hunter, quarry[i].Creature, DefaultAggroRange);
+                var range = CreatureHunting.NoticeRange(hunter, quarry[i].Creature, DefaultAggroRange, _content.LevelCap);
                 if (distance > range * range || distance >= nearestDistance) continue;
                 nearest = i;
                 nearestDistance = distance;

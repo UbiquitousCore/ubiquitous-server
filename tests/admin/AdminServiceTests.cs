@@ -135,6 +135,21 @@ public sealed class AdminServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ALaterBuildsPackage_LetsALevelUpToItsOwnCap()
+    {
+        var package = Path.Combine(_folder.FullName, "package");
+        var path = Path.Combine(package, DataManifest.FileName);
+        DataManifestJson.Save(DataManifestJson.Load(path) with { GameVersion = "4.2.21", LevelCap = 75 }, path);
+        var admin = new AdminService(
+            _accounts, new ServerCharacters(_characters, _inventory, new PackageItems(package)),
+            new EnvFileSettings(Path.Combine(_folder.FullName, ".env")), new FixedStatus(), _control, new PackageItems(package), _online);
+
+        Assert.Equal(CharacterChange.BadLevel, await admin.EditCharacterAsync("c1", new CharacterEdit(Level: 76)));
+        Assert.Equal(CharacterChange.Done, await admin.EditCharacterAsync("c1", new CharacterEdit(Level: 75)));
+        Assert.Equal(75, (await admin.CharacterAsync("c1"))!.Value.Detail.LevelCap);
+    }
+
+    [Fact]
     public async Task LevelGoldAndNameChangeByTheGamesRules()
     {
         Assert.Equal(CharacterChange.BadLevel, await _admin.EditCharacterAsync("c1", new CharacterEdit(Level: 61)));

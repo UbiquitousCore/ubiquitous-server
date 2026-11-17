@@ -22,7 +22,9 @@ public sealed record CreatureTableColumns(
     int Festival = -1,
     int Rank = -1,
     int RangedAttackIntervalMs = -1,
-    int Family = -1);
+    int Family = -1,
+    int SellList = -1,
+    int GreetingMenu = -1);
 
 public static class CreatureTableMapper
 {

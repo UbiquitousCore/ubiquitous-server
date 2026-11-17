@@ -205,11 +205,13 @@ public class NavigationBakeCommandTests
 
             File.WriteAllBytes(Path.Combine(tables, "map_info.tbl"), MapInfoTable(13, "Town", "world/town.wld"));
 
-            foreach (var empty in new[] { "staticobject_spawns", "staticobject_proto", "staticobject_displayinfo" })
+            foreach (var empty in new[] { StaticObjectColumns.Layout, StaticObjectProtoColumns.Layout, StaticObjectDisplayColumns.Layout })
             {
+                string format = empty.ReferenceFormat;
                 File.WriteAllBytes(
-                    Path.Combine(tables, $"{empty}.tbl"),
-                    FTableFixture.Build(rows: 0, cols: 16, entrySize: 64, format: new string('u', 16)));
+                    Path.Combine(tables, Path.GetFileName(empty.Table)),
+                    FTableFixture.Build(
+                        rows: 0, cols: format.Length, entrySize: format.Sum(type => type == 's' ? 6 : 4), format: format));
             }
 
             File.WriteAllBytes(Path.Combine(models, "build", "hut.phy"), Slab(centreY: 4f, halfY: 0.25f, half: 6f));
