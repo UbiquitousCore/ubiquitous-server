@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using Ubiquitous.Data;
 using Ubiquitous.Game;
 using Ubiquitous.Persistence;
@@ -1912,17 +1913,30 @@ public sealed class AccountCharacterTests
     }
 
     [Fact]
-    public async Task PlaySession_PlayerSos_WhileAliveIsRateLimitedByAFifteenMinuteCooldown()
+    public async Task PlaySession_PlayerSos_WhileAliveIsRateLimitedByASixtySecondCooldown()
     {
-        var session = await LootSessionAsync([new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)]);
+        var clock = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
+            [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true, time: clock);
+        await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
+        await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
 
         var first = await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.PlayerUnstuck, 2, new { })));
         Assert.Contains(first, m => m.Contains("\"type\":\"world.entered\""));
 
-        var second = await session.HandleTextAsync(WebMessageJson.Serialize(
+        clock.Advance(TimeSpan.FromSeconds(59));
+        var tooSoon = await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.PlayerUnstuck, 3, new { })));
-        Assert.Contains("unstuck_refused", second.Single());
+        Assert.Contains("unstuck_refused", tooSoon.Single());
+
+        clock.Advance(TimeSpan.FromSeconds(1));
+        var ready = await session.HandleTextAsync(WebMessageJson.Serialize(
+            WebMessageEnvelope.Create(WebMessageTypes.PlayerUnstuck, 4, new { })));
+        Assert.Contains(ready, m => m.Contains("\"type\":\"world.entered\""));
     }
 
     [Fact]

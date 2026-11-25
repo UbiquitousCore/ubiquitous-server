@@ -54,7 +54,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly Dictionary<string, BodyStates> _auraStateSent = new(StringComparer.Ordinal);
     private readonly DirtyValueTracker _dirty = new();
     private readonly AttributeModifierService _attributeModifiers;
-    private static readonly TimeSpan StuckRescueCooldown = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan StuckRescueCooldown = TimeSpan.FromSeconds(60);
     private DateTimeOffset? _lastRescueAt;
     private readonly Dictionary<int, (uint Id, int Type)> _actionBar = new();
     private readonly TeleportService _teleports = new();

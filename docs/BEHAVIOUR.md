@@ -258,7 +258,7 @@ comes from is in `PROVENANCE.md`.
   Nothing else is lost.
 - `player.unstuck` while dead releases to the nearest `map_graveyard`, else the
   `map_info` recall point, else in place, at full health and power. Alive, it
-  is an unstuck: once per 15 minutes, not in combat. A player who disconnects
+  is an unstuck: once per 60 seconds, not in combat. A player who disconnects
   dead is saved at their graveyard.
 - Losing a duel leaves the loser at 10 health, begging; forfeiting plays
   nothing.
