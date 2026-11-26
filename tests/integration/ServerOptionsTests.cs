@@ -91,8 +91,7 @@ public sealed class ServerOptionsTests
         var directory = Directory.CreateTempSubdirectory("ubiquitous-dotenv-").FullName;
         File.WriteAllText(Path.Combine(directory, ".env"), """
             # comment
-            UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true
-            UBIQUITOUS_DEVELOPMENT_PASS_HASH="from-dotenv"
+            UBIQUITOUS_DEVELOPMENT_ENTRY="true"
             export UBIQUITOUS_LOG_LEVEL=Debug
             UBIQUITOUS_WEBSOCKET_PORT=9002
             """);
@@ -103,8 +102,7 @@ public sealed class ServerOptionsTests
                 ["UBIQUITOUS_WEBSOCKET_PORT"] = "9003",
             }, directory);
 
-            Assert.True(options.DevelopmentAccountsEnabled);
-            Assert.Equal("from-dotenv", options.DevelopmentPassHash);
+            Assert.True(options.DevelopmentEntry);
             Assert.Equal("Debug", options.LogLevel);
             Assert.Equal(9003, options.WebSocketPort);
         }
@@ -383,34 +381,13 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
-    public void DevelopmentLogins_AreNoneUnlessExplicitlyEnabled()
+    public void DevelopmentEntry_IsOffUnlessExplicitlyEnabled()
     {
-        var options = ServerOptions.Load([], new Dictionary<string, string?>
+        Assert.False(ServerOptions.Load([], new Dictionary<string, string?>()).DevelopmentEntry);
+        Assert.True(ServerOptions.Load([], new Dictionary<string, string?>
         {
-            ["UBIQUITOUS_DEVELOPMENT_PASS_HASH"] = "local-only",
-            ["UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH"] = "local-only-2",
-        });
-
-        Assert.Empty(options.DevelopmentLogins());
-    }
-
-    [Fact]
-    public void DevelopmentLogins_WhenEnabled_CreateOnlyTheLoginsThatHaveAPassword()
-    {
-        var primaryOnly = ServerOptions.Load([], new Dictionary<string, string?>
-        {
-            ["UBIQUITOUS_DEVELOPMENT_ACCOUNTS"] = "true",
-            ["UBIQUITOUS_DEVELOPMENT_PASS_HASH"] = "local-only",
-        });
-        Assert.Equal([(1, "developer", "local-only")], primaryOnly.DevelopmentLogins());
-
-        var both = primaryOnly with { SecondDevelopmentPassHash = "local-only-2" };
-        Assert.Equal(
-            [(1, "developer", "local-only"), (2, "developer2", "local-only-2")],
-            both.DevelopmentLogins());
-
-        var noPassword = primaryOnly with { DevelopmentPassHash = "" };
-        Assert.Empty(noPassword.DevelopmentLogins());
+            ["UBIQUITOUS_DEVELOPMENT_ENTRY"] = "true",
+        }).DevelopmentEntry);
     }
 
     [Fact]
@@ -428,20 +405,6 @@ public sealed class ServerOptionsTests
 
         Assert.Equal("from-environment", ServerOptions.Load([], environment).ResolvedStateDirectory);
         Assert.Equal("from-arguments", ServerOptions.Load(["--state-dir", "from-arguments"], environment).ResolvedStateDirectory);
-    }
-
-    [Fact]
-    public void DevelopmentLogins_TakeTheSecondUserIdFromTheEnvironment()
-    {
-        var options = ServerOptions.Load([], new Dictionary<string, string?>
-        {
-            ["UBIQUITOUS_DEVELOPMENT_ACCOUNTS"] = "true",
-            ["UBIQUITOUS_DEVELOPMENT_PASS_HASH"] = "local-only",
-            ["UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID"] = "two",
-            ["UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH"] = "local-only-2",
-        });
-
-        Assert.Equal([(1, "developer", "local-only"), (2, "two", "local-only-2")], options.DevelopmentLogins());
     }
 
     [Fact]

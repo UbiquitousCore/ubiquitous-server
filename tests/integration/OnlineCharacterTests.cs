@@ -41,7 +41,7 @@ public sealed class OnlineCharacterTests
     {
         var (world, characters) = Server();
         var first = await LoggedInAsync(world, characters);
-        var second = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+        var second = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
             developmentEntry: true, world: world);
         await ChooseAsync(first, "Ayla");
 
@@ -70,7 +70,7 @@ public sealed class OnlineCharacterTests
     private static (SharedWorld World, InMemoryCharacterStore Characters) Server()
     {
         var characters = new InMemoryCharacterStore([Character("char-online-a", "Ayla"), Character("char-online-b", "Borin")]);
-        var world = new SharedWorld(new SessionStores(new AccountAuthenticator(new DevelopmentAccountStore("developer", "dev-secret")), characters));
+        var world = new SharedWorld(new SessionStores(new AccountAuthenticator(new InMemoryAccountStore("developer", "dev-secret")), characters));
         return (world, characters);
     }
 

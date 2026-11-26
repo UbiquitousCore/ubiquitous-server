@@ -310,7 +310,7 @@ public sealed class QuestOfferVisibilityTests
         GameContent content, IReadOnlyList<CreatureSpawnDefinition> spawns,
         IReadOnlyList<StaticObjectSpawnDefinition> staticSpawns, int level = 4)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character(level)]), spawns, staticSpawns, content, combatRollUnit: () => 1.0);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));

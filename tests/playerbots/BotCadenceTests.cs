@@ -26,7 +26,7 @@ public sealed class BotCadenceTests
     public async Task APlayerBesideABotIsSeenAsWatchingIt()
     {
         var world = new BotTestWorld(PlayerbotWorldTests.QuestContent(), PlayerbotWorldTests.QuestSpawns,
-            PlayerbotWorldTests.OneBot(), new Ubiquitous.Persistence.DevelopmentAccountStore("watcher", "secret"));
+            PlayerbotWorldTests.OneBot(), new Ubiquitous.Persistence.InMemoryAccountStore("watcher", "secret"));
         await world.RunUntilAsync(() => world.Bots is [{ Playing: true }], mostTicks: 50);
         var bot = Assert.Single(world.Bots);
 

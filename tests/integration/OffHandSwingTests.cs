@@ -54,7 +54,7 @@ public sealed class OffHandSwingTests
         var equipment = new int[EquipmentSlots.Count];
         equipment[EquipmentSlots.MainHand] = (int)Blade;
         equipment[EquipmentSlots.OffHand] = (int)offHand;
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, equipment)]),
             [new CreatureSpawnDefinition(1001, 13, 9502, 2, 2, 4, 0)],

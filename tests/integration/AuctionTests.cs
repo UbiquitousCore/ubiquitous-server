@@ -172,7 +172,7 @@ public sealed class AuctionTests
         IInventoryStore? inventoryStore = null)
     {
         var characters = new InMemoryCharacterStore([Character(guidSuffix, name)]);
-        var session = TestSessions.Create(new DevelopmentAccountStore(guidSuffix, "p"), characters,
+        var session = TestSessions.Create(new InMemoryAccountStore(guidSuffix, "p"), characters,
             auctionStore: auctionStore, inventoryStore: inventoryStore);
         var inbox = new List<string>();
         await session.HandleTextAsync(WebMessageJson.Serialize(

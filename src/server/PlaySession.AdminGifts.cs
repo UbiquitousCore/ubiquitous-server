@@ -49,6 +49,23 @@ public sealed partial class PlaySession
         ];
     }
 
+    private IReadOnlyList<string> AdminSetGold(JsonElement payload)
+    {
+        if (RefuseNonAdmin("set gold") is { } refused) return refused;
+        var request = WebMessageJson.DeserializePayload<AdminSetGoldPayload>(payload);
+        var copper = (long)request.Gold * CoinWords.Gold;
+        if (request.Gold < 0 || copper > int.MaxValue)
+            return [Error(WireCodes.ProtocolError.InvalidPayload, $"Choose from 0 to {int.MaxValue / CoinWords.Gold} gold.")];
+
+        _belongings.Currency = (int)copper;
+        _logger.LogInformation("GM {User} set their purse to {Gold} gold", _account!.UserId, request.Gold);
+        return
+        [
+            Reply(WebMessageTypes.PlayerValuesChanged, new PlayerValuesChangedPayload(
+                new Dictionary<string, int> { [WireCodes.UnitValue.Gold] = _belongings.Currency })),
+        ];
+    }
+
     private IReadOnlyList<string> AdminSetLevel(JsonElement payload)
     {
         if (RefuseNonAdmin("set levels") is { } refused) return refused;

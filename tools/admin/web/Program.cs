@@ -5,7 +5,7 @@ using Ubiquitous.Admin.Stores;
 using Ubiquitous.Admin.Web;
 
 var options = AdminOptions.FromEnvironment(Environment.GetEnvironmentVariable);
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ContentRootPath = AppContext.BaseDirectory });
 builder.WebHost.UseUrls(options.Urls);
 
 await using var connection = await ServerConnection.OpenAsync(
@@ -42,7 +42,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 if (connection.UsesFiles)
-    app.Logger.LogWarning("Using the JSON saves in {Directory}. Stop the game server before changing them here, or it may write over the change.", options.StateDirectory);
+    app.Logger.LogInformation("Using the JSON saves in {Directory}", options.StateDirectory);
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseAuthentication();

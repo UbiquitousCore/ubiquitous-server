@@ -114,7 +114,7 @@ public sealed class PartyKickVoteTests
         var sides = new List<Side>();
         foreach (var name in names)
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters, parties: TestSessions.PartiesOf(hub));
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters, parties: TestSessions.PartiesOf(hub));
             var inbox = new List<string>();
             hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });
             var side = new Side(session, inbox, $"player:char-{tag}{name}");

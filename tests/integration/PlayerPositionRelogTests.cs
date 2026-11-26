@@ -28,7 +28,7 @@ public sealed class PlayerPositionRelogTests
     private static async Task<(PlaySession Session, IReadOnlyList<string> Entered)> EnterReportingAsync(
         InMemoryCharacterStore characters)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters, []);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters, []);
         await Send(session, WebMessageTypes.AccountLogin, new LoginRequest("developer", "dev-secret"));
         var entered = await Send(session, WebMessageTypes.CharactersChoose, new ChooseCharacterRequest("Ayla"));
         return (session, entered);

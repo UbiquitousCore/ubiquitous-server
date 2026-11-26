@@ -106,7 +106,7 @@ public sealed class PartyRelogTests
 
     private static async Task<Joined> JoinAsync(PlaySessionHub hub, string guid, string name)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([Character(guid, name)]), parties: TestSessions.PartiesOf(hub));
         var inbox = new List<string>();
         hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });

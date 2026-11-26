@@ -4,7 +4,13 @@
   <PropertyGroup>
     <RootNamespace>Ubiquitous.Admin.Web</RootNamespace>
     <AssemblyName>admin</AssemblyName>
+    <!-- Settings such as data/generated and .env are relative to where it is
+         started, as the game server's are; the page itself sits beside the program. -->
+    <RunWorkingDirectory>$(MSBuildStartupDirectory)</RunWorkingDirectory>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Update="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\core\admin-core.csproj" />
     <ProjectReference Include="..\stores\admin-stores.csproj" />

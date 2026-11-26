@@ -220,7 +220,7 @@ public sealed class HeldAuraTests
     private static async Task<Side> JoinAsync(PlaySessionHub hub, SharedMapRegistry maps, string tag, string name, float x = 1)
     {
         var guid = $"char-{tag}{name}";
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(guid, 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, x, 2, 3, 4, [100, 200])]),
             TravelSession.Spawns, TravelSession.StaticSpawns,
             content: Content, combatRollUnit: () => 1.0, spellRollUnit: () => 0.5, sharedMaps: maps);

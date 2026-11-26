@@ -13,7 +13,7 @@ public sealed class AmbientTests
     [Fact]
     public async Task DevEnterWorld_SendsTheInventedDefaultAmbientStateWhenNothingSetOneYet()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -29,7 +29,7 @@ public sealed class AmbientTests
     {
         var ambient = new AmbientService();
         ambient.SetState(13, new AmbientState("rain", "Harvest Festival"));
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), ambient: ambient, developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -44,7 +44,7 @@ public sealed class AmbientTests
     {
         var ambient = new AmbientService();
         ambient.SetState(20, new AmbientState("snow"));
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), ambient: ambient, developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(

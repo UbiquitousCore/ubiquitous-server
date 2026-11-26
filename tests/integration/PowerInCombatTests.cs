@@ -20,7 +20,7 @@ public sealed class PowerInCombatTests
     private static async Task<PlaySession> SessionAsync(int classId)
     {
         var character = new CharacterRecord("char-a", 1, "Ayla", 1, 2, classId, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([character]), [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
             content: Content, combatRollUnit: () => 1.0);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(

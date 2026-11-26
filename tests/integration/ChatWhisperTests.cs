@@ -71,7 +71,7 @@ public sealed class ChatWhisperTests
     private static async Task<(PlaySession Session, List<string> Inbox)> JoinAsync(
         PlaySessionHub hub, string guid, string name, ushort mapId = 13)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([Character(guid, name, mapId)]));
         var inbox = new List<string>();
         hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });

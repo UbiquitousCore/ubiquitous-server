@@ -550,6 +550,8 @@ public sealed record AdminSetLevelPayload([property: JsonPropertyName("level")] 
 
 public sealed record AdminGiveGoldPayload([property: JsonPropertyName("gold")] int Gold);
 
+public sealed record AdminSetGoldPayload([property: JsonPropertyName("gold")] int Gold);
+
 public sealed record StressTestPayload([property: JsonPropertyName("count")] int Count);
 
 public sealed record SpellLearnedPayload(

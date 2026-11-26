@@ -45,7 +45,7 @@ public sealed class SharedVisibilityTests
         PlaySessionHub hub, SharedMapRegistry maps, string user, string name, string guid)
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore(user, "p"),
+            new InMemoryAccountStore(user, "p"),
             new InMemoryCharacterStore([Character(guid, name)]),
             TravelSession.Spawns, TravelSession.StaticSpawns, GameContent.Development,
             sharedMaps: maps);

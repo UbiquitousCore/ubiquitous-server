@@ -278,7 +278,7 @@ public sealed class StealthVisibilityTests
     private static async Task<Side> JoinAsync(PlaySessionHub hub, string tag, string name)
     {
         var guid = $"char-{tag}{name}";
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(guid, 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             creatureSpawns: [new CreatureSpawnDefinition(1001, 13, 9001, 3, 2, 3, 0)],
             content: Content, combatRollUnit: () => 1.0, spellRollUnit: () => 0.5,

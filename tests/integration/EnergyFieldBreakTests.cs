@@ -50,7 +50,7 @@ public sealed class EnergyFieldBreakTests
         var hub = new PlaySessionHub();
         Side Join()
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
                 content: Content, combatRollUnit: () => 1.0, spellRollUnit: () => 0.5,
                 duels: duels, pvpFlags: flags, blows: blows, developmentEntry: true);
             var inbox = new List<string>();

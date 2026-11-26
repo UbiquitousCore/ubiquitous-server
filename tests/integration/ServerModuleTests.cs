@@ -18,7 +18,7 @@ public sealed class ServerModuleTests
     [Fact]
     public async Task AModuleLogin_SignsInLikeAnyAccountAndOnlyWithItsSecret()
     {
-        var accounts = new ModuleAccounts(new AccountAuthenticator(new DevelopmentAccountStore("hero", "secret"), iterations: 1_000));
+        var accounts = new ModuleAccounts(new AccountAuthenticator(new InMemoryAccountStore("hero", "secret"), iterations: 1_000));
         var login = await accounts.ReserveAsync("playerbots", "random0");
 
         Assert.True((await LoginAsync(accounts, login.UserId, login.Secret)).Ok);
@@ -30,8 +30,8 @@ public sealed class ServerModuleTests
     [Fact]
     public async Task AModuleLogin_KeepsItsAccountIdAcrossRestarts()
     {
-        var first = new ModuleAccounts(new AccountAuthenticator(new DevelopmentAccountStore([])));
-        var second = new ModuleAccounts(new AccountAuthenticator(new DevelopmentAccountStore([])));
+        var first = new ModuleAccounts(new AccountAuthenticator(new InMemoryAccountStore([])));
+        var second = new ModuleAccounts(new AccountAuthenticator(new InMemoryAccountStore([])));
 
         var before = await first.FindByUserIdAsync((await first.ReserveAsync("playerbots", "random3")).UserId);
         var after = await second.FindByUserIdAsync((await second.ReserveAsync("playerbots", "random3")).UserId);
@@ -43,7 +43,7 @@ public sealed class ServerModuleTests
     public async Task AModule_CannotTakeAnAccountThatAlreadyExists()
     {
         var accounts = new ModuleAccounts(new AccountAuthenticator(
-            new DevelopmentAccountStore($"{ModuleAccounts.UserIdPrefix}playerbots.random0", "secret")));
+            new InMemoryAccountStore($"{ModuleAccounts.UserIdPrefix}playerbots.random0", "secret")));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => accounts.ReserveAsync("playerbots", "random0"));
     }
@@ -51,7 +51,7 @@ public sealed class ServerModuleTests
     [Fact]
     public async Task AModule_RaisesOnlyAFreshCharacterOfItsOwnLogin()
     {
-        var accounts = new ModuleAccounts(new AccountAuthenticator(new DevelopmentAccountStore([])));
+        var accounts = new ModuleAccounts(new AccountAuthenticator(new InMemoryAccountStore([])));
         var login = await accounts.ReserveAsync("playerbots", "random0");
         var other = await accounts.ReserveAsync("other", "random0");
         var account = ModuleAccounts.AccountIdFor(login.UserId);

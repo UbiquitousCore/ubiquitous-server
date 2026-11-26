@@ -276,7 +276,7 @@ public sealed class MiningTests
                 : baseContent.StartingItems,
         };
         var clock = new FakeTimeProvider(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, 1, 2, 3, 12, [100, 200]) with { Race = race }]),
             [], Locations, content, wanderRollUnit: () => 0.0, time: clock);

@@ -12,7 +12,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task DevelopmentAccount_UsesNonZeroSuccessAndDeterministicFailureCodes()
     {
-        var store = new AccountAuthenticator(new DevelopmentAccountStore("developer", "dev-secret"), iterations: TestSessions.TestPasswordIterations);
+        var store = new AccountAuthenticator(new InMemoryAccountStore("developer", "dev-secret"), iterations: TestSessions.TestPasswordIterations);
 
         var success = await store.AuthenticateAsync("developer", "dev-secret");
         var failure = await store.AuthenticateAsync("developer", "wrong");
@@ -43,7 +43,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_LoginThenListCharacters_UsesClientMessageSequence()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, developmentEntry: true);
 
@@ -62,7 +62,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_RejectsListBeforeLoginAndSecondLogin()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var session = TestSessions.Create(account, new InMemoryCharacterStore([]), developmentEntry: true);
 
         var beforeLogin = (await session.HandleTextAsync(
@@ -85,7 +85,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task LoginResult_SaysWhetherTheAccountIsAGameMaster()
     {
-        var accounts = new DevelopmentAccountStore(
+        var accounts = new InMemoryAccountStore(
         [
             new AccountRecord(1, "gm", "gm-secret", IsAdmin: true),
             new AccountRecord(2, "player", "player-secret"),
@@ -109,7 +109,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_LoggingOut_LetsTheSameConnectionSignInAgainAsSomeoneElse()
     {
-        var accounts = new DevelopmentAccountStore(
+        var accounts = new InMemoryAccountStore(
         [
             new AccountRecord(1, "one", "one-secret"),
             new AccountRecord(2, "two", "two-secret"),
@@ -132,7 +132,7 @@ public sealed class AccountCharacterTests
     public async Task PlaySession_LoggingOutWhenNotSignedIn_IsRefused()
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("one", "one-secret"), new InMemoryCharacterStore([]));
+            new InMemoryAccountStore("one", "one-secret"), new InMemoryCharacterStore([]));
 
         Assert.Contains("not_authenticated", await Send(session, 1, WebMessageTypes.AccountLogout));
     }
@@ -140,7 +140,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AfterAWrongPassword_TheSameConnectionCanTryAgain()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var session = TestSessions.Create(account, new InMemoryCharacterStore([]), developmentEntry: true);
 
         var wrong = await Login(session, 1, "not-it");
@@ -155,7 +155,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AfterFiveWrongPasswords_TheConnectionStopsTakingLogins()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var session = TestSessions.Create(account, new InMemoryCharacterStore([]), developmentEntry: true);
 
         for (var attempt = 1; attempt <= 5; attempt++)
@@ -168,7 +168,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_ChoosingCharacter_EmitsLoadingThenEntered()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, developmentEntry: true);
 
@@ -191,7 +191,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_MovementWithinStepEmitsEntityMove_AndLargeStepIsCorrected()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, developmentEntry: true);
         var login = WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -225,7 +225,7 @@ public sealed class AccountCharacterTests
                 [13] = new MapDefinition(13, "test-city", "world/city.wld", MinX: -704, MaxX: 320, MinZ: -448, MaxZ: 576),
             },
         };
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, content: content, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -266,7 +266,7 @@ public sealed class AccountCharacterTests
                     DestinationMapId: 1, DestinationX: 40, DestinationY: 0, DestinationZ: 60, DestinationYaw: 1.2f),
             ],
         };
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, content: content, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -303,7 +303,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_WalkingOutOfTheCityThroughTheCityGate_EntersTheForest()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -334,7 +334,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AdminAccount_HasTheAntiTeleportCapBypassedEntirely()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret", isAdmin: true);
+        var account = new InMemoryAccountStore("developer", "dev-secret", isAdmin: true);
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -354,7 +354,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AdminAccountJumpingStraightOverTheCityGate_StillEntersTheForest()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret", isAdmin: true);
+        var account = new InMemoryAccountStore("developer", "dev-secret", isAdmin: true);
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var session = TestSessions.Create(account, characters, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -378,7 +378,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task NewSession_DoesNotInheritSelectedCharacterOrEntityIds()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var spawns = new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) };
 
@@ -405,7 +405,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_ChatAfterWorldEntry_EmitsChatReceived()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -423,7 +423,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_TargetBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.TargetChange, 0, new { networkId = 7 })));
@@ -434,7 +434,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_GossipHelloForVisibleNpc_EmitsMenu()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -452,7 +452,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_GossipBackForVisibleNpc_ReopensTheSameMenu()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -470,7 +470,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_GossipPickOnAPageTheNpcDoesNotOffer_IsRefused()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -488,7 +488,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_GossipBackForANpcThatIsNoLongerVisible_IsRefused()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -504,7 +504,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_QuestStatusForVisibleNpc_EmitsAvailableStatus()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -522,7 +522,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_QuestListForVisibleNpc_EmitsNumericTextIds()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -540,7 +540,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_QuestAccept_EmitsPartialUpdatedQuest()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -559,7 +559,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_QuestCompleteAfterAccept_EmitsFinishedUpdate()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -582,7 +582,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_QuestDestroyAfterAccept_EmitsQuestRemoved()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -602,7 +602,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_QuestDestroyWithStaleSlot_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -621,7 +621,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryMove_EmitsItemMoved()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.InventoryMove, 0,
@@ -633,7 +633,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryEquipBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.InventoryEquip, 0,
@@ -645,7 +645,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryDestroyBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.InventoryDestroy, 0,
@@ -656,7 +656,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventorySplitBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.InventorySplit, 0,
@@ -673,7 +673,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventorySortBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.InventorySort, 0, new { area = "bag" })));
@@ -683,7 +683,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventorySort_PacksTheBagAndResendsTheSnapshot()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -698,7 +698,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventorySort_AlsoSortsTheBank()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -713,7 +713,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventorySort_RefusesAnUnrecognizedArea()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -729,7 +729,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryOpenBankBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.InventoryOpenBank, 0, new { networkId = "StaticObject:1" })));
@@ -739,7 +739,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryOpenBank_RefusesABodyThatIsNotTheBank()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new CreatureSpawnDefinition[] { new(1001, 13, 9001, 2, 2, 4, 0) }, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -756,7 +756,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryOpenBank_OpensTheDevBankStaticObject()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9100, 2, 2, 4, 0) }, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -772,7 +772,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryUpgradeStorage_ClimbsOneRungAndCharges()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -793,7 +793,7 @@ public sealed class AccountCharacterTests
 
         async Task<string> SpellsOf(string guid)
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), store, developmentEntry: true);
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), store, developmentEntry: true);
             var said = await session.HandleTextAsync(WebMessageJson.Serialize(
                 WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = guid })));
             return said.First(m => m.Contains("\"type\":\"spell.book\""));
@@ -813,7 +813,7 @@ public sealed class AccountCharacterTests
     public async Task PlaySession_InventoryUpgradeStorage_WritesTheRoomItBoughtToTheCharacter()
     {
         var store = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), store, developmentEntry: true);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), store, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
 
@@ -828,7 +828,7 @@ public sealed class AccountCharacterTests
     public async Task PlaySession_EnterAsCharacter_KeepsTheRoomAlreadyBought()
     {
         var bought = Character("char-a", 1, "Ayla") with { BagSlots = 18 };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([bought]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -848,7 +848,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryUpgradeStorage_RefusesSkippingARung()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -862,7 +862,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryUseBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.InventoryUse, 0,
@@ -873,7 +873,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryUse_CastsTheItemsOnUseSpellAndConsumesIt()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             spellRollUnit: () => 1.0, developmentEntry: true);
@@ -895,7 +895,7 @@ public sealed class AccountCharacterTests
         {
             Items = new Dictionary<uint, ItemDefinition> { [100] = new(100, "item-100", 0, 0, 100) },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: contentWithoutOnUse, developmentEntry: true);
@@ -912,7 +912,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_InventoryUse_RefusesWithNoValidTarget()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -938,7 +938,7 @@ public sealed class AccountCharacterTests
                 [100] = new(100, "item-100", Class: 0, SubClass: 1, DisplayInfoId: 100, OnUseSpellId: 105),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             content: healContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -967,7 +967,7 @@ public sealed class AccountCharacterTests
                     AllowableRaceMask: ItemRaceMask.BitFor(1)),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             content: content, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -994,7 +994,7 @@ public sealed class AccountCharacterTests
                 [100] = new(100, "item-100", Class: 4, SubClass: 0, DisplayInfoId: 100, OnUseSpellId: 105, InventoryType: 12),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             content: wornContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -1019,7 +1019,7 @@ public sealed class AccountCharacterTests
                 [100] = new(100, "item-100", Class: 10, SubClass: 0, DisplayInfoId: 100, QuestId: 5001),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             content: questItemContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -1046,7 +1046,7 @@ public sealed class AccountCharacterTests
                 [100] = new(100, "item-100", Class: 10, SubClass: 0, DisplayInfoId: 100, QuestId: 5001),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: questItemContent, developmentEntry: true);
@@ -1072,7 +1072,7 @@ public sealed class AccountCharacterTests
                 [100] = new(100, "item-100", Class: 10, SubClass: 0, DisplayInfoId: 100, QuestId: 5001),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             content: questItemContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -1097,7 +1097,7 @@ public sealed class AccountCharacterTests
                 [100] = new(100, "item-100", Class: 10, SubClass: 0, DisplayInfoId: 100, QuestId: 5001),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             content: questItemContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -1117,7 +1117,7 @@ public sealed class AccountCharacterTests
             Quests = [new QuestDefinition(5003, null, 12007, 12008, 1)],
             QuestStartersByStaticObject = [new StaticObjectQuestBindingDefinition(9101, 5003)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) },
             content: content, developmentEntry: true);
@@ -1141,7 +1141,7 @@ public sealed class AccountCharacterTests
             Quests = [new QuestDefinition(5003, null, 12007, 12008, 1)],
             QuestStartersByStaticObject = [new StaticObjectQuestBindingDefinition(9101, 5003)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) },
             content: content, developmentEntry: true);
@@ -1164,7 +1164,7 @@ public sealed class AccountCharacterTests
             QuestStartersByStaticObject = [new StaticObjectQuestBindingDefinition(9101, 5003)],
             QuestFinishersByStaticObject = [new StaticObjectQuestBindingDefinition(9101, 5003)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) },
             content: content, developmentEntry: true);
@@ -1188,7 +1188,7 @@ public sealed class AccountCharacterTests
             QuestRewards = new Dictionary<uint, QuestRewardDefinition> { [5003] = new(5003, 10, [], []) },
             QuestStartersByStaticObject = [new StaticObjectQuestBindingDefinition(9101, 5003)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) },
             content: content, developmentEntry: true);
@@ -1212,7 +1212,7 @@ public sealed class AccountCharacterTests
             QuestRewards = new Dictionary<uint, QuestRewardDefinition> { [5003] = new(5003, 10, [], []) },
             QuestFinishersByCreature = [new CreatureQuestBindingDefinition(9002, 5003)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[]
             {
@@ -1240,7 +1240,7 @@ public sealed class AccountCharacterTests
             QuestRewards = new Dictionary<uint, QuestRewardDefinition> { [5003] = new(5003, 10, [], []) },
             QuestFinishersByCreature = [new CreatureQuestBindingDefinition(9002, 5003)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[]
             {
@@ -1267,7 +1267,7 @@ public sealed class AccountCharacterTests
             Quests = [new QuestDefinition(5003, 9001, 12007, 12008, 1)],
             QuestRewards = new Dictionary<uint, QuestRewardDefinition> { [5003] = new(5003, 10, [], []) },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: content, developmentEntry: true);
@@ -1291,7 +1291,7 @@ public sealed class AccountCharacterTests
                 [new QuestObjectiveDefinition(0, QuestObjectiveKind.Held, GoalCount: 2, ObjectiveItem: 300)])],
             QuestItemBindingsByStaticObject = [new StaticObjectItemBindingDefinition(9101, 5003, 300)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) },
@@ -1324,7 +1324,7 @@ public sealed class AccountCharacterTests
                 [new QuestObjectiveDefinition(0, QuestObjectiveKind.Held, GoalCount: 2, ObjectiveItem: 300)])],
             QuestItemBindingsByStaticObject = [new StaticObjectItemBindingDefinition(9101, 5003, 300)],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) },
             content: content, developmentEntry: true);
@@ -1345,7 +1345,7 @@ public sealed class AccountCharacterTests
             Quests = [new QuestDefinition(5004, 9001, 12009, 12010, 1,
                 [new QuestObjectiveDefinition(0, QuestObjectiveKind.Triggered, GoalCount: 1, ObjectiveObject: 9101)])],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) },
@@ -1368,7 +1368,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_StaticObjectInteract_RefusesAStaticObjectWithNoBinding()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             staticObjectSpawns: new[] { new StaticObjectSpawnDefinition(2001, 13, 9101, 2, 2, 4, 0) }, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -1406,7 +1406,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorHelloForVisibleVendor_EmitsVendorItems()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1424,7 +1424,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AuctioneerHelloForVisibleAuctioneer_OpensTheMarket()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9003, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1441,7 +1441,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AuctioneerHelloForSomeoneWhoIsNot_IsRefused()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1458,7 +1458,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorHelloBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.VendorOpen, 0, new { networkId = "Creature:1" })));
@@ -1469,7 +1469,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorBuy_EmitsBuyResultItemAddedAndNewBalance()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1491,7 +1491,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorBuyUnknownRow_IsRefusedWithItemCode()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1509,7 +1509,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorSell_EmitsSellResultItemRemovedAndNewBalance()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1540,7 +1540,7 @@ public sealed class AccountCharacterTests
                 [100] = GameContent.Development.Items[100] with { SellPrice = 17 },
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
             content: content, developmentEntry: true);
@@ -1559,7 +1559,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorSellAnItemTheBagDoesNotHold_IsRefused()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1578,7 +1578,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorSellBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.VendorSell, 0,
@@ -1591,7 +1591,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_VendorBuyBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.VendorBuy, 0, new { networkId = "Creature:1", slot = 0, entry = 100, count = 1 })));
@@ -1602,7 +1602,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AttackStart_EmitsMeleeStartAndEnterCombat()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1625,7 +1625,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AttackStartRepeatedTarget_EmitsNothing()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1644,7 +1644,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AttackStartInvisibleTarget_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1661,7 +1661,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AttackStartBeforeWorldEntry_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]), developmentEntry: true);
         var response = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AttackEngage, 0, new { targetId = "Creature:1" })));
@@ -1672,7 +1672,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_TickCombat_SwingsHitsAndKills()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
             combatRollUnit: () => 1.0, developmentEntry: true);
@@ -1733,7 +1733,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_AttackStartDeadTarget_IsRejected()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -1916,7 +1916,7 @@ public sealed class AccountCharacterTests
     public async Task PlaySession_PlayerSos_WhileAliveIsRateLimitedByASixtySecondCooldown()
     {
         var clock = new FakeTimeProvider(DateTimeOffset.UtcNow);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], developmentEntry: true, time: clock);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -2036,7 +2036,7 @@ public sealed class AccountCharacterTests
         IReadOnlyList<CreatureSpawnDefinition> spawns, GameContent content, Func<double>? wanderRollUnit,
         int? health = null)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([health is int carried ? Character("char-a", 1, "Ayla") with { Health = carried } : Character("char-a", 1, "Ayla")]), spawns,
             content: content, combatRollUnit: () => 1.0, wanderRollUnit: wanderRollUnit, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -2073,7 +2073,7 @@ public sealed class AccountCharacterTests
     [Fact]
     public async Task PlaySession_WalkingIntoTheForestSideCityZone_ReturnsToTheMainCity()
     {
-        var account = new DevelopmentAccountStore("developer", "dev-secret");
+        var account = new InMemoryAccountStore("developer", "dev-secret");
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla") with
         {
             MapId = 1, X = -900, Y = 60, Z = -290,

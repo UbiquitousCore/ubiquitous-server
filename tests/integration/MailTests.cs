@@ -42,7 +42,7 @@ public sealed class MailTests
                 Character("char-b", 2, "Borin"),
             ]);
 
-            var sender = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var sender = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, mailStore: mailStore);
             await sender.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -56,7 +56,7 @@ public sealed class MailTests
 
             var mailboxSpawn = new[] { new StaticObjectSpawnDefinition(1, 13, 9102, 2, 2, 4, 0) };
 
-            var recipientSessionA = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            var recipientSessionA = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore);
             await recipientSessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
@@ -87,7 +87,7 @@ public sealed class MailTests
             Assert.Contains(claimed, r => r.Contains("\"type\":\"mail.claimed\"") && r.Contains("\"ok\":true") && r.Contains("\"gold\":40"));
             Assert.Contains(claimed, r => r.Contains("\"gold\":5040"));
 
-            var recipientSessionB = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            var recipientSessionB = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore);
             await recipientSessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
@@ -107,7 +107,7 @@ public sealed class MailTests
             await recipientSessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.MailDelete, 4, new MailIdPayload(mailId))));
 
-            var recipientSessionC = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            var recipientSessionC = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore);
             await recipientSessionC.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
@@ -127,7 +127,7 @@ public sealed class MailTests
     [Fact]
     public async Task MailOpen_RefusesWithoutAReachableMailbox()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]));
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -145,7 +145,7 @@ public sealed class MailTests
     [Fact]
     public async Task MailSend_ToUnknownPlayer_IsRefused()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]));
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -166,7 +166,7 @@ public sealed class MailTests
         var mailStore = new InMemoryMailStore();
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla"), Character("char-b", 2, "Borin")]);
         var mailbox = new[] { new StaticObjectSpawnDefinition(1, 13, 9102, 2, 2, 4, 0) };
-        var ayla = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var ayla = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             characters, staticObjectSpawns: mailbox, mailStore: mailStore);
         await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -175,7 +175,7 @@ public sealed class MailTests
         await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.MailSend, 2, new MailSendPayload("Borin", "Hello", "Safe travels!", 40))));
 
-        var borin = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+        var borin = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
             characters, staticObjectSpawns: mailbox, mailStore: mailStore);
         await borin.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
@@ -219,7 +219,7 @@ public sealed class MailTests
             ]);
             var mailboxSpawn = new[] { new StaticObjectSpawnDefinition(1, 13, 9102, 2, 2, 4, 0) };
 
-            var sender = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var sender = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, mailStore: mailStore);
             await sender.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -240,7 +240,7 @@ public sealed class MailTests
                 WebMessageTypes.MailSend, 4, new MailSendPayload("Borin", "Hello", "Again", 0, ["starter-item"]))));
             Assert.Contains(resend, r => r.Contains("\"type\":\"mail.sent\"") && r.Contains("\"ok\":false"));
 
-            var recipient = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            var recipient = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore);
             await recipient.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
@@ -274,7 +274,7 @@ public sealed class MailTests
             Assert.Contains(claimed, r => r.Contains("\"gold\":5010"));
             Assert.Contains(claimed, r => r.Contains("\"type\":\"mail.message\"") && r.Contains("\"itemsClaimed\":true"));
 
-            var afterRestart = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            var afterRestart = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore);
             await afterRestart.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
@@ -312,7 +312,7 @@ public sealed class MailTests
             ]);
             var mailboxSpawn = new[] { new StaticObjectSpawnDefinition(1, 13, 9102, 2, 2, 4, 0) };
 
-            var sender = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var sender = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, mailStore: mailStore);
             await sender.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -324,7 +324,7 @@ public sealed class MailTests
 
             var fullBag = new FixedInventoryStore(Enumerable.Range(0, 12)
                 .Select(slot => new PersistedInventoryItem($"filler-{slot}", 900 + slot, 1, "bag", slot)).ToArray());
-            var fullSession = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            var fullSession = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore, inventoryStore: fullBag);
             await fullSession.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));
@@ -347,7 +347,7 @@ public sealed class MailTests
             Assert.Contains("\"itemsClaimed\":false", reopenedInbox);
             Assert.Contains("\"goldClaimed\":false", reopenedInbox);
 
-            var roomySession = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2),
+            var roomySession = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2),
                 characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore);
             await roomySession.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer2", "dev-secret"))));

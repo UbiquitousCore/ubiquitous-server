@@ -41,6 +41,8 @@ comes from is in `PROVENANCE.md`.
   and the count is 1-1000; gold is 1-100,000 whole gold. A full bag answers
   `item.refused`. Items arrive as `inventory.itemAdded`, gold as
   `player.valuesChanged`. Each is logged with the account name.
+  `admin.setGold {gold}` sets the GM's own purse to that much whole gold
+  (0 up to what a purse holds), answered the same way.
 - `admin.setLevel {level}` (1 to 60) and `admin.learnSpells` are GM-only too. A new level
   restores health and power, resets experience, and sends `player.valuesChanged` and
   `talent.state`, plus `player.expGained` with `levelUp` when the level went up, so the
@@ -261,6 +263,12 @@ comes from is in `PROVENANCE.md`.
   `map_info` recall point, else in place, at full health and power. Alive, it
   is an unstuck: once per 60 seconds, not in combat. A player who disconnects
   dead is saved at their graveyard.
+- A dead player acts on nothing until released: using or equipping an item,
+  casting (`spell.failed`, `incapacitated`), attacking, looting, mounting,
+  NPCs, vendors, quests, travel, trades, duels and summons are refused with
+  "You are dead.". A move is answered with `move.accepted` at where the body
+  lies, as for a stunned player. Chat, social, party and guild, the quest log,
+  bag tidying, cancelling and `player.unstuck` still work.
 - Losing a duel leaves the loser at 10 health, begging; forfeiting plays
   nothing.
 - Level cap 60. Kill XP is `5 × level + 50`, +5% per level above (to +50%),

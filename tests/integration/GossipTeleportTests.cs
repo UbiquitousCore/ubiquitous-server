@@ -35,7 +35,7 @@ public sealed class GossipTeleportTests
 
     private static async Task<PlaySession> SessionAsync(GameContent content, float npcX = 3f)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             [new CreatureSpawnDefinition(1001, 13, 9010, npcX, 0, 0, 0)], [], content, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(

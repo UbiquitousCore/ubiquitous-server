@@ -149,6 +149,20 @@ public sealed class AdminServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task AddedGoldGoesOnTopOfWhatThePurseHolds()
+    {
+        await _admin.EditCharacterAsync("c1", new CharacterEdit(Gold: 12));
+
+        Assert.Equal(CharacterChange.Done, await _admin.AddGoldAsync("c1", 5));
+        Assert.Equal(CharacterChange.BadGold, await _admin.AddGoldAsync("c1", 0));
+        Assert.Equal(CharacterChange.BadGold, await _admin.AddGoldAsync("c1", int.MaxValue));
+        Assert.Equal(17, (await _admin.CharacterAsync("c1"))!.Value.Detail.Gold);
+
+        _online.Names.Add("ayla");
+        Assert.Equal(CharacterChange.Online, await _admin.AddGoldAsync("c1", 5));
+    }
+
+    [Fact]
     public async Task GivenItemsStackAndStopWhenTheBagIsFull()
     {
         Assert.Equal(CharacterChange.NoSuchItem, await _admin.GiveItemAsync("c1", 999, 1));

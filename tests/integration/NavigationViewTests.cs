@@ -25,7 +25,7 @@ public sealed class NavigationViewTests
 
     private static async Task<PlaySession> EnteredSession(bool isAdmin, float x = 2, float y = 2, float z = 2)
     {
-        var accounts = new DevelopmentAccountStore("developer", "dev-secret", isAdmin: isAdmin);
+        var accounts = new InMemoryAccountStore("developer", "dev-secret", isAdmin: isAdmin);
         var characters = new InMemoryCharacterStore([Character(x, y, z)]);
         var session = TestSessions.Create(accounts, characters, walkableGround: Ground());
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -134,7 +134,7 @@ public sealed class NavigationViewTests
     [Fact]
     public async Task MapWithNoBake_AnswersNothingRatherThanFailing()
     {
-        var accounts = new DevelopmentAccountStore("developer", "dev-secret", isAdmin: true);
+        var accounts = new InMemoryAccountStore("developer", "dev-secret", isAdmin: true);
         var characters = new InMemoryCharacterStore([Character()]);
         var session = TestSessions.Create(accounts, characters,
             walkableGround: new WalkableGroundSource(new Dictionary<ushort, NavigationMesh>()));
@@ -155,7 +155,7 @@ public sealed class NavigationViewTests
     [Fact]
     public async Task ServerHoldingNoWalkableGroundAtAll_AnswersNothingRatherThanFailing()
     {
-        var accounts = new DevelopmentAccountStore("developer", "dev-secret", isAdmin: true);
+        var accounts = new InMemoryAccountStore("developer", "dev-secret", isAdmin: true);
         var characters = new InMemoryCharacterStore([Character()]);
         var session = TestSessions.Create(accounts, characters);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -182,7 +182,7 @@ public sealed class NavigationViewTests
     [Fact]
     public async Task BeforeACharacterIsChosen_TheAnswerIsARefusalRatherThanAnEmptyMesh()
     {
-        var accounts = new DevelopmentAccountStore("developer", "dev-secret", isAdmin: true);
+        var accounts = new InMemoryAccountStore("developer", "dev-secret", isAdmin: true);
         var characters = new InMemoryCharacterStore([Character()]);
         var session = TestSessions.Create(accounts, characters, walkableGround: Ground());
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(

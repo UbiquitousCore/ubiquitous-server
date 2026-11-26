@@ -120,6 +120,7 @@ public sealed partial class PlaySession
             [WebMessageTypes.AdminTeleport] = NoBody,
             [WebMessageTypes.AdminGiveItem] = NoBody,
             [WebMessageTypes.AdminGiveGold] = NoBody,
+            [WebMessageTypes.AdminSetGold] = NoBody,
             [WebMessageTypes.AdminSetLevel] = NoBody,
             [WebMessageTypes.AdminSetInvincible] = NoBody,
             [WebMessageTypes.AdminLearnSpells] = NoBody,

@@ -34,7 +34,7 @@ public sealed class SpellFlightTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, Bolt, FrostBolt],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Mage]), [new CreatureSpawnDefinition(1001, 13, 9001, PlayerStartX + Distance, 2, 3, 0)],
             content: content, spellRollUnit: () => 1.0, combatRollUnit: () => 1.0, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(

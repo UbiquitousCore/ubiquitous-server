@@ -167,7 +167,7 @@ public sealed class QuestFinisherMarkTests
 
     private static async Task<PlaySession> SessionAsync(GameContent? content = null)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, PlayerClassIds.Ranger, 4, 5, 6, 7, 8,
                 MapId: 1, X: 2f, Y: 7f, Z: 63f, Level: 8, [100, 200])]),

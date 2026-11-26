@@ -20,7 +20,7 @@ internal static class TravelSession
     ];
 
     internal static PlaySession Session(GameContent? content = null) => TestSessions.Create(
-        new DevelopmentAccountStore("developer", "dev-secret"),
+        new InMemoryAccountStore("developer", "dev-secret"),
         new InMemoryCharacterStore([Character()]), Spawns, StaticSpawns, content);
 
     internal static async Task<PlaySession> LoggedInAsync(GameContent? content = null)

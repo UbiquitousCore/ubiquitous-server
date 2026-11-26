@@ -123,7 +123,7 @@ public sealed class PartyRewardTests
 
     private static async Task<Side> JoinAsync(PlaySessionHub hub, string guid, string name, float x = 1)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, x, 2, 3, 10, [100, 200]) with { Currency = 0 }]),
             [new CreatureSpawnDefinition(1, 13, Wolf, 2f, 2f, 3f, 0f)], null, Content,

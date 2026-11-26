@@ -19,7 +19,7 @@ public sealed class ReportTests
                 Character("char-b", 2, "Borin"),
             ]);
 
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, reportStore: reportStore);
             await LoginAsync(session, "developer", "Ayla");
 
@@ -56,7 +56,7 @@ public sealed class ReportTests
                 Character("char-b", 2, "Borin"),
             ]);
 
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, reportStore: reportStore);
             await LoginAsync(session, "developer", "Ayla");
             await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -81,7 +81,7 @@ public sealed class ReportTests
         {
             var reportStore = new FileReportStore(directory);
             var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, reportStore: reportStore);
             await LoginAsync(session, "developer", "Ayla");
 
@@ -105,7 +105,7 @@ public sealed class ReportTests
             Character("char-a", 1, "Ayla"),
             Character("char-b", 2, "Borin"),
         ]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -118,7 +118,7 @@ public sealed class ReportTests
     public async Task ReportingAnUnknownTarget_IsRefused()
     {
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -135,7 +135,7 @@ public sealed class ReportTests
             Character("char-a", 1, "Ayla"),
             Character("char-b", 2, "Borin"),
         ]);
-        var ayla = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var ayla = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(ayla, "developer", "Ayla");
 
         var responses = await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(

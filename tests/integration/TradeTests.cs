@@ -171,7 +171,7 @@ public sealed class TradeTests
         IInventoryStore? inventoryStore = null, ushort mapId = 13)
     {
         var characters = new InMemoryCharacterStore([Character(guidSuffix, name, mapId)]);
-        var session = TestSessions.Create(new DevelopmentAccountStore(guidSuffix, "p"), characters,
+        var session = TestSessions.Create(new InMemoryAccountStore(guidSuffix, "p"), characters,
             trades: trades, inventoryStore: inventoryStore);
         var inbox = new List<string>();
         hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });

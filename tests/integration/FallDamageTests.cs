@@ -15,7 +15,7 @@ public sealed class FallDamageTests
 
     private static async Task<(PlaySession Session, int MaxHealth)> EnterAsync()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), developmentEntry: true);
         var entry = await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = Character.Guid })));

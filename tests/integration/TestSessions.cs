@@ -54,8 +54,7 @@ internal static class TestSessions
         GuildService? guilds = null,
         SharedWorld? world = null,
         TimeProvider? time = null,
-        PatrolRouteLibrary? patrols = null,
-        IReadOnlySet<string>? developmentUserIds = null)
+        PatrolRouteLibrary? patrols = null)
     {
         var stores = new SessionStores(new AccountAuthenticator(accounts, iterations: TestPasswordIterations), characters, inventoryStore, questLogStore, mailStore, auctionStore,
             guildStore, friendStore, reportStore);
@@ -75,13 +74,13 @@ internal static class TestSessions
                 Parties = parties ?? new(),
                 Guilds = guilds ?? new GuildService(guildStore ?? new InMemoryGuildStore()),
             },
-            new PlaySessionOptions(developmentEntry, spellRollUnit, combatRollUnit, developmentUserIds));
+            new PlaySessionOptions(developmentEntry, spellRollUnit, combatRollUnit));
     }
 }
 
 internal sealed class TestSessionBuilder
 {
-    private IAccountStore _accounts = new DevelopmentAccountStore("developer", "dev-secret");
+    private IAccountStore _accounts = new InMemoryAccountStore("developer", "dev-secret");
     private ICharacterStore _characters = new InMemoryCharacterStore([]);
     private IReadOnlyList<CreatureSpawnDefinition>? _creatureSpawns;
     private GameContent? _content;

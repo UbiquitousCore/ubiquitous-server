@@ -10,7 +10,7 @@ public sealed class PlayerbotPartyTests
     public async Task ABot_JoinsAPlayersPartyFollowsThemAndStaysWhenTold()
     {
         var world = new BotTestWorld(PlayerbotWorldTests.QuestContent(), [], PlayerbotWorldTests.OneBot(),
-            new DevelopmentAccountStore("hero", "secret"));
+            new InMemoryAccountStore("hero", "secret"));
         await world.RunUntilAsync(() => world.Bots is [{ Playing: true }], mostTicks: 50);
         var bot = world.Bots[0];
         var player = await TestPlayer.EnterAsync(world, "hero", "secret", "Hero");
@@ -47,7 +47,7 @@ public sealed class PlayerbotPartyTests
     public async Task ABot_AcceptsAPlayersDuelAndFightsIt()
     {
         var world = new BotTestWorld(PlayerbotWorldTests.QuestContent(), [], PlayerbotWorldTests.OneBot(),
-            new DevelopmentAccountStore("hero", "secret"));
+            new InMemoryAccountStore("hero", "secret"));
         await world.RunUntilAsync(() => world.Bots is [{ Playing: true }], mostTicks: 50);
         var bot = world.Bots[0];
         var player = await TestPlayer.EnterAsync(world, "hero", "secret", "Hero");
@@ -77,7 +77,7 @@ public sealed class PlayerbotPartyTests
             },
             StartingSpells = [.. Ubiquitous.Game.GameContent.Development.StartingSpells, sneak],
         };
-        var world = new BotTestWorld(content, [], PlayerbotWorldTests.OneBot(), new DevelopmentAccountStore("hero", "secret"));
+        var world = new BotTestWorld(content, [], PlayerbotWorldTests.OneBot(), new InMemoryAccountStore("hero", "secret"));
         await world.RunUntilAsync(() => world.Bots is [{ Playing: true }], mostTicks: 50);
         var bot = world.Bots[0];
         var player = await TestPlayer.EnterAsync(world, "hero", "secret", "Hero");

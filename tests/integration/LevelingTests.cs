@@ -69,7 +69,7 @@ public sealed class LevelingTests
     public async Task EnteringTheWorld_TellsTheClientTheExhaustionLimit()
     {
         var content = GameContent.Development with { Rates = new GameRates(ExhaustionLimit: 150) };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character(60)]), [], null, content);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -171,7 +171,7 @@ public sealed class LevelingTests
     public async Task AtTheLevelCap_XpLeftOverFromAnEarlierSaveIsZeroedOnEntry()
     {
         var store = new InMemoryCharacterStore([Character(LevelingService.MaxLevel) with { Xp = 12_345 }]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), store,
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), store,
             [], null, GameContent.Development);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -254,7 +254,7 @@ public sealed class LevelingTests
 
     private static async Task<PlaySession> SessionAsync(GameContent content, int level, int xp = 0)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character(level) with { Xp = xp }]),
             [new CreatureSpawnDefinition(1, 13, 9001, 2f, 2f, 3f, 0f)], null, content,
             combatRollUnit: () => 1.0);

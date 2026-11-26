@@ -74,7 +74,7 @@ public sealed class CombatExitTests
 
     private static async Task<PlaySession> SessionAsync()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             Spawns, content: Content(), combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9);
@@ -86,7 +86,7 @@ public sealed class CombatExitTests
     private static async Task<(PlaySession Session, List<string> Inbox)> JoinAsync(
         PlaySessionHub hub, SharedMapRegistry maps, string guid, string name, string charGuid, int accountId)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p", accountId),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p", accountId),
             new InMemoryCharacterStore([new CharacterRecord(
                 charGuid, accountId, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             Spawns, content: Content(), combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9,

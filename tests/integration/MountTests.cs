@@ -291,18 +291,6 @@ public sealed class MountTests
         Assert.Equal(WireCodes.SpellRefusal.MountNotHere, failed.GetProperty("reason").GetString());
     }
 
-    [Fact]
-    public async Task ADevelopmentLogin_EntersWithEnoughGoldForEveryMount()
-    {
-        var session = TestSessions.Create(Accounts(), new InMemoryCharacterStore([Rider()]), content: Content,
-            developmentUserIds: new HashSet<string> { "developer" });
-
-        var entered = await EnterAsync(session);
-
-        Assert.Contains(entered, message => Is(message, WebMessageTypes.PlayerValuesChanged)
-            && message.Contains($"\"gold\":{DevelopmentFixtures.Purse}"));
-    }
-
     // Longer than a step on foot may cover, within one on a mount.
     private const float LongStride = Ubiquitous.World.PlayerMovementLimits.MaxStepDistance * 1.3f;
 
@@ -310,7 +298,7 @@ public sealed class MountTests
         "char-rider", 1, "Ayla", 1, PlayerRaceIds.Human, PlayerClassIds.Warrior, 4, 5, 6, 7, 8,
         13, 1, 2, 3, 20, [100, 200]);
 
-    private static DevelopmentAccountStore Accounts() => new("developer", "dev-secret");
+    private static InMemoryAccountStore Accounts() => new("developer", "dev-secret");
 
     private static bool Is(string message, string type) => message.Contains($"\"type\":\"{type}\"");
 

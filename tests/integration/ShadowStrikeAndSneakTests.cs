@@ -165,7 +165,7 @@ public sealed class ShadowStrikeAndSneakTests
     private static async Task<PlaySession> SessionAsync(
         CreatureSpawnDefinition spawn, IReadOnlyList<int> equipment, GameContent content)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, PlayerClassIds.Ranger, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, equipment)]),
             [spawn], null, content, spellRollUnit: () => 1.0, combatRollUnit: () => 1.0);

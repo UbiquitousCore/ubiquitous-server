@@ -25,7 +25,7 @@ public sealed class FileAccountStore : IAccountAdmin
 
     public static FileAccountStore Load(string path) => new(path, Read(path));
 
-    // Reading never creates the file: its existence is what tells the server real accounts are in use.
+    // Reading never creates the file; the first account written does.
     public static FileAccountStore Open(string path, Action beforeFirstWrite) =>
         new(path, File.Exists(path) ? Read(path) : [], beforeFirstWrite);
 
@@ -123,7 +123,8 @@ public sealed class FileAccountStore : IAccountAdmin
 public sealed class FileCharacterStore : ICharacterStore
 {
     private readonly string _path;
-    private readonly List<CharacterRecord> _characters;
+    private List<CharacterRecord> _characters;
+    private DateTime _loadedAt;
     private readonly object _gate = new();
     private readonly SemaphoreSlim _writeLock = new(1, 1);
 
@@ -131,12 +132,15 @@ public sealed class FileCharacterStore : ICharacterStore
     {
         _path = path;
         _characters = characters;
+        _loadedAt = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : default;
     }
 
-    public static FileCharacterStore Load(string path)
+    public static FileCharacterStore Load(string path) => new(path, Read(path));
+
+    private static List<CharacterRecord> Read(string path)
     {
         var text = File.ReadAllText(path);
-        if (string.IsNullOrWhiteSpace(text)) return new FileCharacterStore(path, []);
+        if (string.IsNullOrWhiteSpace(text)) return [];
         var characters = JsonSerializer.Deserialize<List<CharacterRecord>>(text, JsonFile.Options)
             ?? throw new InvalidDataException("Character file must contain a JSON array.");
         if (characters.Any(character => string.IsNullOrWhiteSpace(character.Guid)
@@ -144,18 +148,34 @@ public sealed class FileCharacterStore : ICharacterStore
             throw new InvalidDataException("Character file contains an empty GUID or name.");
         if (characters.GroupBy(character => character.Guid, StringComparer.Ordinal).Any(group => group.Count() > 1))
             throw new InvalidDataException("Character file contains duplicate GUIDs.");
-        return new FileCharacterStore(path, characters);
+        return characters;
+    }
+
+    // The admin page edits signed-out characters in this same file while the server runs.
+    private void ReloadIfChanged()
+    {
+        if (!File.Exists(_path)) return;
+        var modified = File.GetLastWriteTimeUtc(_path);
+        if (modified == _loadedAt) return;
+        var fresh = Read(_path);
+        lock (_gate)
+        {
+            _characters = fresh;
+            _loadedAt = modified;
+        }
     }
 
     public Task<CharacterRecord?> GetByGuidAsync(string guid, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ReloadIfChanged();
         lock (_gate) return Task.FromResult(_characters.FirstOrDefault(character => character.Guid == guid));
     }
 
     public Task<IReadOnlyList<CharacterRecord>> ListForAccountAsync(int accountId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ReloadIfChanged();
         lock (_gate)
         {
             return Task.FromResult<IReadOnlyList<CharacterRecord>>(
@@ -166,6 +186,7 @@ public sealed class FileCharacterStore : ICharacterStore
     public Task<CharacterRecord?> FindByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ReloadIfChanged();
         lock (_gate)
         {
             return Task.FromResult(_characters.FirstOrDefault(character =>
@@ -200,6 +221,7 @@ public sealed class FileCharacterStore : ICharacterStore
         await _writeLock.WaitAsync(cancellationToken);
         try
         {
+            ReloadIfChanged();
             CharacterRecord[] snapshot;
             lock (_gate)
             {
@@ -208,6 +230,7 @@ public sealed class FileCharacterStore : ICharacterStore
             }
 
             await JsonFile.WriteAsync(_path, snapshot, cancellationToken);
+            lock (_gate) _loadedAt = File.GetLastWriteTimeUtc(_path);
             return true;
         }
         finally

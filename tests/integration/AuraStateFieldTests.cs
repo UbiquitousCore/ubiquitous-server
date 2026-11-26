@@ -137,7 +137,7 @@ public sealed class AuraStateFieldTests
 
     private static async Task<PlaySession> SessionAsync(GameContent content)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, PlayerClassIds.Ranger, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, DualWielding)]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 3, 2, 3, 0)], null, content,

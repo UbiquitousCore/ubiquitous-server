@@ -14,9 +14,9 @@
   // Unset, saves sit beside the data package above.
   // "stateDirectory": "data/generated",
 
-  // Handy logins for testing. Never enable these on a shared server: each
-  // login below only exists while its pass hash is set (see .env).
-  "developmentAccounts": false,
+  // Lets `dev.enterWorld` join a character without a password, for local
+  // tools and tests. Never enable this on a shared server.
+  "developmentEntry": false,
   // "logLevel": "Information",
 
   // Seasonal scenery and creatures, off by default. Off hides the whole

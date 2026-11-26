@@ -69,7 +69,9 @@ public sealed record SpellDefinition(
     uint? AuraAvatarDisplayId = null,
     // Fires only when the caster was hidden (sneaking) as the cast began: the opener's stun.
     uint? EffectFromHidingTriggerSpellId = null,
-    int? EffectFromHidingTriggerChancePercent = null);
+    int? EffectFromHidingTriggerChancePercent = null,
+    // A `teleport_spot` row the caster is sent to: the wings and the trainers' scrolls.
+    uint? EffectTeleportStopId = null);
 
 public static class SpellEffectTargets
 {

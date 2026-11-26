@@ -175,7 +175,7 @@ public sealed class CreatureHuntTests
     private static async Task<(PlaySession Session, List<string> Inbox)> JoinAsync(
         PlaySessionHub hub, SharedMapRegistry maps, string guid, CreatureSpawnDefinition[] spawns, bool toughRabbit = false)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 $"char-{guid}", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             spawns, content: Content(toughRabbit), combatRollUnit: () => 1.0, sharedMaps: maps);

@@ -154,7 +154,6 @@ public sealed partial class PlaySession : ISessionPlayer
     private WorldSessionState? _world;
 
     private readonly bool _developmentEntry;
-    private readonly IReadOnlySet<string> _developmentUserIds;
     private readonly ILogger _logger;
 
     private string PlayerUnitId => $"player:{_character?.Guid}";
@@ -238,7 +237,6 @@ public sealed partial class PlaySession : ISessionPlayer
         _attributeModifiers = new AttributeModifierService(_effects);
         _logger = logger ?? NullLogger.Instance;
         _developmentEntry = options.DevelopmentEntry;
-        _developmentUserIds = options.DevelopmentUserIds ?? new HashSet<string>();
         _accounts = stores.Accounts;
         _characters = stores.Characters;
         _inventoryStore = stores.Inventory;
@@ -458,6 +456,9 @@ public sealed partial class PlaySession : ISessionPlayer
             return [Error(WireCodes.ProtocolError.Malformed, "Malformed request.")];
         }
 
+        if (_character is not null && _combat.IsPlayerDead && !WhileDead.Allows(envelope.Type))
+            return [RefusedWhileDead(envelope)];
+
         if (RefuseOutOfReach(envelope.Type, envelope.Payload) is string refusal)
             return refusal.Length == 0 ? [] : [refusal];
 
@@ -504,6 +505,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 WebMessageTypes.AdminTeleport => AdminTeleport(envelope.Payload),
                 WebMessageTypes.AdminGiveItem => AdminGiveItem(envelope.Payload),
                 WebMessageTypes.AdminGiveGold => AdminGiveGold(envelope.Payload),
+                WebMessageTypes.AdminSetGold => AdminSetGold(envelope.Payload),
                 WebMessageTypes.AdminSetLevel => AdminSetLevel(envelope.Payload),
                 WebMessageTypes.AdminSetInvincible => AdminSetInvincible(envelope.Payload),
                 WebMessageTypes.AdminLearnSpells => AdminLearnSpells(),
@@ -593,6 +595,20 @@ public sealed partial class PlaySession : ISessionPlayer
             _logger.LogError(ex, "Unexpected failure handling {MessageType}", envelope.Type);
             return [Error(WireCodes.ProtocolError.Internal, "The server could not handle that request.")];
         }
+    }
+
+    private string RefusedWhileDead(WebMessageEnvelope envelope)
+    {
+        if (envelope.Type == WebMessageTypes.SpellRequest)
+        {
+            uint spellId = envelope.Payload.ValueKind == JsonValueKind.Object
+                && envelope.Payload.TryGetProperty("spellId", out var value) && value.TryGetUInt32(out var id) ? id : 0;
+            return Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(
+                WebNetworkId.FromString(PlayerUnitId), spellId, WireCodes.SpellRefusal.Incapacitated));
+        }
+
+        return Error(envelope.Type == WebMessageTypes.AttackEngage
+            ? WireCodes.ProtocolError.InvalidTarget : WireCodes.ProtocolError.InvalidState, "You are dead.");
     }
 
     public ushort? CurrentMapId => _world?.MapId;
@@ -1443,7 +1459,7 @@ public sealed partial class PlaySession : ISessionPlayer
             return Task.FromResult<IReadOnlyList<string>>([Error(WireCodes.ProtocolError.NotInWorld, "Character selection is required before movement.")]);
         }
 
-        if (_character is not null && _control.IsControlled(PlayerUnitId, Now))
+        if (_character is not null && (_combat.IsPlayerDead || _control.IsControlled(PlayerUnitId, Now)))
         {
             var locked = _world.PlayerPosition;
             return Task.FromResult<IReadOnlyList<string>>([Reply(WebMessageTypes.MoveAccepted,

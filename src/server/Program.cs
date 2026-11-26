@@ -55,8 +55,8 @@ public static class Program
         }
 
         await using var _ = postgres;
-        if (postgres is not null && options.DevelopmentAccountsEnabled)
-            logger.LogWarning("Development accounts are ignored with Postgres; create real ones with: account create <name>");
+        if (postgres is not null && options.DevelopmentEntry)
+            logger.LogWarning("Development entry is ignored with Postgres");
         options = options.ForStore(postgres is not null);
 
         SessionStores stores;
@@ -90,8 +90,7 @@ public static class Program
 
         var world = new SharedWorld(stores, loggerFactory.CreateLogger<SharedWorld>());
         var sessions = new PlaySessionFactory(
-            stores, content, world, options.DevelopmentAccountsEnabled, loggerFactory.CreateLogger<PlaySession>(),
-            options.DevelopmentLogins().Select(login => login.UserId));
+            stores, content, world, options.DevelopmentEntry, loggerFactory.CreateLogger<PlaySession>());
 
         var gatewayLogger = loggerFactory.CreateLogger<WebSocketGateway>();
         var hub = new PlaySessionHub(gatewayLogger);

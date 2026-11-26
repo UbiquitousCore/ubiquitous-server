@@ -55,7 +55,7 @@ public sealed partial class DungeonTests
 
         async Task<PlaySession> Join(string guid, string name, float z)
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+            var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
                 new InMemoryCharacterStore([new CharacterRecord(
                     $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 1, GateApproachX, 2, z, 4, [100, 200])]),
                 spawns, content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9,

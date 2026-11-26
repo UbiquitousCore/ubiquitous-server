@@ -17,9 +17,9 @@ public sealed class PvpFlagTests
         ]);
         var flags = pvpFlags ?? new PvpFlagService();
         var blows = new PlayerBlowRelay();
-        var sessionA = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+        var sessionA = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
             combatRollUnit: combatRollUnitA ?? (() => 1.0), pvpFlags: flags, blows: blows);
-        var sessionB = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+        var sessionB = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
             combatRollUnit: combatRollUnitB ?? (() => 1.0), pvpFlags: flags, blows: blows);
         var hub = new PlaySessionHub();
         hub.Register(sessionA, _ => Task.CompletedTask);
@@ -130,9 +130,9 @@ public sealed class PvpFlagTests
             Character("char-c", 1, "Cyra"),
         ]);
         var flags = new PvpFlagService();
-        var sessionA = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+        var sessionA = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
             combatRollUnit: () => 1.0, pvpFlags: flags);
-        var sessionC = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+        var sessionC = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
             combatRollUnit: () => 1.0, pvpFlags: flags);
         await EnterWorldAsync(sessionA, "Ayla");
         await EnterWorldAsync(sessionC, "Cyra");

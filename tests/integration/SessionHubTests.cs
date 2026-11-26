@@ -10,10 +10,10 @@ public sealed class SessionHubTests
     {
         var hub = new PlaySessionHub();
         var first = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("a", "p"),
+            new Ubiquitous.Persistence.InMemoryAccountStore("a", "p"),
             new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var second = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("b", "p"),
+            new Ubiquitous.Persistence.InMemoryAccountStore("b", "p"),
             new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var received = new List<string>();
         hub.Register(first, _ => Task.CompletedTask);
@@ -35,10 +35,10 @@ public sealed class SessionHubTests
     {
         var hub = new PlaySessionHub();
         var first = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("a", "p"),
+            new Ubiquitous.Persistence.InMemoryAccountStore("a", "p"),
             new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var second = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("b", "p"),
+            new Ubiquitous.Persistence.InMemoryAccountStore("b", "p"),
             new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var owner = new List<string>();
         var observer = new List<string>();
@@ -61,10 +61,10 @@ public sealed class SessionHubTests
     {
         var hub = new PlaySessionHub();
         var first = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("a", "p"),
+            new Ubiquitous.Persistence.InMemoryAccountStore("a", "p"),
             new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var second = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("b", "p"),
+            new Ubiquitous.Persistence.InMemoryAccountStore("b", "p"),
             new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var received = new List<string>();
         hub.Register(first, _ => Task.CompletedTask);
@@ -88,7 +88,7 @@ public sealed class SessionHubTests
     public async Task ObserverEncoding_UsesItsOwnSequenceCounter()
     {
         var session = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("a", "p"),
+            new Ubiquitous.Persistence.InMemoryAccountStore("a", "p"),
             new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var first = session.EncodeObserverEvent(
             OutboundEvent.From("{\"type\":\"entity.moved\",\"sequence\":99,\"payload\":{}}")!);
@@ -117,9 +117,9 @@ public sealed class SessionHubTests
     {
         var hub = new PlaySessionHub();
         var first = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("a", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
+            new Ubiquitous.Persistence.InMemoryAccountStore("a", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var second = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("b", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
+            new Ubiquitous.Persistence.InMemoryAccountStore("b", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var received = new List<string>();
         hub.Register(first, _ => Task.CompletedTask);
         hub.Register(second, message => { received.Add(message); return Task.CompletedTask; });
@@ -135,9 +135,9 @@ public sealed class SessionHubTests
     {
         var hub = new PlaySessionHub();
         var first = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("a", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
+            new Ubiquitous.Persistence.InMemoryAccountStore("a", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var second = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("b", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
+            new Ubiquitous.Persistence.InMemoryAccountStore("b", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var received = new List<string>();
         hub.Register(first, _ => Task.CompletedTask);
         hub.Register(second, message => { received.Add(message); return Task.CompletedTask; });
@@ -158,9 +158,9 @@ public sealed class SessionHubTests
     {
         var hub = new PlaySessionHub();
         var first = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("a", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
+            new Ubiquitous.Persistence.InMemoryAccountStore("a", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var second = TestSessions.Create(
-            new Ubiquitous.Persistence.DevelopmentAccountStore("b", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
+            new Ubiquitous.Persistence.InMemoryAccountStore("b", "p"), new Ubiquitous.Persistence.InMemoryCharacterStore([]));
         var received = new List<string>();
         hub.Register(first, _ => Task.CompletedTask);
         hub.Register(second, message => { received.Add(message); return Task.CompletedTask; });

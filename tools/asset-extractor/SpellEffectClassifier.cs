@@ -40,6 +40,8 @@ public static class SpellEffectClassifier
                     spell with { EffectLearnSpellId = effect.EffectArgument },
                 SpellEffectColumns.SummonSubType when effect.EffectArgument != 0 =>
                     spell with { EffectSummonCreatureId = effect.EffectArgument },
+                SpellEffectColumns.TeleportSpotSubType when effect.EffectArgument != 0 =>
+                    spell with { EffectTeleportStopId = effect.EffectArgument },
                 SpellEffectColumns.PowerRestoreSubType => spell with
                 {
                     EffectPowerRestore = effect.BaseValue,

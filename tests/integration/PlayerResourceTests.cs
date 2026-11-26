@@ -14,7 +14,7 @@ public sealed class PlayerResourceTests
     private static async Task<PlaySession> EnterWorldAsync(
         CharacterRecord character, CreatureSpawnDefinition[]? spawns = null, GameContent? content = null)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([character]), spawns ?? [], content: content, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = character.Guid })));
@@ -24,7 +24,7 @@ public sealed class PlayerResourceTests
     [Fact]
     public async Task DevEnterWorld_SendsTheStartingResourceSnapshot()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -48,7 +48,7 @@ public sealed class PlayerResourceTests
     public async Task DevEnterWorld_AManaUsingClassGetsItsPerLevelCurveInsteadOfTheFlatPool()
     {
         var mage = Character with { Class = 2 };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([mage]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -116,7 +116,7 @@ public sealed class PlayerResourceTests
     [Fact]
     public async Task DevEnterWorld_SendsTheCharactersOwnStatsAlongsideTheirBase()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -138,7 +138,7 @@ public sealed class PlayerResourceTests
     [Fact]
     public async Task DevEnterWorld_SendsTheCharacterSheetAsAFightRollsIt()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(

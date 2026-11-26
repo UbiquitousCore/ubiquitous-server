@@ -31,7 +31,7 @@ public sealed class BotInterestTests
     private static async Task<(PlaySession Session, List<string> Forwarded)> JoinAsync(
         PlaySessionHub hub, string guid, string name, float x, bool playedByModule)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, x, 2, 3, 4, [100, 200])]));
         var forwarded = new List<string>();

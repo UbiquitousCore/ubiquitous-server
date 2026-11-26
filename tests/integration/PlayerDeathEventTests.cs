@@ -69,7 +69,7 @@ public sealed class PlayerDeathEventTests
         return log;
     }
 
-    private static IAccountStore Accounts => new DevelopmentAccountStore("developer", "dev-secret");
+    private static IAccountStore Accounts => new InMemoryAccountStore("developer", "dev-secret");
 
     private static async Task EnterWorldAsync(PlaySession session, string characterName)
     {

@@ -34,7 +34,7 @@ public sealed class VendorLessonTests
 
     private static async Task<string> OpenVendorAsync(GameContent content, int level)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, Human, Ranger, 4, 5, 6, 7, 8, 13, 1, 2, 3, level, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],

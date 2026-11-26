@@ -252,6 +252,7 @@ async function openEditor(guid, editor, refreshList) {
   const name = el('input', { value: character.name, 'aria-label': 'Name' });
   const level = el('input', { value: String(character.level), inputmode: 'numeric', 'aria-label': 'Level' });
   const purse = el('input', { value: String(gold), inputmode: 'numeric', 'aria-label': 'Gold' });
+  const extra = el('input', { value: '100', inputmode: 'numeric', 'aria-label': 'Gold to add', class: 'narrow' });
   const search = el('input', { placeholder: 'Item name or id', 'aria-label': 'Find an item' });
   const count = el('input', { value: '1', inputmode: 'numeric', 'aria-label': 'How many', class: 'narrow' });
   const results = el('div', { class: 'results' });
@@ -289,6 +290,14 @@ async function openEditor(guid, editor, refreshList) {
         } catch (error) { tell(error.message); }
       } }, 'Save'),
       el('button', { onclick: () => { editor.hidden = true; } }, 'Close')),
+    el('h2', {}, `Add gold (holds ${gold})`),
+    el('div', { class: 'row' }, extra,
+      el('button', { class: 'primary', onclick: async () => {
+        try {
+          await api('POST', path + '/gold', { gold: Number(extra.value) });
+          await reopen();
+        } catch (error) { tell(error.message); }
+      } }, 'Add')),
     el('h2', {}, `Bag (${bag.length} of ${bagSlots} slots)`),
     bag.length === 0 ? el('p', { class: 'hint' }, 'Empty.') : el('ul', { class: 'bag' }, ...bag.map((item) => el('li', {}, `${item.name} (${item.entry}) × ${item.count}`))),
     el('h2', {}, 'Give an item'),

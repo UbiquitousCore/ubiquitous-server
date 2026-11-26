@@ -219,6 +219,9 @@ public sealed partial class PlaySession
         if (_itemCooldownUntil.TryGetValue(item.Entry, out var readyAt) && now < readyAt)
             return [Error(WireCodes.ProtocolError.CannotUse, "This item is not ready yet.")];
 
+        if (spell.EffectTeleportStopId is uint stopId && !_content.Stops.ContainsKey(stopId))
+            return [Error(WireCodes.ProtocolError.CannotUse, "This item leads nowhere.")];
+
         var casterId = WebNetworkId.FromString(PlayerUnitId);
         bool targetsSelf = spell.EffectHeal is not null || spell.AuraPeriodicHeal is not null
             || spell.EffectTarget == SpellEffectTargets.Self;

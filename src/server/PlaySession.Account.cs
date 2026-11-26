@@ -310,14 +310,11 @@ public sealed partial class PlaySession
         _exhaustionDay = character.ExhaustionDay;
         if (character.LegendDungeons == true) _instances.RecallMode($"player:{character.Guid}", DungeonMode.Legend);
         _belongings.Currency = character.Currency ?? _content.StartingCurrency;
-        if (_account is not null && _developmentUserIds.Contains(_account.UserId))
-            _belongings.Currency = Math.Max(_belongings.Currency, DevelopmentFixtures.Purse);
         _belongings.BagSlots = character.BagSlots ?? PlayerBelongings.DefaultBagCapacity;
         _belongings.BankSlots = character.BankSlots ?? PlayerBelongings.DefaultBankCapacity;
         var startingAttributes = StartingLoadouts.For(character.Race, character.Class)?.Attributes;
         _combat.EnterAsCharacter(character.Class, character.Level, $"player:{character.Guid}", character.Health,
             startingAttributes);
-        RefreshWornAttributes();
         _learnedSpells.Clear();
         _learnedSpells.AddRange(character.LearnedSpells ?? []);
         RestoreTalents(character, [.. KnownSpellsFor(character), .. _learnedSpells]);
@@ -338,9 +335,13 @@ public sealed partial class PlaySession
         _belongings.Items.SeedWorn(character.Equipment);
         character = character with { Equipment = _belongings.Items.WornEquipment() };
         _character = character;
+        RefreshWornAttributes();
         await LoadQuestLogAsync(cancellationToken);
         var responses = new List<string>(EnterWorld(character.MapId,
             new DomainPosition(character.X, character.Y, character.Z), 0f));
+        // The client dresses its own body from the character list, which comes from the record, not the bags.
+        responses.Add(Reply(WebMessageTypes.EntityAppearanceChanged, new EntityAppearanceChangedPayload(
+            WebNetworkId.FromString(PlayerUnitId), character.Equipment)));
         responses.Add(Reply(WebMessageTypes.InventoryUpdated, InventorySnapshot()));
         responses.Add(Reply(WebMessageTypes.QuestLog, new QuestLogPayload(
             _quests.Log(_content.Quests).Select(QuestLogEntryPayloadFor).ToArray())));

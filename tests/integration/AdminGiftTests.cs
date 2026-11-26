@@ -106,6 +106,42 @@ public sealed class AdminGiftTests
     }
 
     [Fact]
+    public async Task AnAdministrator_SetsTheirPurseToTheGoldAsked_WhateverItHeld()
+    {
+        var session = await EnterAsync(admin: true);
+        await SendAsync(session, WebMessageTypes.AdminGiveGold, new { gold = 40 });
+
+        var set = await SendAsync(session, WebMessageTypes.AdminSetGold, new { gold = 3 });
+        var emptied = await SendAsync(session, WebMessageTypes.AdminSetGold, new { gold = 0 });
+
+        Assert.Contains(set, message => message.Contains($"\"{WireCodes.UnitValue.Gold}\":{3 * CoinWords.Gold}"));
+        Assert.Contains(emptied, message => message.Contains($"\"{WireCodes.UnitValue.Gold}\":0"));
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(int.MaxValue)]
+    public async Task APurseTheGameCannotHold_IsRefused(int gold)
+    {
+        var session = await EnterAsync(admin: true);
+
+        var refused = await SendAsync(session, WebMessageTypes.AdminSetGold, new { gold });
+
+        Assert.Contains(refused, message => message.Contains(WireCodes.ProtocolError.InvalidPayload));
+    }
+
+    [Fact]
+    public async Task AnyoneElse_CannotSetTheirPurse()
+    {
+        var session = await EnterAsync(admin: false);
+
+        var refused = await SendAsync(session, WebMessageTypes.AdminSetGold, new { gold = 5 });
+
+        Assert.Contains(refused, message => message.Contains(WireCodes.ProtocolError.Forbidden));
+        Assert.DoesNotContain(refused, message => message.Contains(WebMessageTypes.PlayerValuesChanged));
+    }
+
+    [Fact]
     public async Task AnAdministrator_CanSetTheirLevel_AndIsToldTheNewValues()
     {
         var session = await EnterAsync(admin: true);
@@ -275,7 +311,7 @@ public sealed class AdminGiftTests
         var characters = new InMemoryCharacterStore([new CharacterRecord(
             "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 12, [100, 200])]);
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret", isAdmin: admin), characters, content: content ?? Content);
+            new InMemoryAccountStore("developer", "dev-secret", isAdmin: admin), characters, content: content ?? Content);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(

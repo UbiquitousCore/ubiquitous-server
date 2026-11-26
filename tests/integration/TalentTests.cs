@@ -158,7 +158,7 @@ public sealed class TalentTests
 
     private static async Task<(PlaySession Session, IReadOnlyList<string> Entered)> EnterAsync(InMemoryCharacterStore store)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), store,
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), store,
             [], null, Content());
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));

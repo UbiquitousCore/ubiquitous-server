@@ -129,7 +129,7 @@ public sealed class IgnoreTests
     private static async Task<(PlaySession Session, List<string> Inbox)> JoinAsync(
         PlaySessionHub hub, InMemoryCharacterStore characters, string guid, string name, ushort mapId = 13, float x = 0f)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"), characters,
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"), characters,
             parties: TestSessions.PartiesOf(hub));
         var inbox = new List<string>();
         hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });

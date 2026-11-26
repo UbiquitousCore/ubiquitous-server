@@ -41,7 +41,7 @@ public sealed class InventoryEquipFlowTests
         var store = new FixedInventoryStore(
             bag ?? [new PersistedInventoryItem(ItemId, entry, 1, "bag", BagSlot)]);
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([character]),
             spawn is null ? null : [spawn],
             inventoryStore: store);

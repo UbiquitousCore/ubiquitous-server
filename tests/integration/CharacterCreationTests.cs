@@ -305,7 +305,7 @@ public sealed class CharacterCreationTests
     [Fact]
     public async Task A_Sign_Of_Life_Is_Answered_Without_Signing_In()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(User, Secret), new InMemoryCharacterStore([]));
+        var session = TestSessions.Create(new InMemoryAccountStore(User, Secret), new InMemoryCharacterStore([]));
 
         var replies = await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.SessionPing, 0)));
@@ -316,7 +316,7 @@ public sealed class CharacterCreationTests
     [Fact]
     public async Task Making_A_Character_Before_Signing_In_Is_Refused()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(User, Secret), new InMemoryCharacterStore([]));
+        var session = TestSessions.Create(new InMemoryAccountStore(User, Secret), new InMemoryCharacterStore([]));
 
         var replies = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.CharactersCreate,
@@ -380,7 +380,7 @@ public sealed class CharacterCreationTests
     private static async Task<PlaySession> SignedIn(
         ICharacterStore characters, IInventoryStore? inventory = null, GameContent? content = null)
     {
-        var accounts = new DevelopmentAccountStore(User, Secret);
+        var accounts = new InMemoryAccountStore(User, Secret);
         var session = TestSessions.Create(accounts, characters, content: content, inventoryStore: inventory);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest(User, Secret))));

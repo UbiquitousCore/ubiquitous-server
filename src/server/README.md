@@ -9,7 +9,7 @@ and wires the pieces in `Hosting/`:
 | `SessionStoreFactory` | file or Postgres stores (`SessionStores`) |
 | `SharedWorld` | services every session shares (maps, duels, trades, instances, ...) and the world tick |
 | `PlaySessionFactory` | one `PlaySession` per connection |
-| `DevelopmentFixtures` | spawns, accounts and characters used with no data package |
+| `DevelopmentFixtures` | spawns used with no data package |
 | `ServerModules`, `ModuleHost`, `ModuleAccounts` | the modules built in from `modules/` (see `modules/README.md`) |
 
 `WebSocketGateway` owns the socket, `/health` and the tick loop (`WorldTick`);
@@ -50,6 +50,6 @@ the server reads `server.json` and `.env` from the folder it starts in, and
 defaults, JSON config, `.env`, `UBIQUITOUS_*` environment variables,
 command-line options. `ServerOptions.Settings` declares each one once with its
 config key, environment variable and flags: bind address, port, data directory,
-content directory, Postgres connection string, development accounts, festival
+content directory, Postgres connection string, development entry, festival
 content, disabled races, log level (`Trace` to `Critical`). Module settings are
 under `modules` in the config file or `UBIQUITOUS_MODULE_*` in the environment.

@@ -62,7 +62,7 @@ public sealed class AdminTeleportTests
     private static async Task<PlaySession> EnterAsync(ICharacterStore characters, bool admin)
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret", isAdmin: admin), characters, content: Content);
+            new InMemoryAccountStore("developer", "dev-secret", isAdmin: admin), characters, content: Content);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(

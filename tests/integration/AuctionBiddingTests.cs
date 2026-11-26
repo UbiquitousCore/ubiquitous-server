@@ -88,7 +88,7 @@ public sealed class AuctionBiddingTests
             var mailboxSpawn = new[] { new StaticObjectSpawnDefinition(1, 13, 9102, 2, 2, 4, 0) };
             var mailStore = new InMemoryMailStore();
             var world = new SharedWorld(new SessionStores(
-                new AccountAuthenticator(new DevelopmentAccountStore("ayla-dev", "p", 1)), characters, Mail: mailStore, Auction: auctionStore));
+                new AccountAuthenticator(new InMemoryAccountStore("ayla-dev", "p", 1)), characters, Mail: mailStore, Auction: auctionStore));
 
             var ayla = await JoinAsync(auctionStore, mailStore, characters, mailboxSpawn, "ayla-dev", 1, "Ayla", world);
             var borin = await JoinAsync(auctionStore, mailStore, characters, mailboxSpawn, "borin-dev", 2, "Borin", world);
@@ -175,7 +175,7 @@ public sealed class AuctionBiddingTests
         StaticObjectSpawnDefinition[] mailboxSpawn, string accountName, int accountId, string characterName,
         SharedWorld? world = null)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(accountName, "p", accountId),
+        var session = TestSessions.Create(new InMemoryAccountStore(accountName, "p", accountId),
             characters, staticObjectSpawns: mailboxSpawn, mailStore: mailStore, auctionStore: auctionStore,
             world: world);
         await session.HandleTextAsync(WebMessageJson.Serialize(

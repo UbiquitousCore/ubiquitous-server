@@ -7,11 +7,9 @@ public sealed class PlaySessionFactory(
     ServerContent content,
     SharedWorld world,
     bool developmentEntry = false,
-    ILogger? sessionLogger = null,
-    IEnumerable<string>? developmentUserIds = null)
+    ILogger? sessionLogger = null)
 {
-    private readonly PlaySessionOptions _options = new(
-        developmentEntry, DevelopmentUserIds: (developmentUserIds ?? []).ToHashSet(StringComparer.Ordinal));
+    private readonly PlaySessionOptions _options = new(developmentEntry);
 
     public SharedWorld World { get; } = world;
 

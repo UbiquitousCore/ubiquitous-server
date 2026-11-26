@@ -100,6 +100,7 @@ public sealed class SpellService
         || spell.EffectTriggerSpellId is not null || spell.EffectFromHidingTriggerSpellId is not null
         || spell.EffectLeapToTarget
         || spell.EffectSummonCreatureId is not null
+        || spell.EffectTeleportStopId is not null
         || spell.AuraEatPerTick is not null || spell.AuraDrinkPerTick is not null
         || spell.AuraMountId is not null || spell.AuraAvatarDisplayId is not null
         || (spell.ExtraEffects?.Any(HasResolvableEffect) ?? false);

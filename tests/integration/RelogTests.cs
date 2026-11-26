@@ -129,7 +129,7 @@ public sealed class RelogTests
         SharedMapRegistry maps, string user, string name, string guid, float x, float z)
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore(user, "p"),
+            new InMemoryAccountStore(user, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 guid, 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, x, 2, z, 4, [100, 200])]),
             Spawns, content: Content, combatRollUnit: () => 1.0, sharedMaps: maps);

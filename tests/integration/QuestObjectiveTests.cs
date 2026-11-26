@@ -25,7 +25,7 @@ public sealed class QuestObjectiveTests
     [Fact]
     public async Task WorldEntry_SendsAnEmptyQuestLogOnceAndOnlyOnce()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character()]), Spawns);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -238,7 +238,7 @@ public sealed class QuestObjectiveTests
 
     private static async Task<PlaySession> SessionAsync(GameContent content, IReadOnlyList<CreatureSpawnDefinition> spawns)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character()]), spawns, null, content, combatRollUnit: () => 1.0);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
