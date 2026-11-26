@@ -353,7 +353,9 @@ this project's own:
   for it. These are this project's own design.
 - A training dummy stops counting itself as fighting 8 seconds after nobody
   is in reach (`TrainingDummyScript.CombatExitDelay`).
-- Melee reach 3 units.
+- Melee reach 3 units across the ground with up to 6 units between the two
+  heights (`MeleeReach`); the height allowance is this project's own choice,
+  so a creature on a shore still reaches a player on the bank above it.
 - Wearing and using an item share one requirement: the character's level,
   class and race must all be ones the item's row allows, with one refusal
   for any failure (`PlaySession.MeetsItemRequirements`).

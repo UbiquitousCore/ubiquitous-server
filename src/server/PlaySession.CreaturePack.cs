@@ -167,7 +167,7 @@ public sealed partial class PlaySession
         var dz = mobPosition.Z - guardPosition.Z;
         var distance = Math.Sqrt(dx * dx + dz * dz);
         _combat.UpdateStance(guardId, new RangedAttackContext(
-            distance <= MeleeRange, distance, false, RangedAttackInterval, false), now);
+            MeleeReach.Reaches(guardPosition, mobPosition), distance, false, RangedAttackInterval, false), now);
     }
 
     private bool HomeFor(string wireId, out DomainPosition home)

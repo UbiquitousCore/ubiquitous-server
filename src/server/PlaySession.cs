@@ -141,7 +141,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private int _xp;
     private readonly PlayerBelongings _belongings;
     private const double LootRange = InteractionRange.Max;
-    private const double MeleeRange = 3.0;
+    private const double MeleeRange = MeleeReach.Range;
     private const int DefaultAggroRange = 8;
     private readonly Dictionary<string, DateTimeOffset> _outOfMeleeRangeSince = new(StringComparer.Ordinal);
     private bool _awaitingArrivalMove;
@@ -1221,7 +1221,9 @@ public sealed partial class PlaySession : ISessionPlayer
         }
     }
 
-    private bool InMeleeRange(string networkId) => DistanceTo(networkId) is { } distance && distance <= MeleeRange;
+    private bool InMeleeRange(string networkId) =>
+        _world is not null && TryPositionOf(networkId, out var target)
+        && MeleeReach.Reaches(_world.PlayerPosition, target);
 
     private UnitDiedPayload DeathOf(WebNetworkId body)
     {
@@ -1255,7 +1257,7 @@ public sealed partial class PlaySession : ISessionPlayer
     {
         if (DistanceTo(targetId) is not { } distance) return null;
         return new RangedAttackContext(
-            InMeleeRange: distance <= MeleeRange,
+            InMeleeRange: InMeleeRange(targetId),
             Distance: distance,
             HasRangedWeapon: HasRangedWeapon(),
             RangedInterval: CombatService.EffectiveSwingInterval(

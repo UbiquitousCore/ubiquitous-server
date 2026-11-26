@@ -147,6 +147,26 @@ public sealed class CreatureChaseTests
         Assert.True(firstFollowed, "expected the first creature to follow the player after the switch");
     }
 
+    [Fact]
+    public async Task TickCombat_ACreatureOnTheShoreStillStrikesAPlayerStandingOnTheBankAboveIt()
+    {
+        // The player stands at height 2; no walkable ground reaches them, so the creature
+        // can only walk in beneath them at its own height.
+        var belowTheBank = new CreatureSpawnDefinition(1001, 13, 9001, 9, -2, 3, 0);
+        var session = await SessionAsync(WithSightRange(15), belowTheBank);
+        var now = DateTimeOffset.UtcNow;
+
+        var messages = new List<string>();
+        for (var i = 0; i < 24; i++)
+        {
+            messages.AddRange(session.TickCombat(now));
+            now += TimeSpan.FromMilliseconds(250);
+        }
+
+        Assert.Contains(messages, message => message.Contains("\"type\":\"attack.swingResult\"")
+            && message.Contains("\"attackerId\":\"Creature:1\""));
+    }
+
     private static GameContent WithSightRange(int range) => GameContent.Development with
     {
         Creatures = new Dictionary<uint, CreatureDefinition>(GameContent.Development.Creatures)

@@ -183,9 +183,7 @@ public sealed partial class PlaySession
             }
             if (!_shared.TryGetPosition(wireId, out var at)
                 || !_stressBotHomes.TryGetValue(wireId, out var home)) continue;
-            var dx = at.X - dummyAt.X;
-            var dz = at.Z - dummyAt.Z;
-            _combat.SetInMeleeReach(wireId, Math.Sqrt(dx * dx + dz * dz) <= MeleeRange);
+            _combat.SetInMeleeReach(wireId, MeleeReach.Reaches(at, dummyAt));
             var update = _shared.AdvanceWander(wireId, at, home, StressWanderRadius, now);
             if (update is null) continue;
             _shared.SetPosition(wireId, update.Position);

@@ -38,9 +38,8 @@ public sealed class CreatureChaseService
         string targetId, Position current, Position targetPosition, double meleeRange, DateTimeOffset now,
         double pace = 1.0)
     {
-        var distanceSquared = current.DistanceSquaredTo(targetPosition);
         var wasChasing = _lastTickAt.ContainsKey(targetId);
-        if (distanceSquared <= meleeRange * meleeRange)
+        if (MeleeReach.Reaches(current, targetPosition, meleeRange))
         {
             if (!wasChasing) return null;
             Clear(targetId);

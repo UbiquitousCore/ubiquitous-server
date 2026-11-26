@@ -164,7 +164,8 @@ comes from is in `PROVENANCE.md`.
 ## Combat
 
 - `attack.engage` is refused if the player is dead or stunned, or the target
-  is dead, invisible, friendly, or beyond 3 units (25 ranged). Another player
+  is dead, invisible, friendly, or beyond 3 units across the ground or 6 above
+  or below (25 ranged). Another player
   is a valid target only in a duel or when both are PvP-flagged.
 - First swing at once, then every 2 s (faster with attack speed); swings wait
   while out of reach. 5% miss less hit rating; crits double at 0.1% per rating
