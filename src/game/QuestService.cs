@@ -30,7 +30,8 @@ public sealed record QuestObjectiveProgress(
     int Count,
     int GoalCount,
     uint ObjectiveItem,
-    uint ObjectiveStringId);
+    uint ObjectiveStringId,
+    uint ObjectiveCreature = 0);
 
 public sealed record QuestCounterDelta(int Index, QuestObjectiveKind Kind, int Count);
 
@@ -378,7 +379,8 @@ public sealed class QuestService
         quest.Objectives.Select(objective => new QuestObjectiveProgress(
             objective.Index, objective.Kind,
             accepted.ObjectiveCounts.GetValueOrDefault(objective.Index),
-            objective.GoalCount, objective.ObjectiveItem, objective.ObjectiveStringId)).ToArray();
+            objective.GoalCount, objective.ObjectiveItem, objective.ObjectiveStringId,
+            objective.ObjectiveCreature)).ToArray();
 
     private static bool AllObjectivesMet(QuestDefinition quest, AcceptedQuest accepted) =>
         quest.Objectives.All(objective =>

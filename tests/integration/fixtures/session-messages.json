@@ -253,7 +253,8 @@
         "objectiveItem": 0,
         "objectiveItemCount": 0,
         "goalCount": 4,
-        "objectiveStringId": 90201
+        "objectiveStringId": 90201,
+        "objectiveCreature": 90205
       }
     ]
   },
@@ -273,7 +274,8 @@
         "objectiveItem": 0,
         "objectiveItemCount": 0,
         "goalCount": 4,
-        "objectiveStringId": 90201
+        "objectiveStringId": 90201,
+        "objectiveCreature": 90205
       }
     ],
     "counters": [
@@ -312,7 +314,8 @@
             "objectiveItem": 0,
             "objectiveItemCount": 0,
             "goalCount": 4,
-            "objectiveStringId": 90201
+            "objectiveStringId": 90201,
+            "objectiveCreature": 90205
           }
         ],
         "minLevel": 1,

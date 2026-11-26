@@ -80,7 +80,9 @@ public sealed record QuestObjectivePayload(
     [property: JsonPropertyName("objectiveItem")] uint ObjectiveItem,
     [property: JsonPropertyName("objectiveItemCount")] int ObjectiveItemCount,
     [property: JsonPropertyName("goalCount")] int GoalCount,
-    [property: JsonPropertyName("objectiveStringId")] uint ObjectiveStringId);
+    [property: JsonPropertyName("objectiveStringId")] uint ObjectiveStringId,
+    // The creature an objective is about (one to kill or one to use something on), so the client can mark every one in view.
+    [property: JsonPropertyName("objectiveCreature")] uint? ObjectiveCreature = null);
 
 public sealed record QuestCounterPayload(
     [property: JsonPropertyName("index")] int Index,

@@ -15,7 +15,7 @@ public sealed class SessionWireShapeTests
     private static readonly WebNetworkId Giver = WebNetworkId.FromString("Creature:12");
     private static readonly WebNetworkId Wolf = WebNetworkId.FromString("Creature:40");
 
-    private static readonly QuestObjectivePayload KillFour = new(0, 1, 0, 0, 0, 0, 4, 90201);
+    private static readonly QuestObjectivePayload KillFour = new(0, 1, 0, 0, 0, 0, 4, 90201, ObjectiveCreature: 90205);
     private static readonly QuestZonePayload WolfDen = new(90301, 1, 10.5f, 2f, -20.25f, 8f);
     private static readonly QuestZonePayload GiverHut = new(90302, 1, 24f, 3f, 4f, 5f);
     private static readonly QuestRewardItemPayload Reward = new(90001, 90401, 2, 1);

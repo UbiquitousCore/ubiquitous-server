@@ -67,6 +67,16 @@ public sealed class QuestObjectiveTests
     }
 
     [Fact]
+    public async Task Accept_NamesTheCreatureAKillObjectiveWants()
+    {
+        var session = await SessionAsync();
+
+        var response = await AcceptAsync(session);
+
+        Assert.Contains("\"objectiveCreature\":9001", response);
+    }
+
+    [Fact]
     public async Task KillingTheRequiredCreature_MovesTheObjectiveAndAllowsCompletion()
     {
         var session = await SessionAsync();
