@@ -16,14 +16,22 @@ public sealed class AdminInvincibleTests
         {
             [9001] = new(9001, "creature-9001", 3, 200000, MinDamage: 20, MaxDamage: 20),
         },
+        Spells = new Dictionary<uint, SpellDefinition>(GameContent.Development.Spells)
+        {
+            [CostlySpell] = new(CostlySpell, "Costly Mend", 0, 0, 0f, PowerCost: 1_000_000, EffectHeal: 1,
+                EffectTarget: SpellEffectTargets.Self),
+        },
     };
+
+    // Dearer than any character's whole pool.
+    private const uint CostlySpell = 9611;
 
     private static async Task<PlaySession> EnterAsync(bool admin)
     {
         var session = TestSessions.Create(
             new InMemoryAccountStore("developer", "dev-secret", isAdmin: admin),
             new InMemoryCharacterStore([new CharacterRecord(
-                "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
+                "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200]) { LearnedSpells = [CostlySpell] }]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
             content: Content, spellRollUnit: () => 1.0, combatRollUnit: () => 1.0);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -31,6 +39,36 @@ public sealed class AdminInvincibleTests
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
         return session;
+    }
+
+    private static Task<IReadOnlyList<string>> CastCostlyAsync(PlaySession session) =>
+        session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.SpellRequest, 4, new { spellId = CostlySpell })));
+
+    private static bool Refused(IReadOnlyList<string> cast) =>
+        cast.Any(message => message.Contains($"\"type\":\"{WebMessageTypes.SpellFailed}\""));
+
+    [Fact]
+    public async Task AnInvincibleGm_CastsWithoutSpendingPower()
+    {
+        var session = await EnterAsync(admin: true);
+        await SetAsync(session, true);
+
+        var first = await CastCostlyAsync(session);
+        var second = await CastCostlyAsync(session);
+
+        Assert.False(Refused(first), string.Join("\n", first));
+        Assert.False(Refused(second), string.Join("\n", second));
+    }
+
+    [Fact]
+    public async Task TurningInvincibilityOff_MakesSpellsCostPowerAgain()
+    {
+        var session = await EnterAsync(admin: true);
+        await SetAsync(session, true);
+        await SetAsync(session, false);
+
+        Assert.True(Refused(await CastCostlyAsync(session)));
     }
 
     private static Task<IReadOnlyList<string>> SetAsync(PlaySession session, bool on) =>

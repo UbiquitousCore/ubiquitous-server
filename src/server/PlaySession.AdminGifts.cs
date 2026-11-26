@@ -95,13 +95,14 @@ public sealed partial class PlaySession
         ];
     }
 
-    // Nothing hurts the character while it is on: creatures, spells, auras and other players alike. It lasts until
-    // the character leaves the world, so a relog starts without it.
+    // Nothing hurts the character while it is on: creatures, spells, auras and other players alike, and spells cost
+    // no power. It lasts until the character leaves the world, so a relog starts without it.
     private IReadOnlyList<string> AdminSetInvincible(JsonElement payload)
     {
         if (RefuseNonAdmin("be invincible") is { } refused) return refused;
         var request = WebMessageJson.DeserializePayload<AdminInvinciblePayload>(payload);
         _combat.GodMode = request.On;
+        _spells.CostsWaived = request.On;
         _logger.LogInformation("GM {User} turned invincibility {State}", _account!.UserId, request.On ? "on" : "off");
         return [Reply(WebMessageTypes.AdminInvincible, new AdminInvinciblePayload(request.On))];
     }
