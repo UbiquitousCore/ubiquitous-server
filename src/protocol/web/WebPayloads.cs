@@ -455,7 +455,8 @@ public sealed record EntitySpawnedPayload(
     [property: JsonPropertyName("dead")] bool? Dead = null,
     [property: JsonPropertyName("animationId")] uint? AnimationId = null,
     [property: JsonPropertyName("neverFightsBack")] bool? NeverFightsBack = null,
-    [property: JsonPropertyName("auras")] IReadOnlyList<HeldAuraPayload>? Auras = null);
+    [property: JsonPropertyName("auras")] IReadOnlyList<HeldAuraPayload>? Auras = null,
+    [property: JsonPropertyName("rank")] string? Rank = null);
 
 public sealed record PlayerSpawnedPayload(
     [property: JsonPropertyName("networkId")] WebNetworkId NetworkId,

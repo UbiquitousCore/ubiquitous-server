@@ -70,6 +70,24 @@ public static class WireCodes
         public const string Off = "off";
     }
 
+    // A creature's rank, sent on its spawn when above ordinary; the client frames its portrait for it.
+    public static class CreatureRank
+    {
+        public const string Rare = "rare";
+        public const string Elite = "elite";
+        public const string Boss = "boss";
+        public const string WorldBoss = "worldBoss";
+
+        public static string? Of(Ubiquitous.Data.CreatureRank rank) => rank switch
+        {
+            Ubiquitous.Data.CreatureRank.Rare => Rare,
+            Ubiquitous.Data.CreatureRank.Elite => Elite,
+            Ubiquitous.Data.CreatureRank.Boss => Boss,
+            Ubiquitous.Data.CreatureRank.WorldBoss => WorldBoss,
+            _ => null,
+        };
+    }
+
     public static class DungeonMode
     {
         public const string Normal = "normal";

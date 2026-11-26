@@ -57,6 +57,13 @@ no key. The client keeps such a body in its neutral colour however often it
 is hit; every other neutral creature turns hostile at the player's first
 landed blow.
 
+## Creature ranks
+
+`entity.spawned` carries `rank` on a creature whose `creature_proto` row
+(column 3) ranks it above ordinary: `rare`, `elite`, `boss` or `worldBoss`.
+An ordinary creature sends no key. The client wears the frame round the
+target portrait that the rank calls for.
+
 ## Auras already worn
 
 `aura.applied` and `aura.ended` report a change, so a screen that first sees

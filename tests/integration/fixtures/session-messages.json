@@ -84,7 +84,8 @@
         "maxDuration": 0,
         "remaining": 0
       }
-    ]
+    ],
+    "rank": "elite"
   },
   "spell.book": {
     "spells": [

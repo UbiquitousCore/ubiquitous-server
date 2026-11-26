@@ -30,7 +30,8 @@ public sealed class SessionWireShapeTests
             [new HeldAuraPayload(90103, Hero, 0, 30000, 4200)])),
         (WebMessageTypes.EntitySpawned, new EntitySpawnedPayload(Wolf, 90801, new Position(10.5, 2, -20.25), 0,
             Level: 4, Health: 58, MaxHealth: 80, Faction: 2,
-            Auras: [new HeldAuraPayload(90102, Friend, 1, 10000, 6500), new HeldAuraPayload(90104, Wolf, 0, 0, 0)])),
+            Auras: [new HeldAuraPayload(90102, Friend, 1, 10000, 6500), new HeldAuraPayload(90104, Wolf, 0, 0, 0)],
+            Rank: WireCodes.CreatureRank.Elite)),
         (WebMessageTypes.SpellBook, new SpellBookPayload(
             [90101, 90102],
             [new ActionSlotPayload("primary", 0, 90101, 0), new ActionSlotPayload("shortcut", 1, 90102, 0)])),
