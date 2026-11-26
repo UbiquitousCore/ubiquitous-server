@@ -21,7 +21,42 @@ public sealed class SeenUnit(string id, UnitKind kind)
     public string Id { get; } = id;
     public UnitKind Kind { get; } = kind;
     public uint Entry { get; set; }
-    public Position Position { get; set; }
+
+    // Set from what the server says: a unit put somewhere is no longer walking anywhere.
+    public Position Position
+    {
+        get => _position;
+        set
+        {
+            _position = value;
+            Walking = null;
+        }
+    }
+
+    // A creature's walk is announced once, with where it heads and how fast; where it
+    // has got to is worked out along the way, not taken to be the end of it.
+    internal (Position From, Position To, float Speed, DateTimeOffset Since)? Walking { get; set; }
+
+    private Position _position;
+
+    public void Advance(DateTimeOffset now)
+    {
+        if (Walking is not { } walk) return;
+        var dx = walk.To.X - walk.From.X;
+        var dy = walk.To.Y - walk.From.Y;
+        var dz = walk.To.Z - walk.From.Z;
+        var length = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
+        var gone = walk.Speed * (float)Math.Max(0, (now - walk.Since).TotalSeconds);
+        if (length < 0.01f || gone >= length)
+        {
+            Position = walk.To;
+            return;
+        }
+
+        var share = gone / length;
+        _position = new Position(walk.From.X + dx * share, walk.From.Y + dy * share, walk.From.Z + dz * share);
+    }
+
     public string? Name { get; set; }
     public int Level { get; set; }
     public int Health { get; set; }
@@ -218,10 +253,9 @@ public sealed class BotView
                 Spawned(payload);
                 break;
             case WebMessageTypes.EntityMoved:
-                // Read in place, being most of what a bot hears: it only wants who moved and where to.
-                if (payload.TryGetProperty("networkId", out var moverId) && Units.TryGetValue(Id(moverId), out var mover)
-                    && (Point(payload, "target") ?? Point(payload, "position")) is { } movedTo)
-                    mover.Position = movedTo;
+                // Read in place, being most of what a bot hears: who moved, from where, to where and how fast.
+                if (payload.TryGetProperty("networkId", out var moverId) && Units.TryGetValue(Id(moverId), out var mover))
+                    Moved(mover, payload, now);
                 break;
             case WebMessageTypes.EntityRemoved:
                 var removed = Id(Read<EntityRemovedPayload>(payload).NetworkId);
@@ -607,6 +641,24 @@ public sealed class BotView
     private static QuestZone Zone(QuestZonePayload zone) => new(zone.MapId, new Position(zone.X, zone.Y, zone.Z), zone.Radius);
 
     private static T Read<T>(JsonElement payload) => WebMessageJson.DeserializePayload<T>(payload);
+
+    private static void Moved(SeenUnit mover, JsonElement payload, DateTimeOffset now)
+    {
+        var at = Point(payload, "position");
+        var to = Point(payload, "target");
+        var speed = payload.TryGetProperty("speed", out var pace) && pace.ValueKind == JsonValueKind.Number ? (float)pace.GetDouble() : 0f;
+        var stopped = payload.TryGetProperty("moving", out var moving) && moving.ValueKind == JsonValueKind.False;
+        if (at is { } here) mover.Position = here;
+        if (to is not { } there) return;
+        if (!stopped && speed > 0) mover.Walking = (mover.Position, there, speed, now);
+        else if (at is null) mover.Position = there;
+    }
+
+    // Each walking unit moved on to where it has got to by now.
+    public void Advance(DateTimeOffset now)
+    {
+        foreach (var unit in Units.Values) unit.Advance(now);
+    }
 
     private static Position? Point(JsonElement payload, string name) =>
         payload.TryGetProperty(name, out var point) && point.ValueKind == JsonValueKind.Object

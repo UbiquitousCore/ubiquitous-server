@@ -42,6 +42,7 @@ public sealed partial class BotBrain(BotKnowledge knowledge, PlayerbotSettings s
     private static readonly TimeSpan RetryEngage = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan RetrySpell = TimeSpan.FromSeconds(1.5);
     private static readonly TimeSpan StatusRefresh = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan HandInWait = StatusRefresh * 2;
     private static readonly TimeSpan ShunFor = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan RestFor = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan InviteEvery = TimeSpan.FromSeconds(30);
@@ -57,6 +58,7 @@ public sealed partial class BotBrain(BotKnowledge knowledge, PlayerbotSettings s
     private readonly Dictionary<string, DateTimeOffset> _shunned = new(StringComparer.Ordinal);
     private readonly HashSet<int> _triedSlots = [];
     private readonly Dictionary<uint, DateTimeOffset> _setAside = [];
+    private readonly Dictionary<uint, DateTimeOffset> _waitingToHandIn = [];
     private DateTimeOffset _diedAt;
     private DateTimeOffset _nextRelease;
     private DateTimeOffset _nextEngage;
@@ -268,6 +270,9 @@ public sealed partial class BotBrain(BotKnowledge knowledge, PlayerbotSettings s
                 return unit;
         }
 
+        // A creature lost from sight on the way to it (the route bent away) is left a while:
+        // coming back into sight of it would only turn the bot round for it again.
+        if (_pull is { } lost && !view.Units.ContainsKey(lost)) Shun(lost, now);
         _commandTarget = null;
         _pull = null;
         return null;
@@ -381,12 +386,22 @@ public sealed partial class BotBrain(BotKnowledge knowledge, PlayerbotSettings s
                     return new WalkTo(finisher.Position, TalkReach * 0.6f, finisher.Id, InteractReach);
                 Shun($"{finisher.Id}|{quest.Id}", now);
                 Shun($"handIn:{quest.Id}", now);
+                _waitingToHandIn.Remove(quest.Id);
                 return new SendMessage(WebMessageTypes.QuestComplete, new { networkId = finisher.Id, questId = quest.Id, rewardIndex = 0 });
             }
 
-            if (quest.HandInZone is { } zone && zone.MapId == view.MapId && !InReach(view.Position, zone.Center)
-                && !Shunned($"handIn:{quest.Id}", now))
+            if (quest.HandInZone is not { } zone || zone.MapId != view.MapId || Shunned($"handIn:{quest.Id}", now)) continue;
+            if (!InReach(view.Position, zone.Center))
                 return new WalkTo(zone.Center, TalkReach, $"handIn:{quest.Id}", InteractReach);
+
+            // At the place with no one to hand it to: the marks may not have caught up, so the bot
+            // waits for them; then it leaves the place for a while rather than stepping off to
+            // another quest and straight back, which it would do every turn.
+            if (!_waitingToHandIn.TryGetValue(quest.Id, out var since) || now - since > HandInWait * 2)
+                _waitingToHandIn[quest.Id] = since = now;
+            if (now - since < HandInWait) return Hold.Instance;
+            _waitingToHandIn.Remove(quest.Id);
+            Shun($"handIn:{quest.Id}", now, SetAsideFor);
         }
 
         return null;
