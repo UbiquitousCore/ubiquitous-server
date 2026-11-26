@@ -217,7 +217,7 @@ public sealed class BotBrainTests
     {
         var brain = Brain();
         var view = InWorld();
-        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload("p1",
+        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload(PartyId: "p1", Members:
         [
             new(WebNetworkId.FromString("player:hero"), "Hero", true, true),
             new(WebNetworkId.FromString(Self), "Bot", false, true),
@@ -306,7 +306,7 @@ public sealed class BotBrainTests
             new WirePosition(x, 0, z), 0, name, 1, playerClass, 1, 0, 0, 1, 1, 1, 1, [], health, 100, 0, 0));
 
     private static void Grouped(BotView view, string leaderId, params string[] others) =>
-        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload("p1",
+        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload(PartyId: "p1", Members:
         [
             new(WebNetworkId.FromString(leaderId), "Lead", true, true),
             new(WebNetworkId.FromString(Self), "Bot", false, true),

@@ -61,7 +61,7 @@ public sealed class SessionWireShapeTests
         (WebMessageTypes.PartyVoteKickAsked, new PartyVoteKickAskedPayload(Friend, "Kael", Hero, "Ayla")),
         (WebMessageTypes.PartyVoteKickRefused, new PartyVoteKickRefusedPayload(Friend, "Kael", Hero, "Ayla")),
         (WebMessageTypes.PartyVoteKickEnded, new PartyVoteKickEndedPayload(Friend, "Kael", true)),
-        (WebMessageTypes.PartyRoster, new PartyRosterPayload("7",
+        (WebMessageTypes.PartyRoster, new PartyRosterPayload(PartyId: "7", Members:
             [new PartyRosterMemberPayload(Hero, "Ayla", true, true), new PartyRosterMemberPayload(Friend, "Kael", false, false)])),
         (WebMessageTypes.DuelChallenged, new DuelChallengedPayload(Hero)),
         (WebMessageTypes.QuestStatuses, new QuestStatusesPayload(
