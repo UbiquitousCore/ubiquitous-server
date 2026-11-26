@@ -313,6 +313,8 @@ comes from is in `PROVENANCE.md`.
 - Loot is generated for the killer: money from the creature's range (or 50
   copper); each group item rolls its chance, topped up to the group minimum by
   the nearest misses and trimmed to its maximum; at most 8 rows.
+- An item a quest asks to collect drops only for a killer who holds that quest
+  and has fewer than it asks for; otherwise it is left out before the roll.
 - Vendors sell without stock limits. Any vendor buys any bag stack at the
   item's sell price; a zero sell price is refused (`cantSell`); no buyback.
 - Bus fares are the cheapest total of legs, which run both ways.

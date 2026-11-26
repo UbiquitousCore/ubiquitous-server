@@ -377,7 +377,9 @@ this project's own:
   player stands.
 - Loot generation (`src/game/LootService.cs`): per-item chance rolls, top-up
   to the group minimum with the nearest misses, trim to the group maximum, at
-  most 8 rows per corpse.
+  most 8 rows per corpse. An item a quest's collect objective names drops only
+  for a killer still short of it, and is taken out of its group before the
+  roll (`QuestService.MayDrop`).
 - Selling (`VendorService.Sell`): a sell price of zero in the item row is
   read as "no vendor pays for this" and refused with `cantSell`; an item row
   with no sell price column is priced at half its buy price, or half the

@@ -123,9 +123,7 @@ public sealed partial class PlaySession
         if (_sight.Entries.TryGetValue(targetId, out var victimEntry))
         {
             var creature = _content.Creatures.TryGetValue(victimEntry, out var found) ? found : null;
-            var lootTable = _content.LootTables.TryGetValue(victimEntry, out var table) ? table : null;
-            _loot[targetId] = _lootService.Generate(
-                checked((int)victimEntry), lootTable, creature?.MoneyDropMin, creature?.MoneyDropMax);
+            _loot[targetId] = CorpseLootFor(victimEntry, creature);
             responses.AddRange(RewardKill(victimEntry, creature, targetId, now));
         }
 
