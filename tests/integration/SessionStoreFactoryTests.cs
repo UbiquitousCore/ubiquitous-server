@@ -58,7 +58,8 @@ public sealed class SessionStoreFactoryTests
             Assert.True(File.Exists(Path.Combine(directory.FullName, SessionStoreFactory.AccountsFile)));
             Assert.True(File.Exists(Path.Combine(directory.FullName, SessionStoreFactory.CharactersFile)));
             await first.Characters.CreateAsync(new Ubiquitous.Persistence.CharacterRecord(
-                "char-a", 100, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, []) { Currency = 1234 });
+                "char-a", 100, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [])
+            { Currency = 1234 });
 
             var restarted = SessionStoreFactory.Create(options, postgres: null, NullLogger.Instance);
 
