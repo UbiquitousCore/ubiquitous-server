@@ -97,7 +97,7 @@ public sealed class EmoteTests
     public async Task AnEmote_BeforeChoosingACharacter_IsRefused()
     {
         var hub = new PlaySessionHub();
-        var session = TestSessions.Create(new DevelopmentAccountStore("z", "p"), new InMemoryCharacterStore([]));
+        var session = TestSessions.Create(new InMemoryAccountStore("z", "p"), new InMemoryCharacterStore([]));
         hub.Register(session, _ => Task.CompletedTask);
 
         var direct = await SendAsync(hub, session, WebMessageTypes.PlayerEmote, 0, new { name = "wave" });
@@ -110,7 +110,7 @@ public sealed class EmoteTests
     private static async Task<(PlaySession Session, Inbox Inbox)> JoinAsync(
         PlaySessionHub hub, string guid, string name, ushort mapId = 13, float x = 1)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([Character(guid, name, mapId, x)]));
         var inbox = new Inbox([], []);
         hub.Register(session, message => { inbox.Forwarded.Add(message); return Task.CompletedTask; });

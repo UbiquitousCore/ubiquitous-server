@@ -139,7 +139,7 @@ public sealed class QuestSharingTests
     private static async Task<(PlaySession Session, List<string> Inbox)> JoinAsync(
         PlaySessionHub hub, string guid, string name, int level = 4, float x = 1)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, x, 2, 3, level, [100, 200])]),
             Spawns, [], Content, combatRollUnit: () => 1.0, parties: TestSessions.PartiesOf(hub));

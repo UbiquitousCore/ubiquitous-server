@@ -36,7 +36,7 @@ public sealed class VisibilityRegistrationTests
                 [9001] = new(9001, NpcFlags.Gossip, OffersQuests: true),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1, 13, 9001, 2f, 2f, 3f, 0f)], content: content);
@@ -61,7 +61,7 @@ public sealed class VisibilityRegistrationTests
                 [9401] = new(9401, "creature-9401", 3, 100),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1, 13, 9401, 2f, 2f, 3f, 0f)], content: content);
@@ -78,7 +78,7 @@ public sealed class VisibilityRegistrationTests
     [Fact]
     public async Task Spawn_CarriesThePlacementsStandingAnimationWhenItHasOne()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [
@@ -97,6 +97,27 @@ public sealed class VisibilityRegistrationTests
     }
 
     [Fact]
+    public async Task Spawn_NamesARankAboveOrdinary_SoTheTargetPortraitCanBeFramedForIt()
+    {
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([new CharacterRecord(
+                "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
+            [
+                new CreatureSpawnDefinition(1, 13, 9401, 2f, 2f, 3f, 0f),
+                new CreatureSpawnDefinition(2, 13, 9400, 3f, 2f, 3f, 0f),
+            ]);
+
+        await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
+        var chooseResp = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+
+        var spawned = chooseResp.Where(message => message.Contains("\"type\":\"entity.spawned\"")).ToList();
+        Assert.Contains(spawned, message => message.Contains("\"Creature:1\"") && message.Contains("\"rank\":\"elite\""));
+        Assert.Contains(spawned, message => message.Contains("\"Creature:2\"") && !message.Contains("\"rank\""));
+    }
+
+    [Fact]
     public async Task Spawn_SaysWhenTheCreatureNeverFightsBack()
     {
         var content = GameContent.Development with
@@ -109,7 +130,7 @@ public sealed class VisibilityRegistrationTests
             },
             CreatureScripts = new Dictionary<uint, string> { [9003] = "creature.trainingDummy" },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [
@@ -161,7 +182,7 @@ public sealed class VisibilityRegistrationTests
 
     private static async Task<PlaySession> SessionAsync()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             Spawns);

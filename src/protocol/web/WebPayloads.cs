@@ -87,7 +87,9 @@ public sealed record QuestObjectivePayload(
     [property: JsonPropertyName("objectiveItem")] uint ObjectiveItem,
     [property: JsonPropertyName("objectiveItemCount")] int ObjectiveItemCount,
     [property: JsonPropertyName("goalCount")] int GoalCount,
-    [property: JsonPropertyName("objectiveStringId")] uint ObjectiveStringId);
+    [property: JsonPropertyName("objectiveStringId")] uint ObjectiveStringId,
+    // The creature an objective is about (one to kill or one to use something on), so the client can mark every one in view.
+    [property: JsonPropertyName("objectiveCreature")] uint? ObjectiveCreature = null);
 
 public sealed record QuestCounterPayload(
     [property: JsonPropertyName("index")] int Index,
@@ -462,7 +464,8 @@ public sealed record EntitySpawnedPayload(
     [property: JsonPropertyName("dead")] bool? Dead = null,
     [property: JsonPropertyName("animationId")] uint? AnimationId = null,
     [property: JsonPropertyName("neverFightsBack")] bool? NeverFightsBack = null,
-    [property: JsonPropertyName("auras")] IReadOnlyList<HeldAuraPayload>? Auras = null);
+    [property: JsonPropertyName("auras")] IReadOnlyList<HeldAuraPayload>? Auras = null,
+    [property: JsonPropertyName("rank")] string? Rank = null);
 
 public sealed record PlayerSpawnedPayload(
     [property: JsonPropertyName("networkId")] WebNetworkId NetworkId,
@@ -558,6 +561,8 @@ public sealed record AdminInvinciblePayload([property: JsonPropertyName("on")] b
 public sealed record AdminSetLevelPayload([property: JsonPropertyName("level")] int Level);
 
 public sealed record AdminGiveGoldPayload([property: JsonPropertyName("gold")] int Gold);
+
+public sealed record AdminSetGoldPayload([property: JsonPropertyName("gold")] int Gold);
 
 public sealed record StressTestPayload([property: JsonPropertyName("count")] int Count);
 

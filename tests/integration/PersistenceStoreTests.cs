@@ -10,6 +10,37 @@ namespace Ubiquitous.Integration.Tests;
 
 public sealed class PersistenceStoreTests
 {
+    // The admin page writes the same file the running server holds open.
+    [Fact]
+    public async Task FileCharacterStore_SeesAnotherWritersChange_AndKeepsItWhenItSavesItsOwn()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"ubiquitous-character-{Guid.NewGuid():N}");
+        var path = Path.Combine(directory, "characters.json");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(
+                new[] { Character("char-a", 1, "Ayla"), Character("char-b", 1, "Borin") },
+                new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+            var server = FileCharacterStore.Load(path);
+            var page = FileCharacterStore.Load(path);
+
+            await page.UpdateAsync((await page.GetByGuidAsync("char-a"))! with { Currency = 900 });
+            File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(5));
+            var seen = await server.GetByGuidAsync("char-a");
+            await server.UpdateAsync((await server.GetByGuidAsync("char-b"))! with { Level = 9 });
+
+            Assert.Equal(900, seen!.Currency);
+            var onDisk = FileCharacterStore.Load(path);
+            Assert.Equal(900, (await onDisk.GetByGuidAsync("char-a"))!.Currency);
+            Assert.Equal(9, (await onDisk.GetByGuidAsync("char-b"))!.Level);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task FileCharacterStore_UpdateAsyncPersistsAcrossAFreshLoad()
     {
@@ -93,7 +124,7 @@ public sealed class PersistenceStoreTests
             var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
             var spawns = new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) };
 
-            var sessionA = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var sessionA = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, spawns, inventoryStore: store);
             await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -104,7 +135,7 @@ public sealed class PersistenceStoreTests
             Assert.Contains("inventory.itemAdded", bought[1]);
             await sessionA.SaveInventoryAsync();
 
-            var sessionB = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var sessionB = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, spawns, inventoryStore: store);
             await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -128,7 +159,7 @@ public sealed class PersistenceStoreTests
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var spawns = new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) };
 
-        var sessionA = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters, spawns);
+        var sessionA = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters, spawns);
         await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
         await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -147,7 +178,7 @@ public sealed class PersistenceStoreTests
         Assert.Equal(2f, savedDirectly.Y);
         Assert.Equal(3f, savedDirectly.Z);
 
-        var sessionB = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters, spawns);
+        var sessionB = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters, spawns);
         await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
         var entered = await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -171,7 +202,7 @@ public sealed class PersistenceStoreTests
                 new[] { Character("char-a", 1, "Ayla") }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
             var characters = FileCharacterStore.Load(path);
 
-            var sessionA = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+            var sessionA = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
             await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
             await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -180,7 +211,7 @@ public sealed class PersistenceStoreTests
                 WebMessageTypes.ActionBarAssign, 2, new { slot = 7, id = 100, type = 0 })));
             await sessionA.SaveCharacterAsync();
 
-            var sessionB = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), FileCharacterStore.Load(path));
+            var sessionB = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), FileCharacterStore.Load(path));
             await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
             var entered = await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -242,7 +273,7 @@ public sealed class PersistenceStoreTests
             var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
             var spawns = new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) };
 
-            var sessionA = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var sessionA = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, spawns, questLogStore: store);
             await sessionA.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -253,7 +284,7 @@ public sealed class PersistenceStoreTests
             Assert.Contains(accepted, message => message.Contains("quest.updated"));
             await sessionA.SaveQuestLogAsync();
 
-            var sessionB = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var sessionB = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, spawns, questLogStore: store);
             await sessionB.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));

@@ -29,7 +29,7 @@ public sealed class DuelTests
 
     private static TestClient Join(PlaySessionHub hub, InMemoryCharacterStore characters, DuelService duels, PlayerBlowRelay? blows = null)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
             combatRollUnit: () => 1.0, duels: duels, blows: blows);
         hub.Register(session, _ => Task.CompletedTask);
         return new TestClient(session);

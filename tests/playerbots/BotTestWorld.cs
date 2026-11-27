@@ -28,7 +28,7 @@ internal sealed class BotTestWorld
         IAccountStore? realAccounts = null, InMemoryCharacterStore? characters = null)
     {
         Time = new FakeTimeProvider(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
-        Accounts = new ModuleAccounts(new AccountAuthenticator(realAccounts ?? new DevelopmentAccountStore([]), iterations: 1_000));
+        Accounts = new ModuleAccounts(new AccountAuthenticator(realAccounts ?? new InMemoryAccountStore([]), iterations: 1_000));
         Characters = characters ?? new InMemoryCharacterStore([]);
         var stores = new SessionStores(Accounts, Characters);
         var world = new SharedWorld(stores, time: Time);

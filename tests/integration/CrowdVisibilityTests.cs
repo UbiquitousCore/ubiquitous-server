@@ -24,7 +24,7 @@ public sealed class CrowdVisibilityTests
             },
         };
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret", isAdmin: true),
+            new InMemoryAccountStore("developer", "dev-secret", isAdmin: true),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [
@@ -81,7 +81,7 @@ public sealed class CrowdVisibilityTests
         for (var i = 0; i < sessions; i++)
         {
             var session = TestSessions.Create(
-                new DevelopmentAccountStore($"developer-{i}", "dev-secret"),
+                new InMemoryAccountStore($"developer-{i}", "dev-secret"),
                 new InMemoryCharacterStore([new CharacterRecord(
                     $"char-{i}", 1, $"Ayla{i}", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
                 spawns, staticObjectSpawns: statics, content: content,

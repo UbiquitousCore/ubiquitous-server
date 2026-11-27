@@ -62,6 +62,15 @@ public sealed partial class PlaySession
         return responses;
     }
 
+    private IReadOnlyList<string> ResolveTeleportSpot(
+        WebNetworkId casterId, uint spellId, SpellDefinition spell, uint stopId)
+    {
+        var responses = new List<string>(ResolveReleaseOnly(casterId, casterId.Text!, spellId, spell));
+        if (_content.Stops.TryGetValue(stopId, out var stop))
+            TravelTo(responses, stop.MapId, new DomainPosition(stop.X, stop.Y, stop.Z), stop.Yaw);
+        return responses;
+    }
+
     private void TravelTo(List<string> responses, ushort mapId, DomainPosition position, float yaw)
     {
         if (_character is null) return;

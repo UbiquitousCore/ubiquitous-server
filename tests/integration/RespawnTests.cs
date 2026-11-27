@@ -111,7 +111,7 @@ public sealed class RespawnTests
         SharedMapRegistry maps, InMemoryCharacterStore characters, GameContent content,
         string name, string guid)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             characters,
             [new CreatureSpawnDefinition(1001, 13, 9500, 2, 2, 4, 0)],
             content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9,

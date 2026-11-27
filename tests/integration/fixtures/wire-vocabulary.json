@@ -10,6 +10,7 @@
     "admin.giveItem",
     "admin.invincible",
     "admin.learnSpells",
+    "admin.setGold",
     "admin.setInvincible",
     "admin.setLevel",
     "admin.teleport",

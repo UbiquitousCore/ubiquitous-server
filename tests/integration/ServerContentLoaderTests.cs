@@ -224,9 +224,7 @@ public sealed class ServerContentLoaderTests
 
             Assert.Equal([20u], made.LootTables.Keys);
             Assert.Equal([9100u, 9200u], made.LootTables[20].Groups.SelectMany(group => group.Items).Select(item => item.ItemId));
-            Assert.Equal([7u], made.GeneratedQuestItems[9100]);
             Assert.Empty(none.LootTables);
-            Assert.Empty(none.GeneratedQuestItems);
 
             var hosted = ServerOptions.Load([], new Dictionary<string, string?>
             {

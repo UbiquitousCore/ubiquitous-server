@@ -67,6 +67,16 @@ public sealed class AdminService(
         return await characters.EditAsync(guid, edit, cancellationToken);
     }
 
+    public async Task<CharacterChange> AddGoldAsync(string guid, int gold, CancellationToken cancellationToken = default)
+    {
+        if (gold < 1) return CharacterChange.BadGold;
+        if (await characters.GetAsync(guid, cancellationToken) is not { } detail) return CharacterChange.NotFound;
+        if (await IsOnlineAsync(detail.Character.Name, cancellationToken)) return CharacterChange.Online;
+        var total = (long)detail.Gold + gold;
+        if (total > int.MaxValue) return CharacterChange.BadGold;
+        return await characters.EditAsync(guid, new CharacterEdit(Gold: (int)total), cancellationToken);
+    }
+
     public async Task<CharacterChange> GiveItemAsync(string guid, int entry, int count, CancellationToken cancellationToken = default)
     {
         if (await characters.GetAsync(guid, cancellationToken) is not { } detail) return CharacterChange.NotFound;

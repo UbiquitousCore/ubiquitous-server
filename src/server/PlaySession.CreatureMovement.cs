@@ -64,9 +64,7 @@ public sealed partial class PlaySession
                 if (!string.Equals(_combat.RetaliationTarget(wireId), playerId, StringComparison.Ordinal)) continue;
                 if (!ScriptFor(wireId).Chases) continue;
                 if (!_shared.TryGetPosition(wireId, out var joinerPosition)) continue;
-                var jdx = playerDestination.X - joinerPosition.X;
-                var jdz = playerDestination.Z - joinerPosition.Z;
-                _combat.SetInMeleeReach(wireId, Math.Sqrt(jdx * jdx + jdz * jdz) <= MeleeRange);
+                _combat.SetInMeleeReach(wireId, MeleeReach.Reaches(joinerPosition, playerDestination));
                 ChaseTowards(wireId, joinerPosition, playerDestination, now, responses);
             }
         }

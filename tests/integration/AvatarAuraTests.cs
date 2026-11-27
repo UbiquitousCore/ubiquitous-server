@@ -34,7 +34,7 @@ public sealed class AvatarAuraTests
 
     private static async Task<(PlaySession Session, List<string> Entry)> EnterAsync()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
@@ -116,7 +116,7 @@ public sealed class AvatarAuraTests
     {
         // Two wands, so the second cast has something to use.
         var content = Content with { StartingItems = [new StartingItemStack(Wand, 2)] };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)], content: content, developmentEntry: true);

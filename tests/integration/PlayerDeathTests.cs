@@ -100,7 +100,7 @@ public sealed class PlayerDeathTests
     [Fact]
     public async Task KillerFacesHomeWhenItNeverLeft()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9500, 1, 2, 3, 0)],
@@ -129,7 +129,7 @@ public sealed class PlayerDeathTests
     {
         var characters = new InMemoryCharacterStore([new CharacterRecord(
             "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             characters,
             [new CreatureSpawnDefinition(1001, 13, 9500, 2, 2, 4, 0, IdleBehaviour: 1, WanderRadius: 10)],
             content: Content(), combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9);
@@ -161,7 +161,7 @@ public sealed class PlayerDeathTests
 
     private static async Task<PlaySession> SessionAsync()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9500, 2, 2, 4, 0, IdleBehaviour: 1, WanderRadius: 10)],

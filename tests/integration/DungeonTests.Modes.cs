@@ -229,7 +229,7 @@ public sealed partial class DungeonTests
         var spawns = new[] { new CreatureSpawnDefinition(3113, 14, 2666, -681, InsideFloorY, -2097, 0) };
         async Task<(PlaySession Session, IReadOnlyList<string> Entered)> SignInAsync()
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("mode13", "p"), characters, spawns,
+            var session = TestSessions.Create(new InMemoryAccountStore("mode13", "p"), characters, spawns,
                 content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9, instances: instances);
             await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("mode13", "p"))));
@@ -282,7 +282,7 @@ public sealed partial class DungeonTests
         var spawns = new[] { new CreatureSpawnDefinition(3114, 14, 2666, -681, InsideFloorY, -2097, 0) };
         async Task<(PlaySession Session, IReadOnlyList<string> Entered)> SignInAsync()
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("mode14", "p"), characters, spawns,
+            var session = TestSessions.Create(new InMemoryAccountStore("mode14", "p"), characters, spawns,
                 content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9, instances: instances);
             await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("mode14", "p"))));
@@ -339,7 +339,7 @@ public sealed partial class DungeonTests
             "char-mode15", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, GateApproachX, 2, GateApproachZ, 60, [100, 200])]);
         async Task<(PlaySession Session, IReadOnlyList<string> Entered)> SignInAsync(InstanceService instances)
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("mode15", "p"), characters, [],
+            var session = TestSessions.Create(new InMemoryAccountStore("mode15", "p"), characters, [],
                 content: LegendContent(), instances: instances);
             await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
                 WebMessageTypes.AccountLogin, 0, new LoginRequest("mode15", "p"))));

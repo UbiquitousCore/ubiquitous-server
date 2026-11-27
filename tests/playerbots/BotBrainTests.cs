@@ -132,6 +132,77 @@ public sealed class BotBrainTests
     }
 
     [Fact]
+    public void AtAHandInPlaceWithNoOneToHandItTo_ABotWaitsThenLeavesItRatherThanSteppingToAndFro()
+    {
+        var brain = Brain();
+        var view = InWorld();
+        Hear(view, WebMessageTypes.QuestUpdated, new QuestUpdatePayload(6001, 1, 2, QuestStates.ReadyToHandIn, 0, true, [],
+            HandInZone: new QuestZonePayload(6001, 1, 3, 0, 0, 10)));
+        Hear(view, WebMessageTypes.QuestUpdated, new QuestUpdatePayload(6002, 1, 2, QuestStates.ReadyToHandIn, 1, true, [],
+            HandInZone: new QuestZonePayload(6002, 1, 300, 0, 0, 10)));
+        brain.Decide(view, Start);
+        // Quest marks are refreshed every few seconds whatever else it does; that is not a decision here.
+        BotDecision At(double seconds)
+        {
+            var decided = brain.Decide(view, Start.AddSeconds(seconds));
+            return decided is SendMessage { Type: WebMessageTypes.QuestRefreshStatuses } ? brain.Decide(view, Start.AddSeconds(seconds)) : decided;
+        }
+
+        // Beside the first quest's place, with nobody there: it stays rather than heading off to the second.
+        Assert.IsType<Hold>(At(0));
+        Assert.IsType<Hold>(At(6));
+
+        // Once the marks have had time to catch up, it goes to the other quest's place and keeps going.
+        Assert.Equal("handIn:6002", Assert.IsType<WalkTo>(At(12)).Purpose);
+        view.Position = new Ubiquitous.Common.Position(12, 0, 0);
+        Assert.Equal("handIn:6002", Assert.IsType<WalkTo>(At(13)).Purpose);
+    }
+
+    [Fact]
+    public void ACreatureWalkingAway_IsSeenAlongItsWayNotAtTheEndOfIt()
+    {
+        var view = InWorld();
+        Creature(view, 1, 9001, 10, 0);
+        Hear(view, WebMessageTypes.EntityMoved, new EntityMovedPayload(WebNetworkId.FromString("Creature:1"),
+            new WirePosition(10, 0, 0), Moving: true, Speed: 2, Target: new WirePosition(30, 0, 0)), Start);
+
+        view.Advance(Start.AddSeconds(3));
+        Assert.Equal(16, view.Units["Creature:1"].Position.X, 3);
+
+        view.Advance(Start.AddSeconds(30));
+        Assert.Equal(30, view.Units["Creature:1"].Position.X, 3);
+
+        Hear(view, WebMessageTypes.EntityMoved, new EntityMovedPayload(WebNetworkId.FromString("Creature:1"),
+            new WirePosition(25, 0, 0), Moving: false), Start.AddSeconds(31));
+        view.Advance(Start.AddSeconds(40));
+        Assert.Equal(25, view.Units["Creature:1"].Position.X, 3);
+    }
+
+    [Fact]
+    public void ACreatureLostFromSightOnTheWay_IsNotTurnedBackForWhenItComesBackIntoSight()
+    {
+        var brain = Brain();
+        var view = InWorld();
+        Creature(view, 3, 9400, 30, 0);
+        brain.Decide(view, Start);
+        string? HeadingFor(double seconds)
+        {
+            var decided = brain.Decide(view, Start.AddSeconds(seconds));
+            if (decided is SendMessage { Type: WebMessageTypes.QuestRefreshStatuses }) decided = brain.Decide(view, Start.AddSeconds(seconds));
+            return (decided as WalkTo)?.Purpose;
+        }
+
+        Assert.Equal("Creature:3", HeadingFor(0));
+
+        Hear(view, WebMessageTypes.EntityRemoved, new EntityRemovedPayload(WebNetworkId.FromString("Creature:3")));
+        Assert.NotEqual("Creature:3", HeadingFor(1));
+
+        Creature(view, 3, 9400, 30, 0);
+        Assert.NotEqual("Creature:3", HeadingFor(2));
+        Assert.Equal("Creature:3", HeadingFor(62));
+    }
+
+    [Fact]
     public void Grinding_LeavesCreaturesWellAboveTheBotsLevelAlone()
     {
         var brain = Brain();
@@ -146,7 +217,7 @@ public sealed class BotBrainTests
     {
         var brain = Brain();
         var view = InWorld();
-        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload("p1",
+        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload(PartyId: "p1", Members:
         [
             new(WebNetworkId.FromString("player:hero"), "Hero", true, true),
             new(WebNetworkId.FromString(Self), "Bot", false, true),
@@ -235,7 +306,7 @@ public sealed class BotBrainTests
             new WirePosition(x, 0, z), 0, name, 1, playerClass, 1, 0, 0, 1, 1, 1, 1, [], health, 100, 0, 0));
 
     private static void Grouped(BotView view, string leaderId, params string[] others) =>
-        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload("p1",
+        Hear(view, WebMessageTypes.PartyRoster, new PartyRosterPayload(PartyId: "p1", Members:
         [
             new(WebNetworkId.FromString(leaderId), "Lead", true, true),
             new(WebNetworkId.FromString(Self), "Bot", false, true),

@@ -54,7 +54,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly Dictionary<string, BodyStates> _auraStateSent = new(StringComparer.Ordinal);
     private readonly DirtyValueTracker _dirty = new();
     private readonly AttributeModifierService _attributeModifiers;
-    private static readonly TimeSpan StuckRescueCooldown = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan StuckRescueCooldown = TimeSpan.FromSeconds(60);
     private DateTimeOffset? _lastRescueAt;
     private readonly Dictionary<int, (uint Id, int Type)> _actionBar = new();
     private readonly TeleportService _teleports = new();
@@ -142,7 +142,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private int _xp;
     private readonly PlayerBelongings _belongings;
     private const double LootRange = InteractionRange.Max;
-    private const double MeleeRange = 3.0;
+    private const double MeleeRange = MeleeReach.Range;
     private const int DefaultAggroRange = 8;
     private readonly Dictionary<string, DateTimeOffset> _outOfMeleeRangeSince = new(StringComparer.Ordinal);
     private bool _awaitingArrivalMove;
@@ -155,7 +155,6 @@ public sealed partial class PlaySession : ISessionPlayer
     private WorldSessionState? _world;
 
     private readonly bool _developmentEntry;
-    private readonly IReadOnlySet<string> _developmentUserIds;
     private readonly ILogger _logger;
 
     private string PlayerUnitId => $"player:{_character?.Guid}";
@@ -239,7 +238,6 @@ public sealed partial class PlaySession : ISessionPlayer
         _attributeModifiers = new AttributeModifierService(_effects);
         _logger = logger ?? NullLogger.Instance;
         _developmentEntry = options.DevelopmentEntry;
-        _developmentUserIds = options.DevelopmentUserIds ?? new HashSet<string>();
         _accounts = stores.Accounts;
         _characters = stores.Characters;
         _inventoryStore = stores.Inventory;
@@ -460,6 +458,9 @@ public sealed partial class PlaySession : ISessionPlayer
             return [Error(WireCodes.ProtocolError.Malformed, "Malformed request.")];
         }
 
+        if (_character is not null && _combat.IsPlayerDead && !WhileDead.Allows(envelope.Type))
+            return [RefusedWhileDead(envelope)];
+
         if (RefuseOutOfReach(envelope.Type, envelope.Payload) is string refusal)
             return refusal.Length == 0 ? [] : [refusal];
 
@@ -506,6 +507,7 @@ public sealed partial class PlaySession : ISessionPlayer
                 WebMessageTypes.AdminTeleport => AdminTeleport(envelope.Payload),
                 WebMessageTypes.AdminGiveItem => AdminGiveItem(envelope.Payload),
                 WebMessageTypes.AdminGiveGold => AdminGiveGold(envelope.Payload),
+                WebMessageTypes.AdminSetGold => AdminSetGold(envelope.Payload),
                 WebMessageTypes.AdminSetLevel => AdminSetLevel(envelope.Payload),
                 WebMessageTypes.AdminSetInvincible => AdminSetInvincible(envelope.Payload),
                 WebMessageTypes.AdminLearnSpells => AdminLearnSpells(),
@@ -595,6 +597,20 @@ public sealed partial class PlaySession : ISessionPlayer
             _logger.LogError(ex, "Unexpected failure handling {MessageType}", envelope.Type);
             return [Error(WireCodes.ProtocolError.Internal, "The server could not handle that request.")];
         }
+    }
+
+    private string RefusedWhileDead(WebMessageEnvelope envelope)
+    {
+        if (envelope.Type == WebMessageTypes.SpellRequest)
+        {
+            uint spellId = envelope.Payload.ValueKind == JsonValueKind.Object
+                && envelope.Payload.TryGetProperty("spellId", out var value) && value.TryGetUInt32(out var id) ? id : 0;
+            return Reply(WebMessageTypes.SpellFailed, new SpellFailedPayload(
+                WebNetworkId.FromString(PlayerUnitId), spellId, WireCodes.SpellRefusal.Incapacitated));
+        }
+
+        return Error(envelope.Type == WebMessageTypes.AttackEngage
+            ? WireCodes.ProtocolError.InvalidTarget : WireCodes.ProtocolError.InvalidState, "You are dead.");
     }
 
     public ushort? CurrentMapId => _world?.MapId;
@@ -1072,7 +1088,7 @@ public sealed partial class PlaySession : ISessionPlayer
             if (_sight.Entries.TryGetValue(swing.TargetId, out var victimEntry))
             {
                 var creature = _content.Creatures.TryGetValue(victimEntry, out var found) ? found : null;
-                _loot[swing.TargetId] = CorpseLootOf(victimEntry, creature);
+                _loot[swing.TargetId] = CorpseLootFor(victimEntry, creature);
                 responses.AddRange(RewardKill(victimEntry, creature, swing.TargetId, now));
             }
             var carriesLoot = _loot.TryGetValue(swing.TargetId, out var spoils)
@@ -1221,7 +1237,9 @@ public sealed partial class PlaySession : ISessionPlayer
         }
     }
 
-    private bool InMeleeRange(string networkId) => DistanceTo(networkId) is { } distance && distance <= MeleeRange;
+    private bool InMeleeRange(string networkId) =>
+        _world is not null && TryPositionOf(networkId, out var target)
+        && MeleeReach.Reaches(_world.PlayerPosition, target);
 
     private UnitDiedPayload DeathOf(WebNetworkId body)
     {
@@ -1255,7 +1273,7 @@ public sealed partial class PlaySession : ISessionPlayer
     {
         if (DistanceTo(targetId) is not { } distance) return null;
         return new RangedAttackContext(
-            InMeleeRange: distance <= MeleeRange,
+            InMeleeRange: InMeleeRange(targetId),
             Distance: distance,
             HasRangedWeapon: HasRangedWeapon(),
             RangedInterval: CombatService.EffectiveSwingInterval(
@@ -1441,7 +1459,7 @@ public sealed partial class PlaySession : ISessionPlayer
             return Task.FromResult<IReadOnlyList<string>>([Error(WireCodes.ProtocolError.NotInWorld, "Character selection is required before movement.")]);
         }
 
-        if (_character is not null && _control.IsControlled(PlayerUnitId, Now))
+        if (_character is not null && (_combat.IsPlayerDead || _control.IsControlled(PlayerUnitId, Now)))
         {
             var locked = _world.PlayerPosition;
             return Task.FromResult<IReadOnlyList<string>>([Reply(WebMessageTypes.MoveAccepted,

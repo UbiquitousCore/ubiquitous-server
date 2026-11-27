@@ -59,7 +59,7 @@ public sealed class PeriodicSaveTests
         var clock = new Microsoft.Extensions.Time.Testing.FakeTimeProvider();
         var characters = new CountingCharacterStore();
         var hub = new PlaySessionHub();
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters, time: clock);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters, time: clock);
         hub.Register(session, _ => Task.CompletedTask);
         await hub.SendInOrderAsync(session, () => session.HandleTextAsync(Serialize(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
@@ -99,7 +99,7 @@ public sealed class PeriodicSaveTests
     {
         var characters = new CountingCharacterStore();
         var hub = new PlaySessionHub();
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         hub.Register(session, _ => Task.CompletedTask);
 
         await hub.AutosaveAsync(DateTimeOffset.UtcNow + PlaySession.AutosaveInterval * 3);
@@ -110,7 +110,7 @@ public sealed class PeriodicSaveTests
     private static async Task<(PlaySessionHub Hub, PlaySession Session)> EnteredAsync(CountingCharacterStore characters)
     {
         var hub = new PlaySessionHub();
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         hub.Register(session, _ => Task.CompletedTask);
         await hub.SendInOrderAsync(session, () => session.HandleTextAsync(Serialize(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));

@@ -112,7 +112,7 @@ public sealed class ThreatTests
         SharedMapRegistry maps, GameContent content, CreatureSpawnDefinition[] spawns,
         string userId, string name, string guid, int accountId)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(userId, "p", accountId),
+        var session = TestSessions.Create(new InMemoryAccountStore(userId, "p", accountId),
             new InMemoryCharacterStore([new CharacterRecord(
                 guid, accountId, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             spawns, content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9,
@@ -131,7 +131,7 @@ public sealed class ThreatTests
 
     private static async Task<PlaySession> SessionAsync(GameContent content, params CreatureSpawnDefinition[] spawns)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             spawns, content: content, combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9);

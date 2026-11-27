@@ -102,8 +102,15 @@ minutes and trying the next. A quest that has not moved for eight minutes is
 put aside for ten while the bot does other quests, grinds, sells or travels. A
 quest asking for a spell the bot does not have is abandoned, and not taken up
 again; a quest-giver offering only such quests is left alone for ten minutes.
+At a quest's hand-in place with no one to hand it to, a bot waits ten seconds
+for its quest marks to catch up, then leaves that hand-in for ten minutes.
+A creature walking somewhere is tracked along its way at its pace, not seen at
+the end of its walk; one lost from sight on the way to it is left for a minute.
 A goal the bot has not got closer to in eight seconds of trying (however much
-else it does in between) is given up for a while, and distances count height:
+else it does in between) is given up for a while. Closer means along its route,
+so a way round that starts off away from the goal is followed; and a goal once
+reached starts afresh, so a bot that comes back to it is not judged by its
+last visit. Distances count height:
 a corpse under a bridge is walked down to, not stood over. Each step carries
 the bot's velocity, so a watching client moves it smoothly and faces it the
 way it walks.
@@ -133,8 +140,10 @@ Saying or sending something that needs no standing still (quest marks, chat,
 group answers, talents, gear, emotes) does not stop a walking bot.
 
 A long walk (25 units or more) bends, two times in five, through a point off
-to one side that stands on walkable ground and costs at most half as much
-again, so bots going the same way do not walk in single file.
+to one side that stands on walkable ground and whose route costs at most half
+as much again, so bots going the same way do not walk in single file. Once the
+bot has passed that point it is forgotten, so a later change of route does not
+lead back to it.
 
 On a map with baked walkable ground a bot only ever walks the route the map
 gives it, never a straight line, and only on the main ground: a connected
@@ -145,7 +154,7 @@ be unstuck only if it finds itself in one with nowhere to step back to. A bot
 just below a floor (a plaza laid over the terrain) steps up onto it. A route is
 planned again only when its goal moves, so a bot does not flip between two
 equally short ways round something. A goal with no route, a route that stops
-short, or eight seconds without getting closer means the goal is out of reach,
+short, or eight seconds without getting closer along the route means the goal is out of reach,
 and the bot leaves it for a while. On a map with no baked ground bots walk
 straight. In water deep enough to swim (the bed 1.25 below the surface) a bot
 swims at the swim line at half pace; routes go round water unless the way

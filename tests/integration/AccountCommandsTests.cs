@@ -149,12 +149,12 @@ public sealed class AccountCommandsTests : IDisposable
     }
 
     [Fact]
-    public void DevelopmentAccounts_AreSwitchedOffWhenThePostgresStoreIsInUse()
+    public void DevelopmentEntry_IsSwitchedOffWhenThePostgresStoreIsInUse()
     {
-        var options = ServerOptions.Defaults with { DevelopmentAccountsEnabled = true };
+        var options = ServerOptions.Defaults with { DevelopmentEntry = true };
 
-        Assert.False(options.ForStore(usesPostgres: true).DevelopmentAccountsEnabled);
-        Assert.True(options.ForStore(usesPostgres: false).DevelopmentAccountsEnabled);
+        Assert.False(options.ForStore(usesPostgres: true).DevelopmentEntry);
+        Assert.True(options.ForStore(usesPostgres: false).DevelopmentEntry);
     }
 
     [Fact]

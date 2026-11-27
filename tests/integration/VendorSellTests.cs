@@ -28,7 +28,7 @@ public sealed class VendorSellTests
 
     private static async Task<PlaySession> EnterAsync()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],

@@ -130,7 +130,7 @@ public sealed class PresenceTests
     public async Task LeavingBeforeEverEnteringAWorldDoesNothing()
     {
         var hub = new PlaySessionHub();
-        var session = TestSessions.Create(new DevelopmentAccountStore("z", "p"), new InMemoryCharacterStore([]));
+        var session = TestSessions.Create(new InMemoryAccountStore("z", "p"), new InMemoryCharacterStore([]));
         hub.Register(session, _ => Task.CompletedTask);
 
         await hub.DisconnectAsync(session);
@@ -171,7 +171,7 @@ public sealed class PresenceTests
         PlaySessionHub hub, string guid, string name, ushort mapId, IReadOnlyList<Ubiquitous.Data.CreatureSpawnDefinition> spawns,
         bool playedByModule = false)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([Character(guid, name, mapId)]), spawns);
         var inbox = new Inbox([], []);
         hub.Register(session, message => { inbox.Forwarded.Add(message); return Task.CompletedTask; }, playedByModule);

@@ -68,8 +68,12 @@ public sealed class SpellService
 
     public bool IsCasting => _pending is not null;
 
+    // A GM's invincibility: spells cost no mana, rage or energy while it is on.
+    public bool CostsWaived { get; set; }
+
     public void EnterAsCharacter(int classId, int level, IEnumerable<uint>? knownSpells = null, int? baseIntellect = null)
     {
+        CostsWaived = false;
         _classId = classId;
         _level = level;
         if (baseIntellect is int intellect) _baseIntellect = Math.Max(0, intellect);
@@ -100,6 +104,7 @@ public sealed class SpellService
         || spell.EffectTriggerSpellId is not null || spell.EffectFromHidingTriggerSpellId is not null
         || spell.EffectLeapToTarget
         || spell.EffectSummonCreatureId is not null
+        || spell.EffectTeleportStopId is not null
         || spell.AuraEatPerTick is not null || spell.AuraDrinkPerTick is not null
         || spell.AuraMountId is not null || spell.AuraAvatarDisplayId is not null
         || (spell.ExtraEffects?.Any(HasResolvableEffect) ?? false);
@@ -145,7 +150,7 @@ public sealed class SpellService
             return null;
         }
 
-        if (_power < (spell.PowerCost ?? 0))
+        if (!CostsWaived && _power < (spell.PowerCost ?? 0))
         {
             refusal = new SpellCastRefusal(SpellRefusalReason.InsufficientPower);
             return null;
@@ -289,7 +294,7 @@ public sealed class SpellService
 
     private void Resolve(uint spellId, SpellDefinition spell, DateTimeOffset now, int wisdomBonus = 0)
     {
-        _power -= spell.PowerCost ?? 0;
+        if (!CostsWaived) _power -= spell.PowerCost ?? 0;
         if (spell.CooldownMs > 0) _cooldownUntil[spellId] = now + TimeSpan.FromMilliseconds(spell.CooldownMs);
     }
 }

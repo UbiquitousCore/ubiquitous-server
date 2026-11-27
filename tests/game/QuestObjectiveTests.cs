@@ -209,6 +209,25 @@ public sealed class QuestObjectiveTests
         Assert.Empty(service.Log(KillQuest));
     }
 
+    [Fact]
+    public void MayDrop_AQuestItemOnlyForSomeoneWhoStillNeedsIt()
+    {
+        var service = new QuestService();
+        Assert.False(service.MayDrop(200, HeldQuest));
+
+        service.Accept(5001, HeldQuest);
+        Assert.True(service.MayDrop(200, HeldQuest));
+
+        service.RefreshHeldObjectives(_ => 3, HeldQuest).ToList();
+        Assert.False(service.MayDrop(200, HeldQuest));
+    }
+
+    [Fact]
+    public void MayDrop_AnItemNoQuestAsksForToAnyone()
+    {
+        Assert.True(new QuestService().MayDrop(201, HeldQuest));
+    }
+
     private static readonly QuestDefinition[] HeldQuest =
     [
         new(5001, 9002, 12001, 12002, 1,

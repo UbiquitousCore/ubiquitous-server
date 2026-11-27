@@ -66,7 +66,7 @@ public sealed partial class PlaySession
             CreatureFor(wireId),
             _combat.HealthFractionOf(wireId),
             now - memory.Started,
-            InRangeOf(wireId, (int)MeleeRange),
+            InMeleeRange(wireId),
             since,
             memory.CastCount,
             SummonsInReach(wireId, memory),

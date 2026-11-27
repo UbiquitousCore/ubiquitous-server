@@ -71,7 +71,9 @@ public sealed record SpellDefinition(
     uint? EffectFromHidingTriggerSpellId = null,
     int? EffectFromHidingTriggerChancePercent = null,
     // The first rank of the chain this spell belongs to, when the table names one.
-    uint? ChainFirstSpellId = null);
+    uint? ChainFirstSpellId = null,
+    // A `teleport_spot` row the caster is sent to: the wings and the trainers' scrolls.
+    uint? EffectTeleportStopId = null);
 
 public static class SpellEffectTargets
 {

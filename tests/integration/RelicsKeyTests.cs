@@ -44,7 +44,7 @@ public sealed class RelicsKeyTests
 
     private static async Task<PlaySession> InsideAsync(string guid)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 $"char-{guid}", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, MouthX + 14, -6, MouthZ + 14, 30, [100, 200])]),
             [], content: Content(), combatRollUnit: () => 1.0, wanderRollUnit: () => 0.9);

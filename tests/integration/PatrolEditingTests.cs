@@ -122,7 +122,7 @@ public sealed class PatrolEditingTests : IDisposable
     private static async Task<PlaySession> SessionAsync(bool admin, PatrolRouteLibrary patrols)
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret", isAdmin: admin),
+            new InMemoryAccountStore("developer", "dev-secret", isAdmin: admin),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [], content: GameContent.Development, patrols: patrols);

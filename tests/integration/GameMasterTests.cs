@@ -210,7 +210,7 @@ public sealed class GameMasterTests
         bool admin, CreatureSpawnDefinition[] spawns, GameContent? content = null)
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret", isAdmin: admin),
+            new InMemoryAccountStore("developer", "dev-secret", isAdmin: admin),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             spawns, content: content ?? GameContent.Development,

@@ -125,7 +125,7 @@ internal sealed class PartyHandler(ISessionPlayer player, SessionOutbox outbox, 
             if (kickedSession is not null)
             {
                 var kicked = SessionOutbox.Unsequenced(WebMessageTypes.PartyKicked,
-                    new PartyRosterPayload(null, []));
+                    new PartyRosterPayload([]));
                 await player.Hub.DeliverAsync(kickedSession, kicked);
             }
         }
@@ -194,7 +194,7 @@ internal sealed class PartyHandler(ISessionPlayer player, SessionOutbox outbox, 
                         WebNetworkId.FromString(ended.TargetId), ended.TargetName, ended.Passed)));
                     break;
                 case KickVoteRemoved:
-                    responses.Add(outbox.Reply(WebMessageTypes.PartyKicked, new PartyRosterPayload(null, [])));
+                    responses.Add(outbox.Reply(WebMessageTypes.PartyKicked, new PartyRosterPayload([])));
                     responses.Add(outbox.Reply(WebMessageTypes.PartyRoster, RosterPayload(null)));
                     break;
                 case PartyRosterChanged:
@@ -218,8 +218,8 @@ internal sealed class PartyHandler(ISessionPlayer player, SessionOutbox outbox, 
     }
 
     private static PartyRosterPayload RosterPayload(PartyRoster? roster) => roster is null
-        ? new PartyRosterPayload(null, [])
-        : new PartyRosterPayload(roster.PartyId, [.. roster.Members.Select(member =>
+        ? new PartyRosterPayload([])
+        : new PartyRosterPayload(PartyId: roster.PartyId, Members: [.. roster.Members.Select(member =>
             new PartyRosterMemberPayload(WebNetworkId.FromString(member.Id), member.Name, member.IsLeader, member.Online))]);
 
     private static string PartyRefusalReason(PartyResultCode code) => code switch

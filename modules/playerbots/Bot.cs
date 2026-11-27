@@ -29,11 +29,8 @@ public sealed class Bot
     private const int ApproachDirections = 8;
     private const double DetourChance = 0.4;
     private const float MostDetourCost = 1.5f;
-    private const float Headway = 1f;
-    private static readonly TimeSpan MostTimeWithoutHeadway = TimeSpan.FromSeconds(8);
-    private static readonly TimeSpan ForgetHeadway = TimeSpan.FromMinutes(2);
     private const float VerticalReach = 2.5f;
-    // The server's own stuck rescue allows one every fifteen minutes.
+    // Own choice: a bot that keeps slipping off the ground is not sent to the graveyard over and over.
     private static readonly TimeSpan RescueEvery = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan FirstStep = TimeSpan.FromMilliseconds(400);
 
@@ -60,9 +57,7 @@ public sealed class Bot
     private double _yaw;
     private List<Position> _route = [];
     private Position _routeGoal;
-    // How close each goal has come and when it last got closer, kept whatever else the
-    // bot does in between, so a goal it never gets nearer is given up.
-    private readonly Dictionary<string, (float Closest, DateTimeOffset Since)> _headway = new(StringComparer.Ordinal);
+    private readonly WalkHeadway _headway = new();
     private DateTimeOffset _nextRescue;
     private Position? _via;
     private (ushort MapId, Position Position)? _lastMainGround;
@@ -107,6 +102,7 @@ public sealed class Bot
         var narrating = _stage == Stage.InWorld && _host.Logger.IsEnabled(LogLevel.Debug);
         var before = narrating ? (View.Level, View.MapId, Quests: View.Quests.Keys.ToHashSet(), View.DuelOpponent, Worn: Worn()) : default;
         foreach (var message in _connection.TakeReceived()) View.Apply(message, now);
+        View.Advance(now);
         if (narrating) Narrate(before.Level, before.MapId, before.Quests!, before.DuelOpponent, before.Worn);
         if (_stage != Stage.InWorld)
         {
@@ -267,12 +263,8 @@ public sealed class Bot
             return;
         }
 
-        if (!Progressing(walk, Math.Max(left, 0f) + (climbing ? Math.Abs(walk.Target.Y - from.Y) : 0f), now))
-        {
-            await GiveUpAsync(walk, "made no headway", now, cancellationToken);
-            return;
-        }
-
+        var reached = !climbing && BotBrain.Flat(from, walk.Target) <= (walk.Reach ?? walk.Within + ShortOfGoal);
+        var remaining = Math.Max(left, 0f);
         Position waypoint;
         if (_host.HasWalkableGround(View.MapId))
         {
@@ -286,10 +278,20 @@ public sealed class Bot
             }
 
             waypoint = next;
+            // A way round a hill or a river can start off away from the goal: headway is along the route.
+            remaining = Math.Max(Walked(from, _route) - walk.Within, 0f);
         }
         else
         {
             waypoint = walk.Target;
+        }
+
+        // Following a leader is never given up: the leader moves.
+        if (walk.Purpose is { } purpose
+            && !_headway.Progressing(purpose, remaining + (climbing ? Math.Abs(walk.Target.Y - from.Y) : 0f), reached, now))
+        {
+            await GiveUpAsync(walk, "made no headway", now, cancellationToken);
+            return;
         }
 
         var toGoal = _route.Count <= 1;
@@ -325,10 +327,11 @@ public sealed class Bot
     private Position? NextWaypoint(WalkTo walk, DateTimeOffset now)
     {
         var goal = walk.Target;
+        // A detour passed is done with: a later reroute must not lead back to it.
+        if (_via is { } passing && BotBrain.Flat(View.Position, passing) < WaypointReached * 4) _via = null;
         if (BotBrain.Flat(goal, _routeGoal) > RerouteWhenGoalMoves || _route.Count == 0)
         {
             if (BotBrain.Flat(goal, _routeGoal) > NewGoal) _via = PickDetour(goal);
-            if (_via is { } passing && BotBrain.Flat(View.Position, passing) < WaypointReached * 4) _via = null;
             _routeGoal = goal;
             var reach = walk.Reach ?? walk.Within + ShortOfGoal;
             _route = RouteWithin(goal, reach);
@@ -386,12 +389,29 @@ public sealed class Bot
 
     private List<Position> RouteTo(Position goal)
     {
+        var direct = _host.FindRoute(View.MapId, View.Position, goal)?.ToList() ?? [];
+        // A detour is judged by the route walked, not the straight line: one behind a wall
+        // or up a dead end sends the bot back the way it came.
         if (_via is { } via
             && _host.FindRoute(View.MapId, View.Position, via) is { Count: > 0 } toVia
-            && _host.FindRoute(View.MapId, via, goal) is { Count: > 0 } onward)
+            && _host.FindRoute(View.MapId, via, goal) is { Count: > 0 } onward
+            && (direct.Count == 0
+                || Walked(View.Position, toVia) + Walked(via, onward) <= Walked(View.Position, direct) * MostDetourCost))
             return [.. toVia, .. onward];
         _via = null;
-        return _host.FindRoute(View.MapId, View.Position, goal)?.ToList() ?? [];
+        return direct;
+    }
+
+    private static float Walked(Position from, IEnumerable<Position> route)
+    {
+        var length = 0f;
+        foreach (var point in route)
+        {
+            length += BotBrain.Flat(from, point);
+            from = point;
+        }
+
+        return length;
     }
 
     // Players heading the same way do not all take the one shortest line: a long
@@ -413,29 +433,13 @@ public sealed class Bot
         return detour <= straight * MostDetourCost ? via : null;
     }
 
-    // A walk that has not closed on its goal for a while is stuck behind something.
-    private bool Progressing(WalkTo walk, float left, DateTimeOffset now)
-    {
-        // Following a leader is never given up: the leader moves.
-        if (walk.Purpose is not { } purpose) return true;
-        foreach (var stale in _headway.Where(pair => now - pair.Value.Since > ForgetHeadway).Select(pair => pair.Key).ToList())
-            _headway.Remove(stale);
-        if (!_headway.TryGetValue(purpose, out var seen) || left < seen.Closest - Headway)
-        {
-            _headway[purpose] = (left, now);
-            return true;
-        }
-
-        return now - seen.Since < MostTimeWithoutHeadway;
-    }
-
     private async Task GiveUpAsync(WalkTo walk, string why, DateTimeOffset now, CancellationToken cancellationToken)
     {
         if (walk.Purpose != "wander")
             _host.Logger.LogDebug("Bot {Name} gives up walking for {Purpose}: it {Why}", Name, walk.Purpose ?? "its leader", why);
         _route.Clear();
         _walk = null;
-        if (walk.Purpose is { } purpose) _headway.Remove(purpose);
+        if (walk.Purpose is { } purpose) _headway.Forget(purpose);
         Brain.Unreachable(walk.Purpose, now);
         await StopAsync(cancellationToken);
     }

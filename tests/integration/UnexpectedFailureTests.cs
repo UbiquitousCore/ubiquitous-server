@@ -10,7 +10,7 @@ public sealed class UnexpectedFailureTests
     public async Task LoginWithoutUserId_RepliesInvalidPayload()
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret"), new InMemoryCharacterStore([]));
+            new InMemoryAccountStore("developer", "dev-secret"), new InMemoryCharacterStore([]));
 
         var replies = await session.HandleTextAsync(
             "{\"type\":\"account.login\",\"sequence\":0,\"payload\":{}}");
@@ -24,7 +24,7 @@ public sealed class UnexpectedFailureTests
     public async Task StoreFailureWhileHandling_RepliesInternalErrorWithoutTheExceptionText()
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret"), new FailingCharacterStore());
+            new InMemoryAccountStore("developer", "dev-secret"), new FailingCharacterStore());
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
 

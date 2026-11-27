@@ -41,6 +41,10 @@ public sealed class BotWalkingTests
         public bool HasRoute { get; init; } = true;
         public bool OpenField { get; init; }
         public bool FlipRoutes { get; init; }
+        // Seen from anywhere off the line from the start to the giver, the way on runs back through the start.
+        public bool DeadEndDetours { get; init; }
+        // The only way to the giver starts by going fifty units the other way.
+        public bool LongWayRound { get; init; }
         private int _routes;
         public bool BotOnGround { get; init; } = true;
         public float FloorY { get; init; }
@@ -67,6 +71,9 @@ public sealed class BotWalkingTests
 
         public IReadOnlyList<Position>? FindRoute(ushort mapId, Position from, Position to) =>
             !HasRoute ? null
+            : LongWayRound && BotBrain.Flat(to, new Position(10, FloorY, 10)) < 3
+                ? [new Position(0, FloorY, -50), new Position(30, FloorY, -50), new Position(30, FloorY, to.Z), to]
+            : DeadEndDetours && Math.Abs(from.X - from.Z * 10 / 80) > 0.5 ? [new Position(0, FloorY, 0), to]
             : OpenField ? [to]
             : FlipRoutes && _routes++ % 2 == 1 ? [new Position(-10, FloorY, 0), to]
             : [new Position(10, FloorY, 0), to];
@@ -88,7 +95,8 @@ public sealed class BotWalkingTests
         WebMessageJson.Serialize(WebMessageEnvelope.Create(type, 0, payload));
 
     // Signs a bot in beside a quest giver at (10, 0, 10) and returns what it sends over three turns.
-    private static async Task<List<string>> WalkTowardsAGiverAsync(CornerMap map, float giverZ = 10, int seed = 1, int turns = 3)
+    private static async Task<List<string>> WalkTowardsAGiverAsync(CornerMap map, float giverZ = 10, int seed = 1, int turns = 3,
+        Func<int, IReadOnlyList<PlayerMovePayload>, string?>? onTurn = null)
     {
         var connection = new Connection();
         var settings = PlayerbotSettings.From(new ModuleSettings(), LevelingService.SeenMaxLevel);
@@ -112,7 +120,11 @@ public sealed class BotWalkingTests
         connection.Sent.Clear();
 
         for (var turn = 1; turn <= turns; turn++)
+        {
+            if (onTurn?.Invoke(turn, Moves(connection.Sent)) is { } arriving) connection.Inbox.Add(arriving);
             await bot.TickAsync(Start.AddMilliseconds(400 * turn), CancellationToken.None);
+        }
+
         return connection.Sent;
     }
 
@@ -199,6 +211,55 @@ public sealed class BotWalkingTests
         var slipped = moves.FindIndex(move => move.Z > 3);
         Assert.True(slipped >= 0);
         Assert.True(moves[slipped + 1] is { Moving: false, Z: <= 3 });
+    }
+
+    [Fact]
+    public async Task ABotPastItsDetour_KeepsClosingOnAGoalThatShifts()
+    {
+        var detoured = 0;
+        for (var seed = 1; seed <= 12; seed++)
+        {
+            var shiftedAt = -1;
+            var moves = Moves(await WalkTowardsAGiverAsync(new CornerMap { OpenField = true }, giverZ: 80, seed, turns: 45,
+                onTurn: (turn, sofar) =>
+                {
+                    // Once the bot is well along, the giver steps three units aside.
+                    if (shiftedAt >= 0 || sofar.Count == 0 || sofar[^1].Z < 60) return null;
+                    shiftedAt = sofar.Count;
+                    return Message(WebMessageTypes.EntityMoved, new EntityMovedPayload(
+                        WebNetworkId.FromString("Creature:1"), new WirePosition(13, 0, 80)));
+                }));
+            if (moves.Max(move => Math.Abs(move.X - move.Z * 10 / 80)) < 0.5 || shiftedAt < 0) continue;
+            detoured++;
+
+            var after = moves.Skip(shiftedAt).Where(move => move.Moving).Select(move => Math.Sqrt(
+                Math.Pow(move.X - 13, 2) + Math.Pow(move.Z - 80, 2))).TakeWhile(left => left > BotBrain.InteractReach).ToList();
+            Assert.All(after.Zip(after.Skip(1)), pair => Assert.True(pair.Second <= pair.First + 0.01,
+                $"seed {seed} walked away from its goal: {pair.First:0.00} then {pair.Second:0.00}"));
+        }
+
+        Assert.True(detoured > 0);
+    }
+
+    [Fact]
+    public async Task ARouteThatStartsAwayFromTheGoal_IsFollowedRatherThanGivenUp()
+    {
+        var moves = Moves(await WalkTowardsAGiverAsync(new CornerMap { LongWayRound = true }, turns: 90));
+
+        Assert.Contains(moves, move => move.Z < -45);
+        Assert.Contains(moves, move => BotBrain.Flat(new Position((float)move.X, 0, (float)move.Z), new Position(10, 0, 10)) < BotBrain.InteractReach);
+    }
+
+    [Fact]
+    public async Task ADetourUpADeadEnd_IsNotTaken()
+    {
+        for (var seed = 1; seed <= 12; seed++)
+        {
+            var moves = Moves(await WalkTowardsAGiverAsync(new CornerMap { OpenField = true, DeadEndDetours = true },
+                giverZ: 80, seed, turns: 30));
+
+            Assert.All(moves, move => Assert.True(Math.Abs(move.X - move.Z * 10 / 80) < 0.5, $"seed {seed} left the line at {move.X:0.0},{move.Z:0.0}"));
+        }
     }
 
     [Fact]

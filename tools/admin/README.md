@@ -1,9 +1,9 @@
 # Admin page
 
-A web page for a host: accounts, GM, characters (name, level, gold, bag,
+A web page for a host: accounts, GM, characters (name, level, setting or adding gold, bag,
 giving items) and the `.env` settings.
 Docker: it starts with the stack, at <http://localhost:8790>. From a
-clone, with file saves: `dotnet run --project tools/admin/web`. Only a GM
+clone, with file saves, from the repository root: `dotnet run --project tools/admin/web`. Only a GM
 account signs in.
 
 It is kept apart from the server so it can move to a repository of its own:
@@ -22,7 +22,8 @@ Settings: `UBIQUITOUS_ADMIN_URLS` (default `http://127.0.0.1:8790`),
 `UBIQUITOUS_ADMIN_SETTINGS_FILE` (`.env`), `UBIQUITOUS_ADMIN_SERVER_URL`
 (`http://127.0.0.1:8781/`), `UBIQUITOUS_ADMIN_TOKEN_FILE`, and the server's own
 `UBIQUITOUS_POSTGRES_CONNECTION_STRING`, `UBIQUITOUS_POSTGRES_PASSWORD_FILE`,
-`UBIQUITOUS_STATE_DIRECTORY` and `UBIQUITOUS_DATA_DIRECTORY` (for item names). With file saves, the game server keeps
-characters in memory: stop it before deleting one here.
+`UBIQUITOUS_STATE_DIRECTORY` and `UBIQUITOUS_DATA_DIRECTORY` (for item names). A
+character in the world is left alone; any other change here reaches a running
+server the next time it reads or saves characters.
 
 Tests: `tests/admin`.

@@ -411,6 +411,7 @@ public sealed partial class PlaySession
         if (spell.AuraEatPerTick is not null || spell.AuraDrinkPerTick is not null)
             return ResolveMeal(casterId, spellId, spell, now);
         if (spell.EffectSummonCreatureId is uint petEntry) return ResolvePet(casterId, spellId, spell, petEntry, now);
+        if (spell.EffectTeleportStopId is uint stopId) return ResolveTeleportSpot(casterId, spellId, spell, stopId);
         if (spell.EffectHeal is not null) return ResolveSpellHeal(casterId, targetId, spellId, spell, now);
         if (spell.EffectPowerRestore is not null) return ResolvePowerRestore(casterId, spellId, spell, now);
         if (targetId != casterId.Text && LandsOnFriend(spell) && IsFriendlyPlayer(targetId))

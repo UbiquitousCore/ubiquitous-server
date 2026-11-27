@@ -10,17 +10,13 @@ public sealed record ServerOptions(
     string BindAddress,
     int WebSocketPort,
     string DataDirectory,
-    string DevelopmentUserId,
-    string DevelopmentPassHash,
     string LogLevel,
     string? PostgresConnectionString = null,
     bool FestivalContentEnabled = false,
     IReadOnlyList<uint>? FestivalStaticEntries = null,
     IReadOnlyList<uint>? FestivalCreatureEntries = null,
     IReadOnlyList<int>? DisabledRaces = null,
-    bool DevelopmentAccountsEnabled = false,
-    string? SecondDevelopmentPassHash = null,
-    string SecondDevelopmentUserId = "developer2",
+    bool DevelopmentEntry = false,
     string? StateDirectory = null,
     int MaxConnections = 500,
     int MaxMessagesPerSecond = 30,
@@ -39,8 +35,6 @@ public sealed record ServerOptions(
         BindAddress: "127.0.0.1",
         WebSocketPort: 8781,
         DataDirectory: Path.Combine("data", "generated"),
-        DevelopmentUserId: "developer",
-        DevelopmentPassHash: "",
         LogLevel: "Information");
 
     // Mendel is closed through 1.x: before 1.1.4 there is no such race, and 1.1.4's
@@ -78,16 +72,8 @@ public sealed record ServerOptions(
             (options, value, name) => options with { MaxMessagesPerSecond = ParsePositive(value, name) }),
         new("allowedOrigins", "UBIQUITOUS_ALLOWED_ORIGINS", ["--allowed-origins"],
             (options, value, _) => options with { AllowedOrigins = SplitList(value) }),
-        new("developmentUserId", "UBIQUITOUS_DEVELOPMENT_USER_ID", ["--development-user"],
-            (options, value, _) => options with { DevelopmentUserId = value }),
-        new("developmentPassHash", "UBIQUITOUS_DEVELOPMENT_PASS_HASH", ["--development-pass-hash"],
-            (options, value, _) => options with { DevelopmentPassHash = value }),
-        new("developmentSecondUserId", "UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID", ["--development-second-user"],
-            (options, value, _) => options with { SecondDevelopmentUserId = value }),
-        new("developmentSecondPassHash", "UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH", ["--development-second-pass-hash"],
-            (options, value, _) => options with { SecondDevelopmentPassHash = value }),
-        new("developmentAccounts", "UBIQUITOUS_DEVELOPMENT_ACCOUNTS", ["--development-accounts"],
-            (options, value, name) => options with { DevelopmentAccountsEnabled = ParseBool(value, name) }),
+        new("developmentEntry", "UBIQUITOUS_DEVELOPMENT_ENTRY", ["--development-entry"],
+            (options, value, name) => options with { DevelopmentEntry = ParseBool(value, name) }),
         new("logLevel", "UBIQUITOUS_LOG_LEVEL", ["--log-level"],
             (options, value, _) => options with { LogLevel = value }),
         new("postgresConnectionString", "UBIQUITOUS_POSTGRES_CONNECTION_STRING", ["--postgres-connection-string"],
@@ -229,18 +215,9 @@ public sealed record ServerOptions(
         return this with { PostgresConnectionString = builder.ConnectionString };
     }
 
-    // Development logins and `dev.enterWorld` are for file-backed local runs only; a Postgres server uses real accounts.
+    // `dev.enterWorld` signs in without a password, so a Postgres server, which is a shared one, never offers it.
     public ServerOptions ForStore(bool usesPostgres) =>
-        usesPostgres && DevelopmentAccountsEnabled ? this with { DevelopmentAccountsEnabled = false } : this;
-
-    public IReadOnlyList<(int AccountId, string UserId, string PassHash)> DevelopmentLogins()
-    {
-        if (!DevelopmentAccountsEnabled) return [];
-        var logins = new List<(int, string, string)>();
-        if (!string.IsNullOrEmpty(DevelopmentPassHash)) logins.Add((1, DevelopmentUserId, DevelopmentPassHash));
-        if (!string.IsNullOrEmpty(SecondDevelopmentPassHash)) logins.Add((2, SecondDevelopmentUserId, SecondDevelopmentPassHash));
-        return logins;
-    }
+        usesPostgres && DevelopmentEntry ? this with { DevelopmentEntry = false } : this;
 
     private static ServerOptions ApplyConfigFile(ServerOptions options, string path)
     {

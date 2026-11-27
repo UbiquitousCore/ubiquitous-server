@@ -11,4 +11,7 @@
     <ProjectReference Include="..\..\src\server\server.csproj" />
     <ProjectReference Include="..\..\modules\playerbots\playerbots.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\integration\InMemoryAccountStore.cs" Link="InMemoryAccountStore.cs" />
+  </ItemGroup>
 </Project>

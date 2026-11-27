@@ -17,6 +17,20 @@ public sealed class LootServiceTests
     }
 
     [Fact]
+    public void Generate_LeavesOutWhatMayNotDrop_AndAGuaranteedDropFallsToWhatMay()
+    {
+        var table = new CreatureLootTableDefinition(9001, [new LootGroupDefinition(1, 1,
+        [
+            new LootTableItemDefinition(200, 90, 1, 1),
+            new LootTableItemDefinition(300, 10, 1, 1),
+        ])]);
+
+        var loot = new LootService(nextPercent: () => 50).Generate(2802, table, mayDrop: item => item != 200);
+
+        Assert.Equal(300, Assert.Single(loot.Rows).Entry);
+    }
+
+    [Fact]
     public void Generate_WithAGuaranteedSingleItem_AlwaysAddsThatItem()
     {
         var table = OneGuaranteedItem(itemId: 6689);

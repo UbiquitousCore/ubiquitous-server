@@ -159,7 +159,7 @@ public sealed class ChatChannelTests
     private static async Task<(PlaySession Session, Inbox Inbox)> JoinAsync(
         PlaySessionHub hub, string guid, string name, float x = 0f, ushort mapId = 13)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([Character(guid, name, mapId, x)]));
         var inbox = new Inbox([], []);
         hub.Register(session, message => { inbox.Forwarded.Add(message); return Task.CompletedTask; });

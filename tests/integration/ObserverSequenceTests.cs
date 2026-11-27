@@ -52,7 +52,7 @@ public sealed class ObserverSequenceTests
 
     private static async Task<Side> JoinAsync(PlaySessionHub hub, string guid, string name)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(guid, 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, 2, 2, 3, 4, [100, 200])]));
         var seen = new ConcurrentQueue<string>();
         hub.Register(session, message => { seen.Enqueue(message); return Task.CompletedTask; });

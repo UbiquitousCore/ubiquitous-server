@@ -105,7 +105,7 @@ public sealed class InstanceTests
         {
             Maps = new Dictionary<ushort, MapDefinition> { [13] = new(13, "test") },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("insta5", "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore("insta5", "p"),
             new InMemoryCharacterStore([Character("insta5", "Ayla")]),
             creatureSpawns: DungeonCreatures, content: content, instances: instances);
         hub.Register(session, _ => Task.CompletedTask);
@@ -125,7 +125,7 @@ public sealed class InstanceTests
     private static async Task<(PlaySession Session, Inbox Inbox)> JoinAsync(
         PlaySessionHub hub, InstanceService instances, string guid, string name)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([Character(guid, name)]),
             creatureSpawns: DungeonCreatures, instances: instances, parties: TestSessions.PartiesOf(hub));
         var inbox = new Inbox([], []);

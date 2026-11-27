@@ -21,7 +21,7 @@ public sealed class AccountAuthenticatorTests
     [Fact]
     public async Task ALegacyStoredValue_IsAcceptedOnceAndThenReplacedByAHash()
     {
-        var store = new DevelopmentAccountStore("developer", "legacy-secret");
+        var store = new InMemoryAccountStore("developer", "legacy-secret");
         var authenticator = new AccountAuthenticator(store, iterations: Iterations);
 
         Assert.True((await authenticator.AuthenticateAsync("developer", "legacy-secret")).Ok);
@@ -36,7 +36,7 @@ public sealed class AccountAuthenticatorTests
     public async Task AWrongPasswordOrUnknownUser_IsRefusedWithInvalidCredentials()
     {
         var authenticator = new AccountAuthenticator(
-            new DevelopmentAccountStore("developer", PasswordHasher.Hash("secret", Iterations)), iterations: Iterations);
+            new InMemoryAccountStore("developer", PasswordHasher.Hash("secret", Iterations)), iterations: Iterations);
 
         var wrong = await authenticator.AuthenticateAsync("developer", "nope");
         var unknown = await authenticator.AuthenticateAsync("nobody", "secret");
@@ -50,7 +50,7 @@ public sealed class AccountAuthenticatorTests
     {
         var clock = new FakeTimeProvider();
         var authenticator = new AccountAuthenticator(
-            new DevelopmentAccountStore("developer", PasswordHasher.Hash("secret", Iterations)), clock, Iterations);
+            new InMemoryAccountStore("developer", PasswordHasher.Hash("secret", Iterations)), clock, Iterations);
 
         for (var attempt = 0; attempt < AccountAuthenticator.MaxFailures; attempt++)
             Assert.False((await authenticator.AuthenticateAsync("developer", "wrong")).Ok);
@@ -66,7 +66,7 @@ public sealed class AccountAuthenticatorTests
     {
         var clock = new FakeTimeProvider();
         var authenticator = new AccountAuthenticator(
-            new DevelopmentAccountStore("developer", PasswordHasher.Hash("secret", Iterations)), clock, Iterations);
+            new InMemoryAccountStore("developer", PasswordHasher.Hash("secret", Iterations)), clock, Iterations);
 
         for (var attempt = 0; attempt < AccountAuthenticator.MaxFailures * 2; attempt++)
         {
@@ -102,7 +102,7 @@ public sealed class AccountAuthenticatorTests
     [Fact]
     public async Task DevelopmentSecretsFromTheEnvironment_AreHashedAtStartup()
     {
-        var store = new DevelopmentAccountStore("developer", "dev-secret").WithHashedSecrets();
+        var store = new InMemoryAccountStore("developer", "dev-secret").WithHashedSecrets();
 
         var stored = (await store.FindByUserIdAsync("developer"))!.PassHash;
 

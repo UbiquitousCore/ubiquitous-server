@@ -97,7 +97,7 @@ public sealed class PetTests
     private static async Task<PlaySession> EnterAsync(uint[]? pets = null)
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Owner(pets ?? [])]), content: Content);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));

@@ -25,7 +25,7 @@ public sealed class SpellExtraEffectTests
             StartingSpells = [.. GameContent.Development.StartingSpells, .. spells.Keys],
             Items = items ?? GameContent.Development.Items,
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Ranger]), [new CreatureSpawnDefinition(1001, 13, 9001, 3, 2, 3, 0)],
             null, content, spellRollUnit: spellRoll ?? (() => 1.0), combatRollUnit: () => 1.0);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(

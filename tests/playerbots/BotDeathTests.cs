@@ -37,7 +37,7 @@ public sealed class BotDeathTests
     public async Task ABotInAPlayersParty_ComesBackAfterDying_AndThePlayerSeesItStandAgain()
     {
         var world = new BotTestWorld(Deadly, BruteAtTheStart, PlayerbotWorldTests.OneBot(),
-            new DevelopmentAccountStore("hero", "secret"));
+            new InMemoryAccountStore("hero", "secret"));
         await world.RunUntilAsync(() => world.Bots is [{ Playing: true }], mostTicks: 50);
         var bot = world.Bots[0];
         var player = await TestPlayer.EnterAsync(world, "hero", "secret", "Hero");

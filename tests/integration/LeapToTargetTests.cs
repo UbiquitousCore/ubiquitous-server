@@ -29,7 +29,7 @@ public sealed class LeapToTargetTests
             Spells = new Dictionary<uint, SpellDefinition>(GameContent.Development.Spells) { [Charge] = spell },
             StartingSpells = [.. GameContent.Development.StartingSpells, Charge],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Warrior]), [new CreatureSpawnDefinition(1001, 13, 9001, creatureX, 2, 3, 0)],
             null, content, spellRollUnit: () => 1.0, combatRollUnit: () => 1.0);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(

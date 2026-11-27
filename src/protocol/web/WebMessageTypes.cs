@@ -127,6 +127,7 @@ public static partial class WebMessageTypes
     public const string AdminTeleport = "admin.teleport";
     public const string AdminGiveItem = "admin.giveItem";
     public const string AdminGiveGold = "admin.giveGold";
+    public const string AdminSetGold = "admin.setGold";
     public const string AdminSetLevel = "admin.setLevel";
     public const string AdminSetInvincible = "admin.setInvincible";
     public const string AdminInvincible = "admin.invincible";

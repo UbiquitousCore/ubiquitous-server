@@ -206,7 +206,7 @@ public sealed class SharedMapTests
         IReadOnlyList<CreatureSpawnDefinition>? spawns = null, GameContent? content = null, int? level = null)
     {
         var character = level is int atLevel ? Character(guid, name) with { Level = atLevel } : Character(guid, name);
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([character]),
             spawns ?? Spawns, content: content ?? GameContent.Development,
             combatRollUnit: () => 1.0, sharedMaps: maps);

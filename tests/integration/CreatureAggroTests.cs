@@ -202,7 +202,7 @@ public sealed class CreatureAggroTests
     public async Task TickCombat_LeashesAFightPulledBeyondLeashRangeFromHome()
     {
         var maps = new SharedMapRegistry(() => 0.9);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret", 1, isAdmin: true),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret", 1, isAdmin: true),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 0, 2, 0, 0)],
@@ -231,7 +231,7 @@ public sealed class CreatureAggroTests
     public async Task TickCombat_MeasuresLeashRangeFromWhereTheFightBeganNotTheSpawn()
     {
         var maps = new SharedMapRegistry(() => 0.9);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret", 1, isAdmin: true),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret", 1, isAdmin: true),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 0, 2, 0, 0)],
@@ -257,7 +257,7 @@ public sealed class CreatureAggroTests
     public async Task TickCombat_LeashesAJoinerDrawnBeyondLeashRangeWhileTheTargetStaysHome()
     {
         var maps = new SharedMapRegistry(() => 0.9);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret", 1, isAdmin: true),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret", 1, isAdmin: true),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0), new CreatureSpawnDefinition(1002, 13, 9001, 3, 2, 4, 0)],
@@ -536,7 +536,7 @@ public sealed class CreatureAggroTests
 
     private static async Task<PlaySession> SessionAsync(GameContent content, params CreatureSpawnDefinition[] spawns)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
             spawns, content: content, combatRollUnit: () => 1.0);

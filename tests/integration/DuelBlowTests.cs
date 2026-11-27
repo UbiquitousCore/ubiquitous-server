@@ -26,7 +26,7 @@ public sealed class DuelBlowTests
         var hub = new PlaySessionHub();
         Side Join()
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
                 combatRollUnit: () => 1.0, spellRollUnit: () => 0.5, duels: duels, pvpFlags: flags, blows: blows);
             var inbox = new List<string>();
             hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });

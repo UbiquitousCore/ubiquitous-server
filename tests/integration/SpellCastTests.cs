@@ -26,7 +26,7 @@ public sealed class SpellCastTests
     private static async Task<PlaySession> EnterWorldAsync(
         CreatureSpawnDefinition[] spawns, Func<double>? spellRollUnit = null)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), spawns, spellRollUnit: spellRollUnit ?? (() => 1.0), developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -39,7 +39,7 @@ public sealed class SpellCastTests
     [Fact]
     public async Task EnteringTheWorld_SendsTheKnownSpellList()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -56,7 +56,7 @@ public sealed class SpellCastTests
     public async Task EnteringTheWorld_AnOrdinaryHumanRangerDoesNotGetTheDevPlaytestersDungeonSpells()
     {
         var human = Character with { Race = PlayerRaceIds.Human, Class = PlayerClassIds.Ranger };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([human]), developmentEntry: true);
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -96,7 +96,7 @@ public sealed class SpellCastTests
                     PowerCost: 5, EffectDamage: 1000),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([monk]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
             content: content, spellRollUnit: () => 1.0, developmentEntry: true);
@@ -124,7 +124,7 @@ public sealed class SpellCastTests
                     PowerCost: 5, EffectDamage: 10),
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([monk]),
             [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
             content: content, spellRollUnit: () => 1.0, developmentEntry: true);
@@ -305,7 +305,7 @@ public sealed class SpellCastTests
     public async Task TickCombat_ACastWhoseTargetLeftRangeFailsWhenItFinishesAndCostsNothing()
     {
         var maps = new SharedMapRegistry(() => 0.9);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
             spellRollUnit: () => 1.0, sharedMaps: maps, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
@@ -364,7 +364,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 104],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), content: healContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -388,7 +388,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 107],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: dotContent, developmentEntry: true);
@@ -424,7 +424,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 108],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]), content: hotContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -452,7 +452,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 117, 119],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: hotContent, combatRollUnit: () => 1.0, developmentEntry: true);
@@ -489,7 +489,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 117, 121],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: spellPowerContent, spellRollUnit: () => 1.0, developmentEntry: true);
@@ -520,7 +520,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 117, 122],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: dotContent, spellRollUnit: () => 1.0, developmentEntry: true);
@@ -553,7 +553,7 @@ public sealed class SpellCastTests
             StartingSpells = [.. GameContent.Development.StartingSpells, 117, 121],
         };
         var spellRolls = 0;
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: spellCritContent,
@@ -586,7 +586,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 109],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: stunContent, developmentEntry: true);
@@ -618,7 +618,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 112],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: silenceContent, developmentEntry: true);
@@ -650,7 +650,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 110],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: slowContent, developmentEntry: true);
@@ -682,7 +682,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 111],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: speedupContent, developmentEntry: true);
@@ -713,7 +713,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 113],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: attackSpeedContent, developmentEntry: true);
@@ -744,7 +744,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 117],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: chillContent, developmentEntry: true);
@@ -776,7 +776,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 118],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: content, spellRollUnit: () => 1.0, developmentEntry: true);
@@ -805,7 +805,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 200, 201],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: triggerContent, spellRollUnit: () => 0.5, developmentEntry: true);
@@ -832,7 +832,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 202, 201],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: periodicTriggerContent, spellRollUnit: () => 0.5, developmentEntry: true);
@@ -869,7 +869,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 202, 201],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: content, spellRollUnit: () => 0.5, developmentEntry: true);
@@ -900,7 +900,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 200, 201],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: triggerContent, spellRollUnit: () => 0.5, developmentEntry: true);
@@ -928,7 +928,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 200, 201],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: triggerContent, spellRollUnit: () => 0.5, developmentEntry: true);
@@ -954,7 +954,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 110],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: debuffContent, developmentEntry: true);
@@ -986,7 +986,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 111],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: armorContent, developmentEntry: true);
@@ -1018,7 +1018,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 112],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: strengthContent, combatRollUnit: () => 1.0, developmentEntry: true);
@@ -1056,7 +1056,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 117, 118],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: healingPowerContent, combatRollUnit: () => 1.0, developmentEntry: true);
@@ -1092,7 +1092,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 113],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: staminaContent, developmentEntry: true);
@@ -1128,7 +1128,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 114],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: agilityContent,
@@ -1162,7 +1162,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 120],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: dodgeRatingContent,
@@ -1197,7 +1197,7 @@ public sealed class SpellCastTests
             StartingSpells = [.. GameContent.Development.StartingSpells, 117],
         };
         var combatRolls = 0;
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: critContent,
@@ -1238,7 +1238,7 @@ public sealed class SpellCastTests
             StartingSpells = [.. GameContent.Development.StartingSpells, 115, 116],
         };
         var mage = Character with { Class = PlayerClassIds.Mage };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([mage]), content: wisdomContent, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(
             WebMessageEnvelope.Create(WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" })));
@@ -1270,7 +1270,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 118],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: parryContent,
@@ -1304,7 +1304,7 @@ public sealed class SpellCastTests
             },
             StartingSpells = [.. GameContent.Development.StartingSpells, 119],
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             new[] { new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0) },
             content: blockContent,

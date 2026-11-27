@@ -19,7 +19,7 @@ public sealed class FriendTests
                 Character("char-b", 2, "Borin"),
             ]);
 
-            var ayla = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var ayla = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, friendStore: friendStore);
             await LoginAsync(ayla, "developer", "Ayla");
 
@@ -31,7 +31,7 @@ public sealed class FriendTests
             Assert.Contains("\"networkId\":\"player:char-b\"", reply);
             Assert.Contains("\"ignored\":[]", reply);
 
-            var aylaAgain = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var aylaAgain = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, friendStore: friendStore);
             await LoginAsync(aylaAgain, "developer", "Ayla");
 
@@ -59,7 +59,7 @@ public sealed class FriendTests
                 Character("char-b", 2, "Borin"),
             ]);
 
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, friendStore: friendStore);
             await LoginAsync(session, "developer", "Ayla");
             await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -69,7 +69,7 @@ public sealed class FriendTests
                 WebMessageTypes.SocialFriendRemove, 3, new SocialTargetPayload("player:char-b"))));
             Assert.Contains(removed, r => r.Contains("\"friends\":[]"));
 
-            var restarted = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var restarted = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, friendStore: friendStore);
             await LoginAsync(restarted, "developer", "Ayla");
             var list = await restarted.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -91,7 +91,7 @@ public sealed class FriendTests
             Character("char-b", 2, "Borin"),
             Character("char-c", 3, "Cara"),
         ]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
 
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -108,7 +108,7 @@ public sealed class FriendTests
     public async Task AddingYourselfAsAFriend_IsRefused()
     {
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -121,7 +121,7 @@ public sealed class FriendTests
     public async Task IgnoringYourself_IsRefused()
     {
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -134,7 +134,7 @@ public sealed class FriendTests
     public async Task AFriend_CanBeAddedByTypedName_OnlineOrNot()
     {
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla"), Character("char-b", 2, "Borin")]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -151,8 +151,8 @@ public sealed class FriendTests
     {
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
         var hub = new PlaySessionHub();
-        var ayla = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
-        var borin = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var ayla = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
+        var borin = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-b", 1, "Borin") with { Level = 17 }]));
         hub.Register(ayla, _ => Task.CompletedTask);
         hub.Register(borin, _ => Task.CompletedTask);
@@ -172,7 +172,7 @@ public sealed class FriendTests
     public async Task AddingAnUnknownTarget_IsRefused()
     {
         var characters = new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
 
         var responses = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -189,7 +189,7 @@ public sealed class FriendTests
             Character("char-a", 1, "Ayla"),
             Character("char-b", 2, "Borin"),
         ]);
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(session, "developer", "Ayla");
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.SocialFriendAdd, 2, new SocialTargetPayload("player:char-b"))));
@@ -210,12 +210,12 @@ public sealed class FriendTests
             Character("char-a", 1, "Ayla"),
             Character("char-b", 2, "Borin"),
         ]);
-        var ayla = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters);
+        var ayla = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters);
         await LoginAsync(ayla, "developer", "Ayla");
         await ayla.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.SocialFriendAdd, 2, new SocialTargetPayload("player:char-b"))));
 
-        var borin = TestSessions.Create(new DevelopmentAccountStore("developer2", "dev-secret", 2), characters);
+        var borin = TestSessions.Create(new InMemoryAccountStore("developer2", "dev-secret", 2), characters);
         await LoginAsync(borin, "developer2", "Borin");
         var borinList = await borin.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.SocialFriendList, 2, new { })));
@@ -237,9 +237,9 @@ public sealed class FriendTests
                 Character("char-c", 3, "Myrtle"),
             ]);
             var hub = new PlaySessionHub();
-            var ayla = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var ayla = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 characters, friendStore: friendStore);
-            var borin = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+            var borin = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
                 new InMemoryCharacterStore([Character("char-b", 1, "Borin")]), friendStore: friendStore);
             hub.Register(ayla, _ => Task.CompletedTask);
             hub.Register(borin, _ => Task.CompletedTask);

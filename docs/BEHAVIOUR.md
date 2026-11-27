@@ -46,6 +46,8 @@ comes from is in `PROVENANCE.md`.
   and the count is 1-1000; gold is 1-100,000 whole gold. A full bag answers
   `item.refused`. Items arrive as `inventory.itemAdded`, gold as
   `player.valuesChanged`. Each is logged with the account name.
+  `admin.setGold {gold}` sets the GM's own purse to that much whole gold
+  (0 up to what a purse holds), answered the same way.
 - `admin.setLevel {level}` (1 to 60) and `admin.learnSpells` are GM-only too. A new level
   restores health and power, resets experience, and sends `player.valuesChanged` and
   `talent.state`, plus `player.expGained` with `levelUp` when the level went up, so the
@@ -57,7 +59,8 @@ comes from is in `PROVENANCE.md`.
   fresh `spell.book`: ranks above the new level are forgotten, and an action button
   that held one takes the highest rank still known, or empties.
 - `admin.setInvincible {on}` is GM-only. While on, nothing damages the character (creatures,
-  spells, auras, other players); the server answers `admin.invincible {on}`. It lasts until
+  spells, auras, other players) and spells cost no mana, rage or energy; the server answers
+  `admin.invincible {on}`. It lasts until
   the character leaves the world, and each entry starts without it.
 - `dev.enterWorld {characterRef}` skips login and joins the same entry path.
 
@@ -169,7 +172,8 @@ comes from is in `PROVENANCE.md`.
 ## Combat
 
 - `attack.engage` is refused if the player is dead or stunned, or the target
-  is dead, invisible, friendly, or beyond 3 units (25 ranged). Another player
+  is dead, invisible, friendly, or beyond 3 units across the ground or 6 above
+  or below (25 ranged). Another player
   is a valid target only in a duel or when both are PvP-flagged.
 - First swing at once, then every 2 s (faster with attack speed); swings wait
   while out of reach. 5% miss less hit rating; crits double at 0.1% per rating
@@ -263,8 +267,14 @@ comes from is in `PROVENANCE.md`.
   Nothing else is lost.
 - `player.unstuck` while dead releases to the nearest `map_graveyard`, else the
   `map_info` recall point, else in place, at full health and power. Alive, it
-  is an unstuck: once per 15 minutes, not in combat. A player who disconnects
+  is an unstuck: once per 60 seconds, not in combat. A player who disconnects
   dead is saved at their graveyard.
+- A dead player acts on nothing until released: using or equipping an item,
+  casting (`spell.failed`, `incapacitated`), attacking, looting, mounting,
+  NPCs, vendors, quests, travel, trades, duels and summons are refused with
+  "You are dead.". A move is answered with `move.accepted` at where the body
+  lies, as for a stunned player. Chat, social, party and guild, the quest log,
+  bag tidying, cancelling and `player.unstuck` still work.
 - Losing a duel leaves the loser at 10 health, begging; forfeiting plays
   nothing.
 - Level cap 60 on a 1.1.4 package, and on a later build the highest level its "Player Level" achievements ask for: 75 on 4.2.21 (see PROVENANCE). Kill XP is `5 × level + 50`, +5% per level above (to +50%),
@@ -310,9 +320,8 @@ comes from is in `PROVENANCE.md`.
   the nearest misses and trimmed to its maximum; at most 8 rows.
 - A build whose tables carry no loot (4.2.21) can have its loot made at start-up, when the host turns it on
   (`LootGenerator`, `UBIQUITOUS_GENERATED_LOOT`). A quest item drops 40% of
-  the time from each creature the quest names (always from a boss), and only
-  for a killer whose log holds the quest and who still needs it; party
-  members' quests do not count. Gear asked for at the creature's level or up
+  the time from each creature the quest names (always from a boss), under the
+  rule for every quest item below. Gear asked for at the creature's level or up
   to 4 below (else 9 below), worn in a slot and bought by vendors but neither
   sold nor given for a quest, drops by rank: ordinary 8% (poor to fine),
   rare 40% (common to rare), elite 25% (fine and rare), boss always one and
@@ -321,6 +330,8 @@ comes from is in `PROVENANCE.md`.
   9 below drop 10% of the time. Money is the creature's own range. The
   quest-item percent, a multiplier on the other chances and the gear level
   window are host settings (`UBIQUITOUS_LOOT_*`).
+- An item a quest asks to collect drops only for a killer who holds that quest
+  and has fewer than it asks for; otherwise it is left out before the roll.
 - Vendors sell without stock limits. Any vendor buys any bag stack at the
   item's sell price; a zero sell price is refused (`cantSell`); no buyback.
 - Bus fares are the cheapest total of legs, which run both ways.

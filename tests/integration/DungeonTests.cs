@@ -327,7 +327,7 @@ public sealed partial class DungeonTests
     [Fact]
     public async Task AStaleMoveFromTheOldMap_IsRefusedEvenForAnAdminSession()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("dung12", "p", 1, isAdmin: true),
+        var session = TestSessions.Create(new InMemoryAccountStore("dung12", "p", 1, isAdmin: true),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-dung12", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, GateApproachX, 2, GateApproachZ, 4, [100, 200])]),
             [new CreatureSpawnDefinition(3001, 14, 9400, -670, InsideFloorY, -2200, 0)],
@@ -489,7 +489,7 @@ public sealed partial class DungeonTests
     [Fact]
     public async Task StandingInsideAClosedWay_CanStillWalkOutOfIt()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("dung20", "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore("dung20", "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-dung20", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 14, -545, 11.6f, -2366, 4, [100, 200])]),
             [new CreatureSpawnDefinition(3001, 14, 9400, -670, InsideFloorY, -2200, 0)],
@@ -702,7 +702,7 @@ public sealed partial class DungeonTests
     [Fact]
     public async Task LoggingInOnADungeonMap_OpensACopyAndCanWalkBackOut()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("dung9", "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore("dung9", "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-dung9", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 14, -682.7f, -1.9f, -2104.8f, 4, [100, 200])]),
             [new CreatureSpawnDefinition(3001, 14, 9400, -670, InsideFloorY, -2200, 0)],
@@ -956,7 +956,7 @@ public sealed partial class DungeonTests
         CreatureSpawnDefinition[] spawns, float x, float z, GameContent? content = null, int level = 4,
         int? exhaustion = null)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 1, x, 2, z, level, [100, 200],
                 Exhaustion: exhaustion, ExhaustionDay: exhaustion is null ? null : Exhaustion.DayOf(DateTimeOffset.UtcNow))]),

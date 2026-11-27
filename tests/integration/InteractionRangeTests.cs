@@ -12,7 +12,7 @@ public sealed class InteractionRangeTests
         "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, MapId: 13, X: 0, Y: 0, Z: 0, Level: 1, Equipment: []);
 
     private static PlaySession SessionWithNpcAt(float x, float y, float z) =>
-        TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character]),
             [new CreatureSpawnDefinition(1001, 13, 9001, x, y, z, 0)], developmentEntry: true);
 

@@ -30,63 +30,30 @@ public static class SessionStoreFactory
             Progress: postgres is not null ? new PostgresProgressStore(postgres) : null);
     }
 
-    // Real accounts need both files: with either missing the server falls back to the development fixtures.
     public static IAccountAdmin OpenAccountAdmin(ServerOptions options, NpgsqlDataSource? postgres)
     {
         if (postgres is not null) return new PostgresAccountStore(postgres);
-        var characters = Path.Combine(options.ResolvedStateDirectory, CharactersFile);
-        return FileAccountStore.Open(Path.Combine(options.ResolvedStateDirectory, AccountsFile), () =>
-        {
-            Directory.CreateDirectory(options.ResolvedStateDirectory);
-            if (!File.Exists(characters)) File.WriteAllText(characters, "[]");
-        });
+        return FileAccountStore.Open(Path.Combine(options.ResolvedStateDirectory, AccountsFile), () => EnsureSaveFiles(options));
     }
 
+    // A first run starts with no accounts rather than with stand-ins, so nothing it saves is ever thrown away.
     private static (IAccountAuthenticator, ICharacterStore) LoadAccountsAndCharacters(ServerOptions options, ILogger logger)
     {
-        var accountPath = Path.Combine(options.ResolvedStateDirectory, AccountsFile);
-        var characterPath = Path.Combine(options.ResolvedStateDirectory, CharactersFile);
-        if (!File.Exists(accountPath) || !File.Exists(characterPath))
-        {
-            if (options.DevelopmentLogins().Count == 0)
-            {
-                logger.LogWarning(
-                    "No {Accounts} and no development logins, so nobody can sign in. Set UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true and UBIQUITOUS_DEVELOPMENT_PASS_HASH",
-                    AccountsFile);
-            }
-
-            return (new AccountAuthenticator(DevelopmentFixtures.Accounts(options).WithHashedSecrets()),
-                DevelopmentFixtures.Characters());
-        }
-
-        if (new FileInfo(accountPath).Length == 0)
-            logger.LogInformation("{File} is empty; starting with no persisted accounts", AccountsFile);
-        if (new FileInfo(characterPath).Length == 0)
-            logger.LogInformation("{File} is empty; starting with no persisted characters", CharactersFile);
-        var accounts = FileAccountStore.Load(accountPath);
-        var characters = FileCharacterStore.Load(characterPath);
-        if (options.DevelopmentLogins().Count == 0) return (new AccountAuthenticator(accounts), characters);
-
-        // A local run keeps its development logins next to the real accounts, and their characters in the saves.
-        SeedDevelopmentCharacters(characters, options);
-        return (new AccountAuthenticator(new DevelopmentOverlayAccountStore(
-            DevelopmentFixtures.Accounts(options).WithHashedSecrets(), accounts)), characters);
+        EnsureSaveFiles(options);
+        var accounts = FileAccountStore.Load(Path.Combine(options.ResolvedStateDirectory, AccountsFile));
+        if (!accounts.ListAsync().GetAwaiter().GetResult().Any())
+            logger.LogWarning("No accounts yet, so nobody can sign in. Make one with: account create <name>, then account gm <name> on");
+        return (new AccountAuthenticator(accounts),
+            FileCharacterStore.Load(Path.Combine(options.ResolvedStateDirectory, CharactersFile)));
     }
 
-    private static void SeedDevelopmentCharacters(ICharacterStore characters, ServerOptions options)
+    private static void EnsureSaveFiles(ServerOptions options)
     {
-        var accountIds = options.DevelopmentLogins().Select(login => login.AccountId).ToHashSet();
-        foreach (var character in DevelopmentFixtures.CharacterRecords().Where(one => accountIds.Contains(one.AccountId)))
+        Directory.CreateDirectory(options.ResolvedStateDirectory);
+        foreach (var name in new[] { AccountsFile, CharactersFile })
         {
-            if (characters.GetByGuidAsync(character.Guid).GetAwaiter().GetResult() is not null) continue;
-            try
-            {
-                characters.CreateAsync(character).GetAwaiter().GetResult();
-            }
-            catch (CharacterNameTakenException)
-            {
-                // A real character already has the name: that one stays, and this fixture is not added.
-            }
+            var path = Path.Combine(options.ResolvedStateDirectory, name);
+            if (!File.Exists(path)) File.WriteAllText(path, "[]");
         }
     }
 }

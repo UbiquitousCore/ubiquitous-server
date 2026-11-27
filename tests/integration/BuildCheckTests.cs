@@ -17,7 +17,7 @@ public sealed class BuildCheckTests
     private static async Task<JsonElement> SignInAsync(DataBuild build, IReadOnlyList<ClientTableShape>? tables)
     {
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret"), new InMemoryCharacterStore([]), build: build);
+            new InMemoryAccountStore("developer", "dev-secret"), new InMemoryCharacterStore([]), build: build);
         var replies = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret", tables))));
         return JsonDocument.Parse(Assert.Single(replies)).RootElement.GetProperty("payload");

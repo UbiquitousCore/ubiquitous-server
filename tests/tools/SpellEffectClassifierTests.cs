@@ -85,6 +85,16 @@ public sealed class SpellEffectClassifierTests
     }
 
     [Fact]
+    public void AWingNamesTheTeleportSpotItSendsItsUserTo()
+    {
+        var spell = Classify((33, Effect(1, 0, SpellEffectColumns.TeleportSpotSubType, argument: 4, target: 1)));
+
+        Assert.Equal(4u, spell.EffectTeleportStopId);
+        Assert.Equal(SpellEffectTargets.Self, spell.EffectTarget);
+        Assert.Null(spell.ExtraEffects);
+    }
+
+    [Fact]
     public void AWeaponBlowKeepsTheStunInItsSecondSlot()
     {
         var spell = Classify(

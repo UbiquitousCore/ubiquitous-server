@@ -187,7 +187,7 @@ public sealed class GuildTests
     private static async Task<(PlaySession Session, List<string> Inbox)> JoinAsync(
         PlaySessionHub hub, Ubiquitous.Common.IGuildStore guildStore, string guid, string name)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([Character(guid, name)]), guildStore: guildStore, guilds: TestSessions.GuildsOf(hub, guildStore));
         var inbox = new List<string>();
         hub.Register(session, message => { inbox.Add(message); return Task.CompletedTask; });

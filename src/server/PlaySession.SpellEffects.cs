@@ -123,7 +123,7 @@ public sealed partial class PlaySession
         if (_sight.Entries.TryGetValue(targetId, out var victimEntry))
         {
             var creature = _content.Creatures.TryGetValue(victimEntry, out var found) ? found : null;
-            _loot[targetId] = CorpseLootOf(victimEntry, creature);
+            _loot[targetId] = CorpseLootFor(victimEntry, creature);
             responses.AddRange(RewardKill(victimEntry, creature, targetId, now));
         }
 

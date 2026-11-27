@@ -79,6 +79,9 @@ public static class SpellEffectColumns
 
     public const int LearnSpellSubType = 10;
 
+    // The table's own label for it is "Teleport Spot: <misc:spot id>"; the argument is a `teleport_spot` id.
+    public const int TeleportSpotSubType = 17;
+
     // Names the creature a pet spell calls to its owner's side.
     public const int SummonSubType = 8;
 

@@ -51,7 +51,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var port = FreeLoopbackPort();
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")])));
         gateway.Start();
 
@@ -81,7 +81,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var port = FreeLoopbackPort();
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla"), Character("char-b", 1, "Bryn")])));
         gateway.Start();
 
@@ -116,7 +116,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var port = FreeLoopbackPort();
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")])));
         gateway.Start();
 
@@ -146,7 +146,7 @@ public sealed class WebSocketGatewayLoopbackTests
             var port = FreeLoopbackPort();
             var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
             await using var gateway = new WebSocketGateway(options, Sessions(
-                new DevelopmentAccountStore("developer", "dev-secret"),
+                new InMemoryAccountStore("developer", "dev-secret"),
                 new InMemoryCharacterStore([Character("char-a", 1, "Ayla")]),
                 [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)],
                 new FileInventoryStore(inventoryDir.FullName)));
@@ -203,7 +203,7 @@ public sealed class WebSocketGatewayLoopbackTests
             var port = FreeLoopbackPort();
             var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
             await using var gateway = new WebSocketGateway(options, Sessions(
-                new DevelopmentAccountStore("developer", "dev-secret"),
+                new InMemoryAccountStore("developer", "dev-secret"),
                 FileCharacterStore.Load(characterPath),
                 [new CreatureSpawnDefinition(1001, 13, 9001, 2, 2, 4, 0)]));
             gateway.Start();
@@ -252,7 +252,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var port = FreeLoopbackPort();
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")])),
             idleTimeout: TimeSpan.FromMilliseconds(150));
         gateway.Start();
@@ -276,7 +276,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
         var restart = new AdminGate("the-token");
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([])), admin: restart);
         gateway.Start();
         using var http = new HttpClient();
@@ -303,7 +303,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var port = FreeLoopbackPort();
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([])), admin: new AdminGate("the-token"));
         gateway.Start();
         using var http = new HttpClient();
@@ -325,7 +325,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port };
         var restart = AdminGate.FromFile(null);
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([])), admin: restart);
         gateway.Start();
         using var http = new HttpClient();
@@ -344,7 +344,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var port = FreeLoopbackPort();
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port, MaxConnections = 1 };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")])));
         gateway.Start();
 
@@ -366,7 +366,7 @@ public sealed class WebSocketGatewayLoopbackTests
         var port = FreeLoopbackPort();
         var options = ServerOptions.Defaults with { BindAddress = "127.0.0.1", WebSocketPort = port, MaxMessagesPerSecond = 5 };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")])));
         gateway.Start();
 
@@ -391,7 +391,7 @@ public sealed class WebSocketGatewayLoopbackTests
             AllowedOrigins = ["https://play.example"],
         };
         await using var gateway = new WebSocketGateway(options, Sessions(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", 1, "Ayla")])));
         gateway.Start();
 

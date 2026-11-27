@@ -32,7 +32,7 @@ public class ChaseWalksRoundWallsTests
             },
         };
         var session = TestSessions.Create(
-            new DevelopmentAccountStore("developer", "dev-secret"),
+            new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, MapId, -6, 2, 0, 3, [])]),
             [new CreatureSpawnDefinition(1001, MapId, 9001, 6, creatureY, 0, 0)],

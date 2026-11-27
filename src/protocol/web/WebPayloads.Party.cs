@@ -50,6 +50,7 @@ public sealed record PartyRosterMemberPayload(
     [property: JsonPropertyName("isLeader")] bool IsLeader,
     [property: JsonPropertyName("online")] bool Online);
 
+// No party is written as an absent partyId, so a reader must not require it.
 public sealed record PartyRosterPayload(
-    [property: JsonPropertyName("partyId")] string? PartyId,
-    [property: JsonPropertyName("members")] IReadOnlyList<PartyRosterMemberPayload> Members);
+    [property: JsonPropertyName("members")] IReadOnlyList<PartyRosterMemberPayload> Members,
+    [property: JsonPropertyName("partyId"), JsonPropertyOrder(-1)] string? PartyId = null);

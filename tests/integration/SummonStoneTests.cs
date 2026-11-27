@@ -160,7 +160,7 @@ public sealed class SummonStoneTests
     private static async Task<(PlaySession Session, List<string> Inbox)> JoinAsync(
         PlaySessionHub hub, string guid, string name, float x = 1, int level = 20)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore(guid, "p"),
+        var session = TestSessions.Create(new InMemoryAccountStore(guid, "p"),
             new InMemoryCharacterStore([new CharacterRecord(
                 $"char-{guid}", 1, name, 1, 2, 3, 4, 5, 6, 7, 8, 13, x, 2, 3, level, [100, 200])]),
             staticObjectSpawns: StoneSpawn, content: Content, parties: TestSessions.PartiesOf(hub));

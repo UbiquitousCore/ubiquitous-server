@@ -69,6 +69,7 @@ own copy of client build 1.1.4.
 | `items` column 19 is a spell the user must already know. Own reading of the user's files: class skill books ask for rank I of their line, craft handbooks for the craft, riding-skill items for the race's riding permit and Bonds for that race's riding skill. Only using an item checks it. | `tools/asset-extractor/ItemColumns.cs`, `ItemTableMapper.cs`, `src/game/SpellLessons.cs` | `tests/tools/ItemColumnsTests.cs`, `tests/integration/MountTests.cs` |
 | `spell_effect` type 0 detail 10 teaches the spell its parameter names; type 1 detail 50 seats the caster on the `mountprototype` row its parameter names, `baseValue` the percent chance to stay seated when struck; type 1 detail 52 is the mount's speed-up percent. Read from the user's files: each row's own label. Every `Bond` item's use spell teaches one mount spell, and each mount spell carries a 50 and a 52 row. | `tools/asset-extractor/SpellEffectColumns.cs`, `SpellEffectClassifier.cs`, `src/server/PlaySession.Mounts.cs` | `tests/tools/SpellEffectClassifierTests.cs`, `tests/integration/MountTests.cs` |
 | `spell_effect` type 0 detail 8 calls the `creature_proto` row its parameter names; all but one (spell 91, named "summon") belong to pet spells. Read from the user's files: the row's own label. A pet item (`items` class 12 subclass 2) names that spell directly with no lesson row; that using the item adds the spell to the book, and casting it calls the pet, is the owner's account of play. Casting the pet that is out sends it away: own choice. Re-run ingest to put `effectSummonCreatureId` into spells. | `tools/asset-extractor/SpellEffectColumns.cs`, `SpellEffectClassifier.cs`, `src/game/SpellLessons.cs`, `src/server/PlaySession.Pets.cs` | `tests/integration/PetTests.cs` |
+| `spell_effect` type 0 detail 17 sends the caster to the `teleport_spot` row its parameter names. Read from the user's files: the row's own label names it "Teleport Spot: <misc:spot id>"; it is the only effect of the wings (`items` class 0 subclass 3, "Teleport: Silence" to spot 1, "Teleport: Bellshoal" to spot 4, and so on) and of the trainers' scrolls. The item's own cooldown and stack count apply as for any used item. A wing whose spot the world does not have is refused and kept: own choice. Re-run ingest to put `effectTeleportStopId` into spells. | `tools/asset-extractor/SpellEffectColumns.cs`, `SpellEffectClassifier.cs`, `src/server/PlaySession.Travel.cs` | `tests/tools/SpellEffectClassifierTests.cs`, `tests/integration/WingTests.cs` |
 | `spell_effect` type 1 detail 5 restores health and detail 6 mana, `baseValue` per payment; `spell_new` column 32 is 4000 on every such spell, so a 20-second meal pays five times. Read from the user's files: the rows' own labels (Eat, Drink), and the spell text agrees (base 30 and 60 on a spell reading "Restores 150 HP and 300 MP over 20 sec"). The text also says the eater must remain seated, so moving ends the meal. Re-run ingest to put `auraEatPerTick` and `auraDrinkPerTick` into spells. | `tools/asset-extractor/SpellEffectColumns.cs`, `SpellEffectClassifier.cs`, `src/server/PlaySession.Meals.cs` | `tests/tools/SpellEffectClassifierTests.cs`, `tests/integration/MealTests.cs` |
 | The player who loses a duel begs, observed in play by the owner. The emote played is `beg`, chosen by its name. | `src/server/PlaySession.Duel.cs` | `tests/integration/DuelSpellTests.cs` |
 
@@ -250,8 +251,6 @@ this project's own:
   unknown user and a wrong password.
 - A new character starts with no money (observed in play). Only the synthetic
   development content, used with no data package, hands out a large purse.
-- Development logins enter the world with at least 99,000 gold
-  (`DevelopmentFixtures.Purse`), enough to buy every mount while testing.
 - Only the team leader, or a player on their own, may change the dungeon
   mode, and the change is refused while anyone is inside one of the leader's
   dungeons, as `dungeon.restart` is. The chosen mode lasts until the server
@@ -390,7 +389,9 @@ this project's own:
   for it. These are this project's own design.
 - A training dummy stops counting itself as fighting 8 seconds after nobody
   is in reach (`TrainingDummyScript.CombatExitDelay`).
-- Melee reach 3 units.
+- Melee reach 3 units across the ground with up to 6 units between the two
+  heights (`MeleeReach`); the height allowance is this project's own choice,
+  so a creature on a shore still reaches a player on the bank above it.
 - Wearing and using an item share one requirement: the character's level,
   class and race must all be ones the item's row allows, with one refusal
   for any failure (`PlaySession.MeetsItemRequirements`).
@@ -430,7 +431,9 @@ this project's own:
   (`UBIQUITOUS_LOOT_QUEST_ITEM_PERCENT`, `_DROP_RATE`, `_LEVEL_WINDOW`).
 - Loot generation (`src/game/LootService.cs`): per-item chance rolls, top-up
   to the group minimum with the nearest misses, trim to the group maximum, at
-  most 8 rows per corpse.
+  most 8 rows per corpse. An item a quest's collect objective names drops only
+  for a killer still short of it, and is taken out of its group before the
+  roll (`QuestService.MayDrop`).
 - Selling (`VendorService.Sell`): a sell price of zero in the item row is
   read as "no vendor pays for this" and refused with `cantSell`; an item row
   with no sell price column is priced at half its buy price, or half the

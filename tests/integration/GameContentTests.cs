@@ -117,7 +117,7 @@ public sealed class GameContentTests
 
     private static async Task<IReadOnlyList<string>> EnterWorldRepliesAsync(GameContent content)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([TravelSession.Character()]), TravelSession.Spawns,
             TravelSession.StaticSpawns, content);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -129,7 +129,7 @@ public sealed class GameContentTests
     [Fact]
     public async Task Session_CanAcceptAndCompleteTheOpeningQuestChainForAReward()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 1, 25.6f, 3f, -13.2f, 1, [])]),
             [
@@ -161,7 +161,7 @@ public sealed class GameContentTests
     [Fact]
     public async Task Session_CanAcceptAndCompleteTheClassSpecificTutorialChainForRewards()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([new CharacterRecord(
                 "char-a", 1, "Ayla", 1, 0, 3, 1, 1, 1, 1, 1, 1, 3.5f, 7f, 64f, 1,
                 EquipmentSlots.Build((EquipmentSlots.Ranged, 4149)))]),
@@ -239,7 +239,7 @@ public sealed class GameContentTests
                 [9003] = [new VendorTab(0, 0, 1, true, [new VendorItem(0, 400, 5401, 701, 999, 1, 1)])],
             },
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([TravelSession.Character()]),
             [
                 new CreatureSpawnDefinition(1, 13, 9001, 2f, 2f, 3f, 0f),
@@ -370,7 +370,7 @@ public sealed class GameContentTests
 
     private static async Task<PlaySession> SessionAsync(GameContent content)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([TravelSession.Character()]),
             [new CreatureSpawnDefinition(1, 13, 9001, 2f, 2f, 3f, 0f)], null, content,
             combatRollUnit: () => 1.0);

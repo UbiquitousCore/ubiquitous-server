@@ -7,7 +7,7 @@ namespace Ubiquitous.Integration.Tests;
 public sealed class SessionStoreFactoryTests
 {
     [Fact]
-    public async Task WithNoSavedAccountsAndNoDevelopmentLogins_StartsAndRefusesEveryLogin()
+    public async Task AFirstStart_HasNoAccounts_AndRefusesEveryLogin()
     {
         var directory = Directory.CreateTempSubdirectory("ubiquitous-stores-");
         try
@@ -47,21 +47,22 @@ public sealed class SessionStoreFactoryTests
     }
 
     [Fact]
-    public async Task WithDevelopmentLoginsEnabled_SignsInTheConfiguredDeveloper()
+    public async Task AFirstStart_WritesBothSaveFiles_SoACharacterSurvivesTheNextStart()
     {
         var directory = Directory.CreateTempSubdirectory("ubiquitous-stores-");
         try
         {
-            var options = ServerOptions.Defaults with
-            {
-                DataDirectory = directory.FullName,
-                DevelopmentAccountsEnabled = true,
-                DevelopmentPassHash = "dev-secret",
-            };
+            var options = ServerOptions.Defaults with { DataDirectory = directory.FullName };
+            var first = SessionStoreFactory.Create(options, postgres: null, NullLogger.Instance);
 
-            var stores = SessionStoreFactory.Create(options, postgres: null, NullLogger.Instance);
+            Assert.True(File.Exists(Path.Combine(directory.FullName, SessionStoreFactory.AccountsFile)));
+            Assert.True(File.Exists(Path.Combine(directory.FullName, SessionStoreFactory.CharactersFile)));
+            await first.Characters.CreateAsync(new Ubiquitous.Persistence.CharacterRecord(
+                "char-a", 100, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, []) { Currency = 1234 });
 
-            Assert.True((await stores.Accounts.AuthenticateAsync("developer", "dev-secret")).Ok);
+            var restarted = SessionStoreFactory.Create(options, postgres: null, NullLogger.Instance);
+
+            Assert.Equal(1234, (await restarted.Characters.GetByGuidAsync("char-a"))!.Currency);
         }
         finally
         {

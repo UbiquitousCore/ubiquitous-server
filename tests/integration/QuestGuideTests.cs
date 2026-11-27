@@ -161,7 +161,7 @@ public sealed class QuestGuideTests
             new CreatureSpawnDefinition(1010, 1, 9010, 24, 3, 4, 3.8f),
             new CreatureSpawnDefinition(1011, 1, 9011, 27, 3, -30, 3.1f),
         };
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([StarterCharacter()]), spawns, [], GameContent.Development,
             combatRollUnit: () => 1.0, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
@@ -205,7 +205,7 @@ public sealed class QuestGuideTests
         GameContent content, IReadOnlyList<CreatureSpawnDefinition> spawns,
         IReadOnlyList<StaticObjectSpawnDefinition> staticSpawns)
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character()]), spawns, staticSpawns, content, combatRollUnit: () => 1.0, developmentEntry: true);
         await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
             WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));

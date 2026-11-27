@@ -56,7 +56,7 @@ public sealed class PlayerAuraTests
         var hub = new PlaySessionHub();
         Side Join()
         {
-            var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"), characters,
+            var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
                 content: Content, combatRollUnit: () => 1.0, spellRollUnit: () => 0.5,
                 duels: duels, pvpFlags: flags, blows: blows, developmentEntry: true);
             var inbox = new List<string>();
@@ -192,7 +192,7 @@ public sealed class PlayerAuraTests
     [Fact]
     public async Task ADamageSpellThatSlows_SlowsACreatureAndStillDealsItsDamage()
     {
-        var session = TestSessions.Create(new DevelopmentAccountStore("developer", "dev-secret"),
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
             new InMemoryCharacterStore([Character("char-a", "Ayla")]),
             new[] { new CreatureSpawnDefinition(7310, 13, 9001, 2, 2, 4, 0) },
             content: Content, spellRollUnit: () => 0.5, developmentEntry: true);

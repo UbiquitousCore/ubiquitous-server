@@ -188,7 +188,6 @@ public sealed class ServerContentLoader(
             QuestFinishersByCreature = questFinishersByCreature ?? fallback.QuestFinishersByCreature,
             Maps = maps ?? fallback.Maps,
             LootTables = lootTables ?? (seenBuild ? fallback.LootTables : generated.Tables),
-            GeneratedQuestItems = generated.QuestItems,
             Graveyards = graveyards ?? fallback.Graveyards,
             GossipMenus = gossipMenus ?? fallback.GossipMenus,
             TalentTrees = talentTrees ?? fallback.TalentTrees,

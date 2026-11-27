@@ -18,6 +18,8 @@ public sealed record CharacterEditRequest(string? Name, int? Level, int? Gold);
 
 public sealed record GiveItemRequest(int Entry, int Count);
 
+public sealed record AddGoldRequest(int Gold);
+
 public static class AdminApi
 {
     // Every request that changes something carries this header. A page on
@@ -102,6 +104,9 @@ public static class AdminApi
         gm.MapPatch("/characters/{guid}", async (string guid, CharacterEditRequest body, AdminService admin, CancellationToken token) =>
             Answer(await admin.EditCharacterAsync(guid, new CharacterEdit(body.Name, body.Level, body.Gold), token)));
 
+        gm.MapPost("/characters/{guid}/gold", async (string guid, AddGoldRequest body, AdminService admin, CancellationToken token) =>
+            Answer(await admin.AddGoldAsync(guid, body.Gold, token)));
+
         gm.MapPost("/characters/{guid}/items", async (string guid, GiveItemRequest body, AdminService admin, CancellationToken token) =>
             Answer(await admin.GiveItemAsync(guid, body.Entry, body.Count, token)));
 
@@ -136,7 +141,7 @@ public static class AdminApi
         CharacterChange.BadName => Results.Json(new { error = "A name is 2-16 letters." }, statusCode: 400),
         CharacterChange.NameTaken => Results.Json(new { error = "Another character has that name." }, statusCode: 409),
         CharacterChange.BadLevel => Results.Json(new { error = "Choose a level from 1 to the game data's level cap." }, statusCode: 400),
-        CharacterChange.BadGold => Results.Json(new { error = "That is more gold than a purse holds." }, statusCode: 400),
+        CharacterChange.BadGold => Results.Json(new { error = "Choose a positive amount a purse can hold." }, statusCode: 400),
         CharacterChange.NoSuchItem => Results.Json(new { error = "There is no such item in the imported game data." }, statusCode: 400),
         CharacterChange.BadCount => Results.Json(new { error = "Give between 1 and 1000." }, statusCode: 400),
         _ => Results.Json(new { error = "The bag has no room for that." }, statusCode: 409),

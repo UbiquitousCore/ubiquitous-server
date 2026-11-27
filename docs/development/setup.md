@@ -55,27 +55,21 @@ sign-in and covers every character on the account), and `list` shows them
 with GMs marked. The password is read without echo (or one line from piped
 stdin), needs 8 characters, and is stored as a salted hash. Postgres takes the
 change at once; file saves reload `accounts.json` when it changes, so the
-server need not stop. The first account also writes an empty
-`characters.json`; until both files exist the server runs on the development
-fixtures, so it takes that first account only once it restarts. Real accounts are numbered from 100, and listing accounts
-changes nothing on disk. The development logins below stay available next to
-them.
+server need not stop. The server makes empty `accounts.json` and
+`characters.json` on its first start, so until an account exists nobody can
+sign in. Everything is saved as you play and kept across restarts. Real
+accounts are numbered from 100, and listing accounts changes nothing on disk.
 
-## Development logins
+## Testing as a GM
 
-For file saves only, and always there with them, whether or not real
-accounts exist: their characters are added to the saves (once, then kept as
-you play them). With a Postgres connection the server ignores them and
-`dev.enterWorld` is refused, whatever `.env` says.
+There are no ready-made logins. Make an account, run `account gm <name> on`,
+and sign in again: a GM has the admin tools in game (teleport, level, gold,
+items, every spell), and the admin page sets level and gold and gives items
+to any character that is signed out.
 
-Copy `env.example` to `.env`, set `UBIQUITOUS_DEVELOPMENT_ACCOUNTS=true` and a
-password in `UBIQUITOUS_DEVELOPMENT_PASS_HASH`; without one nobody can sign
-in. With no saved `accounts.json`, two logins exist:
-`UBIQUITOUS_DEVELOPMENT_USER_ID` (default `developer`) and
-`UBIQUITOUS_DEVELOPMENT_SECOND_USER_ID` (default `developer2`), each only when
-its `UBIQUITOUS_DEVELOPMENT_PASS_HASH` / `UBIQUITOUS_DEVELOPMENT_SECOND_PASS_HASH`
-is set. Each holds two level-60 characters with every spell rank and a full
-talent build. Never enable them on a shared server.
+`UBIQUITOUS_DEVELOPMENT_ENTRY=true` (file saves only) lets `dev.enterWorld
+{characterRef}` join a character without a password, for local tools. Never
+turn it on for a shared server.
 
 ## Importing your own client data
 

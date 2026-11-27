@@ -100,11 +100,6 @@ public sealed partial record GameContent(
     // spellbook from the tables only for a later known build.
     public bool PlaysAsSeen => Spellbook is null;
 
-    // For each quest item a generated loot table holds, the quests it drops for; empty when the
-    // build's own loot tables are used.
-    public IReadOnlyDictionary<uint, IReadOnlySet<uint>> GeneratedQuestItems { get; init; } =
-        new Dictionary<uint, IReadOnlySet<uint>>();
-
     // A later build's own spellbook rule; null for 1.1.4, whose books were seen in play.
     public StartingSpellbook? Spellbook { get; init; }
 

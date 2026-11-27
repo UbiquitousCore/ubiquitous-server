@@ -23,7 +23,6 @@ public sealed class LootService
         _nextPercent = nextPercent ?? (() => Random.Shared.NextDouble() * 100.0);
     }
 
-    // `mayDrop` leaves out an item that may not fall for this killer before anything is rolled.
     public CorpseLoot Generate(int entry, CreatureLootTableDefinition? lootTable = null, int? moneyMin = null, int? moneyMax = null,
         Func<uint, bool>? mayDrop = null)
     {
@@ -31,10 +30,10 @@ public sealed class LootService
             ? Roll(moneyMin.Value, moneyMax.Value)
             : CorpseMoney;
 
-        var groups = (lootTable?.Groups ?? [])
-            .Select(group => mayDrop is null ? group : group with { Items = [.. group.Items.Where(item => mayDrop(item.ItemId))] })
-            .Where(group => group.Items.Count > 0);
-        var drops = groups.SelectMany(RollGroup).ToList();
+        // Left out before the roll, so what may not drop never takes a guaranteed drop from what may.
+        var drops = (lootTable?.Groups ?? [])
+            .Select(group => mayDrop is null ? group : group with { Items = group.Items.Where(item => mayDrop(item.ItemId)).ToArray() })
+            .SelectMany(RollGroup).ToList();
         if (drops.Count > MaxLootRowsPerCorpse && _qualityOf is not null)
         {
             var keep = drops.Select((item, index) => (item, index))
