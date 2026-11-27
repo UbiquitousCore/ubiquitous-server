@@ -55,9 +55,9 @@ public sealed record TableFingerprint(
         return new TableFingerprint(sourceHash, tables, DateTimeOffset.UtcNow);
     }
 
-    // Stable hash for an unpacked directory of plain .tbl files: sorted
-    // "name + bytes", so the same tables always hash the same.
-    public static string HashDirectory(IReadOnlyDictionary<string, byte[]> entries)
+    // The one source hash: the same members hash the same whether they came
+    // packed in an archive or loose in a directory.
+    public static string HashEntries(IReadOnlyDictionary<string, byte[]> entries)
     {
         var names = entries.Keys.OrderBy(n => n, StringComparer.Ordinal).ToList();
         using var sha = SHA256.Create();

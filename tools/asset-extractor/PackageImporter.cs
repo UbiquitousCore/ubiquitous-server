@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 using Ubiquitous.Data;
 
@@ -673,7 +672,4 @@ public static class PackageImporter
             TerrainPackage.Write(file, mapId, tiles);
         }
     }
-
-    public static string HashArchive(byte[] archiveBytes) =>
-        Convert.ToHexString(SHA256.HashData(archiveBytes));
 }

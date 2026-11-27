@@ -405,8 +405,9 @@ public static class Program
         return true;
     }
 
-    private static IReadOnlyDictionary<string, byte[]>? ReadArchive(string archivePath, out byte[] archiveBytes)
+    private static IReadOnlyDictionary<string, byte[]>? ReadArchive(string archivePath)
     {
+        byte[] archiveBytes;
         try
         {
             archiveBytes = File.ReadAllBytes(archivePath);
@@ -414,7 +415,6 @@ public static class Program
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Console.WriteLine($"Could not read archive: {ex.Message}");
-            archiveBytes = [];
             return null;
         }
 
@@ -428,9 +428,6 @@ public static class Program
             return null;
         }
     }
-
-    private static IReadOnlyDictionary<string, byte[]>? ReadArchive(string archivePath) =>
-        ReadArchive(archivePath, out _);
 
     private static IReadOnlyDictionary<string, byte[]>? ReadFingerprintSource(string path, out string sourceHash)
     {
@@ -450,17 +447,17 @@ public static class Program
                 return null;
             }
 
-            sourceHash = TableFingerprint.HashDirectory(entries);
+            sourceHash = TableFingerprint.HashEntries(entries);
             return entries;
         }
 
-        if (ReadArchive(path, out var archiveBytes) is not { } archived)
+        if (ReadArchive(path) is not { } archived)
         {
             sourceHash = string.Empty;
             return null;
         }
 
-        sourceHash = PackageImporter.HashArchive(archiveBytes);
+        sourceHash = TableFingerprint.HashEntries(archived);
         return archived;
     }
 
@@ -729,7 +726,7 @@ public static class Program
 
     private static int Import(string archivePath, string outDirectory, IReadOnlyDictionary<string, byte[]>? worldArchives = null)
     {
-        if (ReadArchive(archivePath, out var archiveBytes) is not { } entries)
+        if (ReadArchive(archivePath) is not { } entries)
         {
             return 1;
         }
@@ -738,7 +735,7 @@ public static class Program
         PackageImporter.ImportResult result;
         try
         {
-            result = PackageImporter.Import(entries, outDirectory, PackageImporter.HashArchive(archiveBytes), worldArchives);
+            result = PackageImporter.Import(entries, outDirectory, TableFingerprint.HashEntries(entries), worldArchives);
         }
         catch (FTableFormatException ex)
         {
@@ -764,7 +761,7 @@ public static class Program
         PackageImporter.ImportResult result;
         try
         {
-            result = PackageImporter.Import(entries, outDirectory, sourceHash: "local-tables-directory", worldArchives);
+            result = PackageImporter.Import(entries, outDirectory, TableFingerprint.HashEntries(entries), worldArchives);
         }
         catch (FTableFormatException ex)
         {
@@ -781,17 +778,7 @@ public static class Program
     {
         try
         {
-            var names = entries.Keys.OrderBy(n => n, StringComparer.Ordinal).ToList();
-            using var sha = System.Security.Cryptography.SHA256.Create();
-            foreach (var name in names)
-            {
-                var nameBytes = System.Text.Encoding.UTF8.GetBytes(name);
-                sha.TransformBlock(nameBytes, 0, nameBytes.Length, null, 0);
-                sha.TransformBlock(entries[name], 0, entries[name].Length, null, 0);
-            }
-
-            sha.TransformFinalBlock([], 0, 0);
-            TableFingerprint.Capture(entries, Convert.ToHexString(sha.Hash ?? []))
+            TableFingerprint.Capture(entries, TableFingerprint.HashEntries(entries))
                 .Save(Path.Combine(outDirectory, TableFingerprint.FileName));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

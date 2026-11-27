@@ -5,6 +5,19 @@ namespace Ubiquitous.Integration.Tests;
 public class TableFingerprintTests
 {
     [Fact]
+    public void HashEntries_IsTheSameForTheSameMembersInAnyOrder_AndMovesWithAnyByte()
+    {
+        var forward = new Dictionary<string, byte[]> { ["tables/a.tbl"] = [1, 2], ["tables/b.tbl"] = [3] };
+        var backward = new Dictionary<string, byte[]> { ["tables/b.tbl"] = [3], ["tables/a.tbl"] = [1, 2] };
+        var changed = new Dictionary<string, byte[]> { ["tables/a.tbl"] = [1, 2], ["tables/b.tbl"] = [4] };
+        var shifted = new Dictionary<string, byte[]> { ["tables/a.tbl"] = [1], ["tables/b.tbl"] = [2, 3] };
+
+        Assert.Equal(TableFingerprint.HashEntries(forward), TableFingerprint.HashEntries(backward));
+        Assert.NotEqual(TableFingerprint.HashEntries(forward), TableFingerprint.HashEntries(changed));
+        Assert.NotEqual(TableFingerprint.HashEntries(forward), TableFingerprint.HashEntries(shifted));
+    }
+
+    [Fact]
     public void Capture_RoundTripsThroughJson()
     {
         var entries = new Dictionary<string, byte[]>
