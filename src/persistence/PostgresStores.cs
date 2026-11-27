@@ -75,7 +75,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
 
     private const string SelectColumns =
         "guid, account_id, name, gender, race, class, display_info_id, skin, hair_style, hair_colour, face, "
-        + "map_id, x, y, z, level, equipment, xp, currency, bag_slots, bank_slots, health, talent_ranks, learned_spells, action_bar, exhaustion, exhaustion_day, legend_dungeons, newest_game_version";
+        + "map_id, x, y, z, level, equipment, xp, currency, bag_slots, bank_slots, health, talent_ranks, learned_spells, action_bar, exhaustion, exhaustion_day, legend_dungeons, game_version";
 
     public async Task<CharacterRecord?> GetByGuidAsync(string guid, CancellationToken cancellationToken = default)
     {
@@ -144,7 +144,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
         Exhaustion: reader.IsDBNull(25) ? null : reader.GetInt32(25),
         ExhaustionDay: reader.IsDBNull(26) ? null : reader.GetInt32(26),
         LegendDungeons: reader.IsDBNull(27) ? null : reader.GetBoolean(27),
-        NewestGameVersion: reader.IsDBNull(28) ? null : reader.GetString(28));
+        GameVersion: reader.IsDBNull(28) ? null : reader.GetString(28));
 
     private static void AddLearnedSpells(NpgsqlCommand command, CharacterRecord character) =>
         command.Parameters.AddWithValue(character.LearnedSpells is null
@@ -185,7 +185,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
             UPDATE characters SET map_id = $2, x = $3, y = $4, z = $5, level = $6, xp = $7, currency = $8,
                 bag_slots = $9, bank_slots = $10, health = $11, talent_ranks = $12, learned_spells = $13,
                 action_bar = $14, exhaustion = $15, exhaustion_day = $16, legend_dungeons = $17,
-                newest_game_version = $18
+                game_version = $18
             WHERE guid = $1
             """;
         command.Parameters.AddWithValue(character.Guid);
@@ -205,7 +205,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
         command.Parameters.AddWithValue((object?)character.Exhaustion ?? DBNull.Value);
         command.Parameters.AddWithValue((object?)character.ExhaustionDay ?? DBNull.Value);
         command.Parameters.AddWithValue((object?)character.LegendDungeons ?? DBNull.Value);
-        command.Parameters.AddWithValue((object?)character.NewestGameVersion ?? DBNull.Value);
+        command.Parameters.AddWithValue((object?)character.GameVersion ?? DBNull.Value);
         if (await command.ExecuteNonQueryAsync(cancellationToken) == 0)
             throw new InvalidOperationException($"No character with GUID '{character.Guid}' exists to update.");
     }
@@ -219,7 +219,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
                 guid, account_id, name, gender, race, class, display_info_id,
                 skin, hair_style, hair_colour, face, map_id, x, y, z, level, equipment, xp, currency,
                 bag_slots, bank_slots, health, talent_ranks, learned_spells, action_bar, exhaustion, exhaustion_day,
-                legend_dungeons, newest_game_version)
+                legend_dungeons, game_version)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
                 $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
             """;
@@ -251,7 +251,7 @@ public sealed class PostgresCharacterStore : ICharacterStore
         command.Parameters.AddWithValue((object?)character.Exhaustion ?? DBNull.Value);
         command.Parameters.AddWithValue((object?)character.ExhaustionDay ?? DBNull.Value);
         command.Parameters.AddWithValue((object?)character.LegendDungeons ?? DBNull.Value);
-        command.Parameters.AddWithValue((object?)character.NewestGameVersion ?? DBNull.Value);
+        command.Parameters.AddWithValue((object?)character.GameVersion ?? DBNull.Value);
         try
         {
             await command.ExecuteNonQueryAsync(cancellationToken);

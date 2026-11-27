@@ -12,13 +12,13 @@ comes from is in `PROVENANCE.md`.
   `session.described {gameVersion}`: the game version whose files this server
   plays ("1.1.4" for a package whose build is not known), so the client can
   open, or ask the player for, that build's files.
-- A character keeps the newest game version it was played on, stamped when it
-  is made and whenever it is saved. A server on an older version lists it with
-  `needsGameVersion` and refuses `characters.choose` and `dev.enterWorld` for it
-  (`characters.chosen`, code 3), since that build's tables may lack its items,
-  levels or spells. A character saved before versions were kept plays anywhere
-  and is stamped on its next save; a server whose build is unknown stamps
-  nothing and holds characters as 1.1.4.
+- A character keeps the game version it was made on. A server on any other
+  version lists it with `needsGameVersion` and refuses `characters.choose` and
+  `dev.enterWorld` for it (`characters.chosen`, code 3): builds number and shape
+  their items, quests, spells and talents differently, and no migration between
+  them exists yet. A character saved before versions were kept plays anywhere
+  and takes the version of the first known server that saves it; a server whose
+  build is unknown stamps nothing and holds characters as 1.1.4.
 - A missing or null required field gets `protocol.error invalid_payload`; any
   other handler failure gets one `protocol.error internal` with a generic
   reason, never the exception text.

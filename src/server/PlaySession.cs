@@ -371,7 +371,7 @@ public sealed partial class PlaySession : ISessionPlayer
             Exhaustion = _exhaustionDay is null ? null : _exhaustion,
             ExhaustionDay = _exhaustionDay,
             LegendDungeons = _instances.ChosenMode(PlayerUnitId) == DungeonMode.Legend ? true : null,
-            NewestGameVersion = GameVersions.Stamp(character.NewestGameVersion, _build.GameVersion),
+            GameVersion = GameVersions.Stamp(character.GameVersion, _build.GameVersion),
         };
     }
 

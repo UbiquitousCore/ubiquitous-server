@@ -9,7 +9,7 @@ public enum CharacterChooseCode
 {
     NotFound = 1,
 
-    NeedsLaterGameVersion = 3,
+    OtherGameVersion = 3,
 }
 
 public enum CharacterCreateCode

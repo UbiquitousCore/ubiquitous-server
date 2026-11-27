@@ -39,8 +39,8 @@ public sealed record CharacterRecord(
     int? Exhaustion = null,
     int? ExhaustionDay = null,
     bool? LegendDungeons = null,
-    // The newest game version this character was played on; only that build or a later one plays it.
-    string? NewestGameVersion = null);
+    // The game version this character was made on; only that build plays it.
+    string? GameVersion = null);
 
 public sealed record PersistedActionButton(int Slot, uint Id, int Type);
 

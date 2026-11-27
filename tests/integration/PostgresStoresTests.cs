@@ -129,7 +129,7 @@ public sealed class PostgresStoresTests : IAsyncLifetime
         var store = new PostgresCharacterStore(_dataSource);
         var created = new CharacterRecord("char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 0, 0, 0, 1, [])
         {
-            NewestGameVersion = "1.1.4",
+            GameVersion = "1.1.4",
         };
         await store.CreateAsync(created);
         var saved = created with
@@ -143,10 +143,10 @@ public sealed class PostgresStoresTests : IAsyncLifetime
             Exhaustion = 12,
             ExhaustionDay = 20_395,
             LegendDungeons = true,
-            NewestGameVersion = "2.2.0",
+            GameVersion = "2.2.0",
         };
 
-        Assert.Equal("1.1.4", (await store.GetByGuidAsync("char-a"))!.NewestGameVersion);
+        Assert.Equal("1.1.4", (await store.GetByGuidAsync("char-a"))!.GameVersion);
         await store.UpdateAsync(saved);
 
         var loaded = await store.GetByGuidAsync("char-a");
@@ -160,7 +160,7 @@ public sealed class PostgresStoresTests : IAsyncLifetime
         Assert.Equal(12, loaded.Exhaustion);
         Assert.Equal(20_395, loaded.ExhaustionDay);
         Assert.True(loaded.LegendDungeons);
-        Assert.Equal("2.2.0", loaded.NewestGameVersion);
+        Assert.Equal("2.2.0", loaded.GameVersion);
     }
 
     [Fact]

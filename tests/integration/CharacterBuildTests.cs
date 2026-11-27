@@ -11,8 +11,8 @@ public sealed class CharacterBuildTests
 {
     private static DataBuild Build(string version) => new(version, new Dictionary<string, TableShape>());
 
-    private static CharacterRecord Ayla(string? newest) =>
-        new("char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 12, [100, 200]) { NewestGameVersion = newest };
+    private static CharacterRecord Ayla(string? madeOn) =>
+        new("char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 12, [100, 200]) { GameVersion = madeOn };
 
     private static async Task<PlaySession> SignedInAsync(InMemoryCharacterStore store, string serverVersion)
     {
@@ -42,19 +42,21 @@ public sealed class CharacterBuildTests
         Assert.Equal(announced, described.GetProperty("gameVersion").GetString());
     }
 
-    [Fact]
-    public async Task ACharacterPlayedOnALaterBuild_IsListedWithItAndRefused()
+    [Theory]
+    [InlineData("4.2.21", "2.2.0")]
+    [InlineData("1.1.4", "4.2.21")]
+    public async Task ACharacterOfAnotherBuild_IsListedWithItAndRefused(string madeOn, string server)
     {
-        var session = await SignedInAsync(new InMemoryCharacterStore([Ayla("4.2.21")]), "2.2.0");
+        var session = await SignedInAsync(new InMemoryCharacterStore([Ayla(madeOn)]), server);
 
         var listed = PayloadOf(await Send(session, WebMessageTypes.CharactersList, new { }), WebMessageTypes.CharactersListed);
-        Assert.Equal("4.2.21", listed.GetProperty("characters")[0].GetProperty("needsGameVersion").GetString());
+        Assert.Equal(madeOn, listed.GetProperty("characters")[0].GetProperty("needsGameVersion").GetString());
 
         var chosen = PayloadOf(await Send(session, WebMessageTypes.CharactersChoose, new ChooseCharacterRequest("Ayla")),
             WebMessageTypes.CharactersChosen);
         Assert.False(chosen.GetProperty("ok").GetBoolean());
-        Assert.Equal((int)CharacterChooseCode.NeedsLaterGameVersion, chosen.GetProperty("code").GetInt32());
-        Assert.Contains("4.2.21", chosen.GetProperty("reason").GetString());
+        Assert.Equal((int)CharacterChooseCode.OtherGameVersion, chosen.GetProperty("code").GetInt32());
+        Assert.Contains(madeOn, chosen.GetProperty("reason").GetString());
     }
 
     [Fact]
@@ -69,11 +71,13 @@ public sealed class CharacterBuildTests
         Assert.False(chosen.GetProperty("ok").GetBoolean());
     }
 
-    [Fact]
-    public async Task ACharacterOfAnEarlierBuild_PlaysAndIsSavedAsTheLaterOne()
+    [Theory]
+    [InlineData("2.2.0", "2.2.0")]
+    [InlineData(null, "2.2.0")]
+    public async Task ACharacterOfThisBuild_OrOfNone_PlaysAndIsSavedAsThisBuild(string? madeOn, string server)
     {
-        var store = new InMemoryCharacterStore([Ayla("1.1.4")]);
-        var session = await SignedInAsync(store, "4.2.21");
+        var store = new InMemoryCharacterStore([Ayla(madeOn)]);
+        var session = await SignedInAsync(store, server);
 
         var listed = PayloadOf(await Send(session, WebMessageTypes.CharactersList, new { }), WebMessageTypes.CharactersListed);
         Assert.False(listed.GetProperty("characters")[0].TryGetProperty("needsGameVersion", out var needs)
@@ -82,7 +86,7 @@ public sealed class CharacterBuildTests
             reply => reply.Contains("\"type\":\"world.entered\""));
         await session.SaveCharacterAsync();
 
-        Assert.Equal("4.2.21", (await store.GetByGuidAsync("char-a"))!.NewestGameVersion);
+        Assert.Equal(server, (await store.GetByGuidAsync("char-a"))!.GameVersion);
     }
 
     [Fact]
@@ -94,6 +98,6 @@ public sealed class CharacterBuildTests
         await Send(session, WebMessageTypes.CharactersCreate,
             new CreateCharacterRequest("Brin", 1, 1, 1, new Appearance(0, 0, 0, 0)));
 
-        Assert.Equal("2.2.0", (await store.FindByNameAsync("Brin"))!.NewestGameVersion);
+        Assert.Equal("2.2.0", (await store.FindByNameAsync("Brin"))!.GameVersion);
     }
 }

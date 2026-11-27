@@ -282,4 +282,4 @@ numbers, carried as `code` on `account.loginResult`, `characters.created`,
 `characters.chosen` and `characters.deleted`. The numbering is this project's
 own (`LoginCode`, `CharacterCreateCode` and `CharacterChooseCode`), and `reason`
 carries the text. A refused `characters.chosen` is 1, no such character, or 3,
-the character was last played on a later game version than this server's.
+the character was made on another game version than this server's.

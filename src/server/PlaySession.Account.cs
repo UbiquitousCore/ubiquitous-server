@@ -124,7 +124,7 @@ public sealed partial class PlaySession
             character.Equipment,
             LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap),
             LevelingService.XpToNextLevel(character.Level, _content.LevelCap),
-            GameVersions.MayPlay(character.NewestGameVersion, _build.GameVersion) ? null : character.NewestGameVersion))
+            GameVersions.MayPlay(character.GameVersion, _build.GameVersion) ? null : character.GameVersion))
             .ToArray();
 
         var offered = _content.PlayableRaces.OrderBy(race => race).ToArray();
@@ -184,7 +184,7 @@ public sealed partial class PlaySession
             plan.Level,
             plan.Equipment)
         {
-            NewestGameVersion = GameVersions.Stamp(null, _build.GameVersion),
+            GameVersion = GameVersions.Stamp(null, _build.GameVersion),
         };
 
         try
@@ -427,11 +427,11 @@ public sealed partial class PlaySession
         return await EnterAsCharacterAsync(character, cancellationToken);
     }
 
-    // Played on an older build than its own, a character would lose what that build's tables lack.
+    // Played on another build than its own, a character would lose or misread what it holds.
     private string? RefuseNewerBuild(CharacterRecord character) =>
-        GameVersions.MayPlay(character.NewestGameVersion, _build.GameVersion)
+        GameVersions.MayPlay(character.GameVersion, _build.GameVersion)
             ? null
-            : Reply(WebMessageTypes.CharactersChosen, new ResultPayload(false, (int)CharacterChooseCode.NeedsLaterGameVersion,
-                $"{character.Name} was last played on game version {character.NewestGameVersion}; " +
+            : Reply(WebMessageTypes.CharactersChosen, new ResultPayload(false, (int)CharacterChooseCode.OtherGameVersion,
+                $"{character.Name} was made on game version {character.GameVersion}; " +
                 $"this server plays {GameVersions.PlaysAs(_build.GameVersion)}."));
 }
