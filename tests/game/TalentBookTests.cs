@@ -23,16 +23,29 @@ public sealed class TalentBookTests
     [InlineData(10, 1)]
     [InlineData(11, 2)]
     [InlineData(LevelingService.SeenMaxLevel, 51)]
-    [InlineData(75, 66)]
     public void PointsForLevel_EarnsOneALevelFromTen(int level, int expected)
     {
-        Assert.Equal(expected, TalentBook.PointsForLevel(level));
+        Assert.Equal(expected, TalentBook.PointsForLevel(level, LevelingService.SeenMaxLevel));
+    }
+
+    [Fact]
+    public void ALaterBuildsCap_EarnsPointsUpToIt()
+    {
+        Assert.Equal(66, TalentBook.PointsForLevel(75, levelCap: 75));
+    }
+
+    [Fact]
+    public void ACharacterAboveThisPackagesCap_EarnsOnlyTheCapsPoints()
+    {
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
+
+        Assert.Equal(51, book.Unspent(75));
     }
 
     [Fact]
     public void Learn_BuysOneRankAndSpendsOnePoint()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
 
         Assert.Null(book.Learn(10, Warrior, level: 12));
 
@@ -44,7 +57,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Learn_AHigherRankReplacesTheLowerRanksSpell()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
         book.Learn(10, Warrior, 20);
         book.Learn(10, Warrior, 20);
 
@@ -54,7 +67,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Learn_RefusesWithNoPointsLeft()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
 
         Assert.Equal(TalentRefusal.NoPoints, book.Learn(10, Warrior, level: 9));
         Assert.Null(book.Learn(10, Warrior, level: 10));
@@ -64,7 +77,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Learn_RefusesPastTheLastRank()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
         Assert.Null(book.Learn(11, Warrior, 30));
 
         Assert.Equal(TalentRefusal.MaxRank, book.Learn(11, Warrior, 30));
@@ -73,7 +86,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Learn_RefusesAnotherClassesTreeAndAnUnknownTalent()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
 
         Assert.Equal(TalentRefusal.WrongClass, book.Learn(20, Warrior, 30));
         Assert.Equal(TalentRefusal.UnknownTalent, book.Learn(999, Warrior, 30));
@@ -82,7 +95,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Learn_ATierNeedsEnoughPointsInItsOwnTree()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
         for (var i = 0; i < 4; i++) book.Learn(10, Warrior, 30);
         book.Learn(11, Warrior, 30);
 
@@ -96,7 +109,7 @@ public sealed class TalentBookTests
         {
             new(1, Warrior, [new(10, 1, 1, 0, [], [100, 101]), new(12, 2, 1, 5, [], [120])]),
         };
-        var book = new TalentBook(trees);
+        var book = new TalentBook(trees, LevelingService.SeenMaxLevel);
         book.Learn(10, Warrior, 30);
         book.Learn(10, Warrior, 30);
 
@@ -106,7 +119,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Learn_OpensTheNextTierWithThePrerequisiteAtFullRank()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
         for (var i = 0; i < 5; i++) Assert.Null(book.Learn(10, Warrior, 30));
 
         Assert.Null(book.Learn(12, Warrior, 30));
@@ -115,7 +128,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Reset_GivesEveryPointBack()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
         book.Learn(10, Warrior, 12);
         book.Learn(11, Warrior, 12);
 
@@ -136,7 +149,7 @@ public sealed class TalentBookTests
                 new(30, 1, 1, 0, [31], [300, 301]),
                 new(31, 1, 2, 0, [], [310]),
             ]),
-        ]);
+        ], LevelingService.SeenMaxLevel);
 
         book.Restore(new Dictionary<uint, int> { [30] = 2, [31] = 1 }, Warrior, level: 12);
 
@@ -147,7 +160,7 @@ public sealed class TalentBookTests
     [Fact]
     public void Restore_KeepsOnlyWhatTheRulesAllowNow()
     {
-        var book = new TalentBook(Trees);
+        var book = new TalentBook(Trees, LevelingService.SeenMaxLevel);
 
         book.Restore(
             new Dictionary<uint, int> { [12] = 1, [10] = 5, [11] = 1, [999] = 1 }, Warrior, level: 12);

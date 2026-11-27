@@ -103,7 +103,7 @@ public sealed partial class BotBrain
         view.TalentRefusals.Clear();
         if (view.Class == 0 || view.InCombat) return null;
         var spent = view.TalentRanks.Values.Sum();
-        if (TalentBook.PointsForLevel(view.Level) - spent <= 0) return null;
+        if (TalentBook.PointsForLevel(view.Level, knowledge.LevelCap) - spent <= 0) return null;
 
         var trees = knowledge.TalentTreesFor(view.Class).ToList();
         if (trees.Count == 0) return null;

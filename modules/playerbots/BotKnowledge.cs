@@ -56,6 +56,8 @@ public sealed class BotKnowledge
 
     public IReadOnlyList<MapGateDefinition> MapGates => _content.MapGates;
 
+    public int LevelCap => _content.LevelCap;
+
     public IEnumerable<TalentTreeDefinition> TalentTreesFor(int playerClass) =>
         _content.TalentTrees.Where(tree => tree.ClassId == playerClass).OrderBy(tree => tree.Id);
 
