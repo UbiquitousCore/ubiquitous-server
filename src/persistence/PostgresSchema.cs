@@ -93,6 +93,9 @@ public static class PostgresSchema
         new Migration("0010_legend_dungeons", """
             ALTER TABLE characters ADD COLUMN IF NOT EXISTS legend_dungeons BOOLEAN;
             """),
+        new Migration("0011_newest_game_version", """
+            ALTER TABLE characters ADD COLUMN IF NOT EXISTS newest_game_version TEXT;
+            """),
     ];
 
     public static async Task EnsureCreatedAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken = default)

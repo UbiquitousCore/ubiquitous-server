@@ -123,7 +123,9 @@ public sealed partial class PlaySession
             new Position(character.X, character.Y, character.Z),
             character.Equipment,
             LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap),
-            LevelingService.XpToNextLevel(character.Level, _content.LevelCap))).ToArray();
+            LevelingService.XpToNextLevel(character.Level, _content.LevelCap),
+            GameVersions.MayPlay(character.NewestGameVersion, _build.GameVersion) ? null : character.NewestGameVersion))
+            .ToArray();
 
         var offered = _content.PlayableRaces.OrderBy(race => race).ToArray();
         return Reply(WebMessageTypes.CharactersListed, new CharactersListedPayload(summaries, offered));
@@ -180,7 +182,10 @@ public sealed partial class PlaySession
             plan.Y,
             plan.Z,
             plan.Level,
-            plan.Equipment);
+            plan.Equipment)
+        {
+            NewestGameVersion = GameVersions.Stamp(null, _build.GameVersion),
+        };
 
         try
         {
@@ -292,9 +297,10 @@ public sealed partial class PlaySession
         if (character is null)
         {
             return [Reply(WebMessageTypes.CharactersChosen,
-                new ResultPayload(false, (int)LoginCode.InvalidCredentials, "Character not found."))];
+                new ResultPayload(false, (int)CharacterChooseCode.NotFound, "Character not found."))];
         }
 
+        if (RefuseNewerBuild(character) is { } refusal) return [refusal];
         return await EnterAsCharacterAsync(character, cancellationToken);
     }
 
@@ -413,9 +419,19 @@ public sealed partial class PlaySession
         if (character is null)
             return [Error(WireCodes.ProtocolError.InvalidState, "No character matches that reference.")];
 
+        if (RefuseNewerBuild(character) is { } refusal) return [refusal];
+
         _loginAttempted = true;
         _account = new AccountRecord(character.AccountId, $"dev:{character.Guid}", string.Empty);
         _enteredForDevelopment = true;
         return await EnterAsCharacterAsync(character, cancellationToken);
     }
+
+    // Played on an older build than its own, a character would lose what that build's tables lack.
+    private string? RefuseNewerBuild(CharacterRecord character) =>
+        GameVersions.MayPlay(character.NewestGameVersion, _build.GameVersion)
+            ? null
+            : Reply(WebMessageTypes.CharactersChosen, new ResultPayload(false, (int)CharacterChooseCode.NeedsLaterGameVersion,
+                $"{character.Name} was last played on game version {character.NewestGameVersion}; " +
+                $"this server plays {GameVersions.PlaysAs(_build.GameVersion)}."));
 }

@@ -8,6 +8,17 @@ comes from is in `PROVENANCE.md`.
 
 - JSON text frames only; a binary or over-size frame closes the socket. 60
   seconds of silence closes it; `session.ping` gets `session.pong`.
+- `session.describe`, answered at any time and before signing in, gets
+  `session.described {gameVersion}`: the game version whose files this server
+  plays ("1.1.4" for a package whose build is not known), so the client can
+  open, or ask the player for, that build's files.
+- A character keeps the newest game version it was played on, stamped when it
+  is made and whenever it is saved. A server on an older version lists it with
+  `needsGameVersion` and refuses `characters.choose` and `dev.enterWorld` for it
+  (`characters.chosen`, code 3), since that build's tables may lack its items,
+  levels or spells. A character saved before versions were kept plays anywhere
+  and is stamped on its next save; a server whose build is unknown stamps
+  nothing and holds characters as 1.1.4.
 - A missing or null required field gets `protocol.error invalid_payload`; any
   other handler failure gets one `protocol.error internal` with a generic
   reason, never the exception text.

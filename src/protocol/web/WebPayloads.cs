@@ -417,7 +417,13 @@ public sealed record CharacterSummary(
     [property: JsonPropertyName("position")] Position Position,
     [property: JsonPropertyName("equipment")] IReadOnlyList<int> Equipment,
     [property: JsonPropertyName("xp")] int Xp = 0,
-    [property: JsonPropertyName("xpToLevel")] int XpToLevel = 0);
+    [property: JsonPropertyName("xpToLevel")] int XpToLevel = 0,
+    // Set only when this server's game version is older than the newest one the character was played on.
+    [property: JsonPropertyName("needsGameVersion")] string? NeedsGameVersion = null);
+
+// What a client may ask before signing in: the game version whose files this server plays.
+public sealed record SessionDescribedPayload(
+    [property: JsonPropertyName("gameVersion")] string GameVersion);
 
 public sealed record Appearance(
     [property: JsonPropertyName("skin")] int Skin,

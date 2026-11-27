@@ -38,7 +38,9 @@ public sealed record CharacterRecord(
     IReadOnlyList<PersistedActionButton>? ActionBar = null,
     int? Exhaustion = null,
     int? ExhaustionDay = null,
-    bool? LegendDungeons = null);
+    bool? LegendDungeons = null,
+    // The newest game version this character was played on; only that build or a later one plays it.
+    string? NewestGameVersion = null);
 
 public sealed record PersistedActionButton(int Slot, uint Id, int Type);
 

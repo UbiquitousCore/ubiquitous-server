@@ -371,6 +371,7 @@ public sealed partial class PlaySession : ISessionPlayer
             Exhaustion = _exhaustionDay is null ? null : _exhaustion,
             ExhaustionDay = _exhaustionDay,
             LegendDungeons = _instances.ChosenMode(PlayerUnitId) == DungeonMode.Legend ? true : null,
+            NewestGameVersion = GameVersions.Stamp(character.NewestGameVersion, _build.GameVersion),
         };
     }
 
@@ -469,6 +470,8 @@ public sealed partial class PlaySession : ISessionPlayer
             return envelope.Type switch
             {
                 WebMessageTypes.SessionPing => [Reply(WebMessageTypes.SessionPong, new { })],
+                WebMessageTypes.SessionDescribe => [Reply(WebMessageTypes.SessionDescribed,
+                    new SessionDescribedPayload(GameVersions.PlaysAs(_build.GameVersion)))],
                 WebMessageTypes.AccountLogin => [await LoginAsync(envelope.Payload, cancellationToken)],
                 WebMessageTypes.AccountLogout => [Logout()],
                 WebMessageTypes.DevEnterWorld => await DevEnterWorldAsync(envelope.Payload, cancellationToken),

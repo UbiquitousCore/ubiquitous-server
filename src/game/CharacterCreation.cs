@@ -4,6 +4,14 @@ using Ubiquitous.Data;
 
 namespace Ubiquitous.Game;
 
+// `characters.chosen` refusals. 1 is "no such character", kept from the login code it shared.
+public enum CharacterChooseCode
+{
+    NotFound = 1,
+
+    NeedsLaterGameVersion = 3,
+}
+
 public enum CharacterCreateCode
 {
     Ok = 0,

@@ -92,6 +92,7 @@ public sealed partial class PlaySession
             [WebMessageTypes.PatrolSave] = NoBody,
 
             [WebMessageTypes.SessionPing] = NoBody,
+            [WebMessageTypes.SessionDescribe] = NoBody,
             [WebMessageTypes.AccountLogin] = NoBody,
             [WebMessageTypes.AccountLogout] = NoBody,
             [WebMessageTypes.DevEnterWorld] = NoBody,

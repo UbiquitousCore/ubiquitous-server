@@ -278,6 +278,8 @@ for each.
 ## Numbered codes
 
 The results of logging in and of creating or deleting a character are still
-numbers, carried as `code` on `account.loginResult`, `characters.created` and
-`characters.deleted`. The numbering is this project's own (`LoginCode` and
-`CharacterCreateCode`), and `reason` carries the text.
+numbers, carried as `code` on `account.loginResult`, `characters.created`,
+`characters.chosen` and `characters.deleted`. The numbering is this project's
+own (`LoginCode`, `CharacterCreateCode` and `CharacterChooseCode`), and `reason`
+carries the text. A refused `characters.chosen` is 1, no such character, or 3,
+the character was last played on a later game version than this server's.
