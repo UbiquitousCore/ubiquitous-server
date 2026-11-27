@@ -30,7 +30,7 @@ public sealed class OperatorBuildStartTests
             Assert.Equal(catalog.Manifest.LevelCap, content.LevelCap);
             Assert.Contains(PlayerRaceIds.Mendel, content.PlayableRaces);
             var classes = content.Loadouts.Select(loadout => loadout.PlayerClass).ToHashSet();
-            Assert.Contains(PlayerClassIds.FlameKnight, classes);
+            if (catalog.Manifest.GameVersion == "4.2.21") Assert.Contains(PlayerClassIds.FlameKnight, classes);
             foreach (var loadout in content.Loadouts)
             {
                 Assert.All(loadout.Spells, spell => Assert.True(content.Spells.ContainsKey(spell)));

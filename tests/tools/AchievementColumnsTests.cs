@@ -10,11 +10,13 @@ public class AchievementColumnsTests
 
     private const uint LevelCategory = 1161;
     private const uint GuideCategory = 1555;
+    private const uint GeneralCategory = 8;
 
     private static readonly IReadOnlyDictionary<uint, string> Strings = new Dictionary<uint, string>
     {
         [LevelCategory] = "Level",
         [GuideCategory] = "Guide",
+        [GeneralCategory] = "General",
     };
 
     private static Dictionary<int, uint> Achievement(uint id, uint category, params (uint Type, uint Value)[] conditions)
@@ -39,6 +41,31 @@ public class AchievementColumnsTests
             Achievement(152, LevelCategory, (26, 16912), (30, 70)),
             Achievement(342, GuideCategory, (30, 99)),
             Achievement(9, LevelCategory, (6, 120)),
+        ]));
+
+        Assert.Equal(75, AchievementColumns.HighestPlayerLevelAskedFor(table, Strings));
+    }
+
+    [Fact]
+    public void ABuildWithoutALevelCategory_ReadsItsGeneralOne()
+    {
+        var table = FTableDocument.Load(BuildTable(
+        [
+            Achievement(15, GeneralCategory, (30, 60)),
+            Achievement(16, GeneralCategory, (30, 70)),
+            Achievement(342, GuideCategory, (30, 99)),
+        ]));
+
+        Assert.Equal(70, AchievementColumns.HighestPlayerLevelAskedFor(table, Strings));
+    }
+
+    [Fact]
+    public void ALevelCategory_LeavesTheGeneralOneUncounted()
+    {
+        var table = FTableDocument.Load(BuildTable(
+        [
+            Achievement(442, LevelCategory, (30, 75)),
+            Achievement(16, GeneralCategory, (30, 99)),
         ]));
 
         Assert.Equal(75, AchievementColumns.HighestPlayerLevelAskedFor(table, Strings));

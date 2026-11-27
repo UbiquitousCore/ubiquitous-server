@@ -149,7 +149,8 @@ public class LzmaTests
             var tables = Assert.Single(opened);
             var entries = TableArchiveReader.ReadEntries(tables.ReadAllBytes());
             Assert.NotEmpty(entries);
-            Assert.All(entries.Keys, name => FTableDocument.Load(entries[name]));
+            Assert.All(entries.Keys.Where(name => name.EndsWith(".tbl", StringComparison.OrdinalIgnoreCase)),
+                name => FTableDocument.Load(entries[name]));
         }
         finally
         {

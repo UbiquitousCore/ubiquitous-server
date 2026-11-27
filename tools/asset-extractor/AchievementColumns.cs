@@ -4,11 +4,13 @@ namespace Ubiquitous.AssetExtractor;
 // conditions: their types in columns 7-16, three targets each in 17-46 and their values
 // in 47-56. `achievement_type` row 30 is "Player Level", whose value is the level the
 // achievement asks for. Only the "Level" category counts: two achievements elsewhere in
-// 4.2.2 ask for level 99 while their own text says 69 or names a festival quest.
+// 4.2.2 ask for level 99 while their own text says 69 or names a festival quest. 2.2.0 has
+// no such category and keeps the same ladder under "General".
 public static class AchievementColumns
 {
     public const int Category = 1;
     public const string LevelCategory = "Level";
+    public const string GeneralCategory = "General";
     public const int FirstConditionType = 7;
     public const int FirstConditionValue = 47;
     public const int ConditionCount = 10;
@@ -16,11 +18,14 @@ public static class AchievementColumns
 
     public static int? HighestPlayerLevelAskedFor(FTableDocument achievements, IReadOnlyDictionary<uint, string> strings)
     {
+        string? CategoryOf(IReadOnlyList<object> row) =>
+            Number(row, Category) is int category && strings.TryGetValue((uint)category, out var name) ? name : null;
+        var counted = achievements.Rows.Any(row => CategoryOf(row) == LevelCategory) ? LevelCategory : GeneralCategory;
+
         int? highest = null;
         foreach (var row in achievements.Rows)
         {
-            if (Number(row, Category) is not int category
-                || !strings.TryGetValue((uint)category, out var name) || name != LevelCategory) continue;
+            if (CategoryOf(row) != counted) continue;
             for (int condition = 0; condition < ConditionCount; condition++)
             {
                 if (Number(row, FirstConditionType + condition) != PlayerLevelCondition) continue;
