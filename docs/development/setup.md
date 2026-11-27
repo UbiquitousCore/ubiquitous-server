@@ -97,8 +97,9 @@ dotnet run --project tools/asset-extractor -- --bake data/generated \
   --tables-dir data/raw/tables --models data/raw/model --world-dir data/raw/world
 ```
 
-Never commit anything under `data/`, or any client file. The server targets
-build 1.1.4 and warns on any other.
+Never commit anything under `data/`, or any client file. Any build in
+`tools/asset-extractor/fingerprints/` imports; the server logs what a build's
+files leave out.
 
 ## Docker
 
@@ -135,6 +136,9 @@ inside the container unless `content/` is mounted.
   `FakeTimeProvider` via `TestSessions.Create(time: ...)`, never sleeps.
 - Drive integration tests through `TestClient` (see `DuelTests.cs`).
 - Postgres tests skip unless `UBIQUITOUS_TEST_POSTGRES_CONNECTION_STRING` is set.
+- Tests that read the operator's own client build (its `.ipa`, app directory or
+  a directory holding its packs) skip unless `UBIQUITOUS_TEST_CLIENT_BUILD`
+  names it.
 - After renaming a message, key or code, regenerate the wire fixtures with
   `UBIQUITOUS_WRITE_WIRE_FIXTURES=1 dotnet test` and copy them to `ubiquitous-client`'s
   `client/test/fixtures/`.

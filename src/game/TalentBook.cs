@@ -18,23 +18,26 @@ public sealed class TalentBook
 
     private readonly Dictionary<uint, (TalentTreeDefinition Tree, TalentDefinition Talent)> _talents = new();
     private readonly Dictionary<uint, int> _ranks = new();
+    private readonly int _levelCap;
 
-    public TalentBook(IReadOnlyList<TalentTreeDefinition> trees)
+    public TalentBook(IReadOnlyList<TalentTreeDefinition> trees, int levelCap)
     {
+        _levelCap = levelCap;
         foreach (var tree in trees)
         {
             foreach (var talent in tree.Talents) _talents[talent.Id] = (tree, talent);
         }
     }
 
-    public static int PointsForLevel(int level) =>
-        Math.Max(0, Math.Min(level, LevelingService.MaxLevel) - FirstPointLevel + 1);
+    // A character saved under a higher cap than this package's earns no more than the cap allows.
+    public static int PointsForLevel(int level, int levelCap) =>
+        Math.Max(0, Math.Min(level, levelCap) - FirstPointLevel + 1);
 
     public IReadOnlyDictionary<uint, int> Ranks => _ranks;
 
     public int Spent => _ranks.Values.Sum();
 
-    public int Unspent(int level) => Math.Max(0, PointsForLevel(level) - Spent);
+    public int Unspent(int level) => Math.Max(0, PointsForLevel(level, _levelCap) - Spent);
 
     public IReadOnlyList<uint> CurrentSpells =>
         [.. _ranks.Select(pair => _talents[pair.Key].Talent.RankSpellIds[pair.Value - 1])];

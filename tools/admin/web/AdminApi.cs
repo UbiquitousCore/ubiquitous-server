@@ -98,7 +98,7 @@ public static class AdminApi
 
         gm.MapGet("/characters/{guid}", async (string guid, AdminService admin, CancellationToken token) =>
             await admin.CharacterAsync(guid, token) is { } found
-                ? Results.Ok(new { found.Detail.Character, found.Detail.Gold, found.Detail.BagSlots, found.Detail.Bag, found.Online })
+                ? Results.Ok(new { found.Detail.Character, found.Detail.Gold, found.Detail.BagSlots, found.Detail.Bag, found.Detail.LevelCap, found.Online })
                 : Results.Json(new { error = "No such character." }, statusCode: 404));
 
         gm.MapPatch("/characters/{guid}", async (string guid, CharacterEditRequest body, AdminService admin, CancellationToken token) =>
@@ -140,7 +140,7 @@ public static class AdminApi
         CharacterChange.Online => Results.Json(new { error = "That character is in the world now. Change it once its player has left." }, statusCode: 409),
         CharacterChange.BadName => Results.Json(new { error = "A name is 2-16 letters." }, statusCode: 400),
         CharacterChange.NameTaken => Results.Json(new { error = "Another character has that name." }, statusCode: 409),
-        CharacterChange.BadLevel => Results.Json(new { error = "Choose a level from 1 to 60." }, statusCode: 400),
+        CharacterChange.BadLevel => Results.Json(new { error = "Choose a level from 1 to the game data's level cap." }, statusCode: 400),
         CharacterChange.BadGold => Results.Json(new { error = "Choose a positive amount a purse can hold." }, statusCode: 400),
         CharacterChange.NoSuchItem => Results.Json(new { error = "There is no such item in the imported game data." }, statusCode: 400),
         CharacterChange.BadCount => Results.Json(new { error = "Give between 1 and 1000." }, statusCode: 400),

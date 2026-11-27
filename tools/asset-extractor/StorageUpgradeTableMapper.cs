@@ -3,7 +3,8 @@ using Ubiquitous.Data;
 namespace Ubiquitous.AssetExtractor;
 
 public sealed record StorageUpgradeTableColumns(
-    int Id, int AreaColumn, int SlotCount, int PriceCurrency, int PriceAmount, int FromSlotCount);
+    int Id, int AreaColumn, int SlotCount, int PriceCurrency, int PriceAmount, int FromSlotCount,
+    int LadderColumn = -1);
 
 public static class StorageUpgradeTableMapper
 {
@@ -15,6 +16,9 @@ public static class StorageUpgradeTableMapper
         for (int i = 0; i < document.Rows.Count; i++)
         {
             var row = document.Rows[i];
+            if (columns.LadderColumn >= 0
+                && RequireUInt(row, columns.LadderColumn, i, $"column {columns.LadderColumn} (ladder)") != 0)
+                continue;
             uint id = RequireUInt(row, columns.Id, i, "id");
             if (!seen.Add(id))
             {

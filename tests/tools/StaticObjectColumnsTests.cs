@@ -21,7 +21,7 @@ public class StaticObjectColumnsTests
         }, new Dictionary<int, uint> { [0] = 22u, [1] = 1u, [2] = 1u });
 
         var spawn = Assert.Single(StaticObjectTableMapper.MapStaticObjects(
-            FTableDocument.Load(data), StaticObjectColumns.Build114, mapIds: new HashSet<ushort> { 1 }));
+            FTableDocument.Load(data), StaticObjectColumns.Reference, mapIds: new HashSet<ushort> { 1 }));
 
         Assert.Equal(22u, spawn.Id);
         Assert.Equal((ushort)1, spawn.MapId);

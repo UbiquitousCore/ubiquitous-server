@@ -40,7 +40,7 @@ public sealed class PlayerResourceTests
         Assert.Contains("\"power\":100", snapshot);
         Assert.Contains("\"maxPower\":100", snapshot);
         Assert.Contains("\"xp\":0", snapshot);
-        Assert.Contains($"\"xpToNextLevel\":{LevelingService.XpToNextLevel(4)}", snapshot);
+        Assert.Contains($"\"xpToNextLevel\":{LevelingService.XpToNextLevel(4, LevelingService.SeenMaxLevel)}", snapshot);
         Assert.Contains("\"gold\":5000", snapshot);
     }
 

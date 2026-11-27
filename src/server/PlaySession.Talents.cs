@@ -8,7 +8,7 @@ namespace Ubiquitous.Server;
 
 public sealed partial class PlaySession
 {
-    private TalentBook _talents = new([]);
+    private TalentBook _talents = new([], LevelingService.SeenMaxLevel);
 
     private IReadOnlyList<uint> _baseSpells = [];
 
@@ -44,7 +44,7 @@ public sealed partial class PlaySession
     private void RestoreTalents(CharacterRecord character, IReadOnlyList<uint> baseSpells)
     {
         _baseSpells = baseSpells;
-        _talents = new TalentBook(_content.TalentTrees);
+        _talents = new TalentBook(_content.TalentTrees, _content.LevelCap);
         _talents.Restore(character.TalentRanks ?? new Dictionary<uint, int>(), character.Class, character.Level);
         ApplyPassiveTalents();
     }
@@ -52,8 +52,8 @@ public sealed partial class PlaySession
     private IReadOnlyList<uint> SpellBookWithTalents()
     {
         var talentAbilities = TalentEffects.Castable(_talents.CurrentSpells, _content.Spells);
-        var higherRanks = _level >= LevelingService.MaxLevel
-            ? talentAbilities.SelectMany(PlaytestSpellbook.TalentAbilityRanksAtMaxLevel)
+        var higherRanks = ClassSpellbook.HoldsWholeBook(_content, _level, _enteredForDevelopment)
+            ? ClassSpellbook.TalentRanksAt(_content, talentAbilities, _level, LaterBuildSpellLevels())
             : [];
         return [.. _baseSpells.Concat(talentAbilities).Concat(higherRanks).Distinct()];
     }

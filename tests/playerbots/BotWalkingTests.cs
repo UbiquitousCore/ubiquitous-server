@@ -99,7 +99,7 @@ public sealed class BotWalkingTests
         Func<int, IReadOnlyList<PlayerMovePayload>, string?>? onTurn = null)
     {
         var connection = new Connection();
-        var settings = PlayerbotSettings.From(new ModuleSettings());
+        var settings = PlayerbotSettings.From(new ModuleSettings(), LevelingService.SeenMaxLevel);
         var bot = new Bot(map, connection, new ModuleLogin("bot", "secret"),
             new BotBrain(new BotKnowledge(map.Content), settings, new Random(seed), _ => false), new Random(seed),
             new HashSet<int> { Ubiquitous.Data.PlayerRaceIds.Human });

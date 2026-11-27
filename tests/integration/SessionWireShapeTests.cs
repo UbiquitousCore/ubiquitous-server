@@ -15,7 +15,7 @@ public sealed class SessionWireShapeTests
     private static readonly WebNetworkId Giver = WebNetworkId.FromString("Creature:12");
     private static readonly WebNetworkId Wolf = WebNetworkId.FromString("Creature:40");
 
-    private static readonly QuestObjectivePayload KillFour = new(0, 1, 0, 0, 0, 0, 4, 90201);
+    private static readonly QuestObjectivePayload KillFour = new(0, 1, 0, 0, 0, 0, 4, 90201, ObjectiveCreature: 90205);
     private static readonly QuestZonePayload WolfDen = new(90301, 1, 10.5f, 2f, -20.25f, 8f);
     private static readonly QuestZonePayload GiverHut = new(90302, 1, 24f, 3f, 4f, 5f);
     private static readonly QuestRewardItemPayload Reward = new(90001, 90401, 2, 1);
@@ -30,7 +30,8 @@ public sealed class SessionWireShapeTests
             [new HeldAuraPayload(90103, Hero, 0, 30000, 4200)])),
         (WebMessageTypes.EntitySpawned, new EntitySpawnedPayload(Wolf, 90801, new Position(10.5, 2, -20.25), 0,
             Level: 4, Health: 58, MaxHealth: 80, Faction: 2,
-            Auras: [new HeldAuraPayload(90102, Friend, 1, 10000, 6500), new HeldAuraPayload(90104, Wolf, 0, 0, 0)])),
+            Auras: [new HeldAuraPayload(90102, Friend, 1, 10000, 6500), new HeldAuraPayload(90104, Wolf, 0, 0, 0)],
+            Rank: WireCodes.CreatureRank.Elite)),
         (WebMessageTypes.SpellBook, new SpellBookPayload(
             [90101, 90102],
             [new ActionSlotPayload("primary", 0, 90101, 0), new ActionSlotPayload("shortcut", 1, 90102, 0)])),

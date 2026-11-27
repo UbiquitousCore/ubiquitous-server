@@ -21,9 +21,9 @@ public static class EncounterRules
     };
 
     public static int NoticeRange(
-        int baseRange, int creatureLevel, int playerLevel, CreatureRank rank, bool fightsAtRange = false)
+        int baseRange, int creatureLevel, int playerLevel, CreatureRank rank, int levelCap, bool fightsAtRange = false)
     {
-        var levelGap = Math.Min(creatureLevel, LevelingService.MaxLevel) - playerLevel;
+        var levelGap = Math.Min(creatureLevel, levelCap) - playerLevel;
         var range = baseRange
             * Math.Max(0.0, 1.0 + NoticeRangePerLevel * levelGap)
             * (fightsAtRange ? RangedFactor : 1.0)
@@ -31,11 +31,12 @@ public static class EncounterRules
         return (int)Math.Round(Math.Clamp(range, MinNoticeRange, MaxNoticeRange), MidpointRounding.AwayFromZero);
     }
 
-    public static int NoticeRange(int baseRange, CreatureDefinition? creature, int playerLevel) =>
+    public static int NoticeRange(int baseRange, CreatureDefinition? creature, int playerLevel, int levelCap) =>
         NoticeRange(
             baseRange,
             creature?.Level ?? playerLevel,
             playerLevel,
             creature?.Rank ?? CreatureRank.Ordinary,
+            levelCap,
             creature?.FightsAtRange ?? false);
 }

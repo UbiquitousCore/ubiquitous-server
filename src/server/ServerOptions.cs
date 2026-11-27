@@ -25,7 +25,9 @@ public sealed record ServerOptions(
     string? PostgresPasswordFile = null,
     bool RequireDataPackage = false,
     GameRates? Rates = null,
-    string? AdminTokenFile = null)
+    string? AdminTokenFile = null,
+    bool GeneratedLootEnabled = false,
+    LootGeneratorRules? LootRules = null)
 {
     private const string ModuleEnvironmentPrefix = "UBIQUITOUS_MODULE_";
 
@@ -33,14 +35,19 @@ public sealed record ServerOptions(
         BindAddress: "127.0.0.1",
         WebSocketPort: 8781,
         DataDirectory: Path.Combine("data", "generated"),
-        LogLevel: "Information",
-        // 1.1.4 has no Mendel to play: the race button is unnamed and its
-        // starting land has no zones.
-        DisabledRaces: [PlayerRaceIds.Mendel]);
+        LogLevel: "Information");
+
+    // Mendel is closed through 1.x: before 1.1.4 there is no such race, and 1.1.4's
+    // race button is unnamed and its starting land has no zones. From 2.2.0 the
+    // build names the race, so unless the host says otherwise every race is open.
+    public IReadOnlyList<int> DisabledRacesFor(string? gameVersion) =>
+        DisabledRaces ?? (DataManifest.PlaysAsSeen(gameVersion) ? [PlayerRaceIds.Mendel] : []);
 
     public string ResolvedStateDirectory => StateDirectory ?? DataDirectory;
 
     public GameRates ResolvedRates => Rates ?? GameRates.Normal;
+
+    public LootGeneratorRules ResolvedLootRules => LootRules ?? LootGeneratorRules.Default;
 
 
     private sealed record Setting(
@@ -75,6 +82,20 @@ public sealed record ServerOptions(
             (options, value, _) => options with { PostgresPasswordFile = value }),
         new(null, "UBIQUITOUS_ADMIN_TOKEN_FILE", ["--admin-token-file"],
             (options, value, _) => options with { AdminTokenFile = value }),
+        new("generatedLoot", "UBIQUITOUS_GENERATED_LOOT", ["--generated-loot"],
+            (options, value, name) => options with { GeneratedLootEnabled = ParseBool(value, name) }),
+        new("lootQuestItemPercent", "UBIQUITOUS_LOOT_QUEST_ITEM_PERCENT", ["--loot-quest-item-percent"],
+            (options, value, name) => options with
+            {
+                LootRules = options.ResolvedLootRules with { QuestItemPercent = Math.Min(100, ParseRate(value, name)) },
+            }),
+        new("lootDropRate", "UBIQUITOUS_LOOT_DROP_RATE", ["--loot-drop-rate"],
+            (options, value, name) => options with { LootRules = options.ResolvedLootRules with { DropRate = ParseRate(value, name) } }),
+        new("lootLevelWindow", "UBIQUITOUS_LOOT_LEVEL_WINDOW", ["--loot-level-window"],
+            (options, value, name) => options with
+            {
+                LootRules = options.ResolvedLootRules with { GearLevelWindow = ParsePositive(value, name) },
+            }),
         new("festivalContentEnabled", "UBIQUITOUS_FESTIVAL_CONTENT_ENABLED", ["--festival-content"],
             (options, value, name) => options with { FestivalContentEnabled = ParseBool(value, name) }),
         new("festivalStaticEntries", "UBIQUITOUS_FESTIVAL_STATIC_ENTRIES", ["--festival-static-entries"],

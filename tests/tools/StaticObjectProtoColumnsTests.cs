@@ -13,7 +13,7 @@ public class StaticObjectProtoColumnsTests
     {
         var data = BuildRow(new Dictionary<int, uint> { [0] = 145, [1] = 9 });
 
-        var type = Assert.Single(StaticObjectProtoTableMapper.MapTypes(FTableDocument.Load(data), StaticObjectProtoColumns.Build114));
+        var type = Assert.Single(StaticObjectProtoTableMapper.MapTypes(FTableDocument.Load(data), StaticObjectProtoColumns.Reference));
 
         Assert.Equal(145u, type.Entry);
         Assert.Equal(StaticObjectTypes.StorageBox, type.Type);
@@ -26,14 +26,26 @@ public class StaticObjectProtoColumnsTests
         var anniversary = BuildRow(new Dictionary<int, uint> { [0] = 288, [19] = FestivalIds.Anniversary });
 
         var first = Assert.Single(StaticObjectProtoTableMapper.MapTypes(
-            FTableDocument.Load(winter), StaticObjectProtoColumns.Build114));
+            FTableDocument.Load(winter), StaticObjectProtoColumns.Reference));
         var second = Assert.Single(StaticObjectProtoTableMapper.MapTypes(
-            FTableDocument.Load(anniversary), StaticObjectProtoColumns.Build114));
+            FTableDocument.Load(anniversary), StaticObjectProtoColumns.Reference));
 
         Assert.Equal(FestivalIds.WinterSolstice, first.Festival);
         Assert.Equal(FestivalIds.Anniversary, second.Festival);
         Assert.True(FestivalIds.IsSeasonal(first.Festival));
         Assert.True(FestivalIds.IsSeasonal(second.Festival));
+    }
+
+    [Fact]
+    public void Build114_ReadsTheSpellAPropIsGatheredWith()
+    {
+        var ore = BuildRow(new Dictionary<int, uint> { [0] = 132, [1] = 1, [12] = 23 });
+        var plain = BuildRow(new Dictionary<int, uint> { [0] = 52, [1] = 1 });
+
+        Assert.Equal(23u, Assert.Single(StaticObjectProtoTableMapper.MapTypes(
+            FTableDocument.Load(ore), StaticObjectProtoColumns.Reference)).GatherSpellId);
+        Assert.Equal(0u, Assert.Single(StaticObjectProtoTableMapper.MapTypes(
+            FTableDocument.Load(plain), StaticObjectProtoColumns.Reference)).GatherSpellId);
     }
 
     private static byte[] BuildRow(IReadOnlyDictionary<int, uint> values)

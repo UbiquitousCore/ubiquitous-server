@@ -4,6 +4,14 @@ using Ubiquitous.Data;
 
 namespace Ubiquitous.Game;
 
+// `characters.chosen` refusals. 1 is "no such character", kept from the login code it shared.
+public enum CharacterChooseCode
+{
+    NotFound = 1,
+
+    OtherGameVersion = 3,
+}
+
 public enum CharacterCreateCode
 {
     Ok = 0,
@@ -72,7 +80,8 @@ public static class CharacterCreation
         int face,
         int heldByAccount,
         bool nameIsTaken,
-        IReadOnlySet<int>? offeredRaces = null)
+        IReadOnlySet<int>? offeredRaces = null,
+        IReadOnlyList<CharacterStartingLoadout>? loadouts = null)
     {
         if (heldByAccount >= MaxCharactersPerAccount)
         {
@@ -101,7 +110,7 @@ public static class CharacterCreation
                 CharacterCreateCode.PairingNotPlayable, "That race is not open on this server."));
         }
 
-        var loadout = StartingLoadouts.For(race, playerClass);
+        var loadout = StartingLoadouts.For(loadouts ?? StartingLoadouts.All, race, playerClass);
         if (loadout is null)
         {
             return (null, new CharacterCreateRefusal(
@@ -136,7 +145,7 @@ public static class CharacterCreation
             loadout.X,
             loadout.Y,
             loadout.Z,
-            StartingLevel,
+            loadout.Level,
             loadout.WornEquipment(),
             loadout.BagItems), null);
     }

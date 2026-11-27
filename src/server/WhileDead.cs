@@ -9,6 +9,7 @@ public static class WhileDead
     private static readonly HashSet<string> Allowed = new(StringComparer.Ordinal)
     {
         WebMessageTypes.SessionPing,
+        WebMessageTypes.SessionDescribe,
         WebMessageTypes.AccountLogin,
         WebMessageTypes.AccountLogout,
         WebMessageTypes.DevEnterWorld,

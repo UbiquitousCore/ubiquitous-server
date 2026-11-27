@@ -7,6 +7,13 @@ namespace Ubiquitous.Server;
 
 public sealed partial class PlaySession
 {
+    private CorpseLoot CorpseLootFor(uint victimEntry, CreatureDefinition? creature)
+    {
+        var lootTable = _content.LootTables.TryGetValue(victimEntry, out var table) ? table : null;
+        return _lootService.Generate(checked((int)victimEntry), lootTable, creature?.MoneyDropMin, creature?.MoneyDropMax,
+            item => _quests.MayDrop(item, _content.Quests));
+    }
+
     private IReadOnlyList<string> LootOpen(JsonElement payload)
     {
         if (_world is null || _character is null) return [];

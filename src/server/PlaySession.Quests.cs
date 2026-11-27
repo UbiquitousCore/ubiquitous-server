@@ -153,7 +153,8 @@ public sealed partial class PlaySession
         objective.ObjectiveItem,
         ObjectiveItemCount: objective.Kind == QuestObjectiveKind.Held ? objective.GoalCount : 0,
         objective.GoalCount,
-        objective.ObjectiveStringId);
+        objective.ObjectiveStringId,
+        objective.ObjectiveCreature == 0 ? null : objective.ObjectiveCreature);
 
     private static QuestCounterPayload CounterPayloadFor(QuestCounterDelta counter) =>
         new(counter.Index, counter.Kind, counter.Count);

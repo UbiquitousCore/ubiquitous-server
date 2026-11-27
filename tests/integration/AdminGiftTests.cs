@@ -306,6 +306,47 @@ public sealed class AdminGiftTests
         Assert.Equal(Chain[1], bar.GetProperty("id").GetUInt32());
     }
 
+    // A later build: the ranger's chain at levels 1, 10 and 20, read from its own lessons.
+    private static GameContent LaterBuildContent() => Content with
+    {
+        Spellbook = new StartingSpellbook(5, 4, [], 2, new Dictionary<int, uint>(),
+            new Dictionary<int, ClassStartingSpells> { [PlayerClassIds.Ranger] = new(58, [Chain[0]], Chain[0]) })
+        {
+            ClassRanks = new Dictionary<int, IReadOnlyDictionary<uint, int>>
+            {
+                [PlayerClassIds.Ranger] = new Dictionary<uint, int> { [Chain[0]] = 1, [Chain[1]] = 10, [Chain[2]] = 20 },
+            },
+        },
+        LevelCap = 75,
+    };
+
+    [Fact]
+    public async Task LearnAllSpells_InALaterBuild_TakesItsOwnRanksUpToTheLevel()
+    {
+        var session = await EnterAsync(admin: true, content: LaterBuildContent());
+
+        var learned = BookOf(await SendAsync(session, WebMessageTypes.AdminLearnSpells, new { }));
+
+        Assert.Contains(Chain[1], learned);
+        Assert.DoesNotContain(Chain[2], learned);
+        Assert.DoesNotContain(PlaytestSpellbook.AtMaxLevel(PlayerClassIds.Ranger)[3], learned);
+    }
+
+    [Fact]
+    public async Task ADevelopmentEntry_InALaterBuild_KnowsItsClassRanksUpToItsLevel()
+    {
+        var characters = new InMemoryCharacterStore([new CharacterRecord(
+            "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 12, [100, 200])]);
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"), characters,
+            content: LaterBuildContent(), developmentEntry: true);
+
+        var book = BookOf(await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.DevEnterWorld, 0, new { characterRef = "char-a" }))));
+
+        Assert.Contains(Chain[1], book);
+        Assert.DoesNotContain(Chain[2], book);
+    }
+
     private static async Task<PlaySession> EnterAsync(bool admin, GameContent? content = null)
     {
         var characters = new InMemoryCharacterStore([new CharacterRecord(

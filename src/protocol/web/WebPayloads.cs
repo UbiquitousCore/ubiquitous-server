@@ -6,7 +6,14 @@ namespace Ubiquitous.Protocol.Web;
 
 public sealed record LoginRequest(
     [property: JsonPropertyName("userId")] string UserId,
-    [property: JsonPropertyName("passHash")] string PassHash);
+    [property: JsonPropertyName("passHash")] string PassHash,
+    [property: JsonPropertyName("tables")] IReadOnlyList<ClientTableShape>? Tables = null);
+
+// One table the client read from the player's own game file.
+public sealed record ClientTableShape(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("rows")] int Rows,
+    [property: JsonPropertyName("format")] string Format);
 
 public sealed record ChatPayload(
     [property: JsonPropertyName("channel")] string Channel,
@@ -80,7 +87,9 @@ public sealed record QuestObjectivePayload(
     [property: JsonPropertyName("objectiveItem")] uint ObjectiveItem,
     [property: JsonPropertyName("objectiveItemCount")] int ObjectiveItemCount,
     [property: JsonPropertyName("goalCount")] int GoalCount,
-    [property: JsonPropertyName("objectiveStringId")] uint ObjectiveStringId);
+    [property: JsonPropertyName("objectiveStringId")] uint ObjectiveStringId,
+    // The creature an objective is about (one to kill or one to use something on), so the client can mark every one in view.
+    [property: JsonPropertyName("objectiveCreature")] uint? ObjectiveCreature = null);
 
 public sealed record QuestCounterPayload(
     [property: JsonPropertyName("index")] int Index,
@@ -364,7 +373,9 @@ public sealed record LoginResultPayload(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("code")] int Code,
     [property: JsonPropertyName("reason")] string? Reason,
-    [property: JsonPropertyName("isAdmin")] bool IsAdmin);
+    [property: JsonPropertyName("isAdmin")] bool IsAdmin,
+    [property: JsonPropertyName("gameVersion")] string? GameVersion = null,
+    [property: JsonPropertyName("differingTables")] IReadOnlyList<string>? DifferingTables = null);
 
 public sealed record ChooseCharacterRequest(
     [property: JsonPropertyName("name")] string Name);
@@ -406,7 +417,13 @@ public sealed record CharacterSummary(
     [property: JsonPropertyName("position")] Position Position,
     [property: JsonPropertyName("equipment")] IReadOnlyList<int> Equipment,
     [property: JsonPropertyName("xp")] int Xp = 0,
-    [property: JsonPropertyName("xpToLevel")] int XpToLevel = 0);
+    [property: JsonPropertyName("xpToLevel")] int XpToLevel = 0,
+    // Set only when the character was made on another game version than this server's.
+    [property: JsonPropertyName("needsGameVersion")] string? NeedsGameVersion = null);
+
+// What a client may ask before signing in: the game version whose files this server plays.
+public sealed record SessionDescribedPayload(
+    [property: JsonPropertyName("gameVersion")] string GameVersion);
 
 public sealed record Appearance(
     [property: JsonPropertyName("skin")] int Skin,
@@ -453,7 +470,8 @@ public sealed record EntitySpawnedPayload(
     [property: JsonPropertyName("dead")] bool? Dead = null,
     [property: JsonPropertyName("animationId")] uint? AnimationId = null,
     [property: JsonPropertyName("neverFightsBack")] bool? NeverFightsBack = null,
-    [property: JsonPropertyName("auras")] IReadOnlyList<HeldAuraPayload>? Auras = null);
+    [property: JsonPropertyName("auras")] IReadOnlyList<HeldAuraPayload>? Auras = null,
+    [property: JsonPropertyName("rank")] string? Rank = null);
 
 public sealed record PlayerSpawnedPayload(
     [property: JsonPropertyName("networkId")] WebNetworkId NetworkId,

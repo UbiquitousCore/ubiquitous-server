@@ -367,7 +367,8 @@ public static class NavigationBakeCommand
             return byMap;
         }
 
-        foreach (var map in MapTableMapper.MapMaps(FTableDocument.Load(File.ReadAllBytes(mapInfo)), MapInfoColumns.Build114))
+        var mapDocument = FTableDocument.Load(File.ReadAllBytes(mapInfo));
+        foreach (var map in MapTableMapper.MapMaps(mapDocument, MapInfoColumns.Layout.Resolve(mapDocument).As<MapTableColumns>()))
         {
             if (map.File is null) continue;
             if (archives.TryGetValue(Path.GetFileNameWithoutExtension(map.File), out var archive)) byMap[map.Id] = archive;

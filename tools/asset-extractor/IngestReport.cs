@@ -21,8 +21,11 @@ public static class IngestReport
         if (manifest is not null)
         {
             lines.Add($"  Game version: {manifest.GameVersion}, {manifest.Datasets.Count} data sets.");
-            if (!DataManifest.IsTargetGameVersion(manifest.GameVersion))
-                lines.Add($"  Warning: this server is built for {DataManifest.TargetGameVersion}; other versions may not play correctly.");
+            if (manifest.ImportNotes is { Count: > 0 } notes)
+            {
+                lines.Add("  Warning: this version's files leave some things out:");
+                lines.AddRange(notes.Select(note => $"    {note}"));
+            }
         }
 
         lines.Add("  Your accounts and characters were not touched.");

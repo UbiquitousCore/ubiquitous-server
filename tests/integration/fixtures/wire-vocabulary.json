@@ -202,6 +202,8 @@
     "quest.shareResult",
     "quest.statuses",
     "quest.updated",
+    "session.describe",
+    "session.described",
     "session.ping",
     "session.pong",
     "social.friendAdd",

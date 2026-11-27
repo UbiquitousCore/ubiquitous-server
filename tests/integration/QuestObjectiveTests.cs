@@ -67,6 +67,16 @@ public sealed class QuestObjectiveTests
     }
 
     [Fact]
+    public async Task Accept_NamesTheCreatureAKillObjectiveWants()
+    {
+        var session = await SessionAsync();
+
+        var response = await AcceptAsync(session);
+
+        Assert.Contains("\"objectiveCreature\":9001", response);
+    }
+
+    [Fact]
     public async Task KillingTheRequiredCreature_MovesTheObjectiveAndAllowsCompletion()
     {
         var session = await SessionAsync();
@@ -121,6 +131,38 @@ public sealed class QuestObjectiveTests
             [9001] = [new VendorTab(0, 0, 1, true, [new VendorItem(0, 300, 5301, 701, 10, 10, 1)])],
         },
     };
+
+    private static GameContent QuestItemDropContent() => HeldQuestContent() with
+    {
+        LootTables = new Dictionary<uint, CreatureLootTableDefinition>
+        {
+            [9001] = new(9001, [new LootGroupDefinition(1, 1, [new LootTableItemDefinition(300, 100, 1, 1)])]),
+        },
+    };
+
+    private static async Task<string> LootAsync(PlaySession session)
+    {
+        await KillAsync(session);
+        return string.Join('\n', await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.LootOpen, 4, new { networkId = "Creature:1" }))));
+    }
+
+    [Fact]
+    public async Task AQuestItem_DoesNotDropForSomeoneWithoutTheQuest()
+    {
+        var session = await SessionAsync(QuestItemDropContent(), Spawns);
+
+        Assert.DoesNotContain("\"entry\":300", await LootAsync(session));
+    }
+
+    [Fact]
+    public async Task AQuestItem_DropsForSomeoneWhoHasTheQuest()
+    {
+        var session = await SessionAsync(QuestItemDropContent(), Spawns);
+        await AcceptAsync(session);
+
+        Assert.Contains("\"entry\":300", await LootAsync(session));
+    }
 
     [Fact]
     public async Task BuyingTheRequiredItem_MovesTheHeldObjectiveAndAllowsCompletion()

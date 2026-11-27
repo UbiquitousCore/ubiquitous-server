@@ -246,7 +246,7 @@ async function toggleCharacters(account, row) {
 async function openEditor(guid, editor, refreshList) {
   const path = `/characters/${encodeURIComponent(guid)}`;
   const found = await api('GET', path);
-  const { character, gold, bag, bagSlots, online } = found;
+  const { character, gold, bag, bagSlots, levelCap, online } = found;
   const message = el('div', { class: 'message' });
   const tell = (text, ok) => { message.textContent = text; message.className = 'message ' + (ok ? 'ok' : 'error'); };
   const name = el('input', { value: character.name, 'aria-label': 'Name' });
@@ -279,7 +279,7 @@ async function openEditor(guid, editor, refreshList) {
     el('h2', {}, `${character.name}, level ${character.level} ${character.race} ${character.class}`),
     online ? el('p', { class: 'message error' }, 'In the world now: changes wait until the player leaves.') : el('p', { class: 'hint' }, 'Signed out, so changes apply at their next sign-in.'),
     el('div', { class: 'fields' },
-      el('label', {}, 'Name', name), el('label', {}, 'Level (1-60)', level), el('label', {}, 'Gold', purse)),
+      el('label', {}, 'Name', name), el('label', {}, `Level (1-${levelCap})`, level), el('label', {}, 'Gold', purse)),
     el('p', { class: 'hint' }, 'A new level starts with an empty experience bar and full health. Spells for a higher level are learned in game.'),
     el('div', { class: 'row' },
       el('button', { class: 'primary', onclick: async () => {

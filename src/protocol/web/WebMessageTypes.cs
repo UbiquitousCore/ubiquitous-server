@@ -6,6 +6,9 @@ public static partial class WebMessageTypes
 
     public const string SessionPong = "session.pong";
 
+    public const string SessionDescribe = "session.describe";
+    public const string SessionDescribed = "session.described";
+
     public const string AccountLogin = "account.login";
     public const string AccountLoginResult = "account.loginResult";
     public const string AccountLogout = "account.logout";

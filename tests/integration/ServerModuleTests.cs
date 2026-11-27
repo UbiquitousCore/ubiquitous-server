@@ -1,3 +1,5 @@
+using Ubiquitous.Data;
+using Ubiquitous.Game;
 using Ubiquitous.Modules;
 using Ubiquitous.Persistence;
 using Ubiquitous.Protocol.Web;
@@ -75,6 +77,65 @@ public sealed class ServerModuleTests
         var raised = (await characters.FindByNameAsync("Fresh"))!;
         Assert.Equal((12, (int?)null), (raised.Level, raised.Health));
         Assert.Equal(1, (await characters.FindByNameAsync("Played"))!.Level);
+    }
+
+    [Fact]
+    public async Task ALaterBuildsModule_RaisesAFlameKnightFromItsOwnStart_KnowingItsLessonsByThen()
+    {
+        var accounts = new ModuleAccounts(new AccountAuthenticator(new InMemoryAccountStore([])));
+        var login = await accounts.ReserveAsync("playerbots", "random0");
+        var account = ModuleAccounts.AccountIdFor(login.UserId);
+        CharacterRecord Made(string name, int playerClass, int level) =>
+            new(name, account, name, 0, PlayerRaceIds.Human, playerClass, 1684, 1, 1, 1, 1, 1, 0, 0, 0, level, []);
+        var characters = new InMemoryCharacterStore(
+            [Made("Knight", PlayerClassIds.FlameKnight, 65), Made("Young Knight", PlayerClassIds.FlameKnight, 65),
+                Made("Mage", PlayerClassIds.Mage, 1)]);
+        var stores = new SessionStores(accounts, characters);
+        var classes = new Dictionary<int, ClassStartingSpells>
+        {
+            [PlayerClassIds.Mage] = new(7, [100], 100),
+            [PlayerClassIds.FlameKnight] = new(7, [300], 300),
+        };
+        var book = new StartingSpellbook(5, 4, [1], 2, new Dictionary<int, uint>(), classes)
+        {
+            ClassRanks = new Dictionary<int, IReadOnlyDictionary<uint, int>>
+            {
+                [PlayerClassIds.Mage] = new Dictionary<uint, int> { [100] = 1, [101] = 10, [102] = 30 },
+                [PlayerClassIds.FlameKnight] = new Dictionary<uint, int> { [300] = 65, [301] = 68, [302] = 72 },
+            },
+        };
+        var items = new Dictionary<uint, ItemDefinition>(GameContent.Development.Items)
+        {
+            [7001] = new(7001, "lance", Class: ItemClasses.Weapons, SubClass: 8, DisplayInfoId: 0,
+                AllowableClassMask: ItemClassMask.BitFor(PlayerClassIds.FlameKnight),
+                InventoryType: InventoryTypes.TwoHand, RequiredLevel: 65, MaxDamage: 585),
+        };
+        var game = GameContent.Development with
+        {
+            Maps = new Dictionary<ushort, MapDefinition> { [13] = new(13, "test-city") },
+            Items = items,
+            Spellbook = book,
+            Loadouts = StartingLoadouts.FromSpellbook(book, items),
+            LevelCap = 75,
+        };
+        var host = new ModuleHost("playerbots", new ModuleSettings(new Dictionary<string, string>()),
+            new ServerModules(Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance),
+            new PlaySessionFactory(stores, ServerContent.Empty with { Game = game }, new SharedWorld(stores)),
+            new PlaySessionHub(), accounts, 30, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+
+        Assert.True(await host.StartAtLevelAsync(login, "Knight", 70));
+        Assert.True(await host.StartAtLevelAsync(login, "Mage", 20));
+        Assert.True(await host.StartAtLevelAsync(login, "Young Knight", 20, (13, new Ubiquitous.Common.Position(5, 2, 5))));
+
+        var knight = (await characters.FindByNameAsync("Knight"))!;
+        Assert.Equal(70, knight.Level);
+        Assert.Equal([301u], knight.LearnedSpells!);
+        var mage = (await characters.FindByNameAsync("Mage"))!;
+        Assert.Equal(20, mage.Level);
+        Assert.Equal([101u], mage.LearnedSpells!);
+        Assert.False(await host.StartAtLevelAsync(login, "Mage", 30));
+        var young = (await characters.FindByNameAsync("Young Knight"))!;
+        Assert.Equal((65, (ushort)1), (young.Level, young.MapId));
     }
 
     [Fact]

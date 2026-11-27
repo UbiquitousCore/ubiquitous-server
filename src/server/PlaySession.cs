@@ -136,6 +136,7 @@ public sealed partial class PlaySession : ISessionPlayer
     private readonly Dictionary<string, CorpseLoot> _loot = new(StringComparer.Ordinal);
     private readonly LootService _lootService;
     private readonly GameContent _content;
+    private readonly DataBuild _build;
     private readonly Dictionary<uint, List<VendorTab>> _vendorTabs;
     private int _level;
     private int _xp;
@@ -244,6 +245,7 @@ public sealed partial class PlaySession : ISessionPlayer
         _questLogStore = stores.QuestLog;
 
         _content = content.Game;
+        _build = content.Build;
         _belongings = new PlayerBelongings(_content);
         _creatureSpawns = content.CreatureSpawns;
         _staticObjectSpawns = content.StaticObjectSpawns;
@@ -369,6 +371,7 @@ public sealed partial class PlaySession : ISessionPlayer
             Exhaustion = _exhaustionDay is null ? null : _exhaustion,
             ExhaustionDay = _exhaustionDay,
             LegendDungeons = _instances.ChosenMode(PlayerUnitId) == DungeonMode.Legend ? true : null,
+            GameVersion = GameVersions.Stamp(character.GameVersion, _build.GameVersion),
         };
     }
 
@@ -467,6 +470,8 @@ public sealed partial class PlaySession : ISessionPlayer
             return envelope.Type switch
             {
                 WebMessageTypes.SessionPing => [Reply(WebMessageTypes.SessionPong, new { })],
+                WebMessageTypes.SessionDescribe => [Reply(WebMessageTypes.SessionDescribed,
+                    new SessionDescribedPayload(GameVersions.PlaysAs(_build.GameVersion)))],
                 WebMessageTypes.AccountLogin => [await LoginAsync(envelope.Payload, cancellationToken)],
                 WebMessageTypes.AccountLogout => [Logout()],
                 WebMessageTypes.DevEnterWorld => await DevEnterWorldAsync(envelope.Payload, cancellationToken),
@@ -1086,9 +1091,7 @@ public sealed partial class PlaySession : ISessionPlayer
             if (_sight.Entries.TryGetValue(swing.TargetId, out var victimEntry))
             {
                 var creature = _content.Creatures.TryGetValue(victimEntry, out var found) ? found : null;
-                var lootTable = _content.LootTables.TryGetValue(victimEntry, out var table) ? table : null;
-                _loot[swing.TargetId] = _lootService.Generate(
-                    checked((int)victimEntry), lootTable, creature?.MoneyDropMin, creature?.MoneyDropMax);
+                _loot[swing.TargetId] = CorpseLootFor(victimEntry, creature);
                 responses.AddRange(RewardKill(victimEntry, creature, swing.TargetId, now));
             }
             var carriesLoot = _loot.TryGetValue(swing.TargetId, out var spoils)

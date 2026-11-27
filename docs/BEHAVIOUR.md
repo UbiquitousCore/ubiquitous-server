@@ -8,6 +8,17 @@ comes from is in `PROVENANCE.md`.
 
 - JSON text frames only; a binary or over-size frame closes the socket. 60
   seconds of silence closes it; `session.ping` gets `session.pong`.
+- `session.describe`, answered at any time and before signing in, gets
+  `session.described {gameVersion}`: the game version whose files this server
+  plays ("1.1.4" for a package whose build is not known), so the client can
+  open, or ask the player for, that build's files.
+- A character keeps the game version it was made on. A server on any other
+  version lists it with `needsGameVersion` and refuses `characters.choose` and
+  `dev.enterWorld` for it (`characters.chosen`, code 3): builds number and shape
+  their items, quests, spells and talents differently, and no migration between
+  them exists yet. A character saved before versions were kept plays anywhere
+  and takes the version of the first known server that saves it; a server whose
+  build is unknown stamps nothing and holds characters as 1.1.4.
 - A missing or null required field gets `protocol.error invalid_payload`; any
   other handler failure gets one `protocol.error internal` with a generic
   reason, never the exception text.
@@ -15,7 +26,12 @@ comes from is in `PROVENANCE.md`.
   connection, up to five times; after five refusals, or once signed in, a
   further login gets `invalid_state`. `account.loginResult` carries `isAdmin`,
   true only for a GM account that signed in; the client shows its admin panel
-  from it. The client sends
+  from it. A login may also carry `tables`, the name, row count and type string
+  of each table the client read from the player's own game file; the result
+  then carries `gameVersion`, the build this server's data came from, and
+  `differingTables`, those of the client's tables the server's package holds
+  with another shape or length. A difference never refuses the login: the
+  client warns the player and the server logs it. The client sends
   the typed password as `passHash`; the server stores it as
   `pbkdf2-sha256$<iterations>$<salt>$<hash>` and compares in constant time. A
   stored value without that prefix is accepted once and rehashed. Five failures
@@ -272,7 +288,7 @@ comes from is in `PROVENANCE.md`.
   bag tidying, cancelling and `player.unstuck` still work.
 - Losing a duel leaves the loser at 10 health, begging; forfeiting plays
   nothing.
-- Level cap 60. Kill XP is `5 × level + 50`, +5% per level above (to +50%),
+- Level cap 60 on a 1.1.4 package, and on a later build the highest level its "Player Level" achievements ask for: 75 on 4.2.21 (see PROVENANCE). Kill XP is `5 × level + 50`, +5% per level above (to +50%),
   -10% per level for one or two below, then to nothing across a grey window of
   at least five levels; elites pay double. Teammates on the same map copy
   within 50 units of the body share a kill: it is valued at the highest
@@ -313,6 +329,20 @@ comes from is in `PROVENANCE.md`.
 - Loot is generated for the killer: money from the creature's range (or 50
   copper); each group item rolls its chance, topped up to the group minimum by
   the nearest misses and trimmed to its maximum; at most 8 rows.
+- A build whose tables carry no loot (4.2.21) can have its loot made at start-up, when the host turns it on
+  (`LootGenerator`, `UBIQUITOUS_GENERATED_LOOT`). A quest item drops 40% of
+  the time from each creature the quest names (always from a boss), under the
+  rule for every quest item below. Gear asked for at the creature's level or up
+  to 4 below (else 9 below), worn in a slot and bought by vendors but neither
+  sold nor given for a quest, drops by rank: ordinary 8% (poor to fine),
+  rare 40% (common to rare), elite 25% (fine and rare), boss always one and
+  at most two, world boss two to three (rare and epic). Each creature draws
+  from its own fixed 12 such pieces. Food and potions of its level or up to
+  9 below drop 10% of the time. Money is the creature's own range. The
+  quest-item percent, a multiplier on the other chances and the gear level
+  window are host settings (`UBIQUITOUS_LOOT_*`).
+- An item a quest asks to collect drops only for a killer who holds that quest
+  and has fewer than it asks for; otherwise it is left out before the roll.
 - Vendors sell without stock limits. Any vendor buys any bag stack at the
   item's sell price; a zero sell price is refused (`cantSell`); no buyback.
 - Bus fares are the cheapest total of legs, which run both ways.

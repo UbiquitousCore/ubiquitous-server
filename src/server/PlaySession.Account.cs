@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Ubiquitous.Data;
 using Ubiquitous.Game;
 using Ubiquitous.Persistence;
@@ -11,7 +12,7 @@ public sealed partial class PlaySession
 {
     private IReadOnlyList<uint> KnownSpellsFor(CharacterRecord character)
     {
-        var loadout = StartingLoadouts.For(character.Race, character.Class);
+        var loadout = _content.LoadoutFor(character.Race, character.Class);
         if (loadout is null)
         {
             return _content.StartingSpells;
@@ -21,8 +22,8 @@ public sealed partial class PlaySession
             .ToHashSet();
         _actionBar.Clear();
         foreach (var button in loadout.ActionBar) _actionBar[button.Slot] = (button.SpellId, 0);
-        IReadOnlyList<uint> trained = character.Level >= LevelingService.MaxLevel
-            ? PlaytestSpellbook.AtMaxLevel(character.Class)
+        var trained = ClassSpellbook.HoldsWholeBook(_content, character.Level, _enteredForDevelopment)
+            ? ClassSpellbook.WholeBookAt(_content, character.Class, character.Level)
             : [];
         return [.. _content.StartingSpells.Where(id => !books.Contains(id)), .. loadout.Spells, .. trained];
     }
@@ -53,8 +54,29 @@ public sealed partial class PlaySession
             _failedLogins++;
         }
 
+        var differing = result.Ok ? DifferingTables(request) : [];
+        if (differing.Count > 0)
+        {
+            _logger.LogWarning(
+                "Account {UserId} plays a build whose tables differ from this server's {GameVersion}: {Tables}",
+                request.UserId, _build.GameVersion, string.Join(", ", differing));
+        }
+
         return Reply(WebMessageTypes.AccountLoginResult, new LoginResultPayload(
-            result.Ok, (int)result.Code, result.Reason, result.Ok && _account?.IsAdmin == true));
+            result.Ok, (int)result.Code, result.Reason, result.Ok && _account?.IsAdmin == true,
+            result.Ok && _build.GameVersion.Length > 0 ? _build.GameVersion : null,
+            differing.Count > 0 ? differing : null));
+    }
+
+    // More tables than any build ships are not a build's; they are not compared.
+    private const int MostClientTables = 1024;
+
+    private IReadOnlyList<string> DifferingTables(LoginRequest request)
+    {
+        if (request.Tables is not { Count: > 0 and <= MostClientTables } tables) return [];
+        return _build.Differences(tables
+            .Where(table => table.Name is not null && table.Format is not null)
+            .Select(table => new TableShape(DataBuild.ShortName(table.Name), table.Rows, table.Format)));
     }
 
     // Back to the sign-in screen on the same connection; a character in the world must leave first.
@@ -100,8 +122,10 @@ public sealed partial class PlaySession
             character.MapId,
             new Position(character.X, character.Y, character.Z),
             character.Equipment,
-            LevelingService.HeldXp(character.Level, character.Xp),
-            LevelingService.XpToNextLevel(character.Level))).ToArray();
+            LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap),
+            LevelingService.XpToNextLevel(character.Level, _content.LevelCap),
+            GameVersions.MayPlay(character.GameVersion, _build.GameVersion) ? null : character.GameVersion))
+            .ToArray();
 
         var offered = _content.PlayableRaces.OrderBy(race => race).ToArray();
         return Reply(WebMessageTypes.CharactersListed, new CharactersListedPayload(summaries, offered));
@@ -132,7 +156,8 @@ public sealed partial class PlaySession
             request.Name, request.Race, request.Class, request.Gender,
             look.Skin, look.HairStyle, look.HairColour, look.Face,
             held.Count, nameIsTaken,
-            _content.PlayableRaces);
+            _content.PlayableRaces,
+            _content.Loadouts);
 
         if (plan is null)
         {
@@ -157,7 +182,10 @@ public sealed partial class PlaySession
             plan.Y,
             plan.Z,
             plan.Level,
-            plan.Equipment);
+            plan.Equipment)
+        {
+            GameVersion = GameVersions.Stamp(null, _build.GameVersion),
+        };
 
         try
         {
@@ -199,7 +227,7 @@ public sealed partial class PlaySession
         }
 
         var request = WebMessageJson.DeserializePayload<OutfitRequest>(payload);
-        var loadout = StartingLoadouts.For(request.Race, request.Class);
+        var loadout = _content.LoadoutFor(request.Race, request.Class);
         return Reply(WebMessageTypes.CharactersOutfitted, new OutfitPayload(
             request.Race,
             request.Class,
@@ -269,9 +297,10 @@ public sealed partial class PlaySession
         if (character is null)
         {
             return [Reply(WebMessageTypes.CharactersChosen,
-                new ResultPayload(false, (int)LoginCode.InvalidCredentials, "Character not found."))];
+                new ResultPayload(false, (int)CharacterChooseCode.NotFound, "Character not found."))];
         }
 
+        if (RefuseNewerBuild(character) is { } refusal) return [refusal];
         return await EnterAsCharacterAsync(character, cancellationToken);
     }
 
@@ -305,14 +334,14 @@ public sealed partial class PlaySession
         Volatile.Write(ref _nextAutosaveTicks, (Now + AutosaveInterval).UtcTicks);
         _character = character;
         _level = character.Level;
-        _xp = LevelingService.HeldXp(character.Level, character.Xp);
+        _xp = LevelingService.HeldXp(character.Level, character.Xp, _content.LevelCap);
         _exhaustion = character.Exhaustion ?? 0;
         _exhaustionDay = character.ExhaustionDay;
         if (character.LegendDungeons == true) _instances.RecallMode($"player:{character.Guid}", DungeonMode.Legend);
         _belongings.Currency = character.Currency ?? _content.StartingCurrency;
         _belongings.BagSlots = character.BagSlots ?? PlayerBelongings.DefaultBagCapacity;
         _belongings.BankSlots = character.BankSlots ?? PlayerBelongings.DefaultBankCapacity;
-        var startingAttributes = StartingLoadouts.For(character.Race, character.Class)?.Attributes;
+        var startingAttributes = _content.LoadoutFor(character.Race, character.Class)?.Attributes;
         _combat.EnterAsCharacter(character.Class, character.Level, $"player:{character.Guid}", character.Health,
             startingAttributes);
         _learnedSpells.Clear();
@@ -362,7 +391,7 @@ public sealed partial class PlaySession
             [WireCodes.UnitValue.Power] = _spells.Power,
             [WireCodes.UnitValue.MaxPower] = _spells.EffectiveMaxPower(enterWisdomBonus),
             [WireCodes.UnitValue.Xp] = _xp,
-            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level),
+            [WireCodes.UnitValue.XpToNextLevel] = LevelingService.XpToNextLevel(_level, _content.LevelCap),
             [WireCodes.UnitValue.Exhaustion] = ExhaustionNow(enterNow),
             [WireCodes.UnitValue.MaxExhaustion] = _content.Rates.ExhaustionLimit,
         };
@@ -373,6 +402,8 @@ public sealed partial class PlaySession
 
         return responses;
     }
+
+    private bool _enteredForDevelopment;
 
     private async Task<IReadOnlyList<string>> DevEnterWorldAsync(
         JsonElement payload, CancellationToken cancellationToken)
@@ -388,8 +419,19 @@ public sealed partial class PlaySession
         if (character is null)
             return [Error(WireCodes.ProtocolError.InvalidState, "No character matches that reference.")];
 
+        if (RefuseNewerBuild(character) is { } refusal) return [refusal];
+
         _loginAttempted = true;
         _account = new AccountRecord(character.AccountId, $"dev:{character.Guid}", string.Empty);
+        _enteredForDevelopment = true;
         return await EnterAsCharacterAsync(character, cancellationToken);
     }
+
+    // Played on another build than its own, a character would lose or misread what it holds.
+    private string? RefuseNewerBuild(CharacterRecord character) =>
+        GameVersions.MayPlay(character.GameVersion, _build.GameVersion)
+            ? null
+            : Reply(WebMessageTypes.CharactersChosen, new ResultPayload(false, (int)CharacterChooseCode.OtherGameVersion,
+                $"{character.Name} was made on game version {character.GameVersion}; " +
+                $"this server plays {GameVersions.PlaysAs(_build.GameVersion)}."));
 }

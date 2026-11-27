@@ -10,7 +10,8 @@ public sealed record TalentTableColumns(
     int PointsInTreeRequired,
     IReadOnlyList<int> Prerequisites,
     int RankCount,
-    IReadOnlyList<int> RankSpells);
+    IReadOnlyList<int> RankSpells,
+    int NameTextId = -1);
 
 public sealed record ClassTreeColumns(int ClassId, IReadOnlyList<int> Trees);
 

@@ -30,7 +30,8 @@ public sealed record QuestObjectiveProgress(
     int Count,
     int GoalCount,
     uint ObjectiveItem,
-    uint ObjectiveStringId);
+    uint ObjectiveStringId,
+    uint ObjectiveCreature = 0);
 
 public sealed record QuestCounterDelta(int Index, QuestObjectiveKind Kind, int Count);
 
@@ -86,6 +87,24 @@ public sealed class QuestService
     private int _nextSlot;
 
     public IReadOnlyCollection<uint> Accepted => _accepted.Keys;
+
+    // An item a quest asks to collect drops only for someone holding that quest who has not got enough of it yet.
+    public bool MayDrop(uint itemEntry, IReadOnlyList<QuestDefinition> quests)
+    {
+        var askedFor = false;
+        foreach (var quest in quests)
+        {
+            foreach (var objective in quest.Objectives)
+            {
+                if (objective.Kind != QuestObjectiveKind.Held || objective.ObjectiveItem != itemEntry) continue;
+                askedFor = true;
+                if (_accepted.TryGetValue(quest.Id, out var accepted)
+                    && accepted.ObjectiveCounts.GetValueOrDefault(objective.Index) < objective.GoalCount)
+                    return true;
+            }
+        }
+        return !askedFor;
+    }
 
     public void Load(IReadOnlyList<PersistedQuestLogEntry> accepted, IReadOnlyCollection<uint> completed)
     {
@@ -378,7 +397,8 @@ public sealed class QuestService
         quest.Objectives.Select(objective => new QuestObjectiveProgress(
             objective.Index, objective.Kind,
             accepted.ObjectiveCounts.GetValueOrDefault(objective.Index),
-            objective.GoalCount, objective.ObjectiveItem, objective.ObjectiveStringId)).ToArray();
+            objective.GoalCount, objective.ObjectiveItem, objective.ObjectiveStringId,
+            objective.ObjectiveCreature)).ToArray();
 
     private static bool AllObjectivesMet(QuestDefinition quest, AcceptedQuest accepted) =>
         quest.Objectives.All(objective =>

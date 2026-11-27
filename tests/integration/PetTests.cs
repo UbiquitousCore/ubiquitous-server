@@ -89,7 +89,8 @@ public sealed class PetTests
 
     private static CharacterRecord Owner(uint[] pets) => new(
         "char-owner", 1, "Ayla", 1, PlayerRaceIds.Human, PlayerClassIds.Warrior, 4, 5, 6, 7, 8,
-        13, 1, 2, 3, 20, [100, 200]) { LearnedSpells = pets };
+        13, 1, 2, 3, 20, [100, 200])
+    { LearnedSpells = pets };
 
     private static bool Is(string message, string type) => message.Contains($"\"type\":\"{type}\"");
 

@@ -286,7 +286,8 @@ public sealed partial class PlaySession
                 ? spawn.AnimationId : null,
             NeverFightsBack: creature is not null
                 && !_scripts.For(creature, _instanceWorld is not null, AdvertisesQuests(creature)).FightsBack
-                ? true : null);
+                ? true : null,
+            Rank: creature is null ? null : WireCodes.CreatureRank.Of(creature.Rank));
         payload = dead ? payload with { Dead = true } : payload with { Auras = AurasWornBy(entity.Id.ToString()) };
         return Reply(WebMessageTypes.EntitySpawned, payload);
     }

@@ -37,6 +37,10 @@ public sealed class DataCatalog
         return new DataCatalog(DataManifestJson.Load(manifestPath), Path.GetFullPath(directory));
     }
 
+    public DataBuild LoadBuild() => Directory is null
+        ? new DataBuild(Manifest.GameVersion, DataBuild.Unknown.Tables)
+        : DataBuild.Load(Manifest.GameVersion, Directory);
+
     public DataValidationResult Validate()
     {
         var result = new DataValidationResult();
@@ -120,7 +124,9 @@ public sealed class DataCatalog
         "storageUpgrades",
         "staticObjectTypes",
         "talentTrees",
+        "dungeonRewards",
         PlayerLookDefinition.Dataset,
+        QuestItemSourceDefinition.Dataset,
     };
 
     public string DatasetPath(string name)
@@ -375,6 +381,24 @@ public sealed class DataCatalog
         return tables;
     }
 
+    public IReadOnlyList<QuestItemSourceDefinition> LoadQuestItemSources()
+    {
+        var creatureEntries = LoadCreatures().Select(c => c.EntryId).ToHashSet();
+        var itemIds = LoadItems().Select(i => i.Id).ToHashSet();
+        var sources = LoadDefinitions<QuestItemSourceDefinition>(QuestItemSourceDefinition.Dataset, "quest item sources");
+        foreach (var source in sources)
+        {
+            if (!itemIds.Contains(source.ItemEntry))
+                throw new InvalidDataException(
+                    $"Dataset '{QuestItemSourceDefinition.Dataset}' names missing item {source.ItemEntry}.");
+            if (source.CreatureEntryIds.FirstOrDefault(entry => !creatureEntries.Contains(entry)) is var missing and not 0)
+                throw new InvalidDataException(
+                    $"Dataset '{QuestItemSourceDefinition.Dataset}' names missing creature {missing}.");
+        }
+
+        return sources;
+    }
+
     public IReadOnlyList<QuestDefinition> LoadQuests()
     {
         var npcIds = LoadNpcs().Select(npc => npc.EntryId).ToHashSet();
@@ -448,6 +472,30 @@ public sealed class DataCatalog
             {
                 throw new InvalidDataException(
                     $"Dataset 'questRewards' references missing quest {reward.QuestId}.");
+            }
+        }
+
+        return rewards;
+    }
+
+    public IReadOnlyList<DungeonRewardDefinition> LoadDungeonRewards()
+    {
+        if (Manifest.Datasets is null || !Manifest.Datasets.ContainsKey("dungeonRewards"))
+        {
+            return [];
+        }
+
+        var mapIds = LoadMaps().Select(map => map.Id).ToHashSet();
+        var itemIds = LoadItems().Select(item => item.Id).ToHashSet();
+        var rewards = LoadDefinitions<DungeonRewardDefinition>("dungeonRewards", "dungeon rewards");
+
+        foreach (var reward in rewards)
+        {
+            ValidateMapReference("dungeonRewards", reward.Id, reward.MapId, mapIds);
+            if (!itemIds.Contains(reward.ItemId))
+            {
+                throw new InvalidDataException(
+                    $"Dataset 'dungeonRewards' references missing item {reward.ItemId}.");
             }
         }
 
@@ -806,6 +854,17 @@ public sealed class DataCatalog
                 {
                     throw new InvalidDataException(
                         $"Dataset '{dataset}' contains storage upgrade {id} that does not raise capacity.");
+                }
+            }
+            else if (value is QuestItemSourceDefinition source)
+            {
+                id = source.QuestId;
+                part = unchecked((int)source.ItemEntry);
+                name = $"quest {id} item {source.ItemEntry}";
+                if (source.CreatureEntryIds.Count == 0)
+                {
+                    throw new InvalidDataException(
+                        $"Dataset '{dataset}' names no creature for quest {id} item {source.ItemEntry}.");
                 }
             }
             else

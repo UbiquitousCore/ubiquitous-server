@@ -15,12 +15,11 @@ public sealed class ServerContentLoader(
         var creatureSpawns = LoadCreatureSpawns();
         var (staticObjectSpawns, hiddenStaticObjects) = LoadStaticObjectSpawns(staticObjectTypes);
         var patrols = LoadPatrolRoutes();
+        var disabledRaces = options.DisabledRacesFor(catalog?.Manifest.GameVersion);
         var game = LoadGameContent(staticObjectTypes) with
         {
             HiddenStaticObjects = hiddenStaticObjects,
-            PlayableRaces = PlayerRaceIds.All
-                .Where(race => options.DisabledRaces is not { } disabled || !disabled.Contains(race))
-                .ToHashSet(),
+            PlayableRaces = PlayerRaceIds.All.Where(race => !disabledRaces.Contains(race)).ToHashSet(),
             WaypointRoutes = patrols.All,
         };
         game = WithRates(game, options.ResolvedRates);
@@ -122,11 +121,46 @@ public sealed class ServerContentLoader(
             cat => cat.LoadStaticObjectQuestItemBindings());
         var questFinishersByCreature = LoadOptional("creature quest finishers",
             cat => cat.LoadCreatureQuestFinishers());
-        var lootTables = LoadOptional("creature loot tables",
-            cat => cat.LoadCreatureLootTables().ToDictionary(table => table.CreatureEntryId));
+        var lootTables = catalog.Manifest.Datasets.ContainsKey("creatureLootTables")
+            || DataManifest.PlaysAsSeen(catalog.Manifest.GameVersion)
+            ? LoadOptional("creature loot tables", cat => cat.LoadCreatureLootTables().ToDictionary(table => table.CreatureEntryId))
+            : null;
 
-        if (spells is not null) StartingLoadouts.ValidateAgainst(spells);
+        var seenBuild = DataManifest.PlaysAsSeen(catalog.Manifest.GameVersion);
+        if (catalog.Manifest.GameVersion == DataManifest.UnknownGameVersion)
+        {
+            logger.LogWarning(
+                "The data package's tables match no build this server knows; it plays as 1.1.4 does. " +
+                "Fingerprint the build to have its own spells, cap and classes read.");
+        }
+        StartingSpellbook? book = null;
+        if (spells is not null && seenBuild) StartingLoadouts.ValidateAgainst(spells);
+        else if (spells is not null)
+        {
+            book = StartingSpellbook.Read(
+                spells,
+                items ?? throw new InvalidOperationException("A build other than 1.1.4 needs its items to start a character."),
+                staticObjectTypes ?? throw new InvalidOperationException(
+                    "A build other than 1.1.4 needs its static object types to start a character."),
+                StartingLevelsByClass(talentTrees ?? fallback.TalentTrees));
+            logger.LogInformation("Starting spells read from the {GameVersion} tables: classes {Classes}",
+                catalog.Manifest.GameVersion, string.Join(", ", book.Classes.Keys.Order()));
+        }
+
         var travelLoaded = stops is not null && routes is not null;
+
+        // A later build ships no loot tables; its loot is made from the rest of its data unless the host says no.
+        var generated = GeneratedLoot.None;
+        if (lootTables is null && !seenBuild && options.GeneratedLootEnabled && creatures is not null && items is not null)
+        {
+            generated = LootGenerator.Build(creatures, items, spells ?? fallback.Spells,
+                npcs ?? new Dictionary<uint, NpcDefinition>(), rewards ?? new Dictionary<uint, QuestRewardDefinition>(),
+                vendorTabs ?? new Dictionary<uint, IReadOnlyList<VendorTab>>(),
+                LoadOptional("quest item sources", cat => cat.LoadQuestItemSources()) ?? [],
+                options.ResolvedLootRules);
+            logger.LogInformation("Loot made for {Creatures} creature(s), {QuestItems} of their quest items named by quests",
+                generated.Tables.Count, generated.QuestItems.Count);
+        }
 
         return fallback with
         {
@@ -139,7 +173,8 @@ public sealed class ServerContentLoader(
             Routes = travelLoaded ? routes! : fallback.Routes,
             VendorTabs = vendorTabs ?? fallback.VendorTabs,
             Spells = WithOperatorSpells(spells ?? fallback.Spells, fallback.Spells),
-            StartingSpells = fallback.StartingSpells,
+            // The development spellbook names 1.1.4 ids; a later build starts with its own and the GM spells.
+            StartingSpells = book is not null ? [.. OperatorSpells.All] : fallback.StartingSpells,
             Items = items ?? fallback.Items,
             StorageUpgrades = storageUpgrades ?? fallback.StorageUpgrades,
             BankBoxEntries = EntriesOfType(staticObjectTypes, StaticObjectTypes.StorageBox) ?? fallback.BankBoxEntries,
@@ -152,14 +187,26 @@ public sealed class ServerContentLoader(
             QuestItemBindingsByStaticObject = questItemBindingsByStaticObject ?? fallback.QuestItemBindingsByStaticObject,
             QuestFinishersByCreature = questFinishersByCreature ?? fallback.QuestFinishersByCreature,
             Maps = maps ?? fallback.Maps,
-            LootTables = lootTables ?? fallback.LootTables,
+            LootTables = lootTables ?? (seenBuild ? fallback.LootTables : generated.Tables),
             Graveyards = graveyards ?? fallback.Graveyards,
             GossipMenus = gossipMenus ?? fallback.GossipMenus,
             TalentTrees = talentTrees ?? fallback.TalentTrees,
             PlayerLooks = playerLooks ?? fallback.PlayerLooks,
             Terrain = LoadTerrain(),
+            Loadouts = book is not null ? StartingLoadouts.FromSpellbook(book, items!) : fallback.Loadouts,
+            Spellbook = book,
+            MiningGatherSpellId = book?.MiningGather ?? fallback.MiningGatherSpellId,
+            LevelCap = book is null ? LevelingService.SeenMaxLevel : catalog.Manifest.PlayerLevelCap(LevelingService.SeenMaxLevel),
         };
     }
+
+    // The classes a build plays are those its talent trees belong to.
+    public static IReadOnlyDictionary<int, int> StartingLevelsByClass(IReadOnlyList<TalentTreeDefinition> trees) =>
+        trees.Select(tree => tree.ClassId).Distinct().Order().ToDictionary(
+            playerClass => playerClass,
+            playerClass => playerClass == PlayerClassIds.FlameKnight
+                ? StartingLoadouts.FlameKnightStartingLevel
+                : CharacterCreation.StartingLevel);
 
     private PatrolRouteLibrary LoadPatrolRoutes()
     {

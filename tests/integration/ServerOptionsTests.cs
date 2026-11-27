@@ -506,7 +506,7 @@ public sealed class ServerOptionsTests
     }
 
     [Fact]
-    public void MendelIsClosedUnlessTheHostOpensIt()
+    public void MendelIsClosedOn114UnlessTheHostOpensIt()
     {
         var empty = Directory.CreateTempSubdirectory("ubiquitous-options-");
         try
@@ -515,9 +515,20 @@ public sealed class ServerOptionsTests
             var leftBlank = ServerOptions.Load([], new Dictionary<string, string?> { ["UBIQUITOUS_DISABLED_RACES"] = "" }, empty.FullName);
             var opened = ServerOptions.Load([], new Dictionary<string, string?> { ["UBIQUITOUS_DISABLED_RACES"] = "none" }, empty.FullName);
 
-            Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRaces);
-            Assert.Equal([PlayerRaceIds.Mendel], leftBlank.DisabledRaces);
-            Assert.Empty(opened.DisabledRaces!);
+            Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRacesFor(DataManifest.TargetGameVersion));
+            Assert.Equal([PlayerRaceIds.Mendel], leftBlank.DisabledRacesFor(DataManifest.TargetGameVersion));
+            Assert.Empty(opened.DisabledRacesFor(DataManifest.TargetGameVersion));
+            Assert.Empty(unset.DisabledRacesFor("4.2.21"));
+            Assert.Empty(unset.DisabledRacesFor("2.2.0"));
+            Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRacesFor("1.1.5"));
+            Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRacesFor("unknown"));
+            Assert.Equal(LevelingService.SeenMaxLevel,
+                new DataManifest("test", DataManifest.UnknownGameVersion, "hash", DateTimeOffset.UnixEpoch, [], LevelCap: 99)
+                    .PlayerLevelCap(LevelingService.SeenMaxLevel));
+            Assert.Equal(75,
+                new DataManifest("test", "4.2.21", "hash", DateTimeOffset.UnixEpoch, [], LevelCap: 75)
+                    .PlayerLevelCap(LevelingService.SeenMaxLevel));
+            Assert.Equal([PlayerRaceIds.Mendel], unset.DisabledRacesFor(null));
         }
         finally
         {

@@ -57,6 +57,13 @@ no key. The client keeps such a body in its neutral colour however often it
 is hit; every other neutral creature turns hostile at the player's first
 landed blow.
 
+## Creature ranks
+
+`entity.spawned` carries `rank` on a creature whose `creature_proto` row
+(column 3) ranks it above ordinary: `rare`, `elite`, `boss` or `worldBoss`.
+An ordinary creature sends no key. The client wears the frame round the
+target portrait that the rank calls for.
+
 ## Auras already worn
 
 `aura.applied` and `aura.ended` report a change, so a screen that first sees
@@ -271,6 +278,8 @@ for each.
 ## Numbered codes
 
 The results of logging in and of creating or deleting a character are still
-numbers, carried as `code` on `account.loginResult`, `characters.created` and
-`characters.deleted`. The numbering is this project's own (`LoginCode` and
-`CharacterCreateCode`), and `reason` carries the text.
+numbers, carried as `code` on `account.loginResult`, `characters.created`,
+`characters.chosen` and `characters.deleted`. The numbering is this project's
+own (`LoginCode`, `CharacterCreateCode` and `CharacterChooseCode`), and `reason`
+carries the text. A refused `characters.chosen` is 1, no such character, or 3,
+the character was made on another game version than this server's.

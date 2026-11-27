@@ -20,7 +20,7 @@ public class QuestRewardColumnsTests
         });
 
         var reward = Assert.Single(QuestRewardTableMapper.MapRewards(
-            FTableDocument.Load(data), QuestRewardColumns.Build114,
+            FTableDocument.Load(data), QuestColumns.RewardReference,
             questIds: new HashSet<uint> { 17 },
             resolveItem: entry => entry == 300 ? (5001u, 2) : null));
 
@@ -40,7 +40,7 @@ public class QuestRewardColumnsTests
         var data = BuildRow(new Dictionary<int, uint> { [0] = 18, [88] = 999, [92] = 1 });
 
         var reward = Assert.Single(QuestRewardTableMapper.MapRewards(
-            FTableDocument.Load(data), QuestRewardColumns.Build114,
+            FTableDocument.Load(data), QuestColumns.RewardReference,
             questIds: new HashSet<uint> { 18 }, resolveItem: _ => null));
 
         Assert.Empty(reward.Fixed);

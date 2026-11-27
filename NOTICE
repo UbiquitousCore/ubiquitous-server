@@ -33,6 +33,8 @@ licences with it.
   DotRecast.Core               zlib License (per upstream; the package
   DotRecast.Recast               metadata carries no licence field)
   DotRecast.Detour
+  SharpCompress                MIT License (its LZMA decoder derives from
+                                 Igor Pavlov's public-domain LZMA SDK)
   xunit                        Apache License 2.0
   xunit.runner.visualstudio    Apache License 2.0
   coverlet.collector           MIT License

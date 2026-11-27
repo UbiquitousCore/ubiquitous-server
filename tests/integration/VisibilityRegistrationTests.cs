@@ -97,6 +97,27 @@ public sealed class VisibilityRegistrationTests
     }
 
     [Fact]
+    public async Task Spawn_NamesARankAboveOrdinary_SoTheTargetPortraitCanBeFramedForIt()
+    {
+        var session = TestSessions.Create(new InMemoryAccountStore("developer", "dev-secret"),
+            new InMemoryCharacterStore([new CharacterRecord(
+                "char-a", 1, "Ayla", 1, 2, 3, 4, 5, 6, 7, 8, 13, 1, 2, 3, 4, [100, 200])]),
+            [
+                new CreatureSpawnDefinition(1, 13, 9401, 2f, 2f, 3f, 0f),
+                new CreatureSpawnDefinition(2, 13, 9400, 3f, 2f, 3f, 0f),
+            ]);
+
+        await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.AccountLogin, 0, new LoginRequest("developer", "dev-secret"))));
+        var chooseResp = await session.HandleTextAsync(WebMessageJson.Serialize(WebMessageEnvelope.Create(
+            WebMessageTypes.CharactersChoose, 1, new ChooseCharacterRequest("Ayla"))));
+
+        var spawned = chooseResp.Where(message => message.Contains("\"type\":\"entity.spawned\"")).ToList();
+        Assert.Contains(spawned, message => message.Contains("\"Creature:1\"") && message.Contains("\"rank\":\"elite\""));
+        Assert.Contains(spawned, message => message.Contains("\"Creature:2\"") && !message.Contains("\"rank\""));
+    }
+
+    [Fact]
     public async Task Spawn_SaysWhenTheCreatureNeverFightsBack()
     {
         var content = GameContent.Development with

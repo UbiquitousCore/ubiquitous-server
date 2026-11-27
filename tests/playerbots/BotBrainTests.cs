@@ -17,7 +17,7 @@ public sealed class BotBrainTests
             {
                 ["doubleUpPercent"] = $"{doubleUpPercent}",
                 ["idleBreaks"] = "false",
-            })),
+            }), LevelingService.SeenMaxLevel),
             new Random(1), isBot ?? (_ => false));
 
     private static BotView InWorld(float x = 0, float z = 0)
@@ -262,7 +262,7 @@ public sealed class BotBrainTests
             new WirePosition(3, 0, 0), 0, "Otherbot", 1, 1, 1, 0, 0, 1, 1, 1, 1, [], 100, 100, 0, 0));
         var alone = Brain(_ => true);
         var grouping = new BotBrain(new BotKnowledge(PlayerbotWorldTests.QuestContent()),
-            PlayerbotSettings.From(new ModuleSettings(new Dictionary<string, string> { ["groupWithBots"] = "true", ["idleBreaks"] = "false" })),
+            PlayerbotSettings.From(new ModuleSettings(new Dictionary<string, string> { ["groupWithBots"] = "true", ["idleBreaks"] = "false" }), LevelingService.SeenMaxLevel),
             new Random(1), _ => true);
 
         var asked = Enumerable.Range(0, 5).Select(turn => alone.Decide(view, Start.AddSeconds(turn))).OfType<SendMessage>();
@@ -299,7 +299,7 @@ public sealed class BotBrainTests
 
     private static BotBrain PlayBrain() =>
         new(new BotKnowledge(PlayContent()), PlayerbotSettings.From(new ModuleSettings(
-            new Dictionary<string, string> { ["idleBreaks"] = "false" })), new Random(1), _ => false);
+            new Dictionary<string, string> { ["idleBreaks"] = "false" }), LevelingService.SeenMaxLevel), new Random(1), _ => false);
 
     private static void Player(BotView view, string id, string name, float x, float z, int health = 100, int playerClass = 1) =>
         Hear(view, WebMessageTypes.EntitySpawned, new PlayerSpawnedPayload(WebNetworkId.FromString(id),
@@ -591,7 +591,7 @@ public sealed class BotBrainTests
     public void Now_And_Then_ABotStopsToTalkOrStepsAwayAndThenCarriesOn()
     {
         var brain = new BotBrain(new BotKnowledge(PlayerbotWorldTests.QuestContent()),
-            PlayerbotSettings.From(new ModuleSettings()), new Random(2), _ => false);
+            PlayerbotSettings.From(new ModuleSettings(), LevelingService.SeenMaxLevel), new Random(2), _ => false);
         var view = InWorld();
 
         var turns = Enumerable.Range(0, 3600).Select(turn => (At: Start.AddSeconds(turn), Decision: Arrive(view, brain.Decide(view, Start.AddSeconds(turn))))).ToList();
@@ -606,7 +606,7 @@ public sealed class BotBrainTests
     public void ABotOnABreak_StillFightsBack()
     {
         var brain = new BotBrain(new BotKnowledge(PlayerbotWorldTests.QuestContent()),
-            PlayerbotSettings.From(new ModuleSettings()), new Random(2), _ => false);
+            PlayerbotSettings.From(new ModuleSettings(), LevelingService.SeenMaxLevel), new Random(2), _ => false);
         var view = InWorld();
         var at = Enumerable.Range(0, 3600).Select(turn => Start.AddSeconds(turn))
             .First(now => { Arrive(view, brain.Decide(view, now)); return brain.OnABreak(now); });
@@ -636,7 +636,7 @@ public sealed class BotBrainTests
         for (var seed = 1; seed <= 20; seed++)
         {
             var brain = new BotBrain(new BotKnowledge(PlayerbotWorldTests.QuestContent()),
-                PlayerbotSettings.From(new ModuleSettings()), new Random(seed), _ => false);
+                PlayerbotSettings.From(new ModuleSettings(), LevelingService.SeenMaxLevel), new Random(seed), _ => false);
             var view = InWorld();
             Creature(view, 1, 7001, 200, 0, faction: 1, offersQuests: true);
             Hear(view, WebMessageTypes.QuestStatuses, new QuestStatusesPayload([new(WebNetworkId.FromString("Creature:1"), QuestStates.Offered)]));
@@ -663,7 +663,7 @@ public sealed class BotBrainTests
             },
         };
         var brain = new BotBrain(new BotKnowledge(content, [new Ubiquitous.Data.CreatureSpawnDefinition(1, 1, 7002, 300f, 0f, 40f, 0f)]),
-            PlayerbotSettings.From(new ModuleSettings(new Dictionary<string, string> { ["idleBreaks"] = "false" })), new Random(1), _ => false);
+            PlayerbotSettings.From(new ModuleSettings(new Dictionary<string, string> { ["idleBreaks"] = "false" }), LevelingService.SeenMaxLevel), new Random(1), _ => false);
         var view = InWorld();
         Hear(view, WebMessageTypes.QuestUpdated, new QuestUpdatePayload(6100, 1, 2, QuestStates.Underway, 0, false,
             [new QuestObjectivePayload(0, 0, 0, 0, 8100, 3, 3, 0)]));
@@ -689,7 +689,7 @@ public sealed class BotBrainTests
     private static (BotBrain Brain, BotView View) Looter(string style, int bagSlots, params (string Id, int Entry)[] bag)
     {
         var brain = new BotBrain(new BotKnowledge(LootContent()), PlayerbotSettings.From(new ModuleSettings(
-            new Dictionary<string, string> { ["idleBreaks"] = "false", ["lootStyle"] = style })), new Random(1), _ => false);
+            new Dictionary<string, string> { ["idleBreaks"] = "false", ["lootStyle"] = style }), LevelingService.SeenMaxLevel), new Random(1), _ => false);
         var view = InWorld();
         view.Class = Ubiquitous.Data.PlayerClassIds.Ranger;
         Hear(view, WebMessageTypes.QuestUpdated, new QuestUpdatePayload(6200, 1, 2, QuestStates.Underway, 0, false,
@@ -754,7 +754,7 @@ public sealed class BotBrainTests
     private static BotBrain Planner() =>
         new(new BotKnowledge(PlanContent(), [new Ubiquitous.Data.CreatureSpawnDefinition(1, 1, 7002, 0f, 0f, 0f, 0f),
                 new Ubiquitous.Data.CreatureSpawnDefinition(2, 1, 7002, 100f, 0f, 0f, 0f)]),
-            PlayerbotSettings.From(new ModuleSettings(new Dictionary<string, string> { ["idleBreaks"] = "false" })),
+            PlayerbotSettings.From(new ModuleSettings(new Dictionary<string, string> { ["idleBreaks"] = "false" }), LevelingService.SeenMaxLevel),
             new Random(1), _ => false);
 
     private static void Holds(BotView view, uint questId, int slot, int done = 0) =>
